@@ -1,0 +1,61 @@
+# Security
+.env
+backend/.env
+secrets.py
+
+# Python Junk
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environments
+.venv/
+venv/
+backend/venv/
+backend/.venv/
+env/
+
+# IDEs
+.vscode/
+.idea/
+
+# Database (Local only)
+*.db
+*.sqlite3
+
+# Temporary/Maintenance
+repair_admin.py
+chat_test.html
+debug_user.py
+test_insert.py# Security
+.env
+backend/.env
+secrets.py
+
+# Python Junk
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environments
+.venv/
+venv/
+backend/venv/
+backend/.venv/
+env/
+
+# IDEs
+.vscode/
+.idea/
+
+# Database (Local only)
+*.db
+*.sqlite3
+
+# Temporary/Maintenance
+repair_admin.py
+chat_test.html
+debug_user.py
+test_insert.py
