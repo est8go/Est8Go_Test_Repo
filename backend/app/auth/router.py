@@ -31,7 +31,7 @@ def login(
 
     # 2. VERIFY PASSWORD (With the 72-character safety truncation)
     # We cut the user's typed password to 72 chars to prevent Bcrypt crashes
-    is_valid = verify_password(data.password[:72], user.hashed_password)
+    is_valid = verify_password(data.password[:71], user.hashed_password)
 
     if not is_valid:
         raise HTTPException(
