@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta
-from typing import Any, Union  # (Optional is removed)
+from typing import Any, Union
 from jose import jwt
 from passlib.context import CryptContext
 
@@ -33,3 +33,8 @@ def create_access_token(
     to_encode = {"exp": expire, "sub": str(subject)}
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+# --- COMPATIBILITY ALIAS (Prevents Render ImportError) ---
+# This ensures that old files looking for 'hash_password' don't crash the app
+hash_password = get_password_hash
