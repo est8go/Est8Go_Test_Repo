@@ -15,9 +15,9 @@ from app.listings.models import Listing
 from app.conversations.templates import (
     is_filler,
     get_next_question,
-    format_listings_text,
-    calculate_typing_ms,
 )
+
+# (calculate_typing_ms and format_listings_text are removed)
 from app.conversations.brain import extract_preferences
 from app.conversations.ai_fallback import is_company_faq, answer_company_faq
 
@@ -33,37 +33,25 @@ logger = logging.getLogger(__name__)
 
 
 def _find_matching_listings(db: Session, tenant_id: int, data: dict) -> List[Listing]:
-    """Securely fetches properties from the database with weighted scoring."""
-    # Only show VERIFIED listings to the public
+    """Premium Search: Shows matches even if only one detail is provided."""
     query = db.query(Listing).filter(
         Listing.tenant_id == tenant_id, Listing.status == "verified"
     )
 
+    # If they mentioned a location, filter strictly
     if data.get("location"):
         query = query.filter(Listing.location.ilike(f"%{data['location']}%"))
+
+    # If they mentioned a property type, filter strictly
     if data.get("property_type"):
         query = query.filter(Listing.property_type.ilike(f"%{data['property_type']}%"))
+
+    # Budget is flexible (+20% room)
     if data.get("budget"):
-        query = query.filter(Listing.price <= int(data["budget"]))
+        max_val = int(data["budget"]) * 1.2
+        query = query.filter(Listing.price <= max_val)
 
-    listings = query.all()
-
-    # Weighted scoring for relevance
-    def score(listing):
-        s = 0
-        if (
-            data.get("location")
-            and data["location"].lower() in (listing.location or "").lower()
-        ):
-            s += 3
-        if (
-            data.get("property_type")
-            and data["property_type"].lower() in (listing.property_type or "").lower()
-        ):
-            s += 2
-        return s
-
-    return sorted(listings, key=score, reverse=True)[:5]
+    return query.order_by(Listing.price.desc()).limit(5).all()
 
 
 # ---------------------------------------------------------
@@ -149,48 +137,81 @@ def start_conversation_service(
 
 
 def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Session):
-    """The State Machine: Filters, FAQs, and Data Extraction."""
+    """
+    The 'Premium State Machine'.
+    Handles: Atomic Resets, FAQ Interruptions, and Omni-Intent Extraction.
+    """
     convo = db.query(Conversation).get(conversation_id)
     if not convo:
-        raise HTTPException(status_code=404, detail="Convo not found")
+        raise HTTPException(status_code=404, detail="Conversation not found")
 
     text_clean = (text or "").strip()
+
+    # 1. SAVE USER MESSAGE (Always track history)
     db.add(
         ConversationMessage(conversation_id=convo.id, role="user", content=text_clean)
     )
+    db.commit()
 
-    # 1. Cost Control: Filler Check
-    if is_filler(text_clean):
+    # 2. ATOMIC RESET: Handle 'Start Again' high-vocabulary request
+    reset_keywords = ["start again", "new search", "restart", "something else", "clear"]
+    if any(k in text_clean.lower() for k in reset_keywords):
+        convo.data_json = "{}"
+        convo.state = "ACTIVE"
+        db.commit()
         return {
-            "reply": "Got it. Please tell me more about what you're looking for.",
-            "state": convo.state,
+            "reply": "I've cleared our current search. 🔄 I'm ready to find you something new. What's your focus today?",
+            "state": "ACTIVE",
+            "prefs": {},
         }
 
-    # 2. Knowledge Base: FAQ Check
+    # 3. INTERRUPTION HANDLING: FAQ Check (Answer and keep in funnel)
     if is_company_faq(text_clean):
         profile = (
             db.query(CompanyProfile)
             .filter(CompanyProfile.tenant_id == tenant_id)
             .first()
         )
-        reply = answer_company_faq(db, tenant_id, text_clean, profile)
-        return {"reply": reply, "state": convo.state}
+        faq_reply = answer_company_faq(db, tenant_id, text_clean, profile)
+        # Note: We answer the question but DON'T change the state.
+        # This allows them to answer the previous property question after the FAQ.
+        return {
+            "reply": f"{faq_reply}\n\nShall we continue with our property search? I'm still looking for your ideal match.",
+            "state": convo.state,
+        }
 
-    # 3. AI Extraction: Identify Location, Budget, Type
-    current_data = json.loads(convo.data_json or "{}")
-    updated_data = extract_preferences(text_clean, current_data)
-    convo.data_json = json.dumps(updated_data)
+    # 4. SILENT FILLER CHECK (Cost Control)
+    if is_filler(text_clean):
+        return {
+            "reply": "I understand. Please tell me more about the property you have in mind.",
+            "state": convo.state,
+        }
 
-    # 4. Logic: Get next question or handoff
-    next_q = get_next_question(updated_data)
-    if not next_q:
+    # 5. OMNI-INTENT EXTRACTION (The Gemini Brain)
+    current_prefs = json.loads(convo.data_json or "{}")
+    updated_prefs = extract_preferences(text_clean, current_prefs)
+
+    # Check if the AI detected a pivot/reset inside a natural sentence
+    if updated_prefs.get("reset_requested"):
+        convo.data_json = "{}"
+        db.commit()
+        return {
+            "reply": "No problem, let's explore a different direction. What are you looking for now?",
+            "state": "ACTIVE",
+        }
+
+    convo.data_json = json.dumps(updated_prefs)
+
+    # 6. EVALUATE COMPLETION & RESPONSE
+    next_question = get_next_question(updated_prefs)
+
+    if not next_question:
         convo.state = "HANDOFF"
-        next_q = (
-            "✅ I've captured your preferences! A consultant will contact you shortly."
-        )
+        # High-Authority vocabulary for the handoff
+        next_question = "✅ Splendid. I have documented your requirements. I am now matching you with a verified specialist to provide a curated list of properties for your inspection."
 
     db.commit()
-    return {"reply": next_q, "state": convo.state, "prefs": updated_data}
+    return {"reply": next_question, "state": convo.state, "prefs": updated_prefs}
 
 
 # ---------------------------------------------------------

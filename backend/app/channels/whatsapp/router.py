@@ -1,5 +1,7 @@
 import os
-from fastapi import APIRouter, Request, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, Request, BackgroundTasks, Depends
+
+# (HTTPException is removed)
 from sqlalchemy.orm import Session
 from app.database.db import get_db
 from app.services.conversation_service import handle_incoming_message
@@ -12,7 +14,7 @@ router = APIRouter(prefix="/webhooks/meta", tags=["Meta Webhooks"])
 async def verify_webhook(request: Request):
     params = request.query_params
     # You will put this same token in the Meta Developer Portal
-    VERIFY_TOKEN = os.getenv("META_VERIFY_TOKEN", "BraviesTrust2024")
+    VERIFY_TOKEN = os.getenv("META_VERIFY_TOKEN", "BraviesTrust2026")
 
     if (
         params.get("hub.mode") == "subscribe"

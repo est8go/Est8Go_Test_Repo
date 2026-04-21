@@ -1,118 +1,66 @@
-# app/conversations/ai_fallback.py
-# (This file handles answering company FAQs. It checks your DB cache first, meaning 90% of FAQ questions will cost $0.00 in LLM fees).
-
-from __future__ import annotations
-import re
+import os
 import logging
-from typing import Optional
-
-from sqlalchemy.exc import IntegrityError, OperationalError
+from google import genai  # <--- NEW import
 from sqlalchemy.orm import Session
-from openai import OpenAI
-
-from app.ai_cache.models import AiCache
-from app.company_profiles.models import CompanyProfile
 
 logger = logging.getLogger(__name__)
-client = OpenAI()
-
-FAQ_KEYWORDS = {
-    "installment",
-    "discount",
-    "office",
-    "policy",
-    "pay",
-    "plan",
-    "fee",
-    "where are you",
-    "who are you",
-}
 
 
-# ---------------------------------------------------------
-# CACHE HELPERS
-# ---------------------------------------------------------
-def _normalize(text: str) -> str:
-    t = (text or "").strip().lower()
-    t = re.sub(r"\s+", " ", t)
-    t = re.sub(r"[^a-z0-9 ?!.,-]", "", t)
-    return t[:240]
-
-
-def cache_get(db: Session, tenant_id: int, text: str) -> Optional[str]:
-    try:
-        key = _normalize(text)
-        row = (
-            db.query(AiCache)
-            .filter(
-                AiCache.tenant_id == tenant_id,
-                AiCache.state == "FAQ",
-                AiCache.prompt_key == key,
-            )
-            .first()
-        )
-        return row.answer if row else None
-    except OperationalError:
-        return None
-
-
-def cache_set(db: Session, tenant_id: int, text: str, answer: str) -> None:
-    try:
-        key = _normalize(text)
-        row = AiCache(tenant_id=tenant_id, state="FAQ", prompt_key=key, answer=answer)
-        db.add(row)
-        db.commit()
-    except (IntegrityError, OperationalError):
-        db.rollback()
-
-
-# ---------------------------------------------------------
-# FAQ ROUTER & GENERATOR
-# ---------------------------------------------------------
 def is_company_faq(text: str) -> bool:
-    """PYTHON ROUTER: Determines if we should trigger the LLM FAQ fallback."""
-    text_lower = text.lower()
-    return "?" in text_lower or any(kw in text_lower for kw in FAQ_KEYWORDS)
+    keywords = [
+        "who are you",
+        "office",
+        "location",
+        "pay",
+        "bank",
+        "address",
+        "call",
+        "phone" "about",
+        "where is",
+        "account",
+        "transfer",
+        "installment",
+        "company",
+        "firm",
+    ]
+    return any(k in text.lower() for k in keywords)
 
 
-def answer_company_faq(
-    db: Session, tenant_id: int, user_text: str, profile: CompanyProfile
-) -> str:
-    """Returns answers to company-specific questions (Checks Cache First)."""
+def answer_company_faq(db: Session, tenant_id: int, user_text: str, profile) -> str:
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        return "I'm sorry, I'm having trouble accessing my knowledge base."
 
-    # 1. Check Cache to save LLM cost
-    cached = cache_get(db, tenant_id, user_text)
-    if cached:
-        return cached
+    # Setup NEW Client
+    client = genai.Client(api_key=api_key)
 
-    # 2. Call LLM if not cached
-    system_prompt = f"""
-    You are a polite assistant for {profile.company_name or 'Our Firm'}.
-    Answer the user's question using ONLY this company data:
-    - About: {profile.short_about or 'Premium real estate services.'}
-    - Office: {profile.office_address or 'Details shared upon request.'}
-    - Areas: {profile.areas_covered or 'Strategic high-value locations.'}
-    - Payment: {profile.payment_options or 'Flexible plans available.'}
+    company_name = getattr(profile, "company_name", "Est8Go Partner")
+    about = getattr(profile, "company_about", "A professional real estate agency.")
+    rules = getattr(profile, "payment_rules", "Contact us for details.")
+
+    prompt = f"""
+    You are a professional Nigerian Real Estate Consultant for {company_name}.
     
-    Rule 1: Keep it under 2 sentences.
-    Rule 2: Do not invent rules or properties. If you don't know, say a consultant will clarify.
+    KNOWLEDGE BASE:
+    - About Us: {about}
+    - Payment/Inspection Rules: {rules}
+    
+    USER QUESTION: "{user_text}"
+    
+    INSTRUCTIONS:
+    - Answer using only the information provided above.
+    - Be polite, professional, and use Nigerian property terms.
+    - If you cannot find the answer in the knowledge base, say: "That's a great question. Let me alert a human consultant to provide you with the specific details on that."
+    
+    REPLY IN PLAIN TEXT:
     """
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_text},
-            ],
-            temperature=0.3,
+        # NEW generation method
+        response = client.models.generate_content(
+            model="gemini-2.0-flash", contents=prompt
         )
-        answer = response.choices[0].message.content.strip()
-
-        # 3. Save to Cache for next time
-        cache_set(db, tenant_id, user_text, answer)
-        return answer
-
+        return response.text.strip()
     except Exception as e:
-        logger.error(f"FAQ LLM failed: {e}")
-        return "That's a great question! I'll have a human consultant clarify that for you."
+        logger.error(f"❌ Gemini FAQ Error: {e}")
+        return "I'll have a consultant get back to you shortly with those details."

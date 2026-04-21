@@ -1,26 +1,29 @@
-from sqlalchemy.orm import Session, joinedload  # <--- Add joinedload to your imports
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 
-# These connect this file to your Database and Models
+# Database & Models
 from app.database.db import get_db
 from app.listings.models import Listing
+
+# FIX: Import ListingOut so the public search function works
 from app.listings.schemas import ListingOut
 
-router = APIRouter(prefix="/public", tags=["Public"])
+# Trust Moat Logic
+from app.services.trust_engine import calculate_confidence_score, get_trust_label
 
-# This looks for the 'templates' folder we created
+router = APIRouter(prefix="/public", tags=["Public"])
 templates = Jinja2Templates(directory="templates")
 
 
-# 1. THE BOT'S ENDPOINT (Returns JSON data for WhatsApp/Instagram)
+# --- 1. THE BOT'S SEARCH ENGINE ---
 @router.get("/listings/{tenant_id}", response_model=List[ListingOut])
 def get_public_listings(tenant_id: int, db: Session = Depends(get_db)):
     """
-    CORE PRINCIPLE: Trust-first.
-    Only returns listings that have been VERIFIED.
+    Used by the WhatsApp/IG Bot to find matched properties.
+    CORE PRINCIPLE: Only returns 'verified' listings.
     """
     return (
         db.query(Listing)
@@ -29,12 +32,15 @@ def get_public_listings(tenant_id: int, db: Session = Depends(get_db)):
     )
 
 
-# 2. THE INVESTOR'S ENDPOINT (The 'View More' Page with Swiper.js)
+# --- 2. THE INVESTOR'S SHOWROOM ---
 @router.get("/property/{listing_id}", response_class=HTMLResponse)
 async def get_property_page(
     request: Request, listing_id: int, db: Session = Depends(get_db)
 ):
-    # The 'options(joinedload(...))' is the secret fix for the 500 error
+    """
+    The Swiper.js page with the dynamic Confidence Score.
+    """
+    # Uses joinedload to ensure images are ready for the carousel
     listing = (
         db.query(Listing)
         .options(joinedload(Listing.images))
@@ -45,6 +51,18 @@ async def get_property_page(
     if not listing:
         raise HTTPException(status_code=404, detail="Property not found")
 
+    # Calculate real-time trust signals
+    score = calculate_confidence_score(listing)
+    trust = get_trust_label(score)
+
     return templates.TemplateResponse(
-        request, "property_detail.html", {"request": request, "listing": listing}
+        "property_detail.html",
+        {
+            "request": request,
+            "listing": listing,
+            "trust_score": score,
+            "trust_icon": trust["icon"],
+            "trust_text": trust["text"],
+            "trust_color": trust["color"],
+        },
     )

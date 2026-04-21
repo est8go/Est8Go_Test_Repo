@@ -1,3 +1,7 @@
+
+.venv/
+venv/
+
 # Security
 .env
 backend/.env
