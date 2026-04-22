@@ -1,28 +1,24 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
-from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.database.base import Base
-
-if TYPE_CHECKING:
-    from app.company_profiles.models import CompanyProfile
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import relationship  # <--- Ensure this is imported
+from app.database.db import Base
 
 
 class Tenant(Base):
     __tablename__ = "tenants"
+    __table_args__ = {"extend_existing": True}
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    plan = Column(String(50), default="pilot")
 
-    # subscription plan: free | pro
-    plan: Mapped[str] = mapped_column(String(20), nullable=False, default="free")
+    # 1. THE PROFILE LINK (One-to-One)
+    # This connects the Tenant to their Mission, Vision, and AI Tone.
+    profile = relationship("CompanyProfile", back_populates="tenant", uselist=False)
 
-    profile: Mapped["CompanyProfile"] = relationship(
-        "CompanyProfile",
-        back_populates="tenant",
-        uselist=False,
-        cascade="all, delete-orphan",
-    )
+    # 2. THE USER LINK (One-to-Many)
+    # This allows the Tenant to have many employees/admins.
+    users = relationship("User", back_populates="tenant")
+
+    # 3. THE LISTINGS LINK (One-to-Many)
+    # This allows the Tenant to own many properties/houses.
+    listings = relationship("Listing", back_populates="tenant")
