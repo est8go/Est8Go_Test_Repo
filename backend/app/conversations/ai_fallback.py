@@ -58,7 +58,7 @@ def answer_company_faq(db: Session, tenant_id: int, user_text: str, profile) -> 
     try:
         # NEW generation method
         response = client.models.generate_content(
-            model="gemini-2.0-flash", contents=prompt
+            model="gemini-1.5-flash", contents=prompt
         )
         return response.text.strip()
     except Exception as e:

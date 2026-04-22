@@ -28,7 +28,7 @@ def extract_preferences(text: str, current_data: dict) -> dict:
     try:
         # The NEW way to generate content
         response = client.models.generate_content(
-            model="gemini-2.0-flash", contents=prompt
+            model="gemini-1.5-flash", contents=prompt
         )
 
         cleaned_text = response.text.replace("```json", "").replace("```", "").strip()
