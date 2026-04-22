@@ -1,6 +1,6 @@
 import os
 import logging
-from google import genai  # <--- NEW import
+import google.generativeai as genai
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
@@ -29,38 +29,20 @@ def is_company_faq(text: str) -> bool:
 def answer_company_faq(db: Session, tenant_id: int, user_text: str, profile) -> str:
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
-        return "I'm sorry, I'm having trouble accessing my knowledge base."
+        return "I'm having trouble accessing my knowledge base."
 
-    # Setup NEW Client
-    client = genai.Client(api_key=api_key)
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel("gemini-1.5-flash")
 
     company_name = getattr(profile, "company_name", "Est8Go Partner")
     about = getattr(profile, "company_about", "A professional real estate agency.")
     rules = getattr(profile, "payment_rules", "Contact us for details.")
 
-    prompt = f"""
-    You are a professional Nigerian Real Estate Consultant for {company_name}.
-    
-    KNOWLEDGE BASE:
-    - About Us: {about}
-    - Payment/Inspection Rules: {rules}
-    
-    USER QUESTION: "{user_text}"
-    
-    INSTRUCTIONS:
-    - Answer using only the information provided above.
-    - Be polite, professional, and use Nigerian property terms.
-    - If you cannot find the answer in the knowledge base, say: "That's a great question. Let me alert a human consultant to provide you with the specific details on that."
-    
-    REPLY IN PLAIN TEXT:
-    """
+    prompt = f"Consultant for {company_name}. Knowledge: {about}. Rules: {rules}. Question: {user_text}. Reply politely in Nigerian terms."
 
     try:
-        # NEW generation method
-        response = client.models.generate_content(
-            model="gemini-1.5-flash", contents=prompt
-        )
+        response = model.generate_content(prompt)
         return response.text.strip()
     except Exception as e:
-        logger.error(f"❌ Gemini FAQ Error: {e}")
-        return "I'll have a consultant get back to you shortly with those details."
+        logger.error(f"❌ FAQ Error: {e}")
+        return "A consultant will provide you with those details shortly."
