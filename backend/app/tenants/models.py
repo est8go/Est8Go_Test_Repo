@@ -11,14 +11,7 @@ class Tenant(Base):
     name = Column(String(255), nullable=False)
     plan = Column(String(50), default="pilot")
 
-    # Robust Relationships using string names to avoid circular imports
-    profile = relationship(
-        "CompanyProfile",
-        back_populates="tenant",
-        uselist=False,
-        cascade="all, delete-orphan",
-    )
-    users = relationship("User", back_populates="tenant", cascade="all, delete-orphan")
-    listings = relationship(
-        "Listing", back_populates="tenant", cascade="all, delete-orphan"
-    )
+    # String-based relationships are more stable for multi-folder projects
+    profile = relationship("CompanyProfile", back_populates="tenant", uselist=False)
+    users = relationship("User", back_populates="tenant")
+    listings = relationship("Listing", back_populates="tenant")

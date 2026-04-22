@@ -8,15 +8,14 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# 1. Setup the Engine
-engine = create_engine(DATABASE_URL)
+# Connect to Supabase
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# 2. The Master Base (All models MUST use this)
+# The Master Base
 Base = declarative_base()
 
 
-# 3. Simple Dependency
 def get_db():
     db = SessionLocal()
     try:

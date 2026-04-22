@@ -8,8 +8,11 @@ class User(Base):
     __table_args__ = {"extend_existing": True}
 
     id = Column(Integer, primary_key=True, index=True)
-    # This is the 'Foreign Key' the error was complaining about:
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), index=True)
+
+    # CRITICAL: This is the Foreign Key that points to tenants.id
+    tenant_id = Column(
+        Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False
+    )
 
     email = Column(String(255), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
