@@ -1,6 +1,6 @@
 import os
 import logging
-import google.generativeai as genai
+from openai import OpenAI
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
@@ -27,22 +27,30 @@ def is_company_faq(text: str) -> bool:
 
 
 def answer_company_faq(db: Session, tenant_id: int, user_text: str, profile) -> str:
-    api_key = os.getenv("GOOGLE_API_KEY")
+    api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         return "I'm having trouble accessing my knowledge base."
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    client = OpenAI(api_key=api_key)
 
     company_name = getattr(profile, "company_name", "Est8Go Partner")
     about = getattr(profile, "company_about", "A professional real estate agency.")
     rules = getattr(profile, "payment_rules", "Contact us for details.")
 
-    prompt = f"Consultant for {company_name}. Knowledge: {about}. Rules: {rules}. Question: {user_text}. Reply politely in Nigerian terms."
+    prompt = f"""
+    You are a professional Nigerian Real Estate Consultant for {company_name}.
+    KNOWLEDGE BASE:
+    - About Us: {about}
+    - Payment/Inspection Rules: {rules}
+    USER QUESTION: "{user_text}"
+    Reply politely in plain text using Nigerian property terms.
+    """
 
     try:
-        response = model.generate_content(prompt)
-        return response.text.strip()
+        response = client.chat.completions.create(
+            model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}]
+        )
+        return response.choices[0].message.content.strip()
     except Exception as e:
-        logger.error(f"❌ FAQ Error: {e}")
-        return "A consultant will provide you with those details shortly."
+        logger.error(f"❌ OpenAI FAQ Error: {e}")
+        return "I'll have a consultant get back to you shortly with those details."
