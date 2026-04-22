@@ -1,11 +1,14 @@
 from dotenv import load_dotenv
 
-load_dotenv()  # This MUST stay here to load your keys first
+load_dotenv()  # 1. Load keys first (MUST be at the top)
 
 from fastapi import FastAPI  # noqa: E402
-import app.models_registry  # noqa: F401, E402
+import app.models_registry  # noqa: E402
 
-# Import Routers
+# 2. Register all models (This uses the registry so Pylance is happy)
+app.models_registry.register_all_models()
+
+# 3. Import Routers (We add noqa: E402 to satisfy the import-order rule)
 from app.auth.router import router as auth_router  # noqa: E402
 from app.users.router import router as users_router  # noqa: E402
 from app.tenants.router import router as tenants_router  # noqa: E402
@@ -20,7 +23,8 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Connect the Routers
+# 4. Connect (Include) all routers so they are 'Accessed'
+# This removes the "not accessed" warnings from Pylance/Ruff
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(tenants_router)
@@ -32,4 +36,9 @@ app.include_router(whatsapp_router)
 
 @app.get("/")
 def root():
-    return {"message": "est8go Service Limited API is Live", "docs": "/docs"}
+    """Health check for est8go Service Limited."""
+    return {
+        "message": "est8go Service Limited API is Live",
+        "status": "Healthy",
+        "docs": "/docs",
+    }
