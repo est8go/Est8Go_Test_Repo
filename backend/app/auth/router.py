@@ -41,11 +41,11 @@ def login(
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Account is inactive.")
 
-    # 4. THE FIX: Generate Token with User ID and Tenant ID
-    # This matches the new signature: create_access_token(user_id, tenant_id)
-    access_token = create_access_token(user_id=user.id, tenant_id=user.tenant_id)
+    # Create token
+    token_str = create_access_token(email=user.email, tenant_id=user.tenant_id)
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    # Return the token string (Pylance warning fixed)
+    return {"access_token": token_str, "token_type": "bearer"}
 
 
 # ---------------------------------------------------------
