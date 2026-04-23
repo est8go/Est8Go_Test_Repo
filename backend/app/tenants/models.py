@@ -11,7 +11,19 @@ class Tenant(Base):
     name = Column(String(255), nullable=False)
     plan = Column(String(50), default="pilot")
 
-    # String-based relationships are more stable for multi-folder projects
-    profile = relationship("CompanyProfile", back_populates="tenant", uselist=False)
-    users = relationship("User", back_populates="tenant")
-    listings = relationship("Listing", back_populates="tenant")
+    # String-based relationships are most stable for multi-tenant apps
+    profile = relationship(
+        "CompanyProfile",
+        back_populates="tenant",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    users = relationship("User", back_populates="tenant", cascade="all, delete-orphan")
+    listings = relationship(
+        "Listing", back_populates="tenant", cascade="all, delete-orphan"
+    )
+
+    # ADD THIS LINE: Connects messages to tenants
+    messages = relationship(
+        "Message", back_populates="tenant", cascade="all, delete-orphan"
+    )

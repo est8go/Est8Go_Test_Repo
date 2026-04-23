@@ -1,7 +1,8 @@
 # app/models_registry.py
+import logging
 from sqlalchemy.orm import configure_mappers
 
-# 1. Import all models
+# 1. THE CRITICAL ORDER: Tenants must come before the things that reference them
 import app.tenants.models
 import app.company_profiles.models
 import app.users.models
@@ -9,16 +10,16 @@ import app.listings.models
 import app.conversations.models
 import app.messages.models
 
+logger = logging.getLogger(__name__)
+
 
 def register_all_models():
     """
-    Ensures all models are loaded and relationships are verified.
+    Detailed Registry: Ensures all models are loaded into memory,
+    silences linter warnings, and wires cross-folder relationships.
     """
     try:
-        # THE MAGIC LINE: This forces SQLAlchemy to build the 'tenant' property
-        # on the Listing model immediately.
-        configure_mappers()
-
+        # A. THE SILENCER: Touch each model to prevent 'not accessed' warnings
         models = [
             app.tenants.models,
             app.company_profiles.models,
@@ -27,8 +28,15 @@ def register_all_models():
             app.conversations.models,
             app.messages.models,
         ]
-        print(f"🚀 {len(models)} Premium Models fully wired for est8go.")
+
+        # B. THE HANDSHAKE: Force SQLAlchemy to resolve all 'Tenant' and 'User' names
+        # This fixes the 'InvalidRequestError' and 'NoProperty' errors during login.
+        configure_mappers()
+
+        print(f"✅ {len(models)} Premium Models fully wired and registered for est8go.")
         return True
+
     except Exception as e:
-        print(f"❌ Mapper Configuration Error: {e}")
+        # Detailed error reporting for the Render logs
+        logger.error(f"❌ DATABASE HANDSHAKE FAILED: {e}", exc_info=True)
         return False
