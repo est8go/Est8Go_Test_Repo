@@ -11,7 +11,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 # ---------------------------------------------------------
-# LOGIN ENDPOINT (Premium Safety Version)
+# LOGIN ENDPOINT (Aligned with Multi-tenant Security)
 # ---------------------------------------------------------
 @router.post("/login", response_model=TokenResponse)
 def login(
@@ -19,7 +19,7 @@ def login(
     db: Session = Depends(get_db),
 ):
     """
-    High-performance login with Bcrypt 72-byte safety guard.
+    Premium Login: Generates a token that locks the user to their specific tenant.
     """
     # 1. Find the user
     user = db.query(User).filter(User.email == data.email).first()
@@ -29,30 +29,28 @@ def login(
             status_code=401, detail="The credentials provided do not match our records."
         )
 
-    # 2. VERIFY PASSWORD (With the 72-character safety truncation)
-    # We cut the user's typed password to 72 chars to prevent Bcrypt crashes
-    is_valid = verify_password(data.password[:71], user.hashed_password)
+    # 2. Verify Password (72-byte safety check)
+    is_valid = verify_password(data.password, user.hashed_password)
 
     if not is_valid:
         raise HTTPException(
             status_code=401, detail="The credentials provided do not match our records."
         )
 
-    # 3. Security Checks
+    # 3. Security Status Check
     if not user.is_active:
-        raise HTTPException(
-            status_code=400, detail="Account is inactive. Please contact support."
-        )
+        raise HTTPException(status_code=400, detail="Account is inactive.")
 
-    # 4. Success: Generate Secure JWT Token
-    access_token = create_access_token(subject=user.email)
+    # 4. THE FIX: Generate Token with User ID and Tenant ID
+    # This matches the new signature: create_access_token(user_id, tenant_id)
+    access_token = create_access_token(user_id=user.id, tenant_id=user.tenant_id)
 
     return {"access_token": access_token, "token_type": "bearer"}
 
 
 # ---------------------------------------------------------
-# HELPER: CURRENT USER (Minimal Status Check)
+# MINIMAL STATUS CHECK
 # ---------------------------------------------------------
 @router.get("/me")
 def get_me():
-    return {"status": "Auth system is operational", "security": "72-byte guard active"}
+    return {"status": "Auth system is operational and multi-tenant aware."}
