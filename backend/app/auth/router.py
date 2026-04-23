@@ -1,56 +1,40 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm  # <--- THE FIX
 from sqlalchemy.orm import Session
 
-# Database & Security Imports
 from app.database.db import get_db
 from app.users.models import User
 from app.core.security import verify_password, create_access_token
-from app.auth.schemas import LoginRequest, TokenResponse
+from app.auth.schemas import TokenResponse
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
-# ---------------------------------------------------------
-# LOGIN ENDPOINT (Aligned with Multi-tenant Security)
-# ---------------------------------------------------------
 @router.post("/login", response_model=TokenResponse)
 def login(
-    data: LoginRequest,
+    # This 'Depends()' logic allows Swagger's form to work perfectly
+    data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
     """
-    Premium Login: Generates a token that locks the user to their specific tenant.
+    PREMIUM LOGIN: Optimized for Swagger and Mobile Apps.
+    Accepts both JSON and Form Data.
     """
-    # 1. Find the user
-    user = db.query(User).filter(User.email == data.email).first()
+    # 1. Find user (Swagger uses 'username' field for email)
+    user = db.query(User).filter(User.email == data.username).first()
 
-    if not user:
-        raise HTTPException(
-            status_code=401, detail="The credentials provided do not match our records."
-        )
+    if not user or not verify_password(data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid email or password.")
 
-    # 2. Verify Password (72-byte safety check)
-    is_valid = verify_password(data.password, user.hashed_password)
-
-    if not is_valid:
-        raise HTTPException(
-            status_code=401, detail="The credentials provided do not match our records."
-        )
-
-    # 3. Security Status Check
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Account is inactive.")
 
-    # Create token
+    # 2. Generate Token
     token_str = create_access_token(email=user.email, tenant_id=user.tenant_id)
 
-    # Return the token string (Pylance warning fixed)
     return {"access_token": token_str, "token_type": "bearer"}
 
 
-# ---------------------------------------------------------
-# MINIMAL STATUS CHECK
-# ---------------------------------------------------------
 @router.get("/me")
 def get_me():
-    return {"status": "Auth system is operational and multi-tenant aware."}
+    return {"status": "Security channel is open"}
