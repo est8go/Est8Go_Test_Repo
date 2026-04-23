@@ -1,20 +1,39 @@
 import enum
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Text,
+    DateTime,
+    Boolean,
+    ForeignKey,
+    Float,
+    Enum,
+)
 from sqlalchemy.orm import relationship
 from app.database.db import Base
 
 
+# 1. TRUST STATUS (The Admin Workflow)
 class ListingStatus(str, enum.Enum):
     UNVERIFIED = "unverified"
-    PENDING = "pending_review"
+    PENDING_REVIEW = "pending_review"
     VERIFIED = "verified"
     REJECTED = "rejected"
 
 
+# 2. SOURCE (Company vs Realtor)
 class ListingSource(str, enum.Enum):
     INTERNAL = "internal"
     EXTERNAL = "external"
+
+
+# 3. PROPERTY TIERS (Built vs Prototype vs Land)
+class PropertyStatus(str, enum.Enum):
+    BUILT = "built"
+    OFF_PLAN = "off_plan"  # For Prototypes/3D Renderings
+    LAND = "land"
 
 
 class Listing(Base):
@@ -23,7 +42,7 @@ class Listing(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    # Safe Links: 'use_alter' helps prevent the 'Table not found' error
+    # --- MULTITENANCY & AUDIT ---
     tenant_id = Column(
         Integer,
         ForeignKey("tenants.id", use_alter=True, name="fk_listing_tenant"),
@@ -35,22 +54,36 @@ class Listing(Base):
         nullable=True,
     )
 
-    title = Column(String(255))
-    description = Column(Text)
-    location = Column(String(255))
-    price = Column(Integer)
-    property_type = Column(String(50))
-
-    status = Column(String(50), default=ListingStatus.UNVERIFIED, nullable=False)
-    source = Column(String(20), default=ListingSource.INTERNAL)
-
-    created_at = Column(DateTime, default=datetime.utcnow)
-    verified_at = Column(DateTime, nullable=True)
-    verification_notes = Column(Text, nullable=True)
-
+    # --- THE BRIDGES (The Fix for your Login Error) ---
+    tenant = relationship("Tenant", back_populates="listings")
     images = relationship(
         "ListingImage", back_populates="listing", cascade="all, delete-orphan"
     )
+
+    # --- CORE CONTENT ---
+    title = Column(String(255), nullable=False)
+    description = Column(Text)
+    price = Column(Integer, nullable=False)
+    property_type = Column(String(50))  # Mansion, Duplex, etc.
+
+    # --- DYNAMIC STATUS ---
+    status = Column(String(50), default=ListingStatus.UNVERIFIED)
+    source = Column(String(20), default=ListingSource.INTERNAL)
+    property_status = Column(Enum(PropertyStatus), default=PropertyStatus.BUILT)
+
+    # --- LOCATION MOATS (GPS & NEW SITES) ---
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+    plus_code = Column(String(50), nullable=True)  # Digital Address for 'Bush' sites
+    nearest_landmark = Column(String(255), nullable=True)  # Anchoring
+
+    # --- TRUST MOATS (AI VISION) ---
+    ai_verified_real = Column(Boolean, default=True)
+    ai_audit_report = Column(Text, nullable=True)
+
+    # --- TIMESTAMPS ---
+    created_at = Column(DateTime, default=datetime.utcnow)
+    verified_at = Column(DateTime, nullable=True)
 
 
 class ListingImage(Base):
