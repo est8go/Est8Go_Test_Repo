@@ -46,6 +46,16 @@ def answer_company_faq(db: Session, tenant_id: int, user_text: str, profile) -> 
     Reply politely in plain text using Nigerian property terms.
     """
 
+    prompt = f"""
+    You are {profile.assistant_name}, the {profile.assistant_role} for {profile.company_name}.
+    Tone: {profile.tone}. Emoji Mode: {profile.emoji_mode}.
+
+    OUR PROFILE: {profile.company_about}
+    CONTACT US (Phone/WhatsApp): {profile.phone_whatsapp}
+    LOCATION: {profile.office_address}
+    ...
+    """
+
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}]
