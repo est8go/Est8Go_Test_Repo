@@ -13,14 +13,14 @@ class CompanyProfile(Base):
     # All columns set to nullable=False to enforce your 'No Half-Info' rule
     company_name = Column(String(255), nullable=False)
     company_about = Column(Text, nullable=False)
-    phone_whatsapp = Column(String(50), nullable=False)
+    phone_whatsapp = Column(String(100), nullable=False)
     email = Column(String(100), nullable=False)
     office_address = Column(Text, nullable=False)
     areas_covered = Column(Text, nullable=False)
 
     assistant_name = Column(String(100), nullable=False, default="Assistant")
     assistant_role = Column(String(100), nullable=False, default="Consultant")
-    tone = Column(String(50), nullable=False, default="Professional")
+    tone = Column(String(100), nullable=False, default="Professional")
     emoji_mode = Column(Boolean, nullable=False, default=True)
 
     payment_rules = Column(Text, nullable=False)
