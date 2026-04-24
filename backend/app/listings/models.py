@@ -84,7 +84,7 @@ class Listing(Base):
     verified_at = Column(DateTime, nullable=True)
 
 
-class ListingImage(Base):
+class ListingImage(Base):  # the listing images
     __tablename__ = "listing_images"
     __table_args__ = {"extend_existing": True}
 
