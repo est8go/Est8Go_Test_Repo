@@ -3,13 +3,19 @@ from typing import Optional
 
 
 class CompanyProfileBase(BaseModel):
-    company_name: str
+    """
+    PREMIUM RELAXED SCHEMA: All fields are optional to ensure
+    companies have zero friction during their profile setup.
+    """
+
+    company_name: Optional[str] = None
     company_about: Optional[str] = None
     phone_whatsapp: Optional[str] = None
     email: Optional[str] = None
     office_address: Optional[str] = None
     areas_covered: Optional[str] = None
 
+    # Smart Defaults for the AI Persona
     assistant_name: str = "Assistant"
     assistant_role: str = "Consultant"
     tone: str = "Professional"
@@ -19,13 +25,15 @@ class CompanyProfileBase(BaseModel):
     verification_policy: Optional[str] = None
 
 
-# THE MISSING PIECE: This is what the router was looking for
 class CompanyProfileUpdate(CompanyProfileBase):
-    # We make the name optional during updates
-    company_name: Optional[str] = None
+    """Used for PATCH requests in Swagger."""
+
+    pass
 
 
 class CompanyProfileOut(CompanyProfileBase):
+    """Used for GET responses in Swagger."""
+
     id: int
     tenant_id: int
 
