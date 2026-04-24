@@ -242,7 +242,7 @@ async def handle_incoming_message(data: dict, db: Session):
         if not text_body:
             return
 
-        tenant_id = 1
+        tenant_id = 2
 
         # 1. Fetch or Initialize Conversation
         convo = (
