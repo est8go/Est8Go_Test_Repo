@@ -1,39 +1,51 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
+
+# (Optional is removed because everything is now MANDATORY)
 
 
 class CompanyProfileBase(BaseModel):
     """
-    PREMIUM RELAXED SCHEMA: All fields are optional to ensure
-    companies have zero friction during their profile setup.
+    STRICT DATA CONTRACT: Every company must provide full details
+    to ensure AI consultants have a complete knowledge base.
     """
 
-    company_name: Optional[str] = None
-    company_about: Optional[str] = None
-    phone_whatsapp: Optional[str] = None
-    email: Optional[str] = None
-    office_address: Optional[str] = None
-    areas_covered: Optional[str] = None
+    company_name: str = Field(..., min_length=3, max_length=100)
 
-    # Smart Defaults for the AI Persona
-    assistant_name: str = "Assistant"
-    assistant_role: str = "Consultant"
-    tone: str = "Professional"
-    emoji_mode: bool = True
+    # THE CAP: Max 1000 characters to keep the bot's 'About' section punchy
+    company_about: str = Field(
+        ..., max_length=1000, description="Full bio and mission statement"
+    )
 
-    payment_rules: Optional[str] = None
-    verification_policy: Optional[str] = None
+    phone_whatsapp: str = Field(
+        ..., min_length=10, description="Primary WhatsApp contact"
+    )
+    email: str = Field(..., description="Official company email")
+    office_address: str = Field(..., description="Physical HQ address")
+    areas_covered: str = Field(
+        ..., description="Districts covered (e.g. Maitama, Guzape)"
+    )
+
+    # AI Persona Requirements
+    assistant_name: str = Field(..., description="The name assigned to the bot")
+    assistant_role: str = Field(
+        ..., description="The job title of the bot (e.g. Senior Property Expert)"
+    )
+    tone: str = Field(..., description="Professional, Friendly, or Formal")
+    emoji_mode: bool = Field(default=True)
+
+    payment_rules: str = Field(..., description="Instructions for booking and payments")
+    verification_policy: str = Field(
+        ..., description="How the firm verifies its listings"
+    )
 
 
 class CompanyProfileUpdate(CompanyProfileBase):
-    """Used for PATCH requests in Swagger."""
+    """Ensures even updates maintain the 'No Half-Info' rule."""
 
     pass
 
 
 class CompanyProfileOut(CompanyProfileBase):
-    """Used for GET responses in Swagger."""
-
     id: int
     tenant_id: int
 
