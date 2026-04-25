@@ -47,10 +47,14 @@ class ListingOut(ListingBase):
         from_attributes = True
 
 
-# Add this to app/listings/schemas.py if it's missing
+# Inside backend/app/listings/schemas.py
+
+
 class ListingUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     location: Optional[str] = None
     price: Optional[int] = None
     property_type: Optional[str] = None
+    # ADD THIS LINE: This allows the Admin to change the status
+    status: Optional[str] = None
