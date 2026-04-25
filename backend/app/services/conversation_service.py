@@ -37,7 +37,9 @@ def _find_matching_listings(db: Session, tenant_id: int, data: dict) -> List[Lis
     )
 
     if data.get("location"):
-        query = query.filter(Listing.location.ilike(f"%{data['location']}%"))
+        # We strip common words like 'abuja' to match the specific district
+        loc_search = data["location"].lower().replace("abuja", "").strip()
+        query = query.filter(Listing.location.ilike(f"%{loc_search}%"))
 
     if data.get("property_type"):
         query = query.filter(Listing.property_type.ilike(f"%{data['property_type']}%"))
@@ -271,9 +273,13 @@ async def handle_incoming_message(data: dict, db: Session):
             matches = _find_matching_listings(db, tenant_id, prefs)
             if matches:
                 carousel_cards = prepare_meta_carousel(matches)
-                await send_meta_carousel(sender_id, carousel_cards)
-                await send_meta_message(sender_id, pipeline_res["reply"])
-                return
+            # 1. Send text summary first (The Backup)
+            summary = f"🏠 I found a match: *{matches[0].title}*\n💰 Price: ₦{matches[0].price:,}\n📍 Location: {matches[0].location}\n🔗 View Photos: https://est8go-api.onrender.com/public/property/{matches[0].id}"
+            await send_meta_message(sender_id, summary)
+
+            # 2. Try to send the visual cards
+            await send_meta_carousel(sender_id, carousel_cards)
+            return
 
         # 4. Standard Response
         await send_meta_message(sender_id, pipeline_res["reply"])

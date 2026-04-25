@@ -38,6 +38,21 @@ def answer_company_faq(db: Session, tenant_id: int, user_text: str, profile) -> 
     rules = getattr(profile, "payment_rules", "Contact us for details.")
 
     prompt = f"""
+    You are {profile.assistant_name}, a property consultant for {profile.company_name}.
+    Maintain a {profile.tone} tone. No essays. Be punchy and professional.
+    
+    KNOWLEDGE BASE: {profile.company_about}
+    CONTACT: {profile.phone_whatsapp}
+    
+    USER QUESTION: "{user_text}"
+    
+    INSTRUCTIONS:
+    - Answer in 2-3 short sentences maximum.
+    - Use bullet points only if necessary.
+    - End by asking if they want to see properties in their budget.
+    """
+
+    prompt = f"""
     You are a professional Nigerian Real Estate Consultant for {company_name}.
     KNOWLEDGE BASE:
     - About Us: {about}

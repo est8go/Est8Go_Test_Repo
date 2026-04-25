@@ -37,10 +37,6 @@ def get_public_listings(tenant_id: int, db: Session = Depends(get_db)):
 async def get_property_page(
     request: Request, listing_id: int, db: Session = Depends(get_db)
 ):
-    """
-    The Swiper.js page with the dynamic Confidence Score.
-    """
-    # Uses joinedload to ensure images are ready for the carousel
     listing = (
         db.query(Listing)
         .options(joinedload(Listing.images))
@@ -51,18 +47,16 @@ async def get_property_page(
     if not listing:
         raise HTTPException(status_code=404, detail="Property not found")
 
-    # Calculate real-time trust signals
     score = calculate_confidence_score(listing)
     trust = get_trust_label(score)
 
-    return templates.TemplateResponse(
-        "property_detail.html",
-        {
-            "request": request,
-            "listing": listing,
-            "trust_score": score,
-            "trust_icon": trust["icon"],
-            "trust_text": trust["text"],
-            "trust_color": trust["color"],
-        },
-    )
+    # We define the context clearly as a separate variable to prevent the 'tuple' error
+    context = {
+        "request": request,
+        "listing": listing,
+        "trust_score": score,
+        "trust_icon": trust["icon"],
+        "trust_text": trust["text"],
+        "trust_color": trust["color"],
+    }
+    return templates.TemplateResponse("property_detail.html", context)
