@@ -97,12 +97,11 @@ async def upload_single_photo(
 def update_listing(
     listing_id: int,
     payload: ListingUpdate,
-    x_tenant_id: int = Header(
-        ..., alias="X-Tenant-Id"
-    ),  # <--- This forces the box in Swagger
+    x_tenant_id: int = Header(..., alias="X-Tenant-Id"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # 1. Find the property
     listing = (
         db.query(Listing)
         .filter(Listing.id == listing_id, Listing.tenant_id == x_tenant_id)
@@ -112,8 +111,18 @@ def update_listing(
     if not listing:
         raise HTTPException(status_code=404, detail="Listing not found")
 
-    for key, value in payload.model_dump(exclude_unset=True).items():
+    # 2. Extract the data being sent from Swagger
+    update_data = payload.model_dump(exclude_unset=True)
+
+    # 3. Apply the changes
+    for key, value in update_data.items():
         setattr(listing, key, value)
+
+    # 4. SMART SECURITY RULE (The Fix):
+    # Only reset to 'unverified' if the user is NOT sending a specific status.
+    # This allows you to verify the property without the code overriding you.
+    if "status" not in update_data:
+        listing.status = "unverified"
 
     db.commit()
     db.refresh(listing)
