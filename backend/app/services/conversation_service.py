@@ -190,8 +190,11 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
 # ---------------------------------------------------------
 async def handle_incoming_message(data: dict, db: Session):
     try:
+        # 1. PARSE META DATA
         entry = data.get("entry", [{}])[0]
         value = entry.get("changes", [{}])[0].get("value", {})
+
+        # Capture User Name
         contacts = value.get("contacts", [])
         whatsapp_name = (
             contacts[0].get("profile", {}).get("name", "there") if contacts else "there"
@@ -200,28 +203,42 @@ async def handle_incoming_message(data: dict, db: Session):
         messages = value.get("messages", [])
         if not messages:
             return
+
         msg = messages[0]
         sender_id = msg.get("from")
         tenant_id = 1
 
-        # A. HANDLE BUTTONS (ACCESSED: Realtor Lead Alerts)
-        btn_payload = msg.get("button", {}).get("payload", "") or msg.get(
-            "postback", {}
-        ).get("payload", "")
-        if "INTERESTED_IN_" in btn_payload:
-            list_id = int(btn_payload.split("_")[-1])
-            await alert_realtor_of_lead(db, list_id, sender_id)
+        # ---------------------------------------------------------
+        # 2. BUTTON SOCKET: Handle "I'm Interested" (Clears the Warning)
+        # ---------------------------------------------------------
+        # This catches when a user clicks a button on the carousel
+        btn_data = msg.get("button", {}) or msg.get("postback", {})
+        payload = btn_data.get("payload", "")
+
+        if "INTERESTED_IN_" in payload:
+            listing_id = int(payload.split("_")[-1])
+            # ACTIVE CALL: This uses the alert_realtor_of_lead tool
+            await alert_realtor_of_lead(db, listing_id, sender_id)
             await send_meta_message(
                 sender_id,
-                "🤝 Excellent decision. I've alerted the verified agent; they will reach out shortly.",
+                f"🤝 Excellent choice, {whatsapp_name}! I've notified the verified agent for this property. They will reach out to you on this chat shortly.",
             )
             return
 
-        # B. HANDLE TEXT
+        # ---------------------------------------------------------
+        # 3. TEXT SOCKET: Handle Natural Language
+        # ---------------------------------------------------------
         text_body = msg.get("text", {}).get("body", "")
+        if not text_body:
+            return
+
+        # Fetch or Start Conversation
         convo = (
             db.query(Conversation)
-            .filter(Conversation.external_user_id == sender_id)
+            .filter(
+                Conversation.external_user_id == sender_id,
+                Conversation.tenant_id == tenant_id,
+            )
             .first()
         )
 
@@ -237,45 +254,33 @@ async def handle_incoming_message(data: dict, db: Session):
                 convo.display_name = whatsapp_name
                 db.commit()
 
-        # Resume Welcome
-        from datetime import datetime, timedelta
-
-        if convo.updated_at and convo.updated_at < (
-            datetime.utcnow() - timedelta(hours=4)
-        ):
-            await send_meta_message(
-                sender_id,
-                f"Welcome back, {convo.display_name}! Should we continue, or start a *'New search'*?",
-            )
-
-        # Run State Machine
+        # Run State Machine (AI Brain)
         pipe = add_message_service(convo_id, text_body, tenant_id, db)
         prefs = pipe.get("prefs", {})
 
-        # C. DELIVERY
-        if pipe.get("trigger_search") or (
-            prefs.get("location") and prefs.get("property_type")
+        # 4. SEARCH & DELIVERY (With Index Safety Guard)
+        if prefs.get("location") and (
+            prefs.get("budget") or prefs.get("property_type")
         ):
             matches = _find_matching_listings(db, tenant_id, prefs)
-            if matches:
-                carousel_cards = prepare_meta_carousel(matches)
 
-            # This line now works because we imported 'calculate_confidence_score'
-            trust_pct = calculate_confidence_score(matches[0])
+            # Use len(matches) to prevent the "List Index Out of Range" crash
+            if matches and len(matches) > 0:
+                trust = calculate_confidence_score(matches[0])
+                summary = f"✨ *Excellent news, {convo.display_name}!* I found a verified match ({trust}% Trusted). View Full Details: https://est8go-api.onrender.com/public/property/{matches[0].id}"
+                await send_meta_message(sender_id, summary)
+                await send_meta_carousel(sender_id, prepare_meta_carousel(matches))
+                return
+            else:
+                # Professional 'No Match' response
+                await send_meta_message(
+                    sender_id,
+                    f"I'm searching in {prefs.get('location')} for you, {convo.display_name}. We don't have a direct match this second, but I'll alert you as soon as a verified property is listed there.",
+                )
+                return
 
-            summary = (
-                f"✨ *Premium Match Found!*\n\n"
-                f"🏠 *{matches[0].title}*\n"
-                f"💰 Price: ₦{matches[0].price:,}\n"
-                f"📍 Location: {matches[0].location}\n\n"
-                f"This property has an Est8Go Trust Score of **{trust_pct}%**. "
-                f"Would you like to view the full gallery? 👇"
-            )
-            await send_meta_message(sender_id, summary)
-            await send_meta_carousel(sender_id, carousel_cards)
-            return
-
+        # Default AI reply
         await send_meta_message(sender_id, pipe["reply"])
 
     except Exception as e:
-        logger.error(f"❌ BRIDGE ERROR: {e}", exc_info=True)
+        logger.error(f"❌ PREMIUM BRIDGE ERROR: {e}", exc_info=True)

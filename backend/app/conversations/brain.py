@@ -8,29 +8,17 @@ logger = logging.getLogger(__name__)
 
 def extract_preferences(text: str, current_data: dict) -> dict:
     api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key or api_key == "not_using_this_yet":
-        logger.error("❌ OPENAI_API_KEY is missing or placeholder")
-        return current_data
-
     client = OpenAI(api_key=api_key)
 
-    # --- THE 'ACCURACY' SOCKET ---
+    # THE MEMORY SOCKET: We pass the old data and tell it NOT to delete anything
     system_instruction = """
-    You are a specialized Nigerian Real Estate Data Extractor.
-    Your only job is to turn natural chat into clean data.
+    You are a Nigerian Real Estate Data Extractor. 
     
-    RULES:
-    - If you see "Kabusa", "Maitama", "Guzape", extract them as 'location'.
-    - If you see "million", "billion", "k", "m", convert them to full numbers (e.g., 5m -> 5000000).
-    - If the user provides a budget range (e.g., 5m-10m), extract the HIGHER number.
+    CRITICAL RULE: Do NOT erase any existing data in 'current_data' unless the user explicitly changes it. 
+    If the user says "land" and the intent was already "invest", the output must keep "invest".
     
-    RETURN JSON ONLY:
-    {
-      "intent": "buy" | "rent" | "invest" | null,
-      "property_type": "land" | "mansion" | "apartment" | "duplex" | null,
-      "location": string | null,
-      "budget": number | null
-    }
+    Convert all numbers (5m -> 5000000).
+    Extract: intent, property_type, location, budget.
     """
 
     try:
@@ -40,13 +28,12 @@ def extract_preferences(text: str, current_data: dict) -> dict:
                 {"role": "system", "content": system_instruction},
                 {
                     "role": "user",
-                    "content": f"Existing Data: {json.dumps(current_data)}\nUser says: '{text}'",
+                    "content": f"CURRENT MEMORY: {json.dumps(current_data)}\nUSER INPUT: '{text}'",
                 },
             ],
-            response_format={"type": "json_object"},  # Forces clean JSON
+            response_format={"type": "json_object"},
         )
-
         return json.loads(response.choices[0].message.content)
     except Exception as e:
-        logger.error(f"❌ OpenAI Extraction Error: {e}")
+        logger.error(f"❌ AI Extraction Error: {e}")
         return current_data
