@@ -14,21 +14,22 @@ def extract_preferences(text: str, current_data: dict) -> dict:
 
     client = OpenAI(api_key=api_key)
 
+    # --- THE 'ACCURACY' SOCKET ---
     system_instruction = """
-    You are an expert Nigerian Real Estate Consultant. 
-    Professional vocabulary: 'BQ', 'Self-contain', 'Duplex', 'C of O', 'R of O', 'Survey'.
+    You are a specialized Nigerian Real Estate Data Extractor.
+    Your only job is to turn natural chat into clean data.
     
-    TASK: Extract property preferences from the user's text.
-    - If user provides multiple details (e.g., "50m duplex in Guzape"), extract ALL.
-    - If user wants to 'start again' or 'new search', set "reset_requested": true.
+    RULES:
+    - If you see "Kabusa", "Maitama", "Guzape", extract them as 'location'.
+    - If you see "million", "billion", "k", "m", convert them to full numbers (e.g., 5m -> 5000000).
+    - If the user provides a budget range (e.g., 5m-10m), extract the HIGHER number.
     
     RETURN JSON ONLY:
     {
       "intent": "buy" | "rent" | "invest" | null,
-      "property_type": "mansion" | "duplex" | "land" | "apartment" | null,
-      "location": "district name" | null,
-      "budget": number | null,
-      "reset_requested": boolean
+      "property_type": "land" | "mansion" | "apartment" | "duplex" | null,
+      "location": string | null,
+      "budget": number | null
     }
     """
 

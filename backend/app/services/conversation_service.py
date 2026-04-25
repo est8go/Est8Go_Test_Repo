@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 import logging
 from typing import Optional, List
+from app.services.trust_engine import calculate_confidence_score
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
@@ -273,11 +274,19 @@ async def handle_incoming_message(data: dict, db: Session):
             matches = _find_matching_listings(db, tenant_id, prefs)
             if matches:
                 carousel_cards = prepare_meta_carousel(matches)
-            # 1. Send text summary first (The Backup)
-            summary = f"🏠 I found a match: *{matches[0].title}*\n💰 Price: ₦{matches[0].price:,}\n📍 Location: {matches[0].location}\n🔗 View Photos: https://est8go-api.onrender.com/public/property/{matches[0].id}"
-            await send_meta_message(sender_id, summary)
 
-            # 2. Try to send the visual cards
+            # This line now works because we imported 'calculate_confidence_score'
+            trust_pct = calculate_confidence_score(matches[0])
+
+            summary = (
+                f"✨ *Premium Match Found!*\n\n"
+                f"🏠 *{matches[0].title}*\n"
+                f"💰 Price: ₦{matches[0].price:,}\n"
+                f"📍 Location: {matches[0].location}\n\n"
+                f"This property has an Est8Go Trust Score of **{trust_pct}%**. "
+                f"Would you like to view the full gallery? 👇"
+            )
+            await send_meta_message(sender_id, summary)
             await send_meta_carousel(sender_id, carousel_cards)
             return
 

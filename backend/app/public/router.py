@@ -37,6 +37,11 @@ def get_public_listings(tenant_id: int, db: Session = Depends(get_db)):
 async def get_property_page(
     request: Request, listing_id: int, db: Session = Depends(get_db)
 ):
+    """
+    PREMIUM SHOWROOM: Uses the modern 'Keyword' style to prevent
+    the 'tuple as dict key' crash.
+    """
+    # 1. Fetch house + images
     listing = (
         db.query(Listing)
         .options(joinedload(Listing.images))
@@ -47,16 +52,21 @@ async def get_property_page(
     if not listing:
         raise HTTPException(status_code=404, detail="Property not found")
 
+    # 2. Calculate Moat Logic
     score = calculate_confidence_score(listing)
     trust = get_trust_label(score)
 
-    # We define the context clearly as a separate variable to prevent the 'tuple' error
-    context = {
-        "request": request,
-        "listing": listing,
-        "trust_score": score,
-        "trust_icon": trust["icon"],
-        "trust_text": trust["text"],
-        "trust_color": trust["color"],
-    }
-    return templates.TemplateResponse("property_detail.html", context)
+    # 3. THE BULLETPROOF RETURN
+    # We pass 'request=request' and 'context={...}' as named arguments.
+    # This is the modern standard and fixes the 500 error.
+    return templates.TemplateResponse(
+        request=request,
+        name="property_detail.html",
+        context={
+            "listing": listing,
+            "trust_score": score,
+            "trust_icon": trust.get("icon", "🟢"),
+            "trust_text": trust.get("text", "Verified"),
+            "trust_color": trust.get("color", "green"),
+        },
+    )

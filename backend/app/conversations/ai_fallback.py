@@ -33,42 +33,30 @@ def answer_company_faq(db: Session, tenant_id: int, user_text: str, profile) -> 
 
     client = OpenAI(api_key=api_key)
 
-    company_name = getattr(profile, "company_name", "Est8Go Partner")
-    about = getattr(profile, "company_about", "A professional real estate agency.")
-    rules = getattr(profile, "payment_rules", "Contact us for details.")
+    # We extract these and USE them in the prompt below (clearing the warnings)
+    c_name = getattr(profile, "company_name", "Est8Go Partner")
+    c_about = getattr(profile, "company_about", "A professional real estate agency.")
+    c_rules = getattr(profile, "payment_rules", "Contact us for details.")
+    c_phone = getattr(profile, "phone_whatsapp", "our official line")
 
+    # THE REFINED PROMPT SOCKET
     prompt = f"""
-    You are {profile.assistant_name}, a property consultant for {profile.company_name}.
-    Maintain a {profile.tone} tone. No essays. Be punchy and professional.
+    SYSTEM: You are the Senior Consultant for {c_name}.
+    STRICT RULE: Do NOT write emails/letters. No "Dear Stakeholders".
+    STRICT RULE: Answer in 2-3 SHORT sentences.
     
-    KNOWLEDGE BASE: {profile.company_about}
-    CONTACT: {profile.phone_whatsapp}
+    OUR PROFILE: {c_about}
+    OUR RULES: {c_rules}
+    CONTACT: {c_phone}
     
     USER QUESTION: "{user_text}"
     
     INSTRUCTIONS:
-    - Answer in 2-3 short sentences maximum.
-    - Use bullet points only if necessary.
-    - End by asking if they want to see properties in their budget.
-    """
-
-    prompt = f"""
-    You are a professional Nigerian Real Estate Consultant for {company_name}.
-    KNOWLEDGE BASE:
-    - About Us: {about}
-    - Payment/Inspection Rules: {rules}
-    USER QUESTION: "{user_text}"
-    Reply politely in plain text using Nigerian property terms.
-    """
-
-    prompt = f"""
-    You are {profile.assistant_name}, the {profile.assistant_role} for {profile.company_name}.
-    Tone: {profile.tone}. Emoji Mode: {profile.emoji_mode}.
-
-    OUR PROFILE: {profile.company_about}
-    CONTACT US (Phone/WhatsApp): {profile.phone_whatsapp}
-    LOCATION: {profile.office_address}
-    ...
+    1. Use the info above to answer directly.
+    2. Use a {profile.tone} tone.
+    3. If emoji_mode is True, use 1-2 emojis.
+    
+    REPLY AS A WHATSAPP CHAT MESSAGE:
     """
 
     try:
@@ -76,6 +64,10 @@ def answer_company_faq(db: Session, tenant_id: int, user_text: str, profile) -> 
             model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}]
         )
         return response.choices[0].message.content.strip()
+    except Exception as e:
+        logger.error(f"❌ OpenAI FAQ Error: {e}")
+        return f"Thanks for asking! You can reach {c_name} directly at {c_phone} for full details."
+
     except Exception as e:
         logger.error(f"❌ OpenAI FAQ Error: {e}")
         return "I'll have a consultant get back to you shortly with those details."
