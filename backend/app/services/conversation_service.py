@@ -8,14 +8,20 @@ from sqlalchemy.orm import Session
 from app.company_profiles.models import CompanyProfile
 from app.conversations.models import Conversation, ConversationMessage
 from app.listings.models import Listing
+from app.services.tenant_service import get_tenant_profile
+from app.conversations.responses import get_response
 
-# 2. Brain & Template Helpers
+# 2. Brain & Template Helpers (Ensure these files exist)
 from app.conversations.templates import is_filler, get_next_question
 from app.conversations.brain import extract_preferences
 from app.conversations.ai_fallback import is_company_faq, answer_company_faq
 
-# 3. External Senders
-from app.services.meta_sender_service import send_meta_carousel, send_meta_message
+# 3. External Senders & Trust
+from app.services.meta_sender_service import (
+    send_meta_message,
+    send_meta_carousel,
+    send_whatsapp_message,  # If used interchangeably with send_meta_message
+)
 from app.services.notification_service import alert_realtor_of_lead
 from app.services.trust_engine import calculate_confidence_score
 
@@ -33,6 +39,7 @@ def _find_matching_listings(db: Session, tenant_id: int, data: dict) -> List[Lis
     )
 
     if data.get("location"):
+        # Clean location to prevent strict match failures
         loc_search = data["location"].lower().replace("abuja", "").strip()
         query = query.filter(Listing.location.ilike(f"%{loc_search}%"))
 
@@ -40,8 +47,11 @@ def _find_matching_listings(db: Session, tenant_id: int, data: dict) -> List[Lis
         query = query.filter(Listing.property_type.ilike(f"%{data['property_type']}%"))
 
     if data.get("budget"):
-        max_val = int(data["budget"]) * 1.2  # 20% negotiation room
-        query = query.filter(Listing.price <= max_val)
+        try:
+            max_val = int(data["budget"]) * 1.2  # 20% negotiation room
+            query = query.filter(Listing.price <= max_val)
+        except (ValueError, TypeError):
+            pass
 
     return query.limit(5).all()
 
@@ -83,7 +93,7 @@ def prepare_meta_carousel(listings: List[Listing]) -> List[dict]:
 
 
 # ---------------------------------------------------------
-# CONVERSATION START
+# CONVERSATION START (Upgraded with Voice Engine)
 # ---------------------------------------------------------
 
 
@@ -95,9 +105,10 @@ def start_conversation_service(
     db: Session,
 ):
     """Initializes interaction with professional branding."""
-    profile = (
-        db.query(CompanyProfile).filter(CompanyProfile.tenant_id == tenant_id).first()
-    )
+    # Fetch branding via our new Tenant Service
+    tenant_profile = get_tenant_profile(db, tenant_id)
+    first_name = display_name.split()[0] if display_name else "there"
+
     convo = Conversation(
         tenant_id=tenant_id,
         channel=channel,
@@ -105,19 +116,20 @@ def start_conversation_service(
         display_name=display_name,
         state="ACTIVE",
         data_json="{}",
+        is_bot_active=True,  # Ensure your model has this
     )
     db.add(convo)
     db.commit()
     db.refresh(convo)
 
-    name = profile.assistant_name if profile else "Assistant"
-    firm = profile.company_name if profile else "our firm"
-    reply = f"Hi {display_name}! I am {name}, your property consultant for {firm}. 👋\n\nHow can I help you today? (You can type *'New search'* at any time to start fresh)."
+    # Use our standard Response Engine for the greeting
+    reply = get_response("greeting", first_name, tenant_profile)
 
     db.add(
         ConversationMessage(conversation_id=convo.id, role="assistant", content=reply)
     )
     db.commit()
+
     return {"conversation_id": convo.id, "reply": reply}
 
 
@@ -129,6 +141,8 @@ def start_conversation_service(
 def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Session):
     convo = db.query(Conversation).get(conversation_id)
     text_clean = (text or "").strip()
+
+    # Log user message
     db.add(
         ConversationMessage(conversation_id=convo.id, role="user", content=text_clean)
     )
@@ -144,52 +158,39 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
             "prefs": {},
         }
 
-    # 2. FILLER CHECK (ACCESSED: Cost Control)
+    # 2. FILLER/FAQ CHECKS
     if is_filler(text_clean):
-        return {
-            "reply": "Understood. Please provide more details about your property search.",
-            "state": convo.state,
-            "prefs": {},
-        }
+        return {"reply": "filler_flag", "state": convo.state, "prefs": {}}
 
-    # 3. FAQ CHECK (ACCESSED: Company Knowledge)
     if is_company_faq(text_clean):
         profile = (
             db.query(CompanyProfile)
             .filter(CompanyProfile.tenant_id == tenant_id)
             .first()
         )
-        reply = answer_company_faq(db, tenant_id, text_clean, profile)
-        return {
-            "reply": f"{reply}\n\nShall we continue with our search?",
-            "state": convo.state,
-            "prefs": {},
-        }
+        faq_reply = answer_company_faq(db, tenant_id, text_clean, profile)
+        return {"reply": faq_reply, "state": convo.state, "prefs": {}}
 
-    # 4. AI EXTRACTION
+    # 3. AI PREFERENCE EXTRACTION
     current_data = json.loads(convo.data_json or "{}")
     updated_data = extract_preferences(text_clean, current_data)
 
-    # LOOP BREAKER: If they typed 'invest' or 'buy', force it in
+    # LOOP BREAKER: Intent forcing
     if "invest" in text_clean.lower():
         updated_data["intent"] = "invest"
     if "buy" in text_clean.lower():
         updated_data["intent"] = "buy"
-
-    # SMART ASSUMPTION: If they gave location or type, stop asking if they want to buy
     if updated_data.get("location") or updated_data.get("property_type"):
         if not updated_data.get("intent"):
             updated_data["intent"] = "buy"
 
     convo.data_json = json.dumps(updated_data)
 
-    # 5. NEXT QUESTION (ACCESSED: Logic Flow)
+    # 4. DETERMINE NEXT QUESTION
     next_q = get_next_question(updated_data)
     if not next_q:
         convo.state = "HANDOFF"
-        next_q = (
-            "✅ I've captured your preferences! A consultant will contact you shortly."
-        )
+        next_q = "completed_flag"
 
     db.commit()
     return {"reply": next_q, "state": convo.state, "prefs": updated_data}
@@ -202,72 +203,99 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
 
 async def handle_incoming_message(data: dict, db: Session):
     try:
+        # --- A. PARSE META PAYLOAD ---
         entry = data.get("entry", [{}])[0]
         value = entry.get("changes", [{}])[0].get("value", {})
         contacts = value.get("contacts", [])
         whatsapp_name = (
             contacts[0].get("profile", {}).get("name", "there") if contacts else "there"
         )
-
         messages = value.get("messages", [])
         if not messages:
             return
+
         msg = messages[0]
         sender_id = msg.get("from")
-        tenant_id = 1
+        text_body = msg.get("text", {}).get("body", "").lower()
 
-        # A. HANDLE BUTTONS
+        # --- B. VOICE ENGINE PREP ---
+        first_name = whatsapp_name.split()[0] if whatsapp_name else "there"
+        tenant_id = 1
+        tenant_profile = get_tenant_profile(db, tenant_id)
+
+        # --- C. CONVERSATION & HITL CHECK ---
+        convo = (
+            db.query(Conversation)
+            .filter_by(external_user_id=sender_id, tenant_id=tenant_id)
+            .first()
+        )
+
+        if convo and hasattr(convo, "is_bot_active") and not convo.is_bot_active:
+            logger.info(
+                f"🤖 Bot silenced for {sender_id}. Human Realtor is in control."
+            )
+            return
+
+        # --- D. HANDLE BUTTONS ---
         btn_payload = msg.get("button", {}).get("payload", "") or msg.get(
             "postback", {}
         ).get("payload", "")
         if "INTERESTED_IN_" in btn_payload:
             list_id = int(btn_payload.split("_")[-1])
-            await alert_realtor_of_lead(db, list_id, sender_id)
-            await send_meta_message(
-                sender_id, "🤝 Agent notified! They will reach out to you shortly."
+            await alert_realtor_of_lead(
+                db, list_id, sender_id, tenant_profile["business_name"]
             )
+            reply = get_response("inspection_confirm", first_name, tenant_profile)
+            await send_meta_message(sender_id, reply)
             return
 
-        # B. HANDLE TEXT
-        text_body = msg.get("text", {}).get("body", "")
-        convo = (
-            db.query(Conversation)
-            .filter(
-                Conversation.external_user_id == sender_id,
-                Conversation.tenant_id == tenant_id,
-            )
-            .first()
-        )
-
+        # --- E. CONVERSATION MANAGEMENT ---
         if not convo:
             res = start_conversation_service(
                 "whatsapp", sender_id, whatsapp_name, tenant_id, db
             )
-            convo_id = res["conversation_id"]
-            convo = db.query(Conversation).get(convo_id)
-        else:
-            convo_id = convo.id
-            if not convo.display_name or convo.display_name == "there":
-                convo.display_name = whatsapp_name
-                db.commit()
+            convo = db.query(Conversation).get(res["conversation_id"])
+            # The start_conversation_service already sends the greeting
+            return
 
-        # Run State Machine
-        pipe = add_message_service(convo_id, text_body, tenant_id, db)
+        # --- F. STATE MACHINE ---
+        pipe = add_message_service(convo.id, text_body, tenant_id, db)
         prefs = pipe.get("prefs", {})
 
-        # C. DYNAMIC SEARCH (Index Safety Guard included)
+        # --- G. DYNAMIC SEARCH ---
         if prefs.get("location") and (
             prefs.get("budget") or prefs.get("property_type")
         ):
             matches = _find_matching_listings(db, tenant_id, prefs)
-            if matches and len(matches) > 0:
+            if matches:
                 trust = calculate_confidence_score(matches[0])
-                summary = f"✨ *Great news, {convo.display_name}!* I found a verified match ({trust}% Trusted). View Full Details: https://est8go-api.onrender.com/public/property/{matches[0].id}"
+                biz_name = tenant_profile["business_name"]
+                summary = (
+                    f"✨ *Great news, {first_name}!*\n"
+                    f"I found a verified match from *{biz_name}* ({trust}% Trusted).\n\n"
+                    f"View Full Details: https://est8go-api.onrender.com/public/property/{matches[0].id}"
+                )
                 await send_meta_message(sender_id, summary)
                 await send_meta_carousel(sender_id, prepare_meta_carousel(matches))
                 return
 
-        await send_meta_message(sender_id, pipe["reply"])
+        # --- H. FINAL REPLY (Branding Injection) ---
+        raw_reply = pipe.get("reply", "")
+
+        if raw_reply == "completed_flag":
+            final_reply = f"✅ I've captured your preferences! A consultant from *{tenant_profile['business_name']}* will contact you shortly."
+        elif raw_reply == "filler_flag" or not raw_reply:
+            final_reply = get_response("filler", first_name, tenant_profile)
+        elif any(w in text_body for w in ["hi", "hello", "hey"]):
+            final_reply = get_response("greeting", first_name, tenant_profile)
+        elif "location" in raw_reply.lower():
+            final_reply = get_response("nudge_location", first_name, tenant_profile)
+        elif "budget" in raw_reply.lower():
+            final_reply = get_response("nudge_budget", first_name, tenant_profile)
+        else:
+            final_reply = raw_reply
+
+        await send_meta_message(sender_id, final_reply)
 
     except Exception as e:
         logger.error(f"❌ BRIDGE ERROR: {e}", exc_info=True)

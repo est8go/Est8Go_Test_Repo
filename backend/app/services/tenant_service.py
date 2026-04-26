@@ -17,25 +17,27 @@ def create_tenant_service(name: str, db: Session):
 
     db.refresh(tenant)
 
-    return {
-        "id": tenant.id,
-        "name": tenant.name
-    }
+    return {"id": tenant.id, "name": tenant.name}
 
 
 def list_tenants_service(db: Session):
     tenants = db.query(Tenant).order_by(Tenant.id.asc()).all()
 
-    return [
-        {"id": t.id, "name": t.name}
-        for t in tenants
-    ]
+    return [{"id": t.id, "name": t.name} for t in tenants]
 
 
-def get_tenant_or_404(tenant_id: int, db: Session):
+def get_tenant_profile(db: Session, tenant_id: int):
+    """
+    Retrieves the identity and persona of a tenant.
+    """
     tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
 
-    if not tenant:
-        raise HTTPException(status_code=404, detail="Tenant not found")
+    if tenant:
+        return {
+            "business_name": tenant.name,
+            "tone": tenant.tone,
+            "emoji": tenant.emoji,
+        }
 
-    return tenant
+    # Standard fallback if tenant is not found
+    return {"business_name": "your realtor", "tone": "friendly", "emoji": "😊"}

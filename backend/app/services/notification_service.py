@@ -1,31 +1,27 @@
 import os
 import httpx
 import logging
-import asyncio
-from datetime import datetime, timedelta
-from typing import List
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
 # Import Models
 from app.listings.models import Listing
 from app.users.models import User
 from app.conversations.models import Conversation
+from app.messages.models import Message
 
 # Configuration
 logger = logging.getLogger(__name__)
 META_ACCESS_TOKEN = os.getenv("META_ACCESS_TOKEN")
-# This is the Phone Number ID from your Meta Developer Dashboard
 BUSINESS_PHONE_ID = os.getenv("WHATSAPP_PHONE_ID")
 
 # ---------------------------------------------------------
-# CORE SENDER (The actual Meta API Engine)
+# CORE SENDER (Meta API Engine)
 # ---------------------------------------------------------
 
 
 async def send_meta_text_message(recipient_id: str, text: str):
-    """
-    Low-level service to push text messages to WhatsApp/Instagram.
-    """
+    """Low-level service to push text messages to WhatsApp/Instagram."""
     if not META_ACCESS_TOKEN or not BUSINESS_PHONE_ID:
         logger.error("❌ Meta Credentials missing in .env. Cannot send message.")
         return
@@ -47,8 +43,6 @@ async def send_meta_text_message(recipient_id: str, text: str):
             response = await client.post(url, json=payload, headers=headers)
             if response.status_code != 200:
                 logger.error(f"❌ Meta API Error: {response.text}")
-            else:
-                logger.info(f"✅ Message sent successfully to {recipient_id}")
     except Exception as e:
         logger.error(f"❌ Connection error sending Meta message: {e}")
 
@@ -58,10 +52,11 @@ async def send_meta_text_message(recipient_id: str, text: str):
 # ---------------------------------------------------------
 
 
-async def alert_realtor_of_lead(db: Session, listing_id: int, client_phone: str):
+async def alert_realtor_of_lead(
+    db: Session, listing_id: int, user_phone: str, biz_name: str
+):
     """
     Finds the Realtor for a property and sends them a 'Hot Lead' alert.
-    This triggers when a user clicks 'I'm Interested' on the carousel.
     """
     try:
         # 1. Find the property
@@ -70,8 +65,7 @@ async def alert_realtor_of_lead(db: Session, listing_id: int, client_phone: str)
             logger.warning(f"⚠️ Alert failed: Listing {listing_id} not found.")
             return
 
-        # 2. Find the Primary Admin/Agent for this Tenant
-        # We look for an active admin user tied to the same tenant as the house
+        # 2. Find the Primary Agent for this Tenant
         agent = (
             db.query(User)
             .filter(
@@ -83,46 +77,42 @@ async def alert_realtor_of_lead(db: Session, listing_id: int, client_phone: str)
         )
 
         if not agent or not agent.phone_number:
-            logger.warning(
-                f"⚠️ Alert failed: No active admin with phone found for Tenant {listing.tenant_id}"
-            )
+            logger.warning(f"⚠️ Alert failed: No active admin found for {biz_name}")
             return
 
         # 3. Format the High-Intent Alert
         alert_text = (
-            f"🚨 *HOT LEAD ALERT!* 🚨\n\n"
-            f"A client is interested in your property:\n"
+            f"🚨 *HOT LEAD ALERT: {biz_name}* 🚨\n\n"
+            f"A client is interested in:\n"
             f"🏠 *{listing.title}*\n"
-            f"📍 {listing.location}\n"
             f"💰 ₦{listing.price:,}\n\n"
-            f"📱 *Client Phone*: +{client_phone}\n\n"
-            f"Please reach out to them immediately to close the deal! 🤝"
+            f"📱 *Client Phone*: +{user_phone}\n"
+            f"Please reach out to them immediately! 🤝"
         )
 
         # 4. Push the alert to the Agent's WhatsApp
         await send_meta_text_message(agent.phone_number, alert_text)
-        logger.info(f"🚀 Lead Alert pushed to Agent {agent.email}")
+        logger.info(
+            f"🚀 Lead Alert for {biz_name} pushed to Agent {agent.phone_number}"
+        )
+        return True
 
     except Exception as e:
         logger.error(f"❌ Error in Realtor Alert service: {e}", exc_info=True)
+        return False
 
 
 # ---------------------------------------------------------
-# ABANDONED CHAT REMINDERS (The Retention Engine)
+# ABANDONED CHAT REMINDERS (Retention Engine)
 # ---------------------------------------------------------
 
 
 async def check_for_abandoned_chats(db: Session):
-    """
-    Finds users who 'ghosted' the conversation and nudges them.
-    Intervals: 2 hours, then 24 hours.
-    """
+    """Finds ghosted users and nudges them (2h and 24h intervals)."""
     try:
-        # Define 'Ghosting' time (e.g., 2 hours since last message)
-        reminder_threshold = datetime.utcnow() - timedelta(hours=2)
+        # Using timezone-aware UTC
+        reminder_threshold = datetime.now(timezone.utc) - timedelta(hours=2)
 
-        # Find ACTIVE conversations that are older than the threshold
-        # but haven't been nudged more than twice.
         idle_convos = (
             db.query(Conversation)
             .filter(
@@ -133,28 +123,38 @@ async def check_for_abandoned_chats(db: Session):
             .all()
         )
 
-        if not idle_convos:
-            return
-
         for convo in idle_convos:
-            # 1. Determine the Nudge Content
-            if convo.reminder_count == 0:
-                nudge = "Hey! 👋 Just checking back—are you still looking for a property? I've found some new matches you might like!"
-            else:
-                nudge = "Still there? 🏠 I don't want you to miss out on the best verified properties. Should we continue your search?"
-
-            # 2. Send the Nudge
+            nudge = "Hey! 👋 Just checking—are you still looking for a property? I don't want you to miss out on our verified deals!"
             await send_meta_text_message(convo.external_user_id, nudge)
 
-            # 3. Update Conversation to prevent spamming
             convo.reminder_count += 1
-            convo.updated_at = datetime.utcnow()  # Reset timer for the next 24h check
+            convo.updated_at = datetime.now(timezone.utc)
             db.commit()
 
-            logger.info(
-                f"🔔 Nudge #{convo.reminder_count} sent to {convo.external_user_id}"
-            )
-
     except Exception as e:
-        logger.error(f"❌ Error in Reminder service: {e}", exc_info=True)
+        logger.error(f"❌ Error in Reminder service: {e}")
         db.rollback()
+
+
+# ---------------------------------------------------------
+# INSPECTION LOGIC
+# ---------------------------------------------------------
+
+
+async def schedule_inspection_logic(
+    db: Session, tenant_id: int, user_phone: str, property_id: int, date_text: str
+):
+    """Saves the inspection intent to the Message table."""
+    try:
+        new_request = Message(
+            tenant_id=tenant_id,
+            sender_id=user_phone,
+            content=f"INSPECTION REQUEST for Property #{property_id} on {date_text}",
+            is_bot=False,
+        )
+        db.add(new_request)
+        db.commit()
+        return f"Excellent. I've noted your interest for {date_text}. The Realtor will call you shortly to confirm."
+    except Exception as e:
+        logger.error(f"Failed to save inspection: {e}")
+        return "I've noted your interest, but I had a small glitch saving the date."
