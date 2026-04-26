@@ -1,8 +1,8 @@
-# app/models_registry.py
+# backend/app/models_registry.py
 import logging
 from sqlalchemy.orm import configure_mappers
 
-# 1. THE CRITICAL ORDER: Tenants must come before the things that reference them
+# KEEPING YOUR MODULE IMPORTS (Safe from Circular Errors)
 import app.tenants.models
 import app.company_profiles.models
 import app.users.models
@@ -15,12 +15,12 @@ logger = logging.getLogger(__name__)
 
 def register_all_models():
     """
-    Detailed Registry: Ensures all models are loaded into memory,
-    silences linter warnings, and wires cross-folder relationships.
+    PREMIUM REGISTRY: Maintains est8go architecture while fixing
+    cross-module relationship resolution.
     """
     try:
-        # A. THE SILENCER: Touch each model to prevent 'not accessed' warnings
-        models = [
+        # A. THE SILENCER (Your original logic to stop Pylance warnings)
+        modules = [
             app.tenants.models,
             app.company_profiles.models,
             app.users.models,
@@ -29,14 +29,25 @@ def register_all_models():
             app.messages.models,
         ]
 
-        # B. THE HANDSHAKE: Force SQLAlchemy to resolve all 'Tenant' and 'User' names
-        # This fixes the 'InvalidRequestError' and 'NoProperty' errors during login.
+        # B. THE SURGICAL FIX: TOUCH THE CLASSES
+        # We explicitly access the Classes inside your modules so
+        # SQLAlchemy knows they exist during the mapper handshake.
+        _ = [
+            app.tenants.models.Tenant,
+            app.company_profiles.models.CompanyProfile,
+            app.users.models.User,
+            app.listings.models.Listing,
+            app.conversations.models.Conversation,
+            app.messages.models.Message,
+        ]
+
+        # C. THE HANDSHAKE
         configure_mappers()
 
-        print(f"✅ {len(models)} Premium Models fully wired and registered for est8go.")
+        logger.info(f"✅ {len(modules)} Premium Models fully wired and registered.")
+        print(f"✅ {len(modules)} Premium Models fully wired and registered.")
         return True
 
     except Exception as e:
-        # Detailed error reporting for the Render logs
         logger.error(f"❌ DATABASE HANDSHAKE FAILED: {e}", exc_info=True)
         return False
