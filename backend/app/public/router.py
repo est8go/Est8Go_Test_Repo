@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -20,6 +21,7 @@ templates = Jinja2Templates(directory="templates")
 
 # Professional Path Handling
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+templates_path = os.path.join(BASE_DIR, "templates")
 templates = Jinja2Templates(directory=str(Path(BASE_DIR, "templates")))
 
 router = APIRouter(tags=["Public Pages"])

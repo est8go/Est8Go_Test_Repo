@@ -1,4 +1,6 @@
 # 🔹 1. Imports (ALL at the top — fixes Ruff E402)
+import os
+from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
@@ -12,6 +14,11 @@ from app.company_profiles.router import router as profile_router
 from app.listings.router import router as listings_router
 from app.public.router import router as public_router
 from app.channels.whatsapp.router import router as whatsapp_router
+
+# This finds the 'templates' folder even when deployed on Render
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+templates_path = os.path.join(base_dir, "templates")
+templates = Jinja2Templates(directory=templates_path)
 
 
 # 🔹 2. Environment setup
