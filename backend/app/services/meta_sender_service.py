@@ -4,19 +4,25 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# --- Environment Controls ---
 ACCESS_TOKEN = os.getenv("META_ACCESS_TOKEN")
-# Note: For WhatsApp, you need your 'Phone Number ID' from Meta
 PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_ID")
 
 
 async def send_meta_message(recipient_id: str, text: str):
-    """Sends a standard text message to the user."""
+    """
+    Sends a standard text message via Meta's Graph API.
+    Includes robust error checking to prevent silent failures.
+    """
     if not ACCESS_TOKEN or not PHONE_NUMBER_ID:
-        logger.warning("⚠️ Meta credentials missing. Message not sent.")
+        logger.error("❌ CRITICAL: Meta credentials (TOKEN/ID) missing in .env")
         return
 
     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
-    headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
+    headers = {
+        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "Content-Type": "application/json",
+    }
     payload = {
         "messaging_product": "whatsapp",
         "to": recipient_id,
@@ -24,28 +30,42 @@ async def send_meta_message(recipient_id: str, text: str):
         "text": {"body": text},
     }
 
+    # Your standard httpx logic + Premium Response Validation
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=payload, headers=headers)
-        if response.status_code != 200:
-            logger.error(f"❌ Meta Text Error: {response.text}")
+        try:
+            response = await client.post(url, json=payload, headers=headers)
+
+            # --- PREMIUM ERROR CHECKING ---
+            if response.status_code != 200:
+                logger.error(
+                    f"❌ Meta API Error ({response.status_code}): {response.text}"
+                )
+            else:
+                logger.info(f"✅ Message delivered to {recipient_id}")
+            # ------------------------------
+
+        except httpx.RequestError as e:
+            logger.error(f"❌ Network error connecting to Meta: {e}")
 
 
 async def send_meta_carousel(recipient_id: str, cards: list):
-    """Sends the horizontal scrolling property carousel."""
+    """
+    Sends a high-intent property carousel.
+    Requires 'property_carousel' template to be approved in Meta Dashboard.
+    """
     if not ACCESS_TOKEN or not PHONE_NUMBER_ID:
-        logger.warning("⚠️ Meta credentials missing. Carousel not sent.")
+        logger.error("❌ CRITICAL: Meta credentials missing.")
         return
 
     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
     headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
 
-    # This is the 'Premium' structure for WhatsApp Carousels
     payload = {
         "messaging_product": "whatsapp",
         "to": recipient_id,
         "type": "template",
         "template": {
-            "name": "property_carousel",  # You must create this template in Meta
+            "name": "property_carousel",
             "language": {"code": "en_US"},
             "components": [
                 {
@@ -72,7 +92,7 @@ async def send_meta_carousel(recipient_id: str, cards: list):
                                 },
                             ],
                         }
-                        for i, card in enumerate(cards[:10])  # Meta limit is 10 cards
+                        for i, card in enumerate(cards[:10])
                     ],
                 }
             ],
@@ -80,4 +100,22 @@ async def send_meta_carousel(recipient_id: str, cards: list):
     }
 
     async with httpx.AsyncClient() as client:
-        await client.post(url, json=payload, headers=headers)
+        try:
+            response = await client.post(url, json=payload, headers=headers)
+
+            # --- PREMIUM ERROR CHECKING ---
+            if response.status_code != 200:
+                logger.error(
+                    f"❌ Meta Carousel Error ({response.status_code}): {response.text}"
+                )
+            else:
+                logger.info(f"✅ Carousel delivered to {recipient_id}")
+            # ------------------------------
+
+        except httpx.RequestError as e:
+            logger.error(f"❌ Network error sending Carousel: {e}")
+
+
+# --- THE REQUIRED ALIAS ---
+# Fixes the 'ImportError' in conversation_service.py without changing your naming style.
+send_whatsapp_message = send_meta_message

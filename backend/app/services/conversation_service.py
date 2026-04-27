@@ -19,8 +19,7 @@ from app.conversations.ai_fallback import is_company_faq, answer_company_faq
 # 3. External Senders & Trust
 from app.services.meta_sender_service import (
     send_meta_message,
-    send_meta_carousel,
-    send_whatsapp_message,  # If used interchangeably with send_meta_message
+    send_meta_carousel,  # If used interchangeably with send_meta_message
 )
 from app.services.notification_service import alert_realtor_of_lead
 from app.services.trust_engine import calculate_confidence_score

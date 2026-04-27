@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime
 from sqlalchemy.sql import func
-from app.database.db import Base
+from app.database.base import Base
 
 
 class Conversation(Base):

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
-from app.database.db import Base
+from app.database.base import Base
 
 
 class CompanyProfile(Base):

@@ -1,53 +1,45 @@
-# backend/app/models_registry.py
 import logging
 from sqlalchemy.orm import configure_mappers
 
-# KEEPING YOUR MODULE IMPORTS (Safe from Circular Errors)
-import app.tenants.models
-import app.company_profiles.models
-import app.users.models
-import app.listings.models
-import app.conversations.models
-import app.messages.models
+# 1. EXPLICIT MODEL IMPORTS
+from app.tenants.models import Tenant
+from app.company_profiles.models import CompanyProfile
+from app.users.models import User
+from app.listings.models import Listing
+from app.conversations.models import Conversation, ConversationMessage
+from app.messages.models import Message
 
 logger = logging.getLogger(__name__)
 
 
 def register_all_models():
     """
-    PREMIUM REGISTRY: Maintains est8go architecture while fixing
-    cross-module relationship resolution.
+    Architectural Handshake:
+    Explicitly registers all models to resolve cross-folder relationships.
     """
     try:
-        # A. THE SILENCER (Your original logic to stop Pylance warnings)
-        modules = [
-            app.tenants.models,
-            app.company_profiles.models,
-            app.users.models,
-            app.listings.models,
-            app.conversations.models,
-            app.messages.models,
+        # 🛡️ THE SILENCER: Touching each class to satisfy Pylance/Ruff.
+        # This tells the IDE the imports are necessary.
+        _models = [
+            Tenant,
+            CompanyProfile,
+            User,
+            Listing,
+            Conversation,
+            ConversationMessage,
+            Message,
         ]
 
-        # B. THE SURGICAL FIX: TOUCH THE CLASSES
-        # We explicitly access the Classes inside your modules so
-        # SQLAlchemy knows they exist during the mapper handshake.
-        _ = [
-            app.tenants.models.Tenant,
-            app.company_profiles.models.CompanyProfile,
-            app.users.models.User,
-            app.listings.models.Listing,
-            app.conversations.models.Conversation,
-            app.messages.models.Message,
-        ]
-
-        # C. THE HANDSHAKE
+        # 🔥 THE HANDSHAKE
+        # Force SQLAlchemy to link "Tenant" and "CompanyProfile" strings to these classes.
         configure_mappers()
 
-        logger.info(f"✅ {len(modules)} Premium Models fully wired and registered.")
-        print(f"✅ {len(modules)} Premium Models fully wired and registered.")
+        logger.info(
+            f"✅ {len(_models)} Models successfully registered and relationships resolved."
+        )
         return True
 
     except Exception as e:
         logger.error(f"❌ DATABASE HANDSHAKE FAILED: {e}", exc_info=True)
-        return False
+        # Fail-Fast: Don't allow a broken app to start
+        raise RuntimeError(f"Model registration failed: {e}") from e

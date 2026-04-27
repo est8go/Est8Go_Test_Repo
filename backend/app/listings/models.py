@@ -11,7 +11,7 @@ from sqlalchemy import (
     Float,
 )
 from sqlalchemy.orm import relationship
-from app.database.db import Base
+from app.database.base import Base
 
 
 # 1. Python Enums for Business Logic
