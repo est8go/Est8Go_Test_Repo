@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Est8Go | Realtor Command</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body class="bg-slate-50 pb-20">
+
+    <!-- Header -->
+    <nav class="bg-blue-700 text-white p-5 sticky top-0 z-50 shadow-lg rounded-b-3xl">
+        <div class="flex justify-between items-center">
+            <div>
+                <p class="text-xs opacity-80 font-bold uppercase tracking-widest">Realtor Portal</p>
+                <h1 id="bizName" class="text-xl font-black">Loading...</h1>
+            </div>
+            <div class="bg-white/20 p-3 rounded-2xl">
+                <i class="fa-solid fa-bell text-white"></i>
+            </div>
+        </div>
+    </nav>
+
+    <main class="p-4 mt-2">
+        <!-- Quick Stats -->
+        <div class="flex gap-3 mb-6 overflow-x-auto pb-2">
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-200 min-w-[140px]">
+                <p class="text-[10px] uppercase font-black text-slate-400">Active Leads</p>
+                <h3 id="statCount" class="text-2xl font-black text-blue-700">0</h3>
+            </div>
+            <div class="bg-blue-700 p-4 rounded-3xl shadow-md min-w-[140px]">
+                <p class="text-[10px] uppercase font-black text-blue-100">Ready to Close</p>
+                <h3 id="statHot" class="text-2xl font-black text-white">0</h3>
+            </div>
+        </div>
+
+        <h2 class="font-black text-slate-800 mb-4 px-1">Recent Prospects</h2>
+
+        <!-- Lead Cards Container -->
+        <div id="leadList" class="space-y-4">
+            <!-- Dynamic Content -->
+        </div>
+    </main>
+
+    <script>
+        // In production, this ID comes from the authenticated user session
+        const TENANT_ID = "1";
+
+        async function loadLeads() {
+            try {
+                const response = await fetch('/conversations/realtor/leads', {
+                    headers: { 'X-Tenant-Id': TENANT_ID }
+                });
+                const data = await response.json();
+
+                document.getElementById('statCount').innerText = data.length;
+                document.getElementById('statHot').innerText = data.filter(l => l.status === 'HOT LEAD').length;
+
+                const list = document.getElementById('leadList');
+
+                // Rebuilding the list with clean string concatenation to avoid template literal errors
+                let html = "";
+                data.forEach(lead => {
+                    const badgeClass = lead.status === 'HOT LEAD' ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-500';
+                    const botLabel = lead.is_bot_active ? 'Takeover' : 'Agent In Control';
+                    const botClass = lead.is_bot_active ? 'bg-slate-800' : 'bg-green-600';
+
+                    html += `
+                <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 font-bold">
+                                ${lead.name.charAt(0)}
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-800">${lead.name}</h3>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">${lead.last_active}</p>
+                            </div>
+                        </div>
+                        <span class="text-[9px] font-black px-2 py-1 rounded-full ${badgeClass} uppercase">
+                            ${lead.status}
+                        </span>
+                    </div>
+
+                    <div class="bg-slate-50 rounded-xl p-3 mb-4">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Search Context:</p>
+                        <p class="text-xs font-bold text-slate-700">
+                            ${lead.prefs.location || 'Exploring'} | ${lead.prefs.property_type || 'General'}
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2">
+                        <a href="tel:${lead.phone}" class="bg-blue-600 text-white py-3 rounded-xl text-center shadow-sm">
+                            <i class="fa-solid fa-phone"></i>
+                        </a>
+                        <a href="https://wa.me/${lead.phone}" class="bg-green-500 text-white py-3 rounded-xl text-center shadow-sm">
+                            <i class="fa-brands fa-whatsapp text-lg"></i>
+                        </a>
+                        <button onclick="takeover('${lead.phone}')" class="${botClass} text-white text-[9px] font-black py-3 rounded-xl uppercase tracking-tighter">
+                            ${botLabel}
+                        </button>
+                    </div>
+                </div>`;
+                });
+                list.innerHTML = html;
+            } catch (err) {
+                console.error("Lead Load Error:", err);
+            }
+        }
+
+        async function takeover(phone) {
+            const confirmAction = confirm("Do you want to silence the AI and take control of this chat?");
+            if (!confirmAction) return;
+
+            const res = await fetch('/conversations/takeover/' + phone, {
+                method: 'POST',
+                headers: { 'X-Tenant-Id': TENANT_ID }
+            });
+            if (res.ok) {
+                loadLeads();
+            }
+        }
+
+        loadLeads();
+        setInterval(loadLeads, 30000); // Sync every 30s
+    </script>

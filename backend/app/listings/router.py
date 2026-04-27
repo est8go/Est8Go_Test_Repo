@@ -127,3 +127,47 @@ def update_listing(
     db.commit()
     db.refresh(listing)
     return listing
+
+
+# --- ADD THIS TO THE BOTTOM OF backend/app/listings/router.py ---
+
+
+@router.get("/admin/trust-monitor", tags=["Super Admin"])
+async def monitor_platform_trust(
+    db: Session = Depends(get_db),
+    x_tenant_id: str = Header(None),  # Using str to match your header style
+):
+    """
+    Super Admin Endpoint: Returns a 'Truth Report' for all listings.
+    Only accessible if X-Tenant-Id is '1' (est8go).
+    """
+    if x_tenant_id != "1":
+        return {"error": "Unauthorized. Super Admin only."}
+
+    from app.services.trust_engine import calculate_confidence_score, get_trust_label
+
+    listings = db.query(Listing).all()
+    report = []
+
+    for item in listings:
+        score = calculate_confidence_score(item)
+        label = get_trust_label(score)
+
+        report.append(
+            {
+                "id": item.id,
+                "title": item.title,
+                "tenant_name": item.tenant.name if item.tenant else "Unknown",
+                "location": item.location,
+                "trust_score": score,
+                "status_color": label["color"],
+                "status_text": label["text"],
+                "gps_provided": (
+                    True
+                    if (getattr(item, "latitude", None) or getattr(item, "lat", None))
+                    else False
+                ),
+            }
+        )
+
+    return report

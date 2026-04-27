@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
 from typing import List
+from pathlib import Path
 
 # Database & Models
 from app.database.db import get_db
@@ -16,6 +17,12 @@ from app.services.trust_engine import calculate_confidence_score, get_trust_labe
 
 router = APIRouter(prefix="/public", tags=["Public"])
 templates = Jinja2Templates(directory="templates")
+
+# Professional Path Handling
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+templates = Jinja2Templates(directory=str(Path(BASE_DIR, "templates")))
+
+router = APIRouter(tags=["Public Pages"])
 
 
 # --- 1. THE BOT'S SEARCH ENGINE ---
@@ -69,4 +76,24 @@ async def get_property_page(
             "trust_text": trust.get("text", "Verified"),
             "trust_color": trust.get("color", "green"),
         },
+    )
+
+
+@router.get("/realtor-portal")
+async def get_realtor_portal(request: Request):
+    """
+    Renders the Realtor Lead Dashboard.
+    """
+    return templates.TemplateResponse(
+        name="realtor_dashboard.html", context={"request": request}
+    )
+
+
+@router.get("/super-admin-portal")
+async def get_admin_dashboard(request: Request):
+    """
+    Renders the Super Admin Truth Monitor.
+    """
+    return templates.TemplateResponse(
+        name="admin_dashboard.html", context={"request": request}
     )

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import json
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -92,3 +93,44 @@ async def human_takeover(
         "status": "success",
         "message": f"Bot silenced for {user_phone}. Human Realtor is now in control.",
     }
+
+
+# --- ADD TO backend/app/conversations/router.py ---
+
+
+@router.get("/realtor/leads", tags=["Realtor Portal"])
+async def get_realtor_leads(
+    db: Session = Depends(get_db), x_tenant_id: str = Header(None)
+):
+    """
+    Returns all active leads and their chat status for a specific Realtor.
+    """
+    if not x_tenant_id:
+        raise HTTPException(status_code=400, detail="X-Tenant-Id header missing")
+
+    # Fetch conversations for this tenant, ordered by most recent activity
+    convos = (
+        db.query(Conversation)
+        .filter(Conversation.tenant_id == int(x_tenant_id))
+        .order_by(Conversation.updated_at.desc())
+        .all()
+    )
+
+    leads = []
+    for c in convos:
+        # We classify a lead as 'Hot' if they have preferences or reached Handoff state
+        is_hot = True if c.state == "HANDOFF" or c.data_json != "{}" else False
+
+        leads.append(
+            {
+                "id": c.id,
+                "name": c.display_name or "New Lead",
+                "phone": c.external_user_id,
+                "status": "HOT LEAD" if is_hot else "Browsing",
+                "is_bot_active": getattr(c, "is_bot_active", True),
+                "last_active": c.updated_at.strftime("%I:%M %p"),
+                "prefs": json.loads(c.data_json or "{}"),
+            }
+        )
+
+    return leads
