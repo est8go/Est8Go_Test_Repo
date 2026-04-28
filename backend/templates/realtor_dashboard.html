@@ -144,41 +144,41 @@
                     const budget = lead.prefs.budget ? '₦' + lead.prefs.budget.toLocaleString() : 'Negotiable';
 
                     html += `
-                    <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 relative overflow-hidden">
-                        ${isHot ? '<div class="absolute top-0 right-0 bg-orange-500 text-white text-[8px] font-black px-4 py-1 rounded-bl-2xl uppercase tracking-widest shadow-sm">Hot Deal</div>' : ''}
+                    <div class="bg-white p-5 rounded-[2.5rem] shadow-sm border border-slate-100 relative overflow-hidden w-full max-w-full">
+                        ${isHot ? '<div class="absolute top-0 right-0 bg-orange-500 text-white text-[7px] font-black px-4 py-1 rounded-bl-2xl uppercase tracking-widest">Hot</div>' : ''}
                         
-                        <!-- Header Section with Truncation -->
-                        <div class="flex items-center gap-4 mb-5">
-                            <div class="w-14 h-14 shrink-0 premium-gradient rounded-[1.2rem] flex items-center justify-center text-white text-xl font-black shadow-lg">
+                        <!-- Header with forced spacing -->
+                        <div class="flex items-center gap-3 mb-4 overflow-hidden">
+                            <div class="w-12 h-12 shrink-0 premium-gradient rounded-2xl flex items-center justify-center text-white text-lg font-black">
                                 ${lead.name.charAt(0)}
                             </div>
-                            <div class="overflow-hidden">
-                                <h3 class="text-base font-black text-slate-800 truncate">${lead.name}</h3>
-                                <p class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">Active ${lead.last_active}</p>
+                            <div class="min-w-0 flex-1">
+                                <h3 class="text-sm font-black text-slate-800 truncate">${lead.name}</h3>
+                                <p class="text-[9px] text-slate-400 font-bold uppercase truncate">${lead.last_active}</p>
                             </div>
                         </div>
 
-                        <!-- Data Box with Fixed Column Spacing -->
-                        <div class="bg-[#F1F5F9] rounded-3xl p-4 mb-5 grid grid-cols-2 gap-2 items-center">
-                            <div class="overflow-hidden border-r border-slate-200 pr-2">
-                                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Searching For</p>
-                                <p class="text-[11px] font-bold text-indigo-900 truncate">${loc} | ${type}</p>
+                        <!-- Grid with hard-coded 50% split -->
+                        <div class="bg-[#F8FAFC] rounded-2xl p-3 mb-4 grid grid-cols-2 gap-0 border border-slate-50">
+                            <div class="border-r border-slate-200 pr-2 overflow-hidden">
+                                <p class="text-[7px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">Searching</p>
+                                <p class="text-[10px] font-bold text-indigo-900 truncate">${loc}</p>
                             </div>
-                            <div class="pl-2">
-                                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 text-right">Budget</p>
-                                <p class="text-[11px] font-black text-emerald-600 text-right truncate">${budget}</p>
+                            <div class="pl-2 overflow-hidden">
+                                <p class="text-[7px] font-black text-slate-400 uppercase tracking-tighter mb-0.5 text-right">Budget</p>
+                                <p class="text-[10px] font-black text-emerald-600 text-right truncate">${budget}</p>
                             </div>
                         </div>
 
-                        <!-- Action Buttons -->
-                        <div class="grid grid-cols-3 gap-2">
-                            <a href="tel:${lead.phone}" class="bg-indigo-50 text-indigo-600 py-4 rounded-2xl text-center transition active:scale-95">
-                                <i class="fa-solid fa-phone"></i>
+                        <!-- Small Touch Action Buttons -->
+                        <div class="flex gap-2">
+                            <a href="tel:${lead.phone}" class="flex-1 bg-indigo-50 text-indigo-600 py-3 rounded-xl text-center">
+                                <i class="fa-solid fa-phone text-sm"></i>
                             </a>
-                            <a href="https://wa.me/${lead.phone}" class="bg-emerald-50 text-emerald-600 py-4 rounded-2xl text-center transition active:scale-95">
-                                <i class="fa-brands fa-whatsapp text-xl"></i>
+                            <a href="https://wa.me/${lead.phone}" class="flex-1 bg-emerald-50 text-emerald-600 py-3 rounded-xl text-center">
+                                <i class="fa-brands fa-whatsapp text-lg"></i>
                             </a>
-                            <button onclick="takeover('${lead.phone}')" class="${botClass} text-white text-[8px] font-black py-4 rounded-2xl uppercase tracking-tighter transition active:scale-95 shadow-md">
+                            <button onclick="takeover('${lead.phone}')" class="flex-[1.5] ${botClass} text-white text-[8px] font-black py-3 rounded-xl uppercase">
                                 ${botLabel}
                             </button>
                         </div>
