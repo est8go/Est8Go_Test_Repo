@@ -4,50 +4,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Est8Go | Realtor Command</title>
+    <title>Est8Go | Realtor Executive</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .premium-gradient {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+        }
+
+        .status-pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
 </head>
 
-<body class="bg-slate-50 pb-20">
+<body class="bg-[#F8FAFC] pb-24">
 
-    <!-- Header -->
-    <nav class="bg-blue-700 text-white p-5 sticky top-0 z-50 shadow-lg rounded-b-3xl">
-        <div class="flex justify-between items-center">
+    <!-- Top Premium Header -->
+    <nav class="premium-gradient text-white pt-8 pb-12 px-6 rounded-b-[3rem] shadow-2xl sticky top-0 z-50">
+        <div class="flex justify-between items-center mb-4">
             <div>
-                <p class="text-xs opacity-80 font-bold uppercase tracking-widest">Realtor Portal</p>
-                <h1 id="bizName" class="text-xl font-black">Loading...</h1>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="w-2 h-2 bg-emerald-400 rounded-full status-pulse"></span>
+                    <p class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-200">Realtor Command</p>
+                </div>
+                <h1 id="bizName" class="text-2xl font-black">Bravieshomz <span class="text-indigo-400">Ltd.</span></h1>
             </div>
-            <div class="bg-white/20 p-3 rounded-2xl">
-                <i class="fa-solid fa-bell text-white"></i>
+            <div class="relative">
+                <div class="bg-white/10 p-3 rounded-2xl border border-white/10">
+                    <i class="fa-solid fa-layer-group text-xl"></i>
+                </div>
             </div>
         </div>
     </nav>
 
-    <main class="p-4 mt-2">
-        <!-- Quick Stats -->
-        <div class="flex gap-3 mb-6 overflow-x-auto pb-2">
-            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-200 min-w-[140px]">
-                <p class="text-[10px] uppercase font-black text-slate-400">Active Leads</p>
-                <h3 id="statCount" class="text-2xl font-black text-blue-700">0</h3>
+    <!-- Floating Quick Stats -->
+    <div class="px-6 -mt-8 relative z-50">
+        <div class="grid grid-cols-2 gap-4">
+            <div class="glass-card p-5 rounded-[2rem] shadow-xl border border-white">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Total Leads</p>
+                <div class="flex items-end gap-1">
+                    <h3 id="statCount" class="text-3xl font-black text-slate-800">0</h3>
+                    <span class="text-[10px] text-emerald-500 font-bold mb-1 pb-1">+2 new</span>
+                </div>
             </div>
-            <div class="bg-blue-700 p-4 rounded-3xl shadow-md min-w-[140px]">
-                <p class="text-[10px] uppercase font-black text-blue-100">Ready to Close</p>
-                <h3 id="statHot" class="text-2xl font-black text-white">0</h3>
+            <div class="bg-emerald-500 p-5 rounded-[2rem] shadow-xl border border-emerald-400">
+                <p class="text-[10px] font-black text-emerald-100 uppercase tracking-tighter">Hot Deals</p>
+                <h3 id="statHot" class="text-3xl font-black text-white">0</h3>
             </div>
         </div>
+    </div>
 
-        <h2 class="font-black text-slate-800 mb-4 px-1">Recent Prospects</h2>
+    <!-- Main Content Area -->
+    <main class="px-6 mt-8">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-lg font-black text-slate-800">Live Prospects</h2>
+            <button class="text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-full">Filter By
+                Zone</button>
+        </div>
 
         <!-- Lead Cards Container -->
-        <div id="leadList" class="space-y-4">
-            <!-- Dynamic Content -->
+        <div id="leadList" class="space-y-5">
+            <!-- Dynamic Content Injected Here -->
+            <div class="text-center py-20 text-slate-300 font-bold">Scanning for leads...</div>
         </div>
     </main>
 
+    <!-- Bottom Navigation Bar (App Style) -->
+    <div
+        class="fixed bottom-0 left-0 right-0 glass-card border-t border-slate-100 px-8 py-4 flex justify-between items-center z-[100]">
+        <div class="flex flex-col items-center text-indigo-600">
+            <i class="fa-solid fa-house-chimney text-xl"></i>
+            <span class="text-[9px] font-bold mt-1 uppercase">Dashboard</span>
+        </div>
+        <div class="flex flex-col items-center text-slate-400"
+            onclick="alert('Listing Management coming in the next update!')">
+            <i class="fa-solid fa-plus-circle text-xl"></i>
+            <span class="text-[9px] font-bold mt-1 uppercase">Add Prop</span>
+        </div>
+        <div class="flex flex-col items-center text-slate-400">
+            <i class="fa-solid fa-chart-line text-xl"></i>
+            <span class="text-[9px] font-bold mt-1 uppercase">Sales</span>
+        </div>
+        <div class="flex flex-col items-center text-slate-400">
+            <i class="fa-solid fa-gear text-xl"></i>
+            <span class="text-[9px] font-bold mt-1 uppercase">Setup</span>
+        </div>
+    </div>
+
     <script>
-        // In production, this ID comes from the authenticated user session
-        const TENANT_ID = "1";
+        const TENANT_ID = "1"; // Currently testing with Super Admin tenant
 
         async function loadLeads() {
             try {
@@ -60,70 +131,69 @@
                 document.getElementById('statHot').innerText = data.filter(l => l.status === 'HOT LEAD').length;
 
                 const list = document.getElementById('leadList');
-
-                // Rebuilding the list with clean string concatenation to avoid template literal errors
                 let html = "";
+
                 data.forEach(lead => {
-                    const badgeClass = lead.status === 'HOT LEAD' ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-500';
-                    const botLabel = lead.is_bot_active ? 'Takeover' : 'Agent In Control';
-                    const botClass = lead.is_bot_active ? 'bg-slate-800' : 'bg-green-600';
+                    const isHot = lead.status === 'HOT LEAD';
+                    const botLabel = lead.is_bot_active ? 'Silence AI' : 'In Manual Mode';
+                    const botClass = lead.is_bot_active ? 'bg-slate-900' : 'bg-emerald-500';
 
                     html += `
-                <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-200">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 font-bold">
+                    <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 relative overflow-hidden">
+                        ${isHot ? '<div class="absolute top-0 right-0 bg-orange-500 text-white text-[8px] font-black px-4 py-1 rounded-bl-2xl uppercase tracking-widest shadow-sm">Hot Deal</div>' : ''}
+                        
+                        <div class="flex items-center gap-4 mb-5">
+                            <div class="w-14 h-14 premium-gradient rounded-[1.2rem] flex items-center justify-center text-white text-xl font-black shadow-lg">
                                 ${lead.name.charAt(0)}
                             </div>
                             <div>
-                                <h3 class="font-bold text-slate-800">${lead.name}</h3>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase">${lead.last_active}</p>
+                                <h3 class="text-base font-black text-slate-800">${lead.name}</h3>
+                                <p class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">Last active ${lead.last_active}</p>
                             </div>
                         </div>
-                        <span class="text-[9px] font-black px-2 py-1 rounded-full ${badgeClass} uppercase">
-                            ${lead.status}
-                        </span>
-                    </div>
 
-                    <div class="bg-slate-50 rounded-xl p-3 mb-4">
-                        <p class="text-[10px] font-black text-slate-400 uppercase">Search Context:</p>
-                        <p class="text-xs font-bold text-slate-700">
-                            ${lead.prefs.location || 'Exploring'} | ${lead.prefs.property_type || 'General'}
-                        </p>
-                    </div>
+                        <div class="bg-[#F1F5F9] rounded-3xl p-4 mb-5 flex justify-between items-center">
+                            <div>
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Searching For</p>
+                                <p class="text-xs font-bold text-indigo-900">${lead.prefs.location || 'General Area'} | ${lead.prefs.property_type || 'Land/House'}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Budget</p>
+                                <p class="text-xs font-black text-emerald-600">₦${lead.prefs.budget ? lead.prefs.budget.toLocaleString() : '---'}</p>
+                            </div>
+                        </div>
 
-                    <div class="grid grid-cols-3 gap-2">
-                        <a href="tel:${lead.phone}" class="bg-blue-600 text-white py-3 rounded-xl text-center shadow-sm">
-                            <i class="fa-solid fa-phone"></i>
-                        </a>
-                        <a href="https://wa.me/${lead.phone}" class="bg-green-500 text-white py-3 rounded-xl text-center shadow-sm">
-                            <i class="fa-brands fa-whatsapp text-lg"></i>
-                        </a>
-                        <button onclick="takeover('${lead.phone}')" class="${botClass} text-white text-[9px] font-black py-3 rounded-xl uppercase tracking-tighter">
-                            ${botLabel}
-                        </button>
-                    </div>
-                </div>`;
+                        <div class="grid grid-cols-3 gap-3">
+                            <a href="tel:${lead.phone}" class="bg-indigo-50 text-indigo-600 py-4 rounded-2xl text-center transition active:scale-95">
+                                <i class="fa-solid fa-phone"></i>
+                            </a>
+                            <a href="https://wa.me/${lead.phone}" class="bg-emerald-50 text-emerald-600 py-4 rounded-2xl text-center transition active:scale-95">
+                                <i class="fa-brands fa-whatsapp text-xl"></i>
+                            </a>
+                            <button onclick="takeover('${lead.phone}')" class="${botClass} text-white text-[9px] font-black py-4 rounded-2xl uppercase tracking-wider transition active:scale-95 shadow-md">
+                                ${botLabel}
+                            </button>
+                        </div>
+                    </div>`;
                 });
-                list.innerHTML = html;
+                list.innerHTML = html || '<div class="text-center py-20 text-slate-300 font-bold">No leads found yet.</div>';
             } catch (err) {
-                console.error("Lead Load Error:", err);
+                console.error("Dashboard Sync Error:", err);
             }
         }
 
         async function takeover(phone) {
-            const confirmAction = confirm("Do you want to silence the AI and take control of this chat?");
-            if (!confirmAction) return;
-
+            if (!confirm("Ready to handle this client personally? The AI will stop responding.")) return;
             const res = await fetch('/conversations/takeover/' + phone, {
                 method: 'POST',
                 headers: { 'X-Tenant-Id': TENANT_ID }
             });
-            if (res.ok) {
-                loadLeads();
-            }
+            if (res.ok) loadLeads();
         }
 
         loadLeads();
-        setInterval(loadLeads, 30000); // Sync every 30s
+        setInterval(loadLeads, 15000); // Fast refresh for premium feel
     </script>
+</body>
+
+</html>
