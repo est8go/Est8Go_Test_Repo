@@ -1,6 +1,5 @@
 /**
- * Est8Go Realtor Portal - Modular Logic Engine
- * Premium Version with Action Buttons Restored
+ * Est8Go Realtor Portal - Master Logic Engine
  */
 
 const RealtorPortal = (() => {
@@ -8,8 +7,7 @@ const RealtorPortal = (() => {
         TENANT_ID: "1",
         ENDPOINTS: {
             leads: '/conversations/realtor/leads',
-            takeover: '/conversations/takeover/',
-            upload: '/listings/realtor/upload'
+            takeover: '/conversations/takeover/'
         }
     };
 
@@ -17,30 +15,11 @@ const RealtorPortal = (() => {
         console.log("🚀 Est8Go Portal Active");
         bindEvents();
         loadLeads();
-        setInterval(loadLeads, 20000);
+        setInterval(loadLeads, 15000);
     };
 
     const bindEvents = () => {
-        document.getElementById('addPropTrigger')?.addEventListener('click', () => {
-            document.getElementById('uploadModal')?.classList.remove('hidden');
-        });
-        document.getElementById('closeModal')?.addEventListener('click', () => {
-            document.getElementById('uploadModal')?.classList.add('hidden');
-        });
-        document.getElementById('gpsBtn')?.addEventListener('click', captureLocation);
-        document.getElementById('uploadForm')?.addEventListener('submit', handleUpload);
-    };
-
-    const captureLocation = () => {
-        const btn = document.getElementById('gpsBtn');
-        if (!navigator.geolocation) return alert("GPS not supported");
-        btn.innerHTML = "🛰️ Verifying Site...";
-        navigator.geolocation.getCurrentPosition((pos) => {
-            document.getElementById('latitude').value = pos.coords.latitude;
-            document.getElementById('longitude').value = pos.coords.longitude;
-            btn.classList.replace('bg-emerald-500', 'bg-blue-600');
-            btn.innerHTML = "✅ Site Verified";
-        });
+        document.getElementById('addPropTrigger')?.addEventListener('click', () => alert("Property Upload coming in Stage B Part 2!"));
     };
 
     const loadLeads = async () => {
@@ -48,79 +27,78 @@ const RealtorPortal = (() => {
             const response = await fetch(CONFIG.ENDPOINTS.leads, {
                 headers: { 'X-Tenant-Id': CONFIG.TENANT_ID }
             });
-            const leads = await response.json();
+            const data = await response.json();
 
-            // Update Stats
-            document.getElementById('statCount').innerText = leads.length;
-            document.getElementById('statHot').innerText = leads.filter(l => l.status === 'HOT LEAD').length;
+            document.getElementById('statCount').innerText = data.length;
+            document.getElementById('statHot').innerText = data.filter(l => l.status === 'HOT LEAD').length;
 
-            renderLeads(leads);
-        } catch (err) {
-            console.error("Sync Error:", err);
-        }
+            renderUI(data);
+        } catch (err) { console.error("Sync Error:", err); }
     };
 
-    const renderLeads = (leads) => {
+    const renderUI = (leads) => {
         const list = document.getElementById('leadList');
-        if (!list) return;
-
         let html = "";
+
         leads.forEach(lead => {
-            const name = lead.name || "Guest User";
+            const name = lead.name || "Guest";
             const lastActive = lead.last_active || "Active";
             const prefs = lead.prefs || {};
-            const loc = (prefs.location && prefs.location !== "undefined") ? prefs.location : "General";
+            const loc = (prefs.location && prefs.location !== "undefined") ? prefs.location : "Exploring";
             const budget = (prefs.budget && !isNaN(prefs.budget)) ? '₦' + Number(prefs.budget).toLocaleString() : "Negotiable";
 
             const isHot = lead.status === 'HOT LEAD';
-            const botLabel = lead.is_bot_active ? 'Takeover' : 'Active';
+            const botLabel = lead.is_bot_active ? 'Silence AI' : 'Controlled';
             const botClass = lead.is_bot_active ? 'bg-slate-900' : 'bg-emerald-500';
 
             html += `
-            <div class="bg-white p-5 rounded-[2.2rem] shadow-sm border border-slate-100 overflow-hidden w-full mb-4">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-11 h-11 shrink-0 premium-gradient rounded-xl flex items-center justify-center text-white font-black">
+            <div class="bg-white p-6 rounded-[2.2rem] shadow-sm border border-slate-100 overflow-hidden w-full mb-4 relative">
+                ${isHot ? '<div class="absolute top-0 right-0 bg-orange-500 text-white text-[8px] font-black px-4 py-1 rounded-bl-2xl uppercase tracking-widest">Hot</div>' : ''}
+                
+                <div class="flex items-center gap-4 mb-5">
+                    <div class="w-12 h-12 shrink-0 premium-gradient rounded-2xl flex items-center justify-center text-white font-black shadow-lg">
                         ${name.charAt(0)}
                     </div>
                     <div class="min-w-0 flex-1">
-                        <h3 class="text-sm font-black text-slate-800 truncate">${name}</h3>
-                        <p class="text-[9px] text-slate-400 font-bold uppercase">${lastActive}</p>
-                    </div>
-                    ${isHot ? '<span class="bg-orange-100 text-orange-600 text-[8px] font-black px-2 py-1 rounded-md uppercase">Hot</span>' : ''}
-                </div>
-
-                <div class="bg-slate-50 rounded-2xl p-3 mb-4 border border-slate-100">
-                    <div class="flex w-full text-left" style="display: table; table-layout: fixed; width: 100%;">
-                        <div style="display: table-cell;" class="w-1/2 border-r border-slate-200 pr-2 overflow-hidden">
-                            <p class="text-[7px] font-black text-slate-400 uppercase mb-0.5">Searching</p>
-                            <p class="text-[10px] font-bold text-indigo-900 truncate">${loc}</p>
-                        </div>
-                        <div style="display: table-cell;" class="w-1/2 pl-2 overflow-hidden">
-                            <p class="text-[7px] font-black text-slate-400 uppercase mb-0.5 text-right">Budget</p>
-                            <p class="text-[10px] font-black text-emerald-600 text-right truncate">${budget}</p>
-                        </div>
+                        <h3 class="text-sm font-black text-slate-800 force-truncate">${name}</h3>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase">${lastActive}</p>
                     </div>
                 </div>
 
-                <!-- RESTORED ACTION BUTTONS -->
+                <div class="bg-slate-50 rounded-2xl p-4 mb-5 border border-slate-100">
+                    <table style="width: 100%; table-layout: fixed;">
+                        <tr>
+                            <td style="width: 50%; border-right: 1px solid #e2e8f0; padding-right: 8px; overflow: hidden;">
+                                <p class="text-[8px] font-black text-slate-400 uppercase mb-0.5">Searching</p>
+                                <p class="text-[11px] font-bold text-indigo-900 force-truncate">${loc}</p>
+                            </td>
+                            <td style="width: 50%; padding-left: 8px; overflow: hidden;">
+                                <p class="text-[8px] font-black text-slate-400 uppercase mb-0.5 text-right">Budget</p>
+                                <p class="text-[11px] font-black text-emerald-600 text-right force-truncate">${budget}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
                 <div class="flex gap-2">
-                    <a href="tel:${lead.phone}" class="flex-1 bg-indigo-50 text-indigo-600 py-3 rounded-xl text-center active:scale-95 transition">
-                        <i class="fa-solid fa-phone text-xs"></i>
+                    <a href="tel:${lead.phone}" class="flex-1 bg-indigo-50 text-indigo-600 py-4 rounded-2xl text-center active:scale-95 transition">
+                        <i class="fa-solid fa-phone"></i>
                     </a>
-                    <a href="https://wa.me/${lead.phone}" class="flex-1 bg-emerald-50 text-emerald-600 py-3 rounded-xl text-center active:scale-95 transition">
-                        <i class="fa-brands fa-whatsapp text-sm"></i>
+                    <a href="https://wa.me/${lead.phone}" class="flex-1 bg-emerald-50 text-emerald-600 py-4 rounded-2xl text-center active:scale-95 transition">
+                        <i class="fa-brands fa-whatsapp text-xl"></i>
                     </a>
-                    <button onclick="RealtorPortal.takeover('${lead.phone}')" class="flex-[1.5] ${botClass} text-white text-[9px] font-black py-3 rounded-xl uppercase active:scale-95 transition shadow-md">
+                    <button onclick="window.takeoverChat('${lead.phone}')" class="flex-[1.8] ${botClass} text-white text-[10px] font-black py-4 rounded-2xl uppercase shadow-md active:scale-95 transition">
                         ${botLabel}
                     </button>
                 </div>
             </div>`;
         });
-        list.innerHTML = html || '<div class="text-center py-20 text-slate-300 font-bold">No leads found.</div>';
+        list.innerHTML = html || '<div class="text-center py-20 text-slate-300 font-bold">Waiting for leads...</div>';
     };
 
-    const takeover = async (phone) => {
-        if (!confirm("Ready to handle this client personally? The AI will stop responding.")) return;
+    // 🔹 THE BRIDGE: Exposed to the window so HTML can see it
+    window.takeoverChat = async (phone) => {
+        if (!confirm("Ready to handle this personally? AI will stop responding.")) return;
         const res = await fetch(CONFIG.ENDPOINTS.takeover + phone, {
             method: 'POST',
             headers: { 'X-Tenant-Id': CONFIG.TENANT_ID }
@@ -128,24 +106,7 @@ const RealtorPortal = (() => {
         if (res.ok) loadLeads();
     };
 
-    const handleUpload = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        if (!document.getElementById('latitude').value) return alert("Capture GPS first!");
-
-        const res = await fetch(CONFIG.ENDPOINTS.upload, {
-            method: 'POST',
-            headers: { 'X-Tenant-Id': CONFIG.TENANT_ID },
-            body: formData
-        });
-        if (res.ok) {
-            alert("🎉 Published Successfully!");
-            location.reload();
-        }
-    };
-
-    // 🔹 CRITICAL: Expose functions for HTML buttons to see them
-    return { init, takeover };
+    return { init };
 })();
 
 document.addEventListener('DOMContentLoaded', RealtorPortal.init);

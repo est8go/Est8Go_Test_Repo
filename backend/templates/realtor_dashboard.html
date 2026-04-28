@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Est8Go | Realtor Portal</title>
+    <title>Est8Go | Realtor Executive</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap"
@@ -23,39 +23,64 @@
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
         }
+
+        .force-truncate {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
+        }
     </style>
 </head>
 
 <body class="pb-24">
 
-    <!-- NAVIGATION (Kept from your beautiful design) -->
     <nav class="premium-gradient text-white pt-6 pb-12 px-6 rounded-b-[2.5rem] shadow-2xl sticky top-0 z-50">
         <div class="flex justify-between items-center">
-            <h1 class="text-xl font-black">Est8Go <span class="text-indigo-400">Realtor</span></h1>
-            <div class="bg-white/10 p-3 rounded-2xl"><i class="fa-solid fa-shield-halved"></i></div>
+            <div>
+                <p class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-300 mb-1">Executive Portal
+                </p>
+                <h1 class="text-xl font-black italic">Est8Go</h1>
+            </div>
+            <div class="bg-white/10 p-3 rounded-2xl border border-white/10"><i class="fa-solid fa-shield-halved"></i>
+            </div>
         </div>
     </nav>
 
-    <!-- CONTENT AREA -->
-    <main class="px-4 mt-8">
-        <div id="leadList" class="space-y-4"></div>
-    </main>
-
-    <!-- BOTTOM BAR (Clean ID for JS Hook) -->
-    <div class="fixed bottom-0 left-0 right-0 glass-card px-8 py-4 flex justify-between items-center z-[100]">
-        <div class="flex flex-col items-center text-indigo-600"><i class="fa-solid fa-house-chimney"></i></div>
-
-        <!-- THE MODULAR HOOK ID: addPropTrigger -->
-        <div id="addPropTrigger" class="flex flex-col items-center text-slate-400 cursor-pointer">
-            <i class="fa-solid fa-plus-circle text-xl"></i>
-            <span class="text-[9px] font-bold mt-1 uppercase">Add Prop</span>
+    <!-- Stats -->
+    <div class="px-6 -mt-8 relative z-50">
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-white p-5 rounded-[2rem] shadow-xl border border-white">
+                <p class="text-[9px] font-black text-slate-400 uppercase">Leads</p>
+                <h3 id="statCount" class="text-2xl font-black text-slate-800">0</h3>
+            </div>
+            <div class="bg-emerald-500 p-5 rounded-[2rem] shadow-xl border-emerald-400">
+                <p class="text-[9px] font-black text-emerald-100 uppercase">Hot Deals</p>
+                <h3 id="statHot" class="text-2xl font-black text-white">0</h3>
+            </div>
         </div>
-
-        <div class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-gear"></i></div>
     </div>
 
-    <!-- MODULAR JS: The Clean Way -->
-    <script src="/static/js/realtor_portal.js" type="module"></script>
+    <main class="px-6 mt-8">
+        <div id="leadList" class="space-y-4">
+            <div class="text-center py-20 text-slate-300 font-bold italic">Establishing Truth Connection...</div>
+        </div>
+    </main>
+
+    <!-- Fixed Bottom Nav -->
+    <div
+        class="fixed bottom-0 left-0 right-0 glass-card px-8 py-4 flex justify-between items-center z-[100] border-t border-slate-100">
+        <div class="flex flex-col items-center text-indigo-600"><i class="fa-solid fa-house-chimney text-xl"></i></div>
+        <div id="addPropTrigger" class="flex flex-col items-center text-slate-400 cursor-pointer">
+            <i class="fa-solid fa-plus-circle text-2xl"></i>
+            <span class="text-[9px] font-bold mt-1 uppercase">Add Prop</span>
+        </div>
+        <div class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-gear text-xl"></i></div>
+    </div>
+
+    <!-- ⚡ THE CACHE BUSTER: Added v=1.0.1 to force browser refresh -->
+    <script src="/static/js/realtor_portal.js?v=1.0.1" type="module"></script>
 </body>
 
 </html>
