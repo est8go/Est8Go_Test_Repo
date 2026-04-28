@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Est8Go | Realtor Executive</title>
+    <title>Est8Go | Executive Realtor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap"
@@ -36,12 +36,13 @@
 
 <body class="pb-24">
 
+    <!-- Header -->
     <nav class="premium-gradient text-white pt-6 pb-12 px-6 rounded-b-[2.5rem] shadow-2xl sticky top-0 z-50">
         <div class="flex justify-between items-center">
             <div>
-                <p class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-300 mb-1">Executive Portal
+                <p class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-300 mb-1">Realtor Executive
                 </p>
-                <h1 class="text-xl font-black italic">Est8Go</h1>
+                <h1 class="text-xl font-black italic">Est8Go <span class="text-indigo-400">Portal</span></h1>
             </div>
             <div class="bg-white/10 p-3 rounded-2xl border border-white/10"><i class="fa-solid fa-shield-halved"></i>
             </div>
@@ -62,13 +63,56 @@
         </div>
     </div>
 
+    <!-- Leads Container -->
     <main class="px-6 mt-8">
-        <div id="leadList" class="space-y-4">
-            <div class="text-center py-20 text-slate-300 font-bold italic">Establishing Truth Connection...</div>
-        </div>
+        <h2 class="text-lg font-black text-slate-800 mb-4">Live Prospects</h2>
+        <div id="leadList" class="space-y-4"></div>
     </main>
 
-    <!-- Fixed Bottom Nav -->
+    <!-- PROPERTY UPLOAD MODAL -->
+    <div id="uploadModal" class="fixed inset-0 z-[200] hidden bg-slate-900/95 backdrop-blur-lg flex flex-col">
+        <nav class="p-6 flex justify-between items-center text-white">
+            <h2 class="text-xl font-black">List <span class="text-emerald-400">Property</span></h2>
+            <button id="closeModal" class="text-3xl text-white/50">&times;</button>
+        </nav>
+        <div class="flex-1 overflow-y-auto px-6 pb-20">
+            <form id="uploadForm" class="space-y-6">
+                <!-- GPS Section -->
+                <div class="bg-white/5 p-6 rounded-[2rem] border border-white/10 text-center">
+                    <p class="text-[10px] font-black text-emerald-400 uppercase mb-4 tracking-widest">Physical Proof
+                        Required</p>
+                    <button type="button" id="gpsBtn"
+                        class="w-full bg-emerald-500 text-white py-4 rounded-2xl font-black shadow-lg">CAPTURE SITE
+                        GPS</button>
+                    <input type="hidden" id="latitude" name="latitude">
+                    <input type="hidden" id="longitude" name="longitude">
+                </div>
+                <!-- Details -->
+                <input type="text" name="title" placeholder="Property Title" required
+                    class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white">
+                <input type="number" name="price" placeholder="Price (Naira)" required
+                    class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white">
+                <select name="location_name"
+                    class="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-white/70">
+                    <option value="maitama">Maitama</option>
+                    <option value="asokoro">Asokoro</option>
+                    <option value="gwarinpa">Gwarinpa</option>
+                    <option value="kabusa">Kabusa</option>
+                </select>
+                <select name="prop_type"
+                    class="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-white/70">
+                    <option value="land">Land</option>
+                    <option value="house">House</option>
+                    <option value="apartment">Apartment</option>
+                </select>
+                <input type="file" name="images" multiple class="w-full text-white/50 text-xs">
+                <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-[2rem] font-black">PUBLISH TO
+                    TRUTH-VAULT</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bottom Nav -->
     <div
         class="fixed bottom-0 left-0 right-0 glass-card px-8 py-4 flex justify-between items-center z-[100] border-t border-slate-100">
         <div class="flex flex-col items-center text-indigo-600"><i class="fa-solid fa-house-chimney text-xl"></i></div>
@@ -79,8 +123,7 @@
         <div class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-gear text-xl"></i></div>
     </div>
 
-    <!-- ⚡ THE CACHE BUSTER: Added v=1.0.1 to force browser refresh -->
-    <script src="/static/js/realtor_portal.js?v=1.0.1" type="module"></script>
+    <script src="/static/js/realtor_portal.js?v=1.1.0" type="module"></script>
 </body>
 
 </html>
