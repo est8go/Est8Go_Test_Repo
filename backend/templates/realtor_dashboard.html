@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Est8Go | Executive Portal</title>
+    <title>Est8Go | Realtor Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap"
@@ -19,155 +19,43 @@
             background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
         }
 
-        /* THE OVERFLOW KILLER */
-        .card-container {
-            width: 100%;
-            max-width: 100vw;
-            overflow-x: hidden;
-        }
-
-        .data-grid {
-            display: table;
-            table-layout: fixed;
-            width: 100%;
-        }
-
-        .data-cell {
-            display: table-cell;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
         }
     </style>
 </head>
 
 <body class="pb-24">
 
+    <!-- NAVIGATION (Kept from your beautiful design) -->
     <nav class="premium-gradient text-white pt-6 pb-12 px-6 rounded-b-[2.5rem] shadow-2xl sticky top-0 z-50">
         <div class="flex justify-between items-center">
-            <div>
-                <p class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-300 mb-1">Executive Access
-                </p>
-                <h1 class="text-xl font-black">Est8Go <span class="text-indigo-400">Portal</span></h1>
-            </div>
-            <div class="bg-white/10 p-3 rounded-2xl border border-white/10">
-                <i class="fa-solid fa-shield-halved"></i>
-            </div>
+            <h1 class="text-xl font-black">Est8Go <span class="text-indigo-400">Realtor</span></h1>
+            <div class="bg-white/10 p-3 rounded-2xl"><i class="fa-solid fa-shield-halved"></i></div>
         </div>
     </nav>
 
-    <!-- Stats -->
-    <div class="px-6 -mt-8 relative z-50">
-        <div class="grid grid-cols-2 gap-4">
-            <div class="bg-white p-5 rounded-[2rem] shadow-xl border border-white">
-                <p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Total Leads</p>
-                <h3 id="statCount" class="text-2xl font-black text-slate-800">0</h3>
-            </div>
-            <div class="bg-emerald-500 p-5 rounded-[2rem] shadow-xl border-emerald-400">
-                <p class="text-[9px] font-black text-emerald-100 uppercase tracking-tighter">Hot Deals</p>
-                <h3 id="statHot" class="text-2xl font-black text-white">0</h3>
-            </div>
-        </div>
-    </div>
-
-    <main class="px-4 mt-8 card-container">
-        <div id="leadList" class="space-y-4">
-            <div class="text-center py-20 text-slate-300 font-bold italic">Establishing secure connection...</div>
-        </div>
+    <!-- CONTENT AREA -->
+    <main class="px-4 mt-8">
+        <div id="leadList" class="space-y-4"></div>
     </main>
 
-    <script>
-        const TENANT_ID = "1";
+    <!-- BOTTOM BAR (Clean ID for JS Hook) -->
+    <div class="fixed bottom-0 left-0 right-0 glass-card px-8 py-4 flex justify-between items-center z-[100]">
+        <div class="flex flex-col items-center text-indigo-600"><i class="fa-solid fa-house-chimney"></i></div>
 
-        async function loadLeads() {
-            try {
-                const response = await fetch('/conversations/realtor/leads', {
-                    headers: { 'X-Tenant-Id': TENANT_ID }
-                });
-                const data = await response.json();
+        <!-- THE MODULAR HOOK ID: addPropTrigger -->
+        <div id="addPropTrigger" class="flex flex-col items-center text-slate-400 cursor-pointer">
+            <i class="fa-solid fa-plus-circle text-xl"></i>
+            <span class="text-[9px] font-bold mt-1 uppercase">Add Prop</span>
+        </div>
 
-                document.getElementById('statCount').innerText = data.length;
-                document.getElementById('statHot').innerText = data.filter(l => l.status === 'HOT LEAD').length;
+        <div class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-gear"></i></div>
+    </div>
 
-                const list = document.getElementById('leadList');
-                let html = "";
-
-                data.forEach(lead => {
-                    // --- REVENUE DATA CLEANING ---
-                    const name = lead.name || "Guest User";
-                    const lastActive = lead.last_active || "Active";
-
-                    // Kill the 'undefined' bug at the source
-                    const prefs = lead.prefs || {};
-                    const loc = (prefs.location && prefs.location !== "undefined") ? prefs.location : "General";
-                    const budget = (prefs.budget && prefs.budget !== "undefined" && !isNaN(prefs.budget))
-                        ? '₦' + Number(prefs.budget).toLocaleString()
-                        : "Negotiable";
-
-                    const isHot = lead.status === 'HOT LEAD';
-                    const botLabel = lead.is_bot_active ? 'Silence AI' : 'Active';
-                    const botClass = lead.is_bot_active ? 'bg-slate-900' : 'bg-emerald-500';
-
-                    html += `
-                    <div class="bg-white p-5 rounded-[2.2rem] shadow-sm border border-slate-100 overflow-hidden w-full">
-                        <!-- Top Row -->
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="w-11 h-11 shrink-0 premium-gradient rounded-xl flex items-center justify-center text-white text-sm font-black shadow-md">
-                                ${name.charAt(0)}
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <h3 class="text-sm font-black text-slate-800 truncate">${name}</h3>
-                                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tight">${lastActive}</p>
-                            </div>
-                            ${isHot ? '<span class="bg-orange-100 text-orange-600 text-[8px] font-black px-2 py-1 rounded-md uppercase">Hot</span>' : ''}
-                        </div>
-
-                        <!-- Data Section (Forced Table Logic) -->
-                        <div class="bg-slate-50 rounded-2xl p-3 mb-4 border border-slate-100">
-                            <div class="data-grid">
-                                <div class="data-cell w-1/2 border-r border-slate-200 pr-2">
-                                    <p class="text-[7px] font-black text-slate-400 uppercase mb-0.5">Searching</p>
-                                    <p class="text-[10px] font-bold text-indigo-900 truncate">${loc}</p>
-                                </div>
-                                <div class="data-cell w-1/2 pl-2">
-                                    <p class="text-[7px] font-black text-slate-400 uppercase mb-0.5 text-right">Budget</p>
-                                    <p class="text-[10px] font-black text-emerald-600 text-right truncate">${budget}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="flex gap-2">
-                            <a href="tel:${lead.phone}" class="flex-1 bg-indigo-50 text-indigo-600 py-3 rounded-xl text-center active:scale-95 transition">
-                                <i class="fa-solid fa-phone text-xs"></i>
-                            </a>
-                            <a href="https://wa.me/${lead.phone}" class="flex-1 bg-emerald-50 text-emerald-600 py-3 rounded-xl text-center active:scale-95 transition">
-                                <i class="fa-brands fa-whatsapp text-sm"></i>
-                            </a>
-                            <button onclick="takeover('${lead.phone}')" class="flex-[1.5] ${botClass} text-white text-[9px] font-black py-3 rounded-xl uppercase tracking-tighter shadow-md">
-                                ${botLabel}
-                            </button>
-                        </div>
-                    </div>`;
-                });
-                list.innerHTML = html || '<div class="text-center py-20 text-slate-300 font-bold">No activity detected.</div>';
-            } catch (err) {
-                console.error("Sync Error:", err);
-            }
-        }
-
-        async function takeover(phone) {
-            if (!confirm("Silence the AI for this client?")) return;
-            const res = await fetch('/conversations/takeover/' + phone, {
-                method: 'POST',
-                headers: { 'X-Tenant-Id': TENANT_ID }
-            });
-            if (res.ok) loadLeads();
-        }
-
-        loadLeads();
-        setInterval(loadLeads, 20000); 
-    </script>
+    <!-- MODULAR JS: The Clean Way -->
+    <script src="/static/js/realtor_portal.js" type="module"></script>
 </body>
 
 </html>

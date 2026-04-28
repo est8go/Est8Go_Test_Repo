@@ -1,3 +1,4 @@
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
 # 1. Load keys first (MUST be the absolute first action)
@@ -26,6 +27,7 @@ app = FastAPI(
     description="The Global Multi-tenant Infrastructure for Real Estate Trust.",
     version="1.0.0",
 )
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # 6. Include Routers in the App
 app.include_router(auth_router)
