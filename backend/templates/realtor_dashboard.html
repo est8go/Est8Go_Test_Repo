@@ -14,111 +14,57 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-        }
-
         .premium-gradient {
             background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
         }
 
-        .status-pulse {
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
-
-            100% {
-                opacity: 1;
-            }
+        /* THE SPILLOVER KILLER: Hard truncation */
+        .force-truncate {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
         }
     </style>
 </head>
 
 <body class="bg-[#F8FAFC] pb-24">
 
-    <!-- Top Premium Header -->
-    <nav class="premium-gradient text-white pt-8 pb-12 px-6 rounded-b-[3rem] shadow-2xl sticky top-0 z-50">
-        <div class="flex justify-between items-center mb-4">
+    <nav class="premium-gradient text-white pt-6 pb-10 px-6 rounded-b-[2.5rem] shadow-2xl sticky top-0 z-50">
+        <div class="flex justify-between items-center">
             <div>
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="w-2 h-2 bg-emerald-400 rounded-full status-pulse"></span>
-                    <p class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-200">Realtor Command</p>
-                </div>
-                <h1 id="bizName" class="text-2xl font-black">Bravieshomz <span class="text-indigo-400">Ltd.</span></h1>
+                <p class="text-[9px] font-extrabold uppercase tracking-widest text-indigo-300 mb-1">Realtor Executive
+                </p>
+                <h1 class="text-xl font-black">Est8Go <span class="text-indigo-400">Portal</span></h1>
             </div>
-            <div class="relative">
-                <div class="bg-white/10 p-3 rounded-2xl border border-white/10">
-                    <i class="fa-solid fa-layer-group text-xl"></i>
-                </div>
+            <div class="bg-white/10 p-3 rounded-2xl border border-white/10">
+                <i class="fa-solid fa-bell"></i>
             </div>
         </div>
     </nav>
 
-    <!-- Floating Quick Stats -->
-    <div class="px-6 -mt-8 relative z-50">
-        <div class="grid grid-cols-2 gap-4">
-            <div class="glass-card p-5 rounded-[2rem] shadow-xl border border-white">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Total Leads</p>
-                <div class="flex items-end gap-1">
-                    <h3 id="statCount" class="text-3xl font-black text-slate-800">0</h3>
-                    <span class="text-[10px] text-emerald-500 font-bold mb-1 pb-1">+2 new</span>
-                </div>
+    <div class="px-6 -mt-6 relative z-50">
+        <div class="grid grid-cols-2 gap-3">
+            <div class="bg-white p-4 rounded-[2rem] shadow-xl border border-white">
+                <p class="text-[8px] font-black text-slate-400 uppercase">Leads</p>
+                <h3 id="statCount" class="text-2xl font-black text-slate-800">0</h3>
             </div>
-            <div class="bg-emerald-500 p-5 rounded-[2rem] shadow-xl border border-emerald-400">
-                <p class="text-[10px] font-black text-emerald-100 uppercase tracking-tighter">Hot Deals</p>
-                <h3 id="statHot" class="text-3xl font-black text-white">0</h3>
+            <div class="bg-emerald-500 p-4 rounded-[2rem] shadow-xl border-emerald-400">
+                <p class="text-[8px] font-black text-emerald-100 uppercase">Hot</p>
+                <h3 id="statHot" class="text-2xl font-black text-white">0</h3>
             </div>
         </div>
     </div>
 
-    <!-- Main Content Area -->
     <main class="px-6 mt-8">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-lg font-black text-slate-800">Live Prospects</h2>
-            <button class="text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-full">Filter By
-                Zone</button>
-        </div>
-
-        <!-- Lead Cards Container -->
-        <div id="leadList" class="space-y-5">
-            <!-- Dynamic Content Injected Here -->
-            <div class="text-center py-20 text-slate-300 font-bold">Scanning for leads...</div>
+        <div id="leadList" class="space-y-4">
+            <div class="text-center py-20 text-slate-300 font-bold italic">Syncing live data...</div>
         </div>
     </main>
 
-    <!-- Bottom Navigation Bar (App Style) -->
-    <div
-        class="fixed bottom-0 left-0 right-0 glass-card border-t border-slate-100 px-8 py-4 flex justify-between items-center z-[100]">
-        <div class="flex flex-col items-center text-indigo-600">
-            <i class="fa-solid fa-house-chimney text-xl"></i>
-            <span class="text-[9px] font-bold mt-1 uppercase">Dashboard</span>
-        </div>
-        <div class="flex flex-col items-center text-slate-400"
-            onclick="alert('Listing Management coming in the next update!')">
-            <i class="fa-solid fa-plus-circle text-xl"></i>
-            <span class="text-[9px] font-bold mt-1 uppercase">Add Prop</span>
-        </div>
-        <div class="flex flex-col items-center text-slate-400">
-            <i class="fa-solid fa-chart-line text-xl"></i>
-            <span class="text-[9px] font-bold mt-1 uppercase">Sales</span>
-        </div>
-        <div class="flex flex-col items-center text-slate-400">
-            <i class="fa-solid fa-gear text-xl"></i>
-            <span class="text-[9px] font-bold mt-1 uppercase">Setup</span>
-        </div>
-    </div>
-
     <script>
-        const TENANT_ID = "1"; // Currently testing with Super Admin tenant
+        const TENANT_ID = "1";
 
         async function loadLeads() {
             try {
@@ -134,64 +80,65 @@
                 let html = "";
 
                 data.forEach(lead => {
+                    // --- STEP 1: DEEP DATA CLEANING (Prevents 'undefined') ---
+                    const name = lead.name || "Anonymous";
+                    const lastActive = lead.last_active || "Just now";
+
+                    // Safely check for nested prefs
+                    const prefs = lead.prefs || {};
+                    const loc = (prefs.location && prefs.location !== "undefined") ? prefs.location : "Exploring";
+                    const budget = (prefs.budget && prefs.budget !== "undefined") ? '₦' + Number(prefs.budget).toLocaleString() : "Negotiable";
+
                     const isHot = lead.status === 'HOT LEAD';
-                    const botLabel = lead.is_bot_active ? 'Silence AI' : 'Manual Mode';
+                    const botLabel = lead.is_bot_active ? 'Takeover' : 'Controlled';
                     const botClass = lead.is_bot_active ? 'bg-slate-900' : 'bg-emerald-500';
 
-                    // CLEAN DATA FALLBACKS: Prevents the word 'undefined' from appearing
-                    const loc = lead.prefs.location || 'General';
-                    const type = lead.prefs.property_type || 'Any';
-                    const budget = lead.prefs.budget ? '₦' + lead.prefs.budget.toLocaleString() : 'Negotiable';
-
                     html += `
-                    <div class="bg-white p-5 rounded-[2.5rem] shadow-sm border border-slate-100 relative overflow-hidden w-full max-w-full">
-                        ${isHot ? '<div class="absolute top-0 right-0 bg-orange-500 text-white text-[7px] font-black px-4 py-1 rounded-bl-2xl uppercase tracking-widest">Hot</div>' : ''}
-                        
-                        <!-- Header with forced spacing -->
-                        <div class="flex items-center gap-3 mb-4 overflow-hidden">
-                            <div class="w-12 h-12 shrink-0 premium-gradient rounded-2xl flex items-center justify-center text-white text-lg font-black">
-                                ${lead.name.charAt(0)}
+                    <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 shrink-0 premium-gradient rounded-2xl flex items-center justify-center text-white font-black shadow-md">
+                                ${name.charAt(0)}
                             </div>
                             <div class="min-w-0 flex-1">
-                                <h3 class="text-sm font-black text-slate-800 truncate">${lead.name}</h3>
-                                <p class="text-[9px] text-slate-400 font-bold uppercase truncate">${lead.last_active}</p>
+                                <h3 class="text-sm font-black text-slate-800 force-truncate">${name}</h3>
+                                <p class="text-[9px] text-slate-400 font-bold uppercase">${lastActive}</p>
+                            </div>
+                            ${isHot ? '<span class="bg-orange-100 text-orange-600 text-[8px] font-black px-2 py-1 rounded-lg uppercase">Hot</span>' : ''}
+                        </div>
+
+                        <!-- FORCED 50/50 SPLIT BOX -->
+                        <div class="bg-[#F8FAFC] rounded-2xl p-3 mb-4 flex w-full border border-slate-50">
+                            <div class="w-1/2 border-r border-slate-200 pr-2 min-w-0">
+                                <p class="text-[7px] font-black text-slate-400 uppercase mb-0.5">Searching</p>
+                                <p class="text-[10px] font-bold text-indigo-900 force-truncate">${loc}</p>
+                            </div>
+                            <div class="w-1/2 pl-2 min-w-0">
+                                <p class="text-[7px] font-black text-slate-400 uppercase mb-0.5 text-right">Budget</p>
+                                <p class="text-[10px] font-black text-emerald-600 text-right force-truncate">${budget}</p>
                             </div>
                         </div>
 
-                        <!-- Grid with hard-coded 50% split -->
-                        <div class="bg-[#F8FAFC] rounded-2xl p-3 mb-4 grid grid-cols-2 gap-0 border border-slate-50">
-                            <div class="border-r border-slate-200 pr-2 overflow-hidden">
-                                <p class="text-[7px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">Searching</p>
-                                <p class="text-[10px] font-bold text-indigo-900 truncate">${loc}</p>
-                            </div>
-                            <div class="pl-2 overflow-hidden">
-                                <p class="text-[7px] font-black text-slate-400 uppercase tracking-tighter mb-0.5 text-right">Budget</p>
-                                <p class="text-[10px] font-black text-emerald-600 text-right truncate">${budget}</p>
-                            </div>
-                        </div>
-
-                        <!-- Small Touch Action Buttons -->
                         <div class="flex gap-2">
-                            <a href="tel:${lead.phone}" class="flex-1 bg-indigo-50 text-indigo-600 py-3 rounded-xl text-center">
-                                <i class="fa-solid fa-phone text-sm"></i>
+                            <a href="tel:${lead.phone}" class="flex-1 bg-indigo-50 text-indigo-600 py-3 rounded-xl text-center active:scale-95 transition">
+                                <i class="fa-solid fa-phone text-xs"></i>
                             </a>
-                            <a href="https://wa.me/${lead.phone}" class="flex-1 bg-emerald-50 text-emerald-600 py-3 rounded-xl text-center">
-                                <i class="fa-brands fa-whatsapp text-lg"></i>
+                            <a href="https://wa.me/${lead.phone}" class="flex-1 bg-emerald-50 text-emerald-600 py-3 rounded-xl text-center active:scale-95 transition">
+                                <i class="fa-brands fa-whatsapp text-sm"></i>
                             </a>
-                            <button onclick="takeover('${lead.phone}')" class="flex-[1.5] ${botClass} text-white text-[8px] font-black py-3 rounded-xl uppercase">
+                            <button onclick="takeover('${lead.phone}')" class="flex-[1.5] ${botClass} text-white text-[8px] font-black py-3 rounded-xl uppercase active:scale-95 transition">
                                 ${botLabel}
                             </button>
                         </div>
                     </div>`;
                 });
-                list.innerHTML = html || '<div class="text-center py-20 text-slate-300 font-bold">No leads found yet.</div>';
+                list.innerHTML = html || '<div class="text-center py-20 text-slate-300 font-bold">No leads found.</div>';
             } catch (err) {
                 console.error("Dashboard Sync Error:", err);
             }
         }
 
         async function takeover(phone) {
-            if (!confirm("Ready to handle this client personally? The AI will stop responding.")) return;
+            if (!confirm("Silence the AI for this client?")) return;
             const res = await fetch('/conversations/takeover/' + phone, {
                 method: 'POST',
                 headers: { 'X-Tenant-Id': TENANT_ID }
@@ -200,7 +147,7 @@
         }
 
         loadLeads();
-        setInterval(loadLeads, 15000); // Fast refresh for premium feel
+        setInterval(loadLeads, 20000); 
     </script>
 </body>
 
