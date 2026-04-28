@@ -135,42 +135,50 @@
 
                 data.forEach(lead => {
                     const isHot = lead.status === 'HOT LEAD';
-                    const botLabel = lead.is_bot_active ? 'Silence AI' : 'In Manual Mode';
+                    const botLabel = lead.is_bot_active ? 'Silence AI' : 'Manual Mode';
                     const botClass = lead.is_bot_active ? 'bg-slate-900' : 'bg-emerald-500';
+
+                    // CLEAN DATA FALLBACKS: Prevents the word 'undefined' from appearing
+                    const loc = lead.prefs.location || 'General';
+                    const type = lead.prefs.property_type || 'Any';
+                    const budget = lead.prefs.budget ? '₦' + lead.prefs.budget.toLocaleString() : 'Negotiable';
 
                     html += `
                     <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 relative overflow-hidden">
                         ${isHot ? '<div class="absolute top-0 right-0 bg-orange-500 text-white text-[8px] font-black px-4 py-1 rounded-bl-2xl uppercase tracking-widest shadow-sm">Hot Deal</div>' : ''}
                         
+                        <!-- Header Section with Truncation -->
                         <div class="flex items-center gap-4 mb-5">
-                            <div class="w-14 h-14 premium-gradient rounded-[1.2rem] flex items-center justify-center text-white text-xl font-black shadow-lg">
+                            <div class="w-14 h-14 shrink-0 premium-gradient rounded-[1.2rem] flex items-center justify-center text-white text-xl font-black shadow-lg">
                                 ${lead.name.charAt(0)}
                             </div>
-                            <div>
-                                <h3 class="text-base font-black text-slate-800">${lead.name}</h3>
-                                <p class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">Last active ${lead.last_active}</p>
+                            <div class="overflow-hidden">
+                                <h3 class="text-base font-black text-slate-800 truncate">${lead.name}</h3>
+                                <p class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">Active ${lead.last_active}</p>
                             </div>
                         </div>
 
-                        <div class="bg-[#F1F5F9] rounded-3xl p-4 mb-5 flex justify-between items-center">
-                            <div>
-                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Searching For</p>
-                                <p class="text-xs font-bold text-indigo-900">${lead.prefs.location || 'General Area'} | ${lead.prefs.property_type || 'Land/House'}</p>
+                        <!-- Data Box with Fixed Column Spacing -->
+                        <div class="bg-[#F1F5F9] rounded-3xl p-4 mb-5 grid grid-cols-2 gap-2 items-center">
+                            <div class="overflow-hidden border-r border-slate-200 pr-2">
+                                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Searching For</p>
+                                <p class="text-[11px] font-bold text-indigo-900 truncate">${loc} | ${type}</p>
                             </div>
-                            <div class="text-right">
-                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Budget</p>
-                                <p class="text-xs font-black text-emerald-600">₦${lead.prefs.budget ? lead.prefs.budget.toLocaleString() : '---'}</p>
+                            <div class="pl-2">
+                                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 text-right">Budget</p>
+                                <p class="text-[11px] font-black text-emerald-600 text-right truncate">${budget}</p>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-3">
+                        <!-- Action Buttons -->
+                        <div class="grid grid-cols-3 gap-2">
                             <a href="tel:${lead.phone}" class="bg-indigo-50 text-indigo-600 py-4 rounded-2xl text-center transition active:scale-95">
                                 <i class="fa-solid fa-phone"></i>
                             </a>
                             <a href="https://wa.me/${lead.phone}" class="bg-emerald-50 text-emerald-600 py-4 rounded-2xl text-center transition active:scale-95">
                                 <i class="fa-brands fa-whatsapp text-xl"></i>
                             </a>
-                            <button onclick="takeover('${lead.phone}')" class="${botClass} text-white text-[9px] font-black py-4 rounded-2xl uppercase tracking-wider transition active:scale-95 shadow-md">
+                            <button onclick="takeover('${lead.phone}')" class="${botClass} text-white text-[8px] font-black py-4 rounded-2xl uppercase tracking-tighter transition active:scale-95 shadow-md">
                                 ${botLabel}
                             </button>
                         </div>
