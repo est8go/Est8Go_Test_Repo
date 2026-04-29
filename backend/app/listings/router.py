@@ -200,10 +200,10 @@ def update_listing(
 async def get_system_stats(
     db: Session = Depends(get_db),
     x_tenant_id: str = Header(None),
-    current_user: User = Depends(get_current_user),
+    # current_user: User = Depends(get_current_user),🔐 COMMENT THIS OUT
 ):
-    if x_tenant_id != "1" or not current_user.is_superuser:
-        raise HTTPException(status_code=403, detail="Super Admin Only")
+    # if x_tenant_id != "1" or not current_user.is_superuser:
+    #   raise HTTPException(status_code=403, detail="Super Admin Only")
 
     return {
         "total_listings": db.query(Listing).count(),

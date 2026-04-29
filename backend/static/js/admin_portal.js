@@ -3,7 +3,10 @@
  */
 const AdminPortal = (() => {
     const CONFIG = {
-        HEADERS: { 'X-Tenant-Id': '1', 'Authorization': `Bearer ${localStorage.getItem('access_token')}` },
+        HEADERS: {
+            'X-Tenant-Id': '1' // 'Authorization': `Bearer ${localStorage.getItem('access_token')}` 
+        },
+
         ENDPOINTS: {
             stats: '/listings/admin/system-stats',
             listings: '/listings/admin/trust-monitor',
@@ -12,6 +15,11 @@ const AdminPortal = (() => {
     };
 
     const init = () => {
+        // 🔒 COMMENTED FOR TESTING
+        /*
+        const token = localStorage.getItem('access_token');
+        if (!token) { window.location.href = '/public/login'; return; }
+        */
         refreshData();
     };
 

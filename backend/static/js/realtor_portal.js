@@ -26,13 +26,13 @@ const RealtorPortal = (() => {
     const bindEvents = () => {
         // Modal Triggers
         document.getElementById('addPropTrigger')?.addEventListener('click', () => {
-            // PREMIUM LOGIN GUARD
-            const token = localStorage.getItem('access_token');
-            if (!token) {
-                alert("🔒 Access Denied: You must be logged in to your Est8Go account to list a property.");
-                // Optional: window.location.href = "/login"; 
-                return;
-            }
+            /*  // PREMIUM LOGIN GUARD
+              const token = localStorage.getItem('access_token');
+              if (!token) {
+                  alert("🔒 Access Denied: You must be logged in to your Est8Go account to list a property.");
+                  // Optional: window.location.href = "/login"; 
+                  return;
+              } */
             document.getElementById('uploadModal').classList.remove('hidden');
         });
 
@@ -84,7 +84,7 @@ const RealtorPortal = (() => {
                 method: 'POST',
                 headers: {
                     'X-Tenant-Id': CONFIG.TENANT_ID,
-                    'Authorization': `Bearer ${token}`
+                    //  'Authorization': `Bearer ${token}` // 🔐 COMMENTED
                 },
                 body: formData
             });
