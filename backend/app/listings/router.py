@@ -29,8 +29,10 @@ from app.services.trust_engine import (
 router = APIRouter(prefix="/listings", tags=["Listings"])
 
 # Supabase Initialization
-URL = os.getenv("SUPABASE_URL")
-KEY = os.getenv("SUPABASE_KEY")
+URL = os.getenv("https://dkpvegowrlistpiimlol.supabase.co")
+KEY = os.getenv(
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZlZ293cmxpc3RwaWltbG9sIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTc3MTg1MiwiZXhwIjoyMDkxMzQ3ODUyfQ.5jopvKgkcgRNaCiQl58aN54-PCwRWXcbHZvK-yXB5_o"
+)
 supabase_client: Optional[Client] = None
 if URL and KEY:
     try:
