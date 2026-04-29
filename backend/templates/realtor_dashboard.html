@@ -31,6 +31,30 @@
             white-space: nowrap;
             max-width: 100%;
         }
+
+        /* 🔹 THE SPILLOVER GUARD */
+        .data-container {
+            display: flex;
+            width: 100%;
+            gap: 0;
+            overflow: hidden;
+            /* This stops anything from leaking out */
+        }
+
+        .data-box {
+            flex: 1;
+            /* Forces 50/50 split */
+            min-width: 0;
+            /* CRITICAL: Allows the box to shrink smaller than the text */
+            overflow: hidden;
+        }
+
+        .truncate-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
     </style>
 </head>
 

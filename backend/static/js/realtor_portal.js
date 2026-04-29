@@ -129,19 +129,24 @@ const RealtorPortal = (() => {
 
         let html = "";
         leads.forEach(lead => {
-            // DEEP CLEANING: Zero-Undefined Rule
-            const name = lead.name || "Guest Prospect";
-            const lastActive = lead.last_active || "Active";
-            const prefs = lead.prefs || {};
-            // 🔹 THE UNDEFINED KILLER
-            const loc = (prefs.location && String(prefs.location) !== "undefined") ? prefs.location : "Exploring";
-            const budget = (prefs.budget && !isNaN(prefs.budget) && String(prefs.budget) !== "undefined")
-                ? '₦' + Number(prefs.budget).toLocaleString()
-                : "Negotiable";
+            // 🔹 TRIPLE-GUARD DATA CLEANING
+            const rawPrefs = lead.prefs || {};
 
-            const isHot = lead.status === 'HOT LEAD';
-            const botLabel = lead.is_bot_active ? 'Silence AI' : 'Realtor In Control';
-            const botClass = lead.is_bot_active ? 'bg-slate-900' : 'bg-emerald-500';
+            // 1. Location Guard: Checks if missing, null, or the literal string "undefined"
+            let loc = "General";
+            if (rawPrefs.location && String(rawPrefs.location) !== "undefined" && rawPrefs.location !== null) {
+                loc = rawPrefs.location;
+            }
+
+            // 2. Budget Guard: Checks if it's a valid number
+            let budget = "Negotiable";
+            if (rawPrefs.budget && !isNaN(rawPrefs.budget) && String(rawPrefs.budget) !== "undefined") {
+                budget = '₦' + Number(rawPrefs.budget).toLocaleString();
+            }
+
+            const name = lead.name || "Guest";
+            const lastActive = lead.last_active || "Active";
+            // ... (rest of your variables)
 
             html += `
             <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden w-full mb-5 relative">
@@ -157,20 +162,25 @@ const RealtorPortal = (() => {
                     </div>
                 </div>
 
-                <div class="bg-slate-50 rounded-[1.5rem] p-4 mb-5 border border-slate-100">
-                    <table style="width: 100%; table-layout: fixed;">
-                        <tr>
-                            <td style="width: 55%; border-right: 1px solid #e2e8f0; padding-right: 8px;">
-                                <p class="text-[8px] font-black text-slate-400 uppercase mb-0.5">Searching</p>
-                                <p class="text-[11px] font-bold text-indigo-900 truncate">${loc}</p>
-                            </td>
-                            <td style="width: 45%; padding-left: 8px;">
-                                <p class="text-[8px] font-black text-slate-400 uppercase mb-0.5 text-right">Budget</p>
-                                <p class="text-[11px] font-black text-emerald-600 text-right truncate">${budget}</p>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
+                <!-- 🔹 SOCKET: FIXED TABLE CONTAINER -->
+            <div class="bg-slate-50 rounded-2xl p-4 mb-5 border border-slate-100" style="overflow: hidden;">
+                <table style="width: 100%; table-layout: fixed; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 55%; border-right: 1px solid #e2e8f0; padding-right: 10px; overflow: hidden;">
+                            <p style="font-size: 8px; font-weight: 900; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px;">Searching</p>
+                            <p style="font-size: 11px; font-weight: 700; color: #1e1b4b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ${loc}
+                            </p>
+                        </td>
+                        <td style="width: 45%; padding-left: 10px; overflow: hidden;">
+                            <p style="font-size: 8px; font-weight: 900; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; text-align: right;">Budget</p>
+                            <p style="font-size: 11px; font-weight: 900; color: #059669; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ${budget}
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
 
                 <div class="grid grid-cols-3 gap-3">
                     <a href="tel:${lead.phone}" class="bg-indigo-50 text-indigo-600 py-4 rounded-2xl text-center active:scale-95 transition">
