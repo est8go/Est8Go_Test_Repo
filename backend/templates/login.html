@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Est8Go | Secure Access</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f172a;
+        }
+
+        .premium-gradient {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+        }
+    </style>
+</head>
+
+<body class="flex items-center justify-center h-screen p-6">
+
+    <div class="w-full max-w-md bg-white/5 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/10 shadow-2xl">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-black text-white italic tracking-tighter">Est8Go</h1>
+            <p class="text-indigo-400 text-[10px] font-bold uppercase tracking-[0.3em] mt-2">Truth as a Service</p>
+        </div>
+
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Email</label>
+                <input type="email" id="email" required
+                    class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white outline-none focus:border-indigo-500 transition">
+            </div>
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Access Key</label>
+                <input type="password" id="password" required
+                    class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white outline-none focus:border-indigo-500 transition">
+            </div>
+
+            <button type="submit" id="loginBtn"
+                class="w-full premium-gradient text-white py-5 rounded-2xl font-black shadow-xl active:scale-95 transition">
+                AUTHENTICATE
+            </button>
+        </form>
+
+        <p class="text-center text-slate-500 text-[9px] mt-8 uppercase font-bold tracking-widest">
+            Protected by Est8Go Security Protocol
+        </p>
+    </div>
+
+    <script src="/static/js/auth.js" type="module"></script>
+</body>
+
+</html>

@@ -88,3 +88,8 @@ def get_public_listings(tenant_id: int, db: Session = Depends(get_db)):
         .filter(Listing.tenant_id == tenant_id, Listing.status == "verified")
         .all()
     )
+
+
+@router.get("/login", response_class=HTMLResponse)
+async def get_login_page(request: Request):
+    return templates.TemplateResponse(request=request, name="login.html")

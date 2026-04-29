@@ -30,6 +30,30 @@
                     class="text-blue-400">ADMIN</span></h1>
         </div>
 
+        <!-- 1. SIDEBAR (Now Desktop Only) -->
+        <aside
+            class="hidden lg:flex flex-col w-64 bg-slate-900 text-slate-400 h-full p-6 shadow-2xl fixed left-0 top-0">
+            <div class="mb-10 px-2">
+                <h1 class="text-xl font-black text-white tracking-tighter italic">EST8GO <span
+                        class="text-blue-400">ADMIN</span></h1>
+            </div>
+
+            <nav class="space-y-2 flex-1">
+                <button onclick="AdminPortal.switchTab('overview')" id="btn-overview"
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition hover:text-white sidebar-active">
+                    <i class="fa-solid fa-gauge-high"></i> <span class="text-sm font-bold">Overview</span>
+                </button>
+                <button onclick="AdminPortal.switchTab('listings')" id="btn-listings"
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition hover:text-white">
+                    <i class="fa-solid fa-shield-check"></i> <span class="text-sm font-bold">Truth Monitor</span>
+                </button>
+                <button onclick="AdminPortal.switchTab('tenants')" id="btn-tenants"
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition hover:text-white">
+                    <i class="fa-solid fa-building-user"></i> <span class="text-sm font-bold">Tenant Vault</span>
+                </button>
+            </nav>
+        </aside>
+
         <nav class="space-y-2 flex-1">
             <button onclick="AdminPortal.switchTab('overview')" id="btn-overview"
                 class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition hover:text-white sidebar-active">
@@ -52,7 +76,7 @@
     </aside>
 
     <!-- 2. MAIN CONTENT -->
-    <main class="flex-1 h-full overflow-y-auto relative">
+    <main class="flex-1 h-full overflow-y-auto lg:ml-64 pb-24 lg:pb-8">
 
         <!-- Header -->
         <header
@@ -116,6 +140,25 @@
 
     <!-- Modular JS -->
     <script src="/static/js/admin_portal.js?v=1.0.0" type="module"></script>
+    <!-- 2. MOBILE BOTTOM NAVIGATION (Phone Only) -->
+    <div
+        class="lg:hidden fixed bottom-0 left-0 right-0 bg-slate-900 text-slate-400 px-6 py-4 flex justify-between items-center z-[100] border-t border-slate-800 rounded-t-[2rem] shadow-2xl">
+        <button onclick="AdminPortal.switchTab('overview')"
+            class="flex flex-col items-center gap-1 hover:text-blue-400 transition">
+            <i class="fa-solid fa-gauge-high text-lg"></i>
+            <span class="text-[9px] font-black uppercase">Home</span>
+        </button>
+        <button onclick="AdminPortal.switchTab('listings')"
+            class="flex flex-col items-center gap-1 hover:text-blue-400 transition">
+            <i class="fa-solid fa-shield-check text-lg"></i>
+            <span class="text-[9px] font-black uppercase">Truth</span>
+        </button>
+        <button onclick="AdminPortal.switchTab('tenants')"
+            class="flex flex-col items-center gap-1 hover:text-blue-400 transition">
+            <i class="fa-solid fa-building-user text-lg"></i>
+            <span class="text-[9px] font-black uppercase">Tenants</span>
+        </button>
+    </div>
 </body>
 
 </html>
