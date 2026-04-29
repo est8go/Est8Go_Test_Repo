@@ -15,6 +15,7 @@ from app.conversations.responses import get_response
 from app.conversations.templates import is_filler, get_next_question
 from app.conversations.brain import extract_preferences
 from app.conversations.ai_fallback import is_company_faq, answer_company_faq
+from sqlalchemy.orm import joinedload  # Ensure this is imported
 
 # 3. External Senders & Trust
 from app.services.meta_sender_service import (
@@ -33,8 +34,10 @@ logger = logging.getLogger(__name__)
 
 def _find_matching_listings(db: Session, tenant_id: int, data: dict) -> List[Listing]:
     """Premium Search: Finds verified properties with flexible pricing."""
-    query = db.query(Listing).filter(
-        Listing.tenant_id == tenant_id, Listing.status == "verified"
+    query = (
+        db.query(Listing)
+        .options(joinedload(Listing.images))
+        .filter(Listing.tenant_id == tenant_id, Listing.status == "verified")
     )
 
     if data.get("location"):
@@ -266,31 +269,57 @@ async def handle_incoming_message(data: dict, db: Session):
             prefs.get("budget") or prefs.get("property_type")
         ):
             matches = _find_matching_listings(db, tenant_id, prefs)
-            if matches:
-                trust = calculate_confidence_score(matches[0])
+
+            if matches and len(matches) > 0:
+                prop = matches[0]
+                trust = calculate_confidence_score(prop)
                 biz_name = tenant_profile["business_name"]
+
+                # 🔹 SOCKET: Fetch the first image from the LISTING_IMAGES table
+                image_url = prop.images[0].url if prop.images else None
+
                 summary = (
-                    f"✨ *Great news, {first_name}!*\n"
-                    f"I found a verified match from *{biz_name}* ({trust}% Trusted).\n\n"
-                    f"View Full Details: https://est8go-api.onrender.com/public/property/{matches[0].id}"
+                    f"✨ *Match Found from {biz_name}*\n\n"
+                    f"🏠 *{prop.title}*\n"
+                    f"📍 Location: {prop.location}\n"
+                    f"💰 Price: ₦{prop.price:,}\n"
+                    f"🛡️ Trust Score: {trust}% (GPS Verified)\n\n"
+                    f"📸 *View Verified Photos here:* \n{image_url if image_url else 'Photos pending audit'}\n\n"
+                    f"Would you like to book an inspection for this property?"
                 )
+
+                # Send the text + image link (Always works, no Meta approval needed)
                 await send_meta_message(sender_id, summary)
+
+                # Try the carousel as a 'bonus' (if template is approved, it shows)
                 await send_meta_carousel(sender_id, prepare_meta_carousel(matches))
                 return
 
         # --- H. FINAL REPLY (Branding Injection) ---
+        # --- H. FINAL REPLY (Proactive Branding Injection) ---
         raw_reply = pipe.get("reply", "")
 
+        # 1. Capture Completion
         if raw_reply == "completed_flag":
             final_reply = f"✅ I've captured your preferences! A consultant from *{tenant_profile['business_name']}* will contact you shortly."
+
+        # 2. PROACTIVE GREETING: Tells the user what to do next
+        elif any(w in text_body for w in ["hi", "hello", "hey", "start"]):
+            greeting = get_response("greeting", first_name, tenant_profile)
+            # We pull 'areas_covered' from the Realtor's profile in the DB
+            areas = tenant_profile.get("areas_covered", "Abuja and surrounding areas")
+            nudge = f"\n\nCurrently, I have verified listings in *{areas}*. Which area are you looking at today?"
+            final_reply = greeting + nudge
+
+        # 3. NUDGES: Keep the flow moving
+        elif "location" in raw_reply.lower() or "where" in raw_reply.lower():
+            final_reply = get_response("nudge_location", first_name, tenant_profile)
+        elif "budget" in raw_reply.lower() or "price" in raw_reply.lower():
+            final_reply = get_response("nudge_budget", first_name, tenant_profile)
+
+        # 4. FALLBACK: filler or raw reply
         elif raw_reply == "filler_flag" or not raw_reply:
             final_reply = get_response("filler", first_name, tenant_profile)
-        elif any(w in text_body for w in ["hi", "hello", "hey"]):
-            final_reply = get_response("greeting", first_name, tenant_profile)
-        elif "location" in raw_reply.lower():
-            final_reply = get_response("nudge_location", first_name, tenant_profile)
-        elif "budget" in raw_reply.lower():
-            final_reply = get_response("nudge_budget", first_name, tenant_profile)
         else:
             final_reply = raw_reply
 
