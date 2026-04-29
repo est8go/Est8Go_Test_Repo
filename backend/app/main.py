@@ -13,6 +13,7 @@ register_all_models()
 from fastapi import FastAPI  # noqa: E402
 
 # 4. Import Routers
+from app.conversations.router import router as conversations_router  # noqa: E402
 from app.auth.router import router as auth_router  # noqa: E402
 from app.users.router import router as users_router  # noqa: E402
 from app.tenants.router import router as tenants_router  # noqa: E402
@@ -30,6 +31,7 @@ app = FastAPI(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # 6. Include Routers in the App
+app.include_router(conversations_router)
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(tenants_router)
