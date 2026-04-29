@@ -87,27 +87,42 @@
                     <input type="hidden" id="latitude" name="latitude">
                     <input type="hidden" id="longitude" name="longitude">
                 </div>
-                <!-- Details -->
-                <input type="text" name="title" placeholder="Property Title" required
-                    class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white">
-                <input type="number" name="price" placeholder="Price (Naira)" required
-                    class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white">
-                <select name="location_name"
-                    class="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-white/70">
-                    <option value="maitama">Maitama</option>
-                    <option value="asokoro">Asokoro</option>
-                    <option value="gwarinpa">Gwarinpa</option>
-                    <option value="kabusa">Kabusa</option>
-                </select>
-                <select name="prop_type"
-                    class="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-white/70">
-                    <option value="land">Land</option>
-                    <option value="house">House</option>
-                    <option value="apartment">Apartment</option>
-                </select>
-                <input type="file" name="images" multiple class="w-full text-white/50 text-xs">
-                <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-[2rem] font-black">PUBLISH TO
-                    TRUTH-VAULT</button>
+
+                <!-- FLEXIBLE LOCATION (Fixed restriction) -->
+                <div class="space-y-4">
+                    <input type="text" name="title" placeholder="Property Title (e.g. 3 Bed Apartment)" required
+                        class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white">
+
+                    <input type="number" name="price" placeholder="Price (Naira)" required
+                        class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white">
+
+                    <!-- Datalist allows typing ANY location while suggesting major ones -->
+                    <input list="locations" name="location_name" placeholder="Exact Location (Area/City)" required
+                        class="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-white">
+                    <datalist id="locations">
+                        <option value="Maitama">
+                        <option value="Asokoro">
+                        <option value="Gwarinpa">
+                        <option value="Kabusa">
+                        <option value="Lekki Phase 1">
+                        <option value="Ikeja">
+                    </datalist>
+
+                    <select name="prop_type"
+                        class="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-white/70">
+                        <option value="land">Land</option>
+                        <option value="house">House</option>
+                        <option value="apartment">Apartment</option>
+                    </select>
+
+                    <p class="text-[10px] text-white/40 font-bold ml-2">UPLOAD PHOTOS (MIN 3)</p>
+                    <input type="file" name="images" multiple required class="w-full text-white/50 text-xs">
+                </div>
+
+                <button type="submit" id="submitBtn"
+                    class="w-full bg-indigo-600 text-white py-5 rounded-[2rem] font-black shadow-2xl active:scale-95 transition">
+                    PUBLISH TO TRUTH-VAULT
+                </button>
             </form>
         </div>
     </div>

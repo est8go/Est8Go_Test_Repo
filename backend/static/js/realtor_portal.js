@@ -11,26 +11,73 @@ const RealtorPortal = (() => {
     const init = () => {
         bindEvents();
         loadLeads();
-        setInterval(loadLeads, 15000);
     };
 
     const bindEvents = () => {
         document.getElementById('addPropTrigger')?.addEventListener('click', () => document.getElementById('uploadModal').classList.remove('hidden'));
         document.getElementById('closeModal')?.addEventListener('click', () => document.getElementById('uploadModal').classList.add('hidden'));
         document.getElementById('gpsBtn')?.addEventListener('click', captureGPS);
-        document.getElementById('uploadForm')?.addEventListener('submit', handleUpload);
+
+        // --- FORM SUBMISSION FIX ---
+        const form = document.getElementById('uploadForm');
+        form?.addEventListener('submit', handleUpload);
     };
 
     const captureGPS = () => {
         const btn = document.getElementById('gpsBtn');
         if (!navigator.geolocation) return alert("GPS not supported");
-        btn.innerHTML = "🛰️ Verifying...";
+        btn.innerHTML = "🛰️ Locating Site...";
         navigator.geolocation.getCurrentPosition((pos) => {
             document.getElementById('latitude').value = pos.coords.latitude;
             document.getElementById('longitude').value = pos.coords.longitude;
             btn.className = "w-full bg-blue-600 text-white py-4 rounded-2xl font-black";
             btn.innerHTML = "✅ Site Verified";
+        }, (err) => {
+            alert("Error: Location access is mandatory for Truth-Verification.");
+            btn.innerHTML = "❌ GPS Failed";
         });
+    };
+
+    const handleUpload = async (e) => {
+        e.preventDefault();
+        const submitBtn = document.getElementById('submitBtn');
+
+        // 1. Validation
+        if (!document.getElementById('latitude').value) {
+            return alert("Wait! You must capture the GPS location while standing on the property.");
+        }
+
+        submitBtn.innerHTML = "Publishing to Vault...";
+        submitBtn.disabled = true;
+
+        try {
+            const formData = new FormData(e.target);
+            const token = localStorage.getItem('access_token'); // Get the JWT token from login
+
+            const res = await fetch(CONFIG.ENDPOINTS.upload, {
+                method: 'POST',
+                headers: {
+                    'X-Tenant-Id': CONFIG.TENANT_ID,
+                    'Authorization': `Bearer ${token}` // ADDED: Security handshake
+                },
+                body: formData
+            });
+
+            const result = await res.json();
+
+            if (res.ok) {
+                alert(`🎉 Success! Property listed with ${result.gps_accuracy}% GPS Accuracy.`);
+                location.reload();
+            } else {
+                alert(`Upload Failed: ${result.detail || 'Unknown Error'}`);
+            }
+        } catch (err) {
+            console.error("Upload Error:", err);
+            alert("Connection error. Please try again.");
+        } finally {
+            submitBtn.innerHTML = "PUBLISH TO TRUTH-VAULT";
+            submitBtn.disabled = false;
+        }
     };
 
     const loadLeads = async () => {
