@@ -1,4 +1,10 @@
+/**
+ * EST8GO MASTER EXECUTIVE CONTROLLER (v1.2.0)
+ * Includes: GPS Proof, Cloud Upload, Lead Sync, and HITL Bridge.
+ */
+
 const RealtorPortal = (() => {
+    // 1. CONFIGURATION & STATE
     const CONFIG = {
         TENANT_ID: "1",
         ENDPOINTS: {
@@ -8,72 +14,94 @@ const RealtorPortal = (() => {
         }
     };
 
+    // 2. INITIALIZATION
     const init = () => {
+        console.log("🚀 Est8Go Executive Portal: Systems Nominal");
         bindEvents();
         loadLeads();
+        // Fast sync for high-scaling performance
+        setInterval(loadLeads, 15000);
     };
 
     const bindEvents = () => {
-        document.getElementById('addPropTrigger')?.addEventListener('click', () => document.getElementById('uploadModal').classList.remove('hidden'));
-        document.getElementById('closeModal')?.addEventListener('click', () => document.getElementById('uploadModal').classList.add('hidden'));
-        document.getElementById('gpsBtn')?.addEventListener('click', captureGPS);
+        // Modal Triggers
+        document.getElementById('addPropTrigger')?.addEventListener('click', () => {
+            // PREMIUM LOGIN GUARD
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                alert("🔒 Access Denied: You must be logged in to your Est8Go account to list a property.");
+                // Optional: window.location.href = "/login"; 
+                return;
+            }
+            document.getElementById('uploadModal').classList.remove('hidden');
+        });
 
-        // --- FORM SUBMISSION FIX ---
-        const form = document.getElementById('uploadForm');
-        form?.addEventListener('submit', handleUpload);
+        document.getElementById('closeModal')?.addEventListener('click', () => {
+            document.getElementById('uploadModal').classList.add('hidden');
+        });
+
+        // GPS & Form Hooks
+        document.getElementById('gpsBtn')?.addEventListener('click', captureLocation);
+        document.getElementById('uploadForm')?.addEventListener('submit', handleUpload);
     };
 
-    const captureGPS = () => {
+    // 3. CORE BUSINESS LOGIC
+    const captureLocation = () => {
         const btn = document.getElementById('gpsBtn');
-        if (!navigator.geolocation) return alert("GPS not supported");
-        btn.innerHTML = "🛰️ Locating Site...";
+        if (!navigator.geolocation) return alert("Security Error: Device does not support GPS.");
+
+        btn.innerHTML = "🛰️ SYNCING WITH SATELLITES...";
         navigator.geolocation.getCurrentPosition((pos) => {
             document.getElementById('latitude').value = pos.coords.latitude;
             document.getElementById('longitude').value = pos.coords.longitude;
-            btn.className = "w-full bg-blue-600 text-white py-4 rounded-2xl font-black";
-            btn.innerHTML = "✅ Site Verified";
+
+            // Visual feedback for Truth-Verification
+            btn.className = "w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg animate-bounce";
+            btn.innerHTML = "✅ PHYSICAL SITE VERIFIED";
         }, (err) => {
-            alert("Error: Location access is mandatory for Truth-Verification.");
-            btn.innerHTML = "❌ GPS Failed";
+            alert("Mandatory: Location access is required to list properties on Est8Go.");
+            btn.innerHTML = "❌ VERIFICATION FAILED";
         });
     };
 
     const handleUpload = async (e) => {
         e.preventDefault();
-        const submitBtn = document.getElementById('submitBtn');
+        const submitBtn = document.querySelector('#uploadForm button[type="submit"]');
 
-        // 1. Validation
+        // Validation: Physical Proof check
         if (!document.getElementById('latitude').value) {
-            return alert("Wait! You must capture the GPS location while standing on the property.");
+            return alert("Verification Required: You must be on-site to list this property.");
         }
 
-        submitBtn.innerHTML = "Publishing to Vault...";
+        submitBtn.innerHTML = "PUBLISHING TO VAULT...";
         submitBtn.disabled = true;
 
-        try {
-            const formData = new FormData(e.target);
-            const token = localStorage.getItem('access_token'); // Get the JWT token from login
+        const formData = new FormData(e.target);
+        const token = localStorage.getItem('access_token'); // Premium Auth
 
+        try {
             const res = await fetch(CONFIG.ENDPOINTS.upload, {
                 method: 'POST',
                 headers: {
                     'X-Tenant-Id': CONFIG.TENANT_ID,
-                    'Authorization': `Bearer ${token}` // ADDED: Security handshake
+                    'Authorization': `Bearer ${token}`
                 },
                 body: formData
             });
 
-            const result = await res.json();
-
             if (res.ok) {
-                alert(`🎉 Success! Property listed with ${result.gps_accuracy}% GPS Accuracy.`);
+                alert("🎉 SUCCESS: Property is now LIVE and Truth-Verified.");
                 location.reload();
             } else {
-                alert(`Upload Failed: ${result.detail || 'Unknown Error'}`);
+                if (res.status === 401 || res.status === 403) {
+                    alert("🚨 Session Expired: Please log in again to publish.");
+                } else {
+                    const err = await res.json();
+                    alert(`Upload Failed: ${err.detail || 'Ensure all fields are filled'}`);
+                }
             }
         } catch (err) {
-            console.error("Upload Error:", err);
-            alert("Connection error. Please try again.");
+            alert("Network Error: Cloud connection interrupted.");
         } finally {
             submitBtn.innerHTML = "PUBLISH TO TRUTH-VAULT";
             submitBtn.disabled = false;
@@ -81,70 +109,97 @@ const RealtorPortal = (() => {
     };
 
     const loadLeads = async () => {
-        const res = await fetch(CONFIG.ENDPOINTS.leads, { headers: { 'X-Tenant-Id': CONFIG.TENANT_ID } });
-        const data = await res.json();
-        document.getElementById('statCount').innerText = data.length;
-        document.getElementById('statHot').innerText = data.filter(l => l.status === 'HOT LEAD').length;
-        renderLeads(data);
+        try {
+            const response = await fetch(CONFIG.ENDPOINTS.leads, {
+                headers: { 'X-Tenant-Id': CONFIG.TENANT_ID }
+            });
+            const data = await response.json();
+
+            // Dashboard Stats
+            document.getElementById('statCount').innerText = data.length;
+            document.getElementById('statHot').innerText = data.filter(l => l.status === 'HOT LEAD').length;
+
+            renderLeads(data);
+        } catch (err) { console.error("Lead Sync Error:", err); }
     };
 
     const renderLeads = (leads) => {
         const list = document.getElementById('leadList');
+        if (!list) return;
+
         let html = "";
         leads.forEach(lead => {
+            // DEEP CLEANING: Zero-Undefined Rule
+            const name = lead.name || "Guest Prospect";
+            const lastActive = lead.last_active || "Active";
             const prefs = lead.prefs || {};
-            const loc = (prefs.location && prefs.location !== "undefined") ? prefs.location : "General";
+            const loc = (prefs.location && prefs.location !== "undefined") ? prefs.location : "Exploring";
             const budget = (prefs.budget && !isNaN(prefs.budget)) ? '₦' + Number(prefs.budget).toLocaleString() : "Negotiable";
-            const botLabel = lead.is_bot_active ? 'Silence AI' : 'Active';
+
+            const isHot = lead.status === 'HOT LEAD';
+            const botLabel = lead.is_bot_active ? 'Silence AI' : 'Realtor In Control';
             const botClass = lead.is_bot_active ? 'bg-slate-900' : 'bg-emerald-500';
 
             html += `
-            <div class="bg-white p-6 rounded-[2.2rem] shadow-sm border border-slate-100 mb-4 overflow-hidden">
-                <div class="flex items-center gap-4 mb-4">
-                    <div class="w-12 h-12 premium-gradient rounded-2xl flex items-center justify-center text-white font-black">${lead.name.charAt(0)}</div>
+            <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden w-full mb-5 relative">
+                ${isHot ? '<div class="absolute top-0 right-0 bg-orange-500 text-white text-[8px] font-black px-4 py-1 rounded-bl-2xl uppercase tracking-widest">Hot Lead</div>' : ''}
+                
+                <div class="flex items-center gap-4 mb-5">
+                    <div class="w-14 h-14 premium-gradient rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-lg">
+                        ${name.charAt(0)}
+                    </div>
                     <div class="min-w-0 flex-1">
-                        <h3 class="text-sm font-black text-slate-800 truncate">${lead.name}</h3>
-                        <p class="text-[9px] text-slate-400 font-bold uppercase">${lead.last_active}</p>
+                        <h3 class="text-base font-black text-slate-800 truncate">${name}</h3>
+                        <p class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">Last Active ${lastActive}</p>
                     </div>
                 </div>
-                <div class="bg-slate-50 rounded-2xl p-4 mb-4 border border-slate-100">
+
+                <div class="bg-slate-50 rounded-[1.5rem] p-4 mb-5 border border-slate-100">
                     <table style="width: 100%; table-layout: fixed;">
                         <tr>
-                            <td style="width: 50%; border-right: 1px solid #e2e8f0; padding-right: 8px;">
-                                <p class="text-[8px] font-black text-slate-400 uppercase">Searching</p>
-                                <p class="text-[10px] font-bold text-indigo-900 truncate">${loc}</p>
+                            <td style="width: 55%; border-right: 1px solid #e2e8f0; padding-right: 8px;">
+                                <p class="text-[8px] font-black text-slate-400 uppercase mb-0.5">Searching</p>
+                                <p class="text-[11px] font-bold text-indigo-900 truncate">${loc}</p>
                             </td>
-                            <td style="width: 50%; padding-left: 8px;">
-                                <p class="text-[8px] font-black text-slate-400 uppercase text-right">Budget</p>
-                                <p class="text-[10px] font-black text-emerald-600 text-right truncate">${budget}</p>
+                            <td style="width: 45%; padding-left: 8px;">
+                                <p class="text-[8px] font-black text-slate-400 uppercase mb-0.5 text-right">Budget</p>
+                                <p class="text-[11px] font-black text-emerald-600 text-right truncate">${budget}</p>
                             </td>
                         </tr>
                     </table>
                 </div>
-                <div class="flex gap-2">
-                    <a href="tel:${lead.phone}" class="flex-1 bg-indigo-50 text-indigo-600 py-4 rounded-2xl text-center"><i class="fa-solid fa-phone"></i></a>
-                    <a href="https://wa.me/${lead.phone}" class="flex-1 bg-emerald-50 text-emerald-600 py-4 rounded-2xl text-center"><i class="fa-brands fa-whatsapp text-xl"></i></a>
-                    <button onclick="window.takeoverChat('${lead.phone}')" class="flex-[1.8] ${botClass} text-white text-[10px] font-black py-4 rounded-2xl uppercase">${botLabel}</button>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <a href="tel:${lead.phone}" class="bg-indigo-50 text-indigo-600 py-4 rounded-2xl text-center active:scale-95 transition">
+                        <i class="fa-solid fa-phone"></i>
+                    </a>
+                    <a href="https://wa.me/${lead.phone}" class="bg-emerald-50 text-emerald-600 py-4 rounded-2xl text-center active:scale-95 transition">
+                        <i class="fa-brands fa-whatsapp text-xl"></i>
+                    </a>
+                    <button onclick="RealtorPortal.takeover('${lead.phone}')" class="${botClass} text-white text-[9px] font-black py-4 rounded-2xl uppercase shadow-md active:scale-95 transition">
+                        ${botLabel}
+                    </button>
                 </div>
             </div>`;
         });
-        list.innerHTML = html;
+        list.innerHTML = html || '<div class="text-center py-20 text-slate-300 font-bold italic">No leads detected today.</div>';
     };
 
-    window.takeoverChat = async (phone) => {
-        if (!confirm("Silence AI?")) return;
-        await fetch(CONFIG.ENDPOINTS.takeover + phone, { method: 'POST', headers: { 'X-Tenant-Id': CONFIG.TENANT_ID } });
-        loadLeads();
+    const takeover = async (phone) => {
+        if (!confirm("Ready to handle this client personally? The AI will stop responding.")) return;
+        try {
+            await fetch(CONFIG.ENDPOINTS.takeover + phone, {
+                method: 'POST',
+                headers: { 'X-Tenant-Id': CONFIG.TENANT_ID }
+            });
+            loadLeads();
+        } catch (err) { console.error("Takeover Failed:", err); }
     };
 
-    const handleUpload = async (e) => {
-        e.preventDefault();
-        if (!document.getElementById('latitude').value) return alert("Verify GPS first!");
-        const formData = new FormData(e.target);
-        const res = await fetch(CONFIG.ENDPOINTS.upload, { method: 'POST', headers: { 'X-Tenant-Id': CONFIG.TENANT_ID }, body: formData });
-        if (res.ok) { alert("🎉 Property Published!"); location.reload(); }
-    };
-
-    return { init };
+    // 4. THE BRIDGE
+    return { init, takeover };
 })();
+
+// FINAL GLOBAL LINK
 document.addEventListener('DOMContentLoaded', RealtorPortal.init);
+window.RealtorPortal = RealtorPortal;

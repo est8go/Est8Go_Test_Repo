@@ -9,6 +9,7 @@ from app.database.db import get_db
 from app.auth.deps import get_current_user
 from app.users.models import User
 from app.listings.models import Listing, ListingImage
+from app.tenants.models import Tenant  # <--- SOCKET THIS LINE HERE
 
 # Schemas
 # These are now all used below to satisfy Ruff/Pylance
@@ -193,3 +194,34 @@ def update_listing(
     db.commit()
     db.refresh(listing)
     return listing
+
+
+@router.get("/admin/system-stats", tags=["Super Admin"])
+async def get_system_stats(
+    db: Session = Depends(get_db),
+    x_tenant_id: str = Header(None),
+    current_user: User = Depends(get_current_user),
+):
+    if x_tenant_id != "1" or not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Super Admin Only")
+
+    return {
+        "total_listings": db.query(Listing).count(),
+        "total_tenants": db.query(Tenant).count(),
+        "total_users": db.query(User).count(),
+        "pending_verifications": db.query(Listing)
+        .filter(Listing.status == "pending_review")
+        .count(),
+    }
+
+
+@router.get("/admin/tenants-list", tags=["Super Admin"])
+async def get_all_tenants(
+    db: Session = Depends(get_db),
+    x_tenant_id: str = Header(None),
+    current_user: User = Depends(get_current_user),
+):
+    if x_tenant_id != "1" or not current_user.is_admin:
+        raise HTTPException(status_code=403)
+
+    return db.query(Tenant).all()  # <--- SOCKET THIS RETURN
