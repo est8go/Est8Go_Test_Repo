@@ -133,8 +133,11 @@ const RealtorPortal = (() => {
             const name = lead.name || "Guest Prospect";
             const lastActive = lead.last_active || "Active";
             const prefs = lead.prefs || {};
-            const loc = (prefs.location && prefs.location !== "undefined") ? prefs.location : "Exploring";
-            const budget = (prefs.budget && !isNaN(prefs.budget)) ? '₦' + Number(prefs.budget).toLocaleString() : "Negotiable";
+            // 🔹 THE UNDEFINED KILLER
+            const loc = (prefs.location && String(prefs.location) !== "undefined") ? prefs.location : "Exploring";
+            const budget = (prefs.budget && !isNaN(prefs.budget) && String(prefs.budget) !== "undefined")
+                ? '₦' + Number(prefs.budget).toLocaleString()
+                : "Negotiable";
 
             const isHot = lead.status === 'HOT LEAD';
             const botLabel = lead.is_bot_active ? 'Silence AI' : 'Realtor In Control';

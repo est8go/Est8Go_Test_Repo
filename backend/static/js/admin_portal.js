@@ -58,20 +58,23 @@ const AdminPortal = (() => {
         const res = await fetch(CONFIG.ENDPOINTS.listings, { headers: CONFIG.HEADERS });
         const data = await res.json();
         const body = document.getElementById('listingsTableBody');
+
         body.innerHTML = data.map(item => `
             <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
                 <td class="p-4">
-                    <p class="font-bold text-slate-800">${item.title}</p>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase">${item.location}</p>
+                    <p class="font-bold text-slate-800 text-sm">${item.title}</p>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase">${item.location}</p>
                 </td>
-                <td class="p-4 text-sm font-semibold text-slate-600">${item.realtor}</td>
+                <td class="p-4 text-xs font-semibold text-slate-600">${item.realtor}</td>
                 <td class="p-4 text-center">
-                    <span class="px-3 py-1 rounded-full text-[10px] font-black bg-${item.status_color}-100 text-${item.status_color}-700 border border-${item.status_color}-200">
+                    <span class="px-3 py-1 rounded-full text-[9px] font-black bg-${item.status_color}-100 text-${item.status_color}-700">
                         ${item.trust_score}%
                     </span>
                 </td>
                 <td class="p-4 text-right">
-                    <button class="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-lg uppercase">Audit Detail</button>
+                    <span class="text-[10px] font-bold ${item.gps_verified ? 'text-green-600' : 'text-slate-300'}">
+                        ${item.gps_verified ? '📍 VERIFIED' : '⚪ MANUAL'}
+                    </span>
                 </td>
             </tr>
         `).join('');

@@ -76,56 +76,64 @@
         </nav>
 
         <div class="flex-1 overflow-y-auto px-8 pb-32">
-            <form id="uploadForm" class="space-y-8">
-                <!-- GPS Section -->
-                <div class="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 text-center">
-                    <p class="text-[10px] font-black text-emerald-400 uppercase mb-5 tracking-[0.2em]">Mandatory Site
-                        Check</p>
+            <form id="uploadForm" class="space-y-6">
+                <!-- GPS Section (Fixed Contrast) -->
+                <div class="bg-black/20 p-6 rounded-[2rem] border border-white/5 text-center">
+                    <p class="text-[10px] font-black text-indigo-300 uppercase mb-4 tracking-[0.2em]">Mandatory Site
+                        Presence</p>
                     <button type="button" id="gpsBtn"
-                        class="w-full bg-emerald-500 text-white py-5 rounded-2xl font-black shadow-xl active:scale-95 transition">CAPTURE
-                        SITE GPS</button>
+                        class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black shadow-lg">CAPTURE SITE
+                        GPS</button>
                     <input type="hidden" id="latitude" name="latitude">
                     <input type="hidden" id="longitude" name="longitude">
-                    <p class="text-[9px] text-white/30 mt-3 italic">GPS data proves your physical presence on the
-                        property.</p>
                 </div>
 
-                <!-- Input Fields -->
+                <!-- Details (Added Labels and Better Contrast) -->
                 <div class="space-y-4">
-                    <input type="text" name="title" placeholder="Listing Title (e.g. 4 Bedroom Terrace)" required
-                        class="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-white placeholder:text-white/20 outline-none focus:border-emerald-500">
-                    <input type="number" name="price" placeholder="Price in Naira" required
-                        class="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-white placeholder:text-white/20 outline-none focus:border-emerald-500">
+                    <div>
+                        <label class="text-[9px] font-black text-emerald-400 uppercase ml-4 mb-2 block">Listing
+                            Title</label>
+                        <input type="text" name="title" placeholder="e.g. 3 Bedroom Semi-Detached" required
+                            class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-white placeholder:text-slate-500">
+                    </div>
 
-                    <!-- Datalist: Flexible Location -->
-                    <input list="loc-suggestions" name="location_name" placeholder="Exact Neighborhood/Area" required
-                        class="w-full bg-white/10 border border-white/10 rounded-2xl p-5 text-white outline-none focus:border-emerald-500">
-                    <datalist id="loc-suggestions">
-                        <option value="Maitama">
-                        <option value="Asokoro">
-                        <option value="Gwarinpa">
-                        <option value="Kabusa">
-                        <option value="Lekki Phase 1">
-                    </datalist>
+                    <div>
+                        <label class="text-[9px] font-black text-emerald-400 uppercase ml-4 mb-2 block">Price
+                            (Naira)</label>
+                        <input type="number" name="price" placeholder="50000000" required
+                            class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-white placeholder:text-slate-500">
+                    </div>
 
-                    <select name="prop_type"
-                        class="w-full bg-white/10 border border-white/10 rounded-2xl p-5 text-white/70 outline-none">
-                        <option value="land">Plot of Land</option>
-                        <option value="house">Completed House</option>
-                        <option value="apartment">Apartment/Flat</option>
-                    </select>
+                    <div>
+                        <label class="text-[9px] font-black text-emerald-400 uppercase ml-4 mb-2 block">Neighborhood /
+                            Area</label>
+                        <!-- FIXED: Standard text type + Explicit ID -->
+                        <input type="text" list="loc-suggestions" name="location_name"
+                            placeholder="Type neighborhood name..." required
+                            class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-white outline-none focus:border-emerald-500">
+                        <datalist id="loc-suggestions">
+                            <option value="Maitama">
+                            <option value="Asokoro">
+                            <option value="Gwarinpa">
+                            <option value="Kabusa">
+                            <option value="Lekki Phase 1">
+                        </datalist>
+                    </div>
 
-                    <div class="pt-4">
-                        <p class="text-[10px] text-emerald-400 font-black uppercase mb-3 ml-2 tracking-widest">Property
-                            Photos</p>
-                        <input type="file" name="images" multiple required
-                            class="w-full text-white/40 text-xs file:bg-white/10 file:border-none file:text-white file:px-4 file:py-2 file:rounded-lg file:mr-4">
+                    <div>
+                        <label class="text-[9px] font-black text-emerald-400 uppercase ml-4 mb-2 block">Category</label>
+                        <select name="prop_type"
+                            class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-white/70">
+                            <option value="land">Plot of Land</option>
+                            <option value="house">Completed House</option>
+                        </select>
                     </div>
                 </div>
 
-                <button type="submit"
-                    class="w-full premium-gradient text-white py-6 rounded-[2.5rem] font-black shadow-2xl active:scale-95 transition">PUBLISH
-                    TO TRUTH-VAULT</button>
+                <button type="submit" id="submitBtn"
+                    class="w-full premium-gradient text-white py-6 rounded-[2.5rem] font-black shadow-2xl active:scale-95 transition border border-white/10">
+                    PUBLISH TO TRUTH-VAULT
+                </button>
             </form>
         </div>
     </div>
