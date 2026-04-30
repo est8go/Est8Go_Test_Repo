@@ -10,7 +10,8 @@ const AdminPortal = (() => {
         ENDPOINTS: {
             stats: '/listings/admin/system-stats',
             listings: '/listings/admin/trust-monitor',
-            tenants: '/listings/admin/tenants-list'
+            tenants: '/listings/admin/tenants-list',
+            verify: '/listings/admin/verify/' // 🔹 SOCKET: Add this
         }
     };
 
@@ -70,11 +71,11 @@ const AdminPortal = (() => {
                     <span class="px-3 py-1 rounded-full text-[9px] font-black bg-${item.status_color}-100 text-${item.status_color}-700">
                         ${item.trust_score}%
                     </span>
-                </td>
-                <td class="p-4 text-right">
-                    <span class="text-[10px] font-bold ${item.gps_verified ? 'text-green-600' : 'text-slate-300'}">
-                        ${item.gps_verified ? '📍 VERIFIED' : '⚪ MANUAL'}
-                    </span>
+               <td class="p-4 text-right">
+                    ${item.status_color === 'green'
+                ? '<span class="text-[10px] font-black text-emerald-600">LIVE ✅</span>'
+                : `<button onclick="AdminPortal.verifyListing('${item.id}')" class="text-[10px] font-black text-white bg-blue-600 px-3 py-1 rounded-lg uppercase shadow-md hover:bg-blue-700 transition">Verify Listing</button>`
+            }
                 </td>
             </tr>
         `).join('');
@@ -99,7 +100,22 @@ const AdminPortal = (() => {
         `).join('');
     };
 
-    window.AdminPortal = { switchTab, refreshData };
+    const verifyListing = async (id) => {
+        if (!confirm("Are you sure? This will make the listing visible to all WhatsApp users.")) return;
+
+        try {
+            const res = await fetch(CONFIG.ENDPOINTS.verify + id, {
+                method: 'PATCH',
+                headers: { 'X-Tenant-Id': '1' }
+            });
+            if (res.ok) {
+                alert("✅ Listing Verified Successfully!");
+                refreshData(); // Reload the table
+            }
+        } catch (err) { console.error("Verification failed:", err); }
+    };
+
+    window.AdminPortal = { switchTab, refreshData, verifyListing };
     return { init };
 })();
 

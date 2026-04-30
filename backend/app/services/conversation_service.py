@@ -136,7 +136,6 @@ async def handle_incoming_message(data: dict, db: Session):
         tenant_profile = get_tenant_profile(db, tenant_id)
         first_name = whatsapp_name.split()[0] if whatsapp_name else "there"
 
-        # --- B. HITL & STATE RETRIEVAL ---
         # --- B. HITL & GREETING GUARD (Top Priority) ---
         convo = (
             db.query(Conversation)

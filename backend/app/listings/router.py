@@ -229,3 +229,27 @@ async def get_all_tenants(
         raise HTTPException(status_code=403)
 
     return db.query(Tenant).all()  # <--- SOCKET THIS RETURN
+
+
+# 🔹 SOCKET: Add to the bottom of listings/router.py
+
+
+@router.patch("/admin/verify/{listing_id}", tags=["Super Admin"])
+async def verify_listing_manually(
+    listing_id: int, db: Session = Depends(get_db), x_tenant_id: str = Header(None)
+):
+    """
+    Super Admin Switch: Manually promotes a listing to 'verified' status.
+    """
+    if x_tenant_id != "1":
+        raise HTTPException(status_code=403, detail="Super Admin Access Only")
+
+    listing = db.query(Listing).filter(Listing.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+
+    # The Logic: Promote to Verified
+    listing.status = "verified"
+    db.commit()
+
+    return {"status": "success", "message": f"Property #{listing_id} is now Verified."}
