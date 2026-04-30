@@ -22,7 +22,7 @@ def get_response(key: str, name: str, tenant_profile: dict) -> str:
         "greeting": (
             [
                 f"Hi {name} {emoji}, I'm the assistant for *{biz_name}*. How can I help you find the right property today?",
-                f"Hello {name}! You're speaking with the *{biz_name}* virtual office. Ready to explore some verified listings? 😊",
+                f"Hello {name}! You're speaking with the *{biz_name}* Assistant. Ready to explore some verified listings? 😊",
             ]
             if tone == "friendly"
             else [
