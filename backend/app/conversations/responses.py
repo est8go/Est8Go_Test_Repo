@@ -31,7 +31,7 @@ def get_response(key: str, name: str, tenant_profile: dict) -> str:
             ]
         ),
         "nudge_location": [
-            f"Which area in Nigeria are you considering for your next investment with *{biz_name}*?",
+            f"Which area are you considering for your next investment with *{biz_name}*?",
             f"To help *{biz_name}* find the best deal, {name}, which location do you prefer? 📍",
         ],
         "nudge_budget": [
