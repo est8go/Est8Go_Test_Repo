@@ -39,7 +39,7 @@ def get_response(key: str, name: str, tenant_profile: dict) -> str:
             f"Could you share your budget? It helps *{biz_name}* filter out the noise for you. 💰",
         ],
         "inspection_confirm": [
-            f"Excellent choice, {name}! I've sent your request to the *{biz_name}* team. They will call you shortly to confirm the time. 👍🏽",
+            f"Excellent choice, {name}! I've sent your request to the *{biz_name}* team. They will contact you shortly to confirm the time. 👍🏽",
         ],
         "filler": [
             f"I’m with you {name} 👍🏽 — just give me a bit more detail so *{biz_name}* can serve you better.",
