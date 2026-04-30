@@ -150,10 +150,19 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
     )
 
     # 1. ATOMIC RESET
-    if any(k in text_clean.lower() for k in ["new search", "start again", "restart"]):
+    # 🔹 SOCKET: Added "hi", "hello", "hey" to the reset list
+    if any(
+        k in text_clean.lower()
+        for k in ["new search", "start again", "restart", "hi", "hello", "hey"]
+    ):
         convo.data_json = "{}"
-        convo.state = "ACTIVE"
+        convo.state = "ACTIVE"  # This pulls the bot out of 'HANDOFF'
         db.commit()
+
+        # If it was a greeting, we let the main logic handle the response
+        if any(k in text_clean.lower() for k in ["hi", "hello", "hey"]):
+            return {"reply": "greeting_flag", "state": "ACTIVE", "prefs": {}}
+
         return {
             "reply": "I've refreshed our search. 🔄 What type of property are we looking for now?",
             "state": "ACTIVE",
@@ -265,6 +274,7 @@ async def handle_incoming_message(data: dict, db: Session):
         prefs = pipe.get("prefs", {})
 
         # --- G. DYNAMIC SEARCH ---
+        # --- G. DYNAMIC SEARCH (The Truth-First Results) ---
         if prefs.get("location") and (
             prefs.get("budget") or prefs.get("property_type")
         ):
@@ -273,29 +283,33 @@ async def handle_incoming_message(data: dict, db: Session):
             if matches and len(matches) > 0:
                 prop = matches[0]
                 trust = calculate_confidence_score(prop)
-                biz_name = tenant_profile["business_name"]
-
-                # 🔹 SOCKET: Fetch the first image from the LISTING_IMAGES table
                 image_url = prop.images[0].url if prop.images else None
 
                 summary = (
-                    f"✨ *Match Found from {biz_name}*\n\n"
+                    f"✨ *Verified Match Found!*\n\n"
                     f"🏠 *{prop.title}*\n"
                     f"📍 Location: {prop.location}\n"
                     f"💰 Price: ₦{prop.price:,}\n"
                     f"🛡️ Trust Score: {trust}% (GPS Verified)\n\n"
-                    f"📸 *View Verified Photos here:* \n{image_url if image_url else 'Photos pending audit'}\n\n"
+                    f"📸 *View Photos:* {image_url if image_url else 'Pending Audit'}\n\n"
                     f"Would you like to book an inspection for this property?"
                 )
 
-                # Send the text + image link (Always works, no Meta approval needed)
+                # 1. SEND TEXT (Always works, ensures link is seen)
                 await send_meta_message(sender_id, summary)
 
-                # Try the carousel as a 'bonus' (if template is approved, it shows)
+                # 2. 🔹 SOCKET: SEND CAROUSEL (Satisfies Linter + Premium Visuals)
+                # This uses both 'send_meta_carousel' and 'prepare_meta_carousel'
                 await send_meta_carousel(sender_id, prepare_meta_carousel(matches))
+
                 return
 
-        # --- H. FINAL REPLY (Branding Injection) ---
+            # Handle "No Results" specifically
+            else:
+                final_reply = f"I've searched our Truth-Vault for verified listings in *{prefs.get('location')}*, but I couldn't find a match for your budget yet. 🔍\n\nWould you like to see our most trusted deals in other areas instead?"
+                await send_meta_message(sender_id, final_reply)
+                return
+
         # --- H. FINAL REPLY (Proactive Branding Injection) ---
         raw_reply = pipe.get("reply", "")
 
@@ -303,11 +317,11 @@ async def handle_incoming_message(data: dict, db: Session):
         if raw_reply == "completed_flag":
             final_reply = f"✅ I've captured your preferences! A consultant from *{tenant_profile['business_name']}* will contact you shortly."
 
-        # 2. PROACTIVE GREETING: Tells the user what to do next
+        # 2. PROACTIVE GREETING
         elif any(w in text_body for w in ["hi", "hello", "hey", "start"]):
             greeting = get_response("greeting", first_name, tenant_profile)
-            # We pull 'areas_covered' from the Realtor's profile in the DB
-            areas = tenant_profile.get("areas_covered", "Abuja and surrounding areas")
+            # Pull areas_covered from the company profile
+            areas = tenant_profile.get("areas_covered", "Abuja")
             nudge = f"\n\nCurrently, I have verified listings in *{areas}*. Which area are you looking at today?"
             final_reply = greeting + nudge
 
@@ -323,6 +337,7 @@ async def handle_incoming_message(data: dict, db: Session):
         else:
             final_reply = raw_reply
 
+        # Send the final greeting or nudge
         await send_meta_message(sender_id, final_reply)
 
     except Exception as e:
