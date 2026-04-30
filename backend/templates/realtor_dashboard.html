@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Est8Go | Realtor Executive</title>
+    <title>Est8Go | Realtor Executive Command</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap"
@@ -15,13 +15,26 @@
             background-color: #F8FAFC;
         }
 
-        .premium-gradient {
-            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+        .premium-indigo {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
         }
 
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+        .glass-dock {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(15px);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .nav-active {
+            color: #4f46e5;
+            transform: translateY(-5px);
         }
 
         .force-truncate {
@@ -32,149 +45,165 @@
             max-width: 100%;
         }
 
-        /* 🔹 THE SPILLOVER GUARD */
-        .data-container {
-            display: flex;
-            width: 100%;
-            gap: 0;
-            overflow: hidden;
-            /* This stops anything from leaking out */
+        .status-dot {
+            animation: pulse 2s infinite;
         }
 
-        .data-box {
-            flex: 1;
-            /* Forces 50/50 split */
-            min-width: 0;
-            /* CRITICAL: Allows the box to shrink smaller than the text */
-            overflow: hidden;
-        }
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
 
-        .truncate-text {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: block;
+            50% {
+                opacity: 0.3;
+            }
+
+            100% {
+                opacity: 1;
+            }
         }
     </style>
 </head>
 
-<body class="pb-24">
+<body class="pb-32">
 
-    <!-- Header -->
-    <nav class="premium-gradient text-white pt-8 pb-14 px-6 rounded-b-[3rem] shadow-2xl sticky top-0 z-50">
-        <div class="flex justify-between items-center">
+    <!-- 1. EXECUTIVE HEADER -->
+    <nav class="premium-indigo text-white pt-8 pb-14 px-6 rounded-b-[3rem] shadow-2xl sticky top-0 z-50">
+        <div class="flex justify-between items-start">
             <div>
-                <p class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-300 mb-1">Realtor Portal</p>
-                <h1 class="text-2xl font-black italic">Est8Go</h1>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="w-2 h-2 bg-emerald-400 rounded-full status-dot"></span>
+                    <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-indigo-300">Command Center</p>
+                </div>
+                <h1 id="bizName" class="text-2xl font-black tracking-tighter italic">Bravieshomz <span
+                        class="text-indigo-400">Ltd.</span></h1>
             </div>
-            <div class="bg-white/10 p-3 rounded-2xl border border-white/10"><i class="fa-solid fa-shield-halved"></i>
+            <div class="bg-white/10 p-3 rounded-2xl border border-white/10 shadow-inner">
+                <i class="fa-solid fa-tower-broadcast text-indigo-200"></i>
             </div>
         </div>
     </nav>
 
-    <!-- Stats -->
+    <!-- 2. THE PIPELINE STATS -->
     <div class="px-6 -mt-10 relative z-50">
         <div class="grid grid-cols-2 gap-4">
-            <div class="bg-white p-6 rounded-[2.5rem] shadow-xl border border-white">
-                <p class="text-[9px] font-black text-slate-400 uppercase">My Leads</p>
-                <h3 id="statCount" class="text-3xl font-black text-slate-800">0</h3>
+            <div class="bg-white p-5 rounded-[2.5rem] shadow-xl border border-white">
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active DMs</p>
+                <h3 id="statCount" class="text-2xl font-black text-slate-800">0</h3>
             </div>
-            <div class="bg-emerald-500 p-6 rounded-[2.5rem] shadow-xl border-emerald-400">
-                <p class="text-[9px] font-black text-emerald-100 uppercase">Ready Deals</p>
-                <h3 id="statHot" class="text-3xl font-black text-white">0</h3>
+            <div class="bg-indigo-600 p-5 rounded-[2.5rem] shadow-xl border-indigo-500">
+                <p class="text-[9px] font-black text-indigo-200 uppercase tracking-widest">Pipeline Val</p>
+                <h3 class="text-2xl font-black text-white">₦450M</h3>
             </div>
         </div>
     </div>
 
-    <!-- Leads Container -->
+    <!-- 3. MAIN COMMAND AREA (TABBED) -->
     <main class="px-6 mt-10">
-        <h2 class="text-lg font-black text-slate-800 mb-6">Live Pipeline</h2>
-        <div id="leadList" class="space-y-4"></div>
+
+        <!-- SECTION: PULSE (Leads & Ticker) -->
+        <div id="tab-pulse" class="tab-content active space-y-6">
+            <h2 class="text-lg font-black text-slate-800">Live DM Pulse</h2>
+            <div id="leadList" class="space-y-4"></div>
+        </div>
+
+        <!-- SECTION: VAULT (My Inventory & Truth Score) -->
+        <div id="tab-vault" class="tab-content space-y-6">
+            <h2 class="text-lg font-black text-slate-800">Property Vault</h2>
+            <div id="inventoryList" class="space-y-4"></div>
+        </div>
+
+        <!-- SECTION: STUDIO (Social Media Control) -->
+        <div id="tab-studio" class="tab-content space-y-6">
+            <div class="bg-slate-900 rounded-[2.5rem] p-8 text-center text-white border-4 border-indigo-500/20">
+                <i class="fa-solid fa-clapperboard text-4xl mb-4 text-indigo-400"></i>
+                <h3 class="text-xl font-black mb-2">Est8Go Studio</h3>
+                <p class="text-slate-400 text-sm leading-relaxed mb-6">Create high-energy Reels with trending music from
+                    your site photos.</p>
+                <button class="w-full bg-indigo-600 py-4 rounded-2xl font-black text-sm uppercase">Launch Video
+                    Engine</button>
+            </div>
+        </div>
+
+        <!-- SECTION: NETWORK (Referrals) -->
+        <div id="tab-network" class="tab-content space-y-6">
+            <div class="bg-emerald-50 p-6 rounded-[2.5rem] border border-emerald-100">
+                <h3 class="font-black text-emerald-900 mb-1">Referral Network</h3>
+                <p class="text-xs text-emerald-700 font-bold mb-4">Earn split-commissions by referring Est8Go partners.
+                </p>
+                <div id="networkList" class="space-y-3"></div>
+            </div>
+        </div>
+
     </main>
 
-    <!-- FULL PROPERTY UPLOAD MODAL -->
-    <div id="uploadModal" class="fixed inset-0 z-[200] hidden bg-slate-900/98 backdrop-blur-xl flex flex-col">
+    <!-- 4. UPLOAD MODAL (Restored) -->
+    <div id="uploadModal" class="fixed inset-0 z-[200] hidden bg-slate-900/98 backdrop-blur-2xl flex flex-col">
         <nav class="p-8 flex justify-between items-center text-white">
             <h2 class="text-2xl font-black">List <span class="text-emerald-400">Property</span></h2>
-            <button id="closeModal" class="text-4xl text-white/30 hover:text-white">&times;</button>
+            <button id="closeModal" class="text-4xl text-white/30">&times;</button>
         </nav>
-
         <div class="flex-1 overflow-y-auto px-8 pb-32">
-            <form id="uploadForm" class="space-y-6">
-                <!-- GPS Section (Fixed Contrast) -->
-                <div class="bg-black/20 p-6 rounded-[2rem] border border-white/5 text-center">
-                    <p class="text-[10px] font-black text-indigo-300 uppercase mb-4 tracking-[0.2em]">Mandatory Site
-                        Presence</p>
+            <form id="uploadForm" class="space-y-8">
+                <div class="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 text-center">
                     <button type="button" id="gpsBtn"
-                        class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black shadow-lg">CAPTURE SITE
+                        class="w-full bg-emerald-500 text-white py-5 rounded-2xl font-black shadow-xl">CAPTURE SITE
                         GPS</button>
-                    <input type="hidden" id="latitude" name="latitude">
-                    <input type="hidden" id="longitude" name="longitude">
+                    <input type="hidden" id="latitude" name="latitude"><input type="hidden" id="longitude"
+                        name="longitude">
                 </div>
-
-                <!-- Details (Added Labels and Better Contrast) -->
                 <div class="space-y-4">
-                    <div>
-                        <label class="text-[9px] font-black text-emerald-400 uppercase ml-4 mb-2 block">Listing
-                            Title</label>
-                        <input type="text" name="title" placeholder="e.g. 3 Bedroom Semi-Detached" required
-                            class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-white placeholder:text-slate-500">
-                    </div>
-
-                    <div>
-                        <label class="text-[9px] font-black text-emerald-400 uppercase ml-4 mb-2 block">Price
-                            (Naira)</label>
-                        <input type="number" name="price" placeholder="50000000" required
-                            class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-white placeholder:text-slate-500">
-                    </div>
-
-                    <div>
-                        <label class="text-[9px] font-black text-emerald-400 uppercase ml-4 mb-2 block">Neighborhood /
-                            Area</label>
-                        <!-- FIXED: Standard text type + Explicit ID -->
-                        <input type="text" list="loc-suggestions" name="location_name"
-                            placeholder="Type neighborhood name..." required
-                            class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-white outline-none focus:border-emerald-500">
-                        <datalist id="loc-suggestions">
-                            <option value="Maitama">
-                            <option value="Asokoro">
-                            <option value="Gwarinpa">
-                            <option value="Kabusa">
-                            <option value="Lekki Phase 1">
-                        </datalist>
-                    </div>
-
-                    <div>
-                        <label class="text-[9px] font-black text-emerald-400 uppercase ml-4 mb-2 block">Category</label>
-                        <select name="prop_type"
-                            class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-white/70">
-                            <option value="land">Plot of Land</option>
-                            <option value="house">Completed House</option>
-                        </select>
-                    </div>
+                    <input type="text" name="title" placeholder="Listing Title" required
+                        class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-5 text-white">
+                    <input type="number" name="price" placeholder="Price (Naira)" required
+                        class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-5 text-white">
+                    <input list="locs" name="location_name" placeholder="Area" required
+                        class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-5 text-white">
+                    <datalist id="locs">
+                        <option value="Maitama">
+                        <option value="Asokoro">
+                    </datalist>
+                    <select name="prop_type"
+                        class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-5 text-white">
+                        <option value="land">Land</option>
+                        <option value="house">House</option>
+                    </select>
+                    <input type="file" name="images" multiple required class="w-full text-white/30 text-xs">
                 </div>
-
-                <button type="submit" id="submitBtn"
-                    class="w-full premium-gradient text-white py-6 rounded-[2.5rem] font-black shadow-2xl active:scale-95 transition border border-white/10">
-                    PUBLISH TO TRUTH-VAULT
-                </button>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-6 rounded-[2.5rem] font-black">PUBLISH
+                    TO VAULT</button>
             </form>
         </div>
     </div>
 
-    <!-- Bottom App Navigation -->
+    <!-- 5. EXECUTIVE NAVIGATION DOCK -->
     <div
-        class="fixed bottom-0 left-0 right-0 glass-card px-10 py-5 flex justify-between items-center z-[100] border-t border-slate-100 rounded-t-[2.5rem] shadow-2xl">
-        <div class="flex flex-col items-center text-indigo-600"><i class="fa-solid fa-house-chimney text-2xl"></i></div>
+        class="fixed bottom-6 left-6 right-6 glass-dock h-20 rounded-[2.5rem] shadow-2xl border border-white/50 flex justify-around items-center px-4 z-[100]">
+        <button onclick="RealtorPortal.switchTab('pulse')" id="nav-pulse"
+            class="flex flex-col items-center gap-1 transition active:scale-90 nav-active">
+            <i class="fa-solid fa-wave-square text-xl"></i><span class="text-[8px] font-black uppercase">Pulse</span>
+        </button>
+        <button onclick="RealtorPortal.switchTab('vault')" id="nav-vault"
+            class="flex flex-col items-center gap-1 transition active:scale-90 text-slate-400">
+            <i class="fa-solid fa-vault text-xl"></i><span class="text-[8px] font-black uppercase">Vault</span>
+        </button>
         <div id="addPropTrigger"
-            class="flex flex-col items-center text-slate-300 hover:text-indigo-600 cursor-pointer transition">
-            <i class="fa-solid fa-circle-plus text-3xl"></i>
-            <span class="text-[8px] font-black mt-1 uppercase tracking-tighter">Add Prop</span>
+            class="w-14 h-14 premium-indigo rounded-full flex items-center justify-center shadow-lg -mt-12 border-4 border-white active:scale-90 transition">
+            <i class="fa-solid fa-plus text-white text-xl"></i>
         </div>
-        <div class="flex flex-col items-center text-slate-300"><i class="fa-solid fa-gears text-2xl"></i></div>
+        <button onclick="RealtorPortal.switchTab('studio')" id="nav-studio"
+            class="flex flex-col items-center gap-1 transition active:scale-90 text-slate-400">
+            <i class="fa-solid fa-wand-magic-sparkles text-xl"></i><span
+                class="text-[8px] font-black uppercase">Studio</span>
+        </button>
+        <button onclick="RealtorPortal.switchTab('network')" id="nav-network"
+            class="flex flex-col items-center gap-1 transition active:scale-90 text-slate-400">
+            <i class="fa-solid fa-diagram-project text-xl"></i><span
+                class="text-[8px] font-black uppercase">Network</span>
+        </button>
     </div>
 
-    <script src="/static/js/realtor_portal.js?v=1.2.0" type="module"></script>
+    <script src="/static/js/realtor_portal.js?v=2.0.0" type="module"></script>
 </body>
 
 </html>
