@@ -11,7 +11,8 @@ const AdminPortal = (() => {
             stats: '/listings/admin/system-stats',
             listings: '/listings/admin/trust-monitor',
             tenants: '/listings/admin/tenants-list',
-            verify: '/listings/admin/verify/' // 🔹 SOCKET: Add this
+            verify: '/listings/admin/verify/',
+            delete: '/listings/admin/delete/'
         }
     };
 
@@ -60,25 +61,40 @@ const AdminPortal = (() => {
         const data = await res.json();
         const body = document.getElementById('listingsTableBody');
 
-        body.innerHTML = data.map(item => `
-            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+
+        body.innerHTML = data.map(item => {
+            const colorMap = {
+                'emerald': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                'blue': 'bg-blue-100 text-blue-700 border-blue-200',
+                'amber': 'bg-amber-100 text-amber-700 border-amber-200',
+                'rose': 'bg-rose-100 text-rose-700 border-rose-200'
+            };
+            const activeClass = colorMap[item.status_color] || colorMap['rose'];
+
+            return `
+            <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
                 <td class="p-4">
                     <p class="font-bold text-slate-800 text-sm">${item.title}</p>
-                    <p class="text-[9px] text-slate-400 font-bold uppercase">${item.location}</p>
+                    <p class="text-[9px] text-slate-400 font-black uppercase">${item.location}</p>
                 </td>
-                <td class="p-4 text-xs font-semibold text-slate-600">${item.realtor}</td>
+                <td class="p-4 text-xs font-semibold text-slate-500">${item.realtor}</td>
                 <td class="p-4 text-center">
-                    <span class="px-3 py-1 rounded-full text-[9px] font-black bg-${item.status_color}-100 text-${item.status_color}-700">
+                    <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase border ${activeClass}">
                         ${item.trust_score}%
                     </span>
-                <td class="p-4 text-right">
-                    ${item.status === 'verified'
-                ? '<span class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">VERIFIED ✅</span>'
-                : `<button onclick="AdminPortal.verifyListing('${item.id}')" class="text-[10px] font-black text-white bg-blue-600 px-3 py-1 rounded-lg uppercase shadow-md">Verify Now</button>`
-            }   
                 </td>
-            </tr>
-        `).join('');
+                <td class="p-4 text-right">
+                    <div class="flex flex-col items-end gap-1">
+                        ${item.status === 'verified'
+                    ? '<span class="text-[10px] font-black text-emerald-600">AUTHORIZED ✅</span>'
+                    : `<button onclick="AdminPortal.verifyListing('${item.id}')" class="bg-blue-600 text-white text-[9px] font-black px-3 py-1.5 rounded-lg shadow-md uppercase">Verify</button>`
+                }
+                        <button onclick="AdminPortal.deleteListing('${item.id}')" class="text-[8px] font-bold text-slate-300 hover:text-rose-500 uppercase transition">Remove</button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+
     };
 
     const loadTenants = async () => {
@@ -115,7 +131,23 @@ const AdminPortal = (() => {
         } catch (err) { console.error("Verification failed:", err); }
     };
 
-    window.AdminPortal = { switchTab, refreshData, verifyListing };
+    const deleteListing = async (id) => {
+        if (!confirm("🚨 PERMANENT ACTION: Are you sure this property is sold or should be removed?")) return;
+
+        try {
+            const res = await fetch(CONFIG.ENDPOINTS.delete + id, {
+                method: 'DELETE',
+                headers: { 'X-Tenant-Id': '1' }
+            });
+            if (res.ok) {
+                alert("🗑️ Listing Removed Successfully.");
+                refreshData();
+            }
+        } catch (err) { console.error("Delete failed:", err); }
+    };
+
+
+    window.AdminPortal = { switchTab, refreshData, verifyListing, deleteListing };
     return { init };
 })();
 

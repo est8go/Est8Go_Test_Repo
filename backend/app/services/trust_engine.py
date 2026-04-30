@@ -74,9 +74,17 @@ def calculate_confidence_score(listing: Listing) -> int:
 
 
 def get_trust_label(score: int) -> dict:
-    """Returns visual signals (icon, text, color) for the UI."""
+    """
+    World-Class Trust Grading:
+    85 - 100: PREMIUM (Green)
+    65 - 84:  VERIFIED (Blue)
+    40 - 64:  CAUTION (Amber)
+    0  - 39:  FLAGGED (Red)
+    """
     if score >= 85:
-        return {"color": "green", "icon": "🟢", "text": "High Trust"}
-    if score >= 50:
-        return {"color": "yellow", "icon": "🟡", "text": "Verified Source"}
-    return {"color": "red", "icon": "🔴", "text": "Under Review"}
+        return {"color": "emerald", "icon": "💎", "text": "Premium Trust"}
+    if score >= 65:
+        return {"color": "blue", "icon": "✅", "text": "Verified Source"}
+    if score >= 40:
+        return {"color": "amber", "icon": "⚠️", "text": "Needs Audit"}
+    return {"color": "rose", "icon": "🚫", "text": "Low Confidence"}

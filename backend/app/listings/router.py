@@ -30,10 +30,8 @@ from app.services.trust_engine import (
 router = APIRouter(prefix="/listings", tags=["Listings"])
 
 # Supabase Initialization
-URL = os.getenv("https://dkpvegowrlistpiimlol.supabase.co")
-KEY = os.getenv(
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZlZ293cmxpc3RwaWltbG9sIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTc3MTg1MiwiZXhwIjoyMDkxMzQ3ODUyfQ.5jopvKgkcgRNaCiQl58aN54-PCwRWXcbHZvK-yXB5_o"
-)
+URL = os.getenv("SUPABASE_URL")
+KEY = os.getenv("SUPABASE_KEY")
 supabase_client: Optional[Client] = None
 if URL and KEY:
     try:
@@ -97,10 +95,26 @@ async def realtor_upload_property(
                 db.add(ListingImage(listing_id=new_listing.id, url=url))
             db.commit()
 
+        trust_score = calculate_confidence_score(new_listing)
+        label = get_trust_label(trust_score)
+
+        feedback = (
+            "To reach 85% (Emerald Green), please add a landmark and wait for AI audit."
+        )
+        if gps_score < 80:
+            feedback = (
+                "⚠️ GPS Mismatch: Ensure you are standing ON-SITE when uploading."
+            )
+
         return {
             "status": "success",
             "listing_id": new_listing.id,
-            "gps_accuracy": gps_score,
+            "verification": {
+                "score": f"{trust_score}%",
+                "label": label["text"],
+                "color": label["color"],
+                "coaching": feedback,
+            },
         }
 
     except Exception as e:
@@ -126,13 +140,12 @@ async def monitor_platform_trust(
         {
             "id": i.id,
             "title": i.title,
+            "status": i.status,  # 🔹 SOCKET: Must have this for the JS button logic
             "realtor": i.tenant.name if i.tenant else "Unknown",
-            "location": i.location or "N/A",  # 🔹 SOCKET THIS LINE: Adds location data
+            "location": i.location or "N/A",
             "trust_score": calculate_confidence_score(i),
             "status_color": get_trust_label(calculate_confidence_score(i))["color"],
-            "status_text": get_trust_label(calculate_confidence_score(i))[
-                "text"
-            ],  # 🔹 SOCKET 2
+            "status_text": get_trust_label(calculate_confidence_score(i))["text"],
             "gps_verified": True if i.latitude else False,
         }
         for i in listings
@@ -257,3 +270,26 @@ async def verify_listing_manually(
     db.commit()
 
     return {"status": "success", "message": f"Property #{listing_id} is now Verified."}
+
+
+# 🔹 SOCKET: Add to the bottom of listings/router.py
+
+
+@router.delete("/admin/delete/{listing_id}", tags=["Super Admin"])
+async def delete_listing_manually(
+    listing_id: int, db: Session = Depends(get_db), x_tenant_id: str = Header(None)
+):
+    """
+    Super Admin Command: Permanently removes a listing (e.g., if Sold or Fake).
+    """
+    if x_tenant_id != "1":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+
+    listing = db.query(Listing).filter(Listing.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+
+    db.delete(listing)
+    db.commit()
+
+    return {"status": "success", "message": f"Listing #{listing_id} deleted."}
