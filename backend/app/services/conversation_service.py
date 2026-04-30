@@ -25,6 +25,7 @@ from app.services.chatbot.search_service import execute_premium_search
 from app.services.chatbot.message_builder import (
     build_property_summary,
     build_no_match_message,
+    build_referral_summary,
 )
 from app.services.chatbot.kora_behavior import determine_bot_voice
 from app.services.chatbot.fallback_engine import handle_logic_error
@@ -158,24 +159,47 @@ async def handle_incoming_message(data: dict, db: Session):
         prefs = pipe.get("prefs", {})
 
         # --- D. THE HUNTER: Execute Search ---
+
+        # --- D. THE HUNTER: Execute Network-Aware Search ---
         if prefs.get("location") and (
             prefs.get("budget") or prefs.get("property_type")
         ):
             try:
-                matches = execute_premium_search(db, tenant_id, prefs)
+                # Execute the Premium Search (returns source and data)
+                search_result = execute_premium_search(db, tenant_id, prefs)
+                matches = search_result.get("data", [])
+                source = search_result.get("source", "none")
+
                 if matches:
-                    # THE ARCHITECT: Build Visuals
-                    summary = build_property_summary(matches[0], first_name)
+                    # THE ARCHITECT: Build Visuals based on the Source
+                    if source == "referral":
+                        # 🔹 Handshake Logic: Kora refers a partner's property
+                        summary = build_referral_summary(
+                            matches[0],
+                            tenant_profile.get("business_name", "this agency"),
+                        )
+                    else:
+                        # Standard direct match
+                        summary = build_property_summary(matches[0], first_name)
+
+                    # 1. Send the text summary (The Truth Data)
                     await send_meta_message(sender_id, summary)
-                    await send_meta_carousel(sender_id, prepare_meta_carousel(matches))
+
+                    # 2. Send the Visual Carousel (The Emotional Hook)
+                    carousel_payload = prepare_meta_carousel(matches)
+                    if carousel_payload:
+                        await send_meta_carousel(sender_id, carousel_payload)
                     return
+
                 else:
+                    # 🔄 NO MATCHES — Suggest nearby or network deals
                     await send_meta_message(
                         sender_id, build_no_match_message(prefs.get("location"))
                     )
                     return
+
             except Exception as e:
-                logger.error(f"Search Failure: {e}")
+                logger.error(f"❌ SEARCH BLOCK FAILURE: {e}", exc_info=True)
                 await send_meta_message(sender_id, handle_logic_error("search_failure"))
                 return
 

@@ -41,9 +41,9 @@ app.include_router(public_router)
 app.include_router(whatsapp_router)
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def root():
-    """Health check for est8go."""
+    """Health check for est8go Service Limited."""
     return {
         "message": "est8go Service Limited API is Live",
         "status": "Healthy",
