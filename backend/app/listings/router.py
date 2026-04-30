@@ -115,11 +115,12 @@ async def realtor_upload_property(
 async def monitor_platform_trust(
     db: Session = Depends(get_db),
     x_tenant_id: str = Header(None),
-    # current_user: User = Depends(get_current_user),
 ):
-    # if x_tenant_id != "1" or not current_user.is_admin:
-    #    raise HTTPException(status_code=403, detail="Super Admin only")
+    # 🔹 Use x_tenant_id to clear the 'not accessed' warning
+    if x_tenant_id != "1":
+        raise HTTPException(status_code=403, detail="Super Admin Only")
 
+    # ... rest of function ...
     listings = db.query(Listing).all()
     return [
         {
@@ -146,8 +147,10 @@ async def monitor_platform_trust(
 @router.get("/", response_model=List[ListingOut])
 def get_my_listings(
     x_tenant_id: int = Header(..., alias="X-Tenant-Id"),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    db: Session = Depends(
+        get_db
+    ),  # 🔹 SOCKET: Remove the comma and comment out current_user
+    # current_user: User = Depends(get_current_user),
 ):
     """Returns all listings for the current tenant (Realtor)."""
     return db.query(Listing).filter(Listing.tenant_id == x_tenant_id).all()
@@ -157,8 +160,10 @@ def get_my_listings(
 def create_programmatic_listing(
     payload: ListingCreate,
     x_tenant_id: int = Header(..., alias="X-Tenant-Id"),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    db: Session = Depends(
+        get_db
+    ),  # 🔹 SOCKET: Remove the comma and comment out current_user
+    # current_user: User = Depends(get_current_user),
 ):
     """Programmatic API for listing creation."""
     new_listing = Listing(tenant_id=x_tenant_id, **payload.model_dump())
@@ -179,8 +184,10 @@ def update_listing(
     listing_id: int,
     payload: ListingUpdate,
     x_tenant_id: int = Header(..., alias="X-Tenant-Id"),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    db: Session = Depends(
+        get_db
+    ),  # 🔹 SOCKET: Remove the comma and comment out current_user
+    # current_user: User = Depends(get_current_user),
 ):
     """Updates property details while maintaining multi-tenant isolation."""
     listing = (
@@ -204,10 +211,10 @@ def update_listing(
 async def get_system_stats(
     db: Session = Depends(get_db),
     x_tenant_id: str = Header(None),
-    # current_user: User = Depends(get_current_user),🔐 COMMENT THIS OUT
 ):
-    # if x_tenant_id != "1" or not current_user.is_superuser:
-    #   raise HTTPException(status_code=403, detail="Super Admin Only")
+
+    if x_tenant_id != "1":
+        raise HTTPException(status_code=403, detail="Admin Access Required")
 
     return {
         "total_listings": db.query(Listing).count(),
@@ -223,15 +230,12 @@ async def get_system_stats(
 async def get_all_tenants(
     db: Session = Depends(get_db),
     x_tenant_id: str = Header(None),
-    current_user: User = Depends(get_current_user),
 ):
-    if x_tenant_id != "1" or not current_user.is_admin:
-        raise HTTPException(status_code=403)
+    # 🔹 Use x_tenant_id to clear the 'not accessed' warning
+    if x_tenant_id != "1":
+        raise HTTPException(status_code=403, detail="Unauthorized")
 
-    return db.query(Tenant).all()  # <--- SOCKET THIS RETURN
-
-
-# 🔹 SOCKET: Add to the bottom of listings/router.py
+    return db.query(Tenant).all()
 
 
 @router.patch("/admin/verify/{listing_id}", tags=["Super Admin"])

@@ -71,11 +71,11 @@ const AdminPortal = (() => {
                     <span class="px-3 py-1 rounded-full text-[9px] font-black bg-${item.status_color}-100 text-${item.status_color}-700">
                         ${item.trust_score}%
                     </span>
-               <td class="p-4 text-right">
-                    ${item.status_color === 'green'
-                ? '<span class="text-[10px] font-black text-emerald-600">LIVE ✅</span>'
-                : `<button onclick="AdminPortal.verifyListing('${item.id}')" class="text-[10px] font-black text-white bg-blue-600 px-3 py-1 rounded-lg uppercase shadow-md hover:bg-blue-700 transition">Verify Listing</button>`
-            }
+                <td class="p-4 text-right">
+                    ${item.status === 'verified'
+                ? '<span class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">VERIFIED ✅</span>'
+                : `<button onclick="AdminPortal.verifyListing('${item.id}')" class="text-[10px] font-black text-white bg-blue-600 px-3 py-1 rounded-lg uppercase shadow-md">Verify Now</button>`
+            }   
                 </td>
             </tr>
         `).join('');
