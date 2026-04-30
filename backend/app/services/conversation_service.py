@@ -137,6 +137,7 @@ async def handle_incoming_message(data: dict, db: Session):
         first_name = whatsapp_name.split()[0] if whatsapp_name else "there"
 
         # --- B. HITL & STATE RETRIEVAL ---
+        # --- B. HITL & GREETING GUARD (Top Priority) ---
         convo = (
             db.query(Conversation)
             .filter_by(external_user_id=sender_id, tenant_id=tenant_id)
@@ -145,7 +146,8 @@ async def handle_incoming_message(data: dict, db: Session):
         if convo and hasattr(convo, "is_bot_active") and not convo.is_bot_active:
             return
 
-        if not convo:
+        # 🔹 SOCKET: Reset and Greet immediately if it's a 'Hi'
+        if any(w in text_body.lower() for w in ["hi", "hello", "hey", "start"]):
             res = start_conversation_service(
                 "whatsapp", sender_id, whatsapp_name, tenant_id, db
             )
