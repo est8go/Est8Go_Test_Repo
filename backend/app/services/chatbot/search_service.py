@@ -56,4 +56,11 @@ def execute_premium_search(db: Session, tenant_id: int, prefs: dict) -> dict:
             prop.calculated_trust = calculate_confidence_score(prop)
         return {"source": "referral", "data": referrals}
 
-    return {"source": "none", "data": []}
+    if matches:
+        # 🔹 SOCKET: Store the ID so the bot remembers which house was shown
+        prefs["last_viewed_id"] = matches[0].id
+
+        for prop in matches:
+            prop.calculated_trust = calculate_confidence_score(prop)
+
+        return {"source": "direct", "data": matches, "prefs": prefs}

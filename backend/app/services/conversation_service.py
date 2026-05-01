@@ -1,6 +1,8 @@
 import logging
 import json
 from sqlalchemy.orm import Session
+from app.listings.models import Listing
+from app.services.notification_service import alert_realtor_of_lead
 
 # 1. DOMAIN & INFRASTRUCTURE
 # Removed 'ConversationMessage'
@@ -180,7 +182,10 @@ async def handle_incoming_message(data: dict, db: Session):
                         )
                     else:
                         # Standard direct match
-                        summary = build_property_summary(matches[0], first_name)
+                        # Pass both the first property AND the whole list of matches
+                        summary = build_property_summary(
+                            matches[0], matches, first_name
+                        )
 
                     # 1. Send the text summary (The Truth Data)
                     await send_meta_message(sender_id, summary)
@@ -203,11 +208,45 @@ async def handle_incoming_message(data: dict, db: Session):
                 await send_meta_message(sender_id, handle_logic_error("search_failure"))
                 return
 
-        # --- E. THE PERSONALITY: Branded Response ---
-        final_reply = determine_bot_voice(
-            pipe.get("reply", ""), text_body, first_name, tenant_profile
-        )
-        await send_meta_message(sender_id, final_reply)
+        # --- E. THE PERSONALITY (Branded Response & Handshake) ---
+        try:
+            raw_reply = pipe.get("reply", "")
+            # We use determine_bot_voice to get the branded content or 'handshake_flag'
+            final_reply = determine_bot_voice(
+                raw_reply, text_body, first_name, tenant_profile
+            )
+
+            # 🔹 HANDSHAKE LOGIC: Handles the connection to the Agent
+            if final_reply == "handshake_flag":
+                last_id = prefs.get("last_viewed_id")
+                # Legacy check: Use db.get(Listing, id) for SQLAlchemy 2.0
+                listing = db.get(Listing, last_id) if last_id else None
+
+                if listing and listing.tenant:
+                    realtor_name = listing.tenant.name
+                    connection_msg = (
+                        f"Excellent choice, {first_name}! 🤝\n\n"
+                        f"I've notified the team at *{realtor_name}*. You can reach them directly here:\n\n"
+                        f"📱 *Realtor:* {realtor_name}\n\n"
+                        f"Shall I schedule a physical site inspection for you?"
+                    )
+                    await send_meta_message(sender_id, connection_msg)
+
+                    # 💰 THE REVENUE TRIGGER: Alert the Realtor of the lead
+                    await alert_realtor_of_lead(db, last_id, sender_id, realtor_name)
+                    return  # Stop here; handshake complete
+
+            # 📢 FINAL FALLBACK: Send the standard branded reply
+            await send_meta_message(sender_id, final_reply)
+
+        except Exception as e:
+            # 🔹 THIS IS THE 'EXCEPT' CLAUSE THAT FIXES YOUR ERROR
+            logger.error(f"❌ PERSONALITY BLOCK FAILURE: {e}", exc_info=True)
+            await send_meta_message(
+                sender_id,
+                "I'm still here! I had a small glitch, could you please say that again? 🙏",
+            )
 
     except Exception as e:
-        logger.error(f"❌ ORCHESTRATOR ERROR: {e}", exc_info=True)
+        # This catches errors in the outer bridge (parsing, etc.)
+        logger.error(f"❌ BRIDGE ERROR: {e}", exc_info=True)

@@ -16,10 +16,14 @@ def determine_bot_voice(
     biz_name = tenant_profile.get("business_name", "our team")
     areas = tenant_profile.get("areas_covered", "Abuja")
 
-    # 2. THE 'YES' LOOP BREAKER
-    # Handles user agreement after search failure
-    if text_lower in ["yes", "yes please", "sure", "show me", "okay", "yep"]:
-        return f"I'm pulling up our most trusted, verified deals across {areas} for you now, {first_name}... 🔄"
+    # 2. Smart Handshake Logic
+    if text_lower in ["yes", "yes please", "sure", "show me", "connect me"]:
+        last_id = tenant_profile.get("last_viewed_id")  # We'll pass this in
+
+        if last_id:
+            return "handshake_flag"  # Tell the controller to send agent details
+
+        return f"I'm pulling up our most trusted, verified deals across {areas} for you now... 🔄"
 
     # 3. PROACTIVE GREETING
     # This uses 'get_response', satisfying the linter

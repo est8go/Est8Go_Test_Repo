@@ -93,3 +93,32 @@ def get_public_listings(tenant_id: int, db: Session = Depends(get_db)):
 @router.get("/login", response_class=HTMLResponse)
 async def get_login_page(request: Request):
     return templates.TemplateResponse(request=request, name="login.html")
+
+
+# 🔹 SOCKET: Add this to backend/app/public/router.py
+
+
+@router.get("/matches", response_class=HTMLResponse)
+async def get_matches_page(request: Request, ids: str, db: Session = Depends(get_db)):
+    """
+    World-Class Hybrid Gallery: Opens when a user clicks the Bot link.
+    URL format: /public/matches?ids=1,2,5
+    """
+    try:
+        # Convert comma-separated string "1,2,5" to list [1, 2, 5]
+        id_list = [int(i) for i in ids.split(",") if i.strip()]
+
+        # Fetch verified properties from the list
+        listings = (
+            db.query(Listing)
+            .options(joinedload(Listing.images))
+            .filter(Listing.id.in_(id_list))
+            .all()
+        )
+
+        return templates.TemplateResponse(
+            request=request, name="matches_gallery.html", context={"listings": listings}
+        )
+    except Exception as e:
+        logger.error(f"Gallery Error: {e}")
+        return HTMLResponse("Gallery temporarily unavailable", status_code=500)

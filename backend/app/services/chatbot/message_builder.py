@@ -2,30 +2,26 @@
 # Responsible for high-converting property summaries and referral handshakes.
 
 
-def build_property_summary(prop, first_name: str) -> str:
-    """Constructs a premium property pitch for WhatsApp."""
-    # 1. Format Price Safely
-    try:
-        formatted_price = f"₦{int(prop.price):,}" if prop.price else "Price on request"
-    except (ValueError, TypeError):
-        formatted_price = "Price on request"
+# 🔹 SOCKET: Update build_property_summary in message_builder.py
 
-    # 2. Extract Image from joined relationship
-    image = "Pending audit"
-    if hasattr(prop, "images") and prop.images:
-        image = prop.images[0].url
 
-    # 3. Fetch Trust Score
-    trust = getattr(prop, "calculated_trust", 90)
+def build_property_summary(prop, matches: list, first_name: str) -> str:
+    """Invites the user to the Web-Gallery."""
+    # 1. Create the link containing all matched IDs
+    all_ids = ",".join([str(m.id) for m in matches])
+    # IMPORTANT: Change this URL to your actual Render URL!
+    gallery_link = f"https://est8go-api.onrender.com/public/matches?ids={all_ids}"
+
+    price = f"₦{int(prop.price):,}" if prop.price else "Price on request"
 
     return (
-        f"✨ *Verified Match for {first_name}!*\n\n"
-        f"🏠 *{prop.title}*\n"
+        f"✨ *Verified Matches Found for {first_name}!* \n\n"
+        f"🏠 *Top Pick:* {prop.title}\n"
         f"📍 Location: {prop.location}\n"
-        f"💰 Price: {formatted_price}\n"
-        f"🛡️ Trust Score: {trust}% (GPS Verified)\n\n"
-        f"📸 *View Verified Site Photos:* \n{image}\n\n"
-        f"Would you like to book an inspection or see more options?"
+        f"💰 Price: {price}\n\n"
+        f"🔗 *Tap below to view all {len(matches)} verified options in our Full-Screen Gallery:* \n"
+        f"{gallery_link}\n\n"
+        f"Which one would you like to visit?"
     )
 
 
