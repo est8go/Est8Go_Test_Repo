@@ -126,6 +126,7 @@ async def get_realtor_leads(
                 "id": c.id,
                 "name": c.display_name or "New Lead",
                 "phone": c.external_user_id,
+                "channel": c.channel,  # 🔹 SOCKET: This tells the UI which icon to show
                 "status": "HOT LEAD" if is_hot else "Browsing",
                 "is_bot_active": getattr(c, "is_bot_active", True),
                 "last_active": c.updated_at.strftime("%I:%M %p"),

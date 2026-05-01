@@ -92,20 +92,42 @@ const RealtorPortal = (() => {
         const list = document.getElementById('leadList');
         let html = "";
         leads.forEach(lead => {
+            // 🔹 1. SOCKET: Channel Icon Logic
+            const channelIcon = lead.channel === 'instagram'
+                ? '<i class="fa-brands fa-instagram text-pink-500"></i>'
+                : lead.channel === 'facebook'
+                    ? '<i class="fa-brands fa-facebook text-blue-600"></i>'
+                    : '<i class="fa-brands fa-whatsapp text-emerald-500"></i>';
+
             const prefs = lead.prefs || {};
             const loc = (prefs.location && String(prefs.location) !== "undefined") ? prefs.location : "General";
+
             html += `
             <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 mb-4">
                 <div class="flex items-center gap-4 mb-4">
-                    <div class="w-12 h-12 premium-indigo rounded-2xl flex items-center justify-center text-white font-black">${lead.name.charAt(0)}</div>
+                    
+                    <!-- 🔹 2. SOCKET: Relative Avatar with Channel Badge -->
+                    <div class="relative">
+                        <div class="w-12 h-12 premium-indigo rounded-2xl flex items-center justify-center text-white font-black shadow-lg">
+                            ${lead.name.charAt(0)}
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 bg-white w-5 h-5 rounded-full flex items-center justify-center shadow-sm border border-slate-100" style="font-size: 10px;">
+                            ${channelIcon}
+                        </div>
+                    </div>
+
                     <div class="min-w-0 flex-1">
                         <h4 class="text-sm font-black text-slate-800 truncate">${lead.name}</h4>
                         <p class="text-[9px] text-slate-400 font-bold">${lead.last_active} | Searching ${loc}</p>
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <a href="tel:${lead.phone}" class="flex-1 bg-indigo-50 text-indigo-600 py-3 rounded-xl text-center"><i class="fa-solid fa-phone"></i></a>
-                    <button onclick="window.RealtorPortal.takeover('${lead.phone}')" class="flex-[2] bg-slate-900 text-white text-[9px] font-black py-3 rounded-xl uppercase">Takeover</button>
+                    <a href="tel:${lead.phone}" class="flex-1 bg-indigo-50 text-indigo-600 py-3 rounded-xl text-center active:scale-95 transition">
+                        <i class="fa-solid fa-phone"></i>
+                    </a>
+                    <button onclick="window.RealtorPortal.takeover('${lead.phone}')" class="flex-[2] bg-slate-900 text-white text-[9px] font-black py-3 rounded-xl uppercase active:scale-95 transition">
+                        Takeover
+                    </button>
                 </div>
             </div>`;
         });

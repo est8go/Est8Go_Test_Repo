@@ -120,84 +120,94 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
 
 async def handle_incoming_message(data: dict, db: Session):
     try:
-        # --- A. PARSE INCOMING ---
+        # --- A. UNIFIED META PARSER ---
         entry = data.get("entry", [{}])[0]
-        value = entry.get("changes", [{}])[0].get("value", {})
-        contacts = value.get("contacts", [])
-        whatsapp_name = (
-            contacts[0].get("profile", {}).get("name", "there") if contacts else "there"
-        )
-        messages = value.get("messages", [])
-        if not messages:
-            return
+        changes = entry.get("changes", [{}])[0]
+        field = changes.get("field", "")
+        value = changes.get("value", {})
 
-        msg = messages[0]
-        sender_id = msg.get("from")
-        text_body = msg.get("text", {}).get("body", "")
-        tenant_id = 1  # Update to be dynamic in production
+        # 1. CHANNEL DETECTION (Fixes 'channel' not used error)
+        if field == "messaging":
+            # Instagram or Facebook Messenger
+            sender_id = value.get("sender", {}).get("id")
+            text_body = value.get("message", {}).get("text", "")
+            whatsapp_name = "Social Prospect"
+            channel = "instagram" if "instagram" in str(data) else "facebook"
+        else:
+            # Standard WhatsApp
+            contacts = value.get("contacts", [])
+            whatsapp_name = (
+                contacts[0].get("profile", {}).get("name", "there")
+                if contacts
+                else "there"
+            )
+            msg = value.get("messages", [{}])[0]
+            sender_id = msg.get("from")
+            text_body = msg.get("text", {}).get("body", "")
+            channel = "whatsapp"
 
+        # 2. IDENTITY SETUP (Fixes 'Undefined name' errors)
+        tenant_id = 1  # Master Tenant ID
         tenant_profile = get_tenant_profile(db, tenant_id)
         first_name = whatsapp_name.split()[0] if whatsapp_name else "there"
 
-        # --- B. HITL & GREETING GUARD (Top Priority) ---
+        # --- B. HITL & GREETING GUARD ---
         convo = (
             db.query(Conversation)
             .filter_by(external_user_id=sender_id, tenant_id=tenant_id)
             .first()
         )
+
         if convo and hasattr(convo, "is_bot_active") and not convo.is_bot_active:
             return
 
-        # 🔹 SOCKET: Reset and Greet immediately if it's a 'Hi'
-        if any(w in text_body.lower() for w in ["hi", "hello", "hey", "start"]):
+        # Trigger Reset and Greeting if 'Hi' or new user
+        if not convo or any(
+            w in text_body.lower() for w in ["hi", "hello", "hey", "start"]
+        ):
+            # 🔹 We pass 'channel' here, satisfying the 'not accessed' warning
             res = start_conversation_service(
-                "whatsapp", sender_id, whatsapp_name, tenant_id, db
+                channel, sender_id, whatsapp_name, tenant_id, db
             )
             await send_meta_message(sender_id, res["reply"])
             return
 
-        # --- C. RUN LOGIC ENGINE ---
+        # --- C. RUN LOGIC ENGINE (State Machine) ---
         pipe = add_message_service(convo.id, text_body, tenant_id, db)
         prefs = pipe.get("prefs", {})
-
-        # --- D. THE HUNTER: Execute Search ---
 
         # --- D. THE HUNTER: Execute Network-Aware Search ---
         if prefs.get("location") and (
             prefs.get("budget") or prefs.get("property_type")
         ):
             try:
-                # Execute the Premium Search (returns source and data)
+                # 1. Execute Search (Returns source, data, and total_count)
                 search_result = execute_premium_search(db, tenant_id, prefs)
                 matches = search_result.get("data", [])
+                total = search_result.get("total_count", 0)
                 source = search_result.get("source", "none")
 
                 if matches:
-                    # THE ARCHITECT: Build Visuals based on the Source
+                    # 2. THE ARCHITECT: Build Visuals based on the Source
                     if source == "referral":
-                        # 🔹 Handshake Logic: Kora refers a partner's property
+                        # Handshake logic for partner listings
                         summary = build_referral_summary(
                             matches[0],
                             tenant_profile.get("business_name", "this agency"),
                         )
                     else:
-                        # Standard direct match
-                        # Pass both the first property AND the whole list of matches
+                        # Standard direct match with Boutique count
                         summary = build_property_summary(
-                            matches[0], matches, first_name
+                            matches[0], matches, total, first_name
                         )
 
-                    # 1. Send the text summary (The Truth Data)
+                    # 3. DISPATCH: Send results to WhatsApp
                     await send_meta_message(sender_id, summary)
-
-                    # 2. Send the Visual Carousel (The Emotional Hook)
-                    carousel_payload = prepare_meta_carousel(matches)
-                    if carousel_payload:
-                        await send_meta_carousel(sender_id, carousel_payload)
+                    await send_meta_carousel(sender_id, prepare_meta_carousel(matches))
                     return
 
                 else:
-                    # 🔄 NO MATCHES — Suggest nearby or network deals
+                    # 4. RECOVERY: No matches found
                     await send_meta_message(
                         sender_id, build_no_match_message(prefs.get("location"))
                     )

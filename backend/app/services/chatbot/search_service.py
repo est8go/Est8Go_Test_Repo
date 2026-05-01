@@ -8,14 +8,16 @@ from app.services.trust_engine import (
 
 def execute_premium_search(db: Session, tenant_id: int, prefs: dict) -> dict:
     """
-    World-Class Network Search:
-    Prioritizes current Realtor, but pulls from the Partner Network if empty.
+    ULTIMATE SEARCH ENGINE:
+    1. Sorts by Trust (Emerald First)
+    2. Searches Current Realtor, then the Partner Network
+    3. Calculates Total Count for the Boutique
+    4. Saves 'last_viewed_id' for the Handshake
     """
-    # 1. SETUP BASE FILTERS
     location = prefs.get("location", "").strip()
     p_type = prefs.get("property_type", "").strip()
 
-    # 2. PRIMARY SEARCH (Current Realtor)
+    # --- STEP 1: PRIMARY SEARCH (Current Realtor) ---
     query = (
         db.query(Listing)
         .options(joinedload(Listing.images))
@@ -27,16 +29,27 @@ def execute_premium_search(db: Session, tenant_id: int, prefs: dict) -> dict:
     if p_type:
         query = query.filter(Listing.property_type.ilike(f"%{p_type}%"))
 
-    # Explicitly type the list to satisfy Ruff F401
-    matches: List[Listing] = query.limit(3).all()
+    # 🔹 MULTI-TIER SORTING: High Trust Score first, then Lowest Price
+    query = query.order_by(Listing.trust_score.desc(), Listing.price.asc())
 
-    if matches:
-        # 🔹 SOCKET: Use the trust engine to verify scores before returning
-        for prop in matches:
+    primary_matches: List[Listing] = query.all()  # 🔹 SOCKET: Adds type hint
+
+    if primary_matches:
+        # Save the ID of the top match so the bot remembers it
+        prefs["last_viewed_id"] = primary_matches[0].id
+
+        # Calculate trust for the results
+        for prop in primary_matches:
             prop.calculated_trust = calculate_confidence_score(prop)
-        return {"source": "direct", "data": matches}
 
-    # 3. SHADOW SEARCH (Partner Referral)
+        return {
+            "source": "direct",
+            "data": primary_matches[:5],  # Show top 5 in chat
+            "total_count": len(primary_matches),  # Count for the 'Boutique'
+            "prefs": prefs,
+        }
+
+    # --- STEP 2: SHADOW SEARCH (Partner Referral Network) ---
     # If original realtor has nothing, we find high-trust partners
     net_query = (
         db.query(Listing)
@@ -49,18 +62,24 @@ def execute_premium_search(db: Session, tenant_id: int, prefs: dict) -> dict:
     if p_type:
         net_query = net_query.filter(Listing.property_type.ilike(f"%{p_type}%"))
 
-    referrals: List[Listing] = net_query.limit(2).all()
+    # Sort the network results as well
+    net_query = net_query.order_by(Listing.trust_score.desc(), Listing.price.asc())
+
+    referrals: List[Listing] = net_query.all()  # 🔹 SOCKET: Adds type hint
 
     if referrals:
+        # Save the ID of the top referral match
+        prefs["last_viewed_id"] = referrals[0].id
+
         for prop in referrals:
             prop.calculated_trust = calculate_confidence_score(prop)
-        return {"source": "referral", "data": referrals}
 
-    if matches:
-        # 🔹 SOCKET: Store the ID so the bot remembers which house was shown
-        prefs["last_viewed_id"] = matches[0].id
+        return {
+            "source": "referral",
+            "data": referrals[:5],
+            "total_count": len(referrals),
+            "prefs": prefs,
+        }
 
-        for prop in matches:
-            prop.calculated_trust = calculate_confidence_score(prop)
-
-        return {"source": "direct", "data": matches, "prefs": prefs}
+    # --- STEP 3: NO MATCHES ---
+    return {"source": "none", "data": [], "total_count": 0, "prefs": prefs}
