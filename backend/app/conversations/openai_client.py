@@ -40,7 +40,7 @@ def _is_bad_tone(t: str) -> bool:
 
 def _postprocess_explain(text: str) -> str:
     """
-    World-class constraints:
+    World class constraints:
     - 1 short WhatsApp sentence (max ~16 words)
     - calm, polite, supportive
     - NO questions
