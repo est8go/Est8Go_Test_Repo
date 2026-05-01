@@ -10,26 +10,36 @@ from app.services.conversation_service import handle_incoming_message
 router = APIRouter(prefix="/webhooks/meta", tags=["Meta Webhooks"])
 
 
-@router.get("/")
+router.get("/")
+
+
 async def verify_webhook(request: Request):
+    """
+    World-Class Meta Handshake: Returns hub.challenge as raw text.
+    """
     params = request.query_params
 
-    # 1. Get the token from your .env
-    # Note: Ensure this variable name matches what you put in the Meta Dashboard
-    EXPECTED_TOKEN = os.getenv("META_VERIFY_TOKEN", "Est8Go_Secure_2026")
+    # Use the corporate Est8Go token
+    expected_token = os.getenv("META_VERIFY_TOKEN", "Est8Go_Secure_2026")
 
-    # 2. Extract Meta's query parameters
     mode = params.get("hub.mode")
     token = params.get("hub.verify_token")
     challenge = params.get("hub.challenge")
 
-    # 3. Perform the Handshake
-    if mode == "subscribe" and token == EXPECTED_TOKEN:
-        print("✅ Meta Webhook Verified Successfully!")
-        # 🔹 SOCKET: Return the challenge as PLAIN TEXT (This is what Meta requires)
-        return PlainTextResponse(content=challenge)
+    # Meta sometimes sends the params with underscores too, let's be safe
+    if not mode:
+        mode = params.get("hub_mode")
+    if not token:
+        token = params.get("hub_verify_token")
+    if not challenge:
+        challenge = params.get("hub_challenge")
 
-    print("❌ Meta Webhook Verification Failed: Token Mismatch")
+    if mode == "subscribe" and token == expected_token:
+        print(f"✅ Meta Handshake Success! Sending challenge: {challenge}")
+        # 🔹 SOCKET: This MUST be a string in PlainTextResponse
+        return PlainTextResponse(content=str(challenge))
+
+    print(f"❌ Meta Handshake Failed. Received token: {token}")
     return PlainTextResponse(content="Verification failed", status_code=403)
 
 
