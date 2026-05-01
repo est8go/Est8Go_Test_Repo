@@ -14,7 +14,7 @@ router = APIRouter(prefix="/webhooks/meta", tags=["Meta Webhooks"])
 async def verify_webhook(request: Request):
     params = request.query_params
     # You will put this same token in the Meta Developer Portal
-    VERIFY_TOKEN = os.getenv("META_VERIFY_TOKEN", "BraviesTrust2026")
+    VERIFY_TOKEN = os.getenv("META_VERIFY_TOKEN", "Est8Go_System_Default")
 
     if (
         params.get("hub.mode") == "subscribe"
