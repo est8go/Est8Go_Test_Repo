@@ -1,5 +1,6 @@
 import os
 from fastapi import APIRouter, Request, BackgroundTasks, Depends
+from fastapi.responses import PlainTextResponse  # 🔹 SOCKET: Add this import
 
 # (HTTPException is removed)
 from sqlalchemy.orm import Session
@@ -9,19 +10,27 @@ from app.services.conversation_service import handle_incoming_message
 router = APIRouter(prefix="/webhooks/meta", tags=["Meta Webhooks"])
 
 
-# 1. THE VERIFICATION (Meta needs this to trust your server)
 @router.get("/")
 async def verify_webhook(request: Request):
     params = request.query_params
-    # You will put this same token in the Meta Developer Portal
-    VERIFY_TOKEN = os.getenv("META_VERIFY_TOKEN", "Est8Go_System_Default")
 
-    if (
-        params.get("hub.mode") == "subscribe"
-        and params.get("hub.verify_token") == VERIFY_TOKEN
-    ):
-        return int(params.get("hub.challenge"))
-    return "Verification failed"
+    # 1. Get the token from your .env
+    # Note: Ensure this variable name matches what you put in the Meta Dashboard
+    EXPECTED_TOKEN = os.getenv("META_VERIFY_TOKEN", "Est8Go_Secure_2026")
+
+    # 2. Extract Meta's query parameters
+    mode = params.get("hub.mode")
+    token = params.get("hub.verify_token")
+    challenge = params.get("hub.challenge")
+
+    # 3. Perform the Handshake
+    if mode == "subscribe" and token == EXPECTED_TOKEN:
+        print("✅ Meta Webhook Verified Successfully!")
+        # 🔹 SOCKET: Return the challenge as PLAIN TEXT (This is what Meta requires)
+        return PlainTextResponse(content=challenge)
+
+    print("❌ Meta Webhook Verification Failed: Token Mismatch")
+    return PlainTextResponse(content="Verification failed", status_code=403)
 
 
 # 2. THE RECEIVER (Listens to messages from WhatsApp/IG/FB)
