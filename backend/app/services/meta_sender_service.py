@@ -5,7 +5,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # --- Environment Controls ---
-ACCESS_TOKEN = os.getenv("META_ACCESS_TOKEN")
+ACCESS_TOKEN = os.getenv("WHATSAPP_ACCESS_TOKEN")
 PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_ID")
 
 
