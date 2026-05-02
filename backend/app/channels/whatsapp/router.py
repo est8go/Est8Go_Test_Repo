@@ -11,26 +11,37 @@ from app.services.conversation_service import handle_incoming_message
 router = APIRouter(prefix="/webhooks/meta", tags=["Meta Webhooks"])
 
 
-# --- 1. THE HANDSHAKE (Unified GET) ---
-@router.get("/")  # Maps to /webhooks/meta/
-@router.get("")  # Maps to /webhooks/meta/ (Fixes 405 error)
+@router.get("/")
+@router.get("")
 async def verify_webhook(request: Request):
     """
-    World-Class Meta Handshake: Handles both trailing slash and no-slash paths.
+    Indestructible Meta Handshake:
+    Sanitized and Ruff-compliant (No redundant f-strings).
     """
     params = request.query_params
-    expected_token = os.getenv("META_VERIFY_TOKEN", "Est8Go_Secure_2026")
 
-    # Extract params from either format (Meta varies by region)
-    mode = params.get("hub.mode") or params.get("hub_mode")
-    token = params.get("hub.verify_token") or params.get("hub_verify_token")
+    # 1. Fetch and Sanitize the Expected Token
+    raw_env_token = os.getenv("META_VERIFY_TOKEN", "Est8Go_Secure_2026")
+    expected_token = raw_env_token.strip().replace('"', "").replace("'", "")
+
+    # 2. Extract and Sanitize Meta's Token
+    received_token = params.get("hub.verify_token") or params.get("hub_verify_token")
+    if received_token:
+        received_token = received_token.strip()
+
     challenge = params.get("hub.challenge") or params.get("hub_challenge")
+    mode = params.get("hub.mode") or params.get("hub_mode")
 
-    if mode == "subscribe" and token == expected_token:
-        print(f"✅ Meta Handshake Success: {token}")
+    # 3. The Comparison
+    if mode == "subscribe" and received_token == expected_token:
+        print(f"✅ HANDSHAKE SUCCESS: Verified '{received_token}'")
         return PlainTextResponse(content=str(challenge))
 
-    print(f"❌ Meta Handshake Failed: Token Mismatch. Got: {token}")
+    # 4. Diagnostic Log (Removed redundant 'f' to satisfy Ruff F541)
+    print("❌ HANDSHAKE ERROR")
+    print(f"   - Expected: [{expected_token}]")
+    print(f"   - Received: [{received_token}]")
+
     return PlainTextResponse(content="Verification failed", status_code=403)
 
 
