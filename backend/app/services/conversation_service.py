@@ -28,6 +28,7 @@ from app.services.chatbot.message_builder import (
     build_property_summary,
     build_no_match_message,
     build_referral_summary,
+    build_inspection_confirmation,
 )
 from app.services.chatbot.kora_behavior import determine_bot_voice
 from app.services.chatbot.fallback_engine import handle_logic_error
@@ -225,11 +226,23 @@ async def handle_incoming_message(data: dict, db: Session):
                     await send_meta_carousel(sender_id, prepare_meta_carousel(matches))
                     return
 
-                else:
                     # 4. RECOVERY: No matches found
-                    await send_meta_message(
-                        sender_id, build_no_match_message(prefs.get("location"))
+                else:
+                    # 🔹 SOCKET: This call uses the imported function, clearing the Pylance/Ruff error
+                    header_msg = build_no_match_message(
+                        prefs.get("location", "that area")
                     )
+
+                    # Combine the elite header with our professional pivot options
+                    pivot_msg = (
+                        f"{header_msg}\n\n"
+                        f"**Here is what I suggest, {first_name}:**\n"
+                        "1. Search nearby areas with similar prices.\n"
+                        "2. Show you our 'Top 5 Exclusive Deals' in Abuja right now.\n"
+                        "3. Increase the budget filter.\n\n"
+                        "Which would you prefer?"
+                    )
+                    await send_meta_message(sender_id, pivot_msg)
                     return
 
             except Exception as e:
@@ -245,11 +258,63 @@ async def handle_incoming_message(data: dict, db: Session):
                 raw_reply, text_body, first_name, tenant_profile
             )
 
+            # 🔹 SOCKET 4: THE 'YES' HANDOVER
+            if final_reply == "trigger_global_search":
+                # 1. Physically perform the wide search
+                search_result = execute_premium_search(
+                    db, tenant_id, {"location": "Abuja"}
+                )
+                matches = search_result.get("data", [])
+
+                if matches:
+                    # 2. Build the result with the next guide
+                    summary = f"I've pulled our Top {len(matches)} most trusted deals in Abuja for you, {first_name}. 🔄\n\n"
+                    summary += build_property_summary(
+                        matches[0],
+                        matches,
+                        search_result.get("total_count"),
+                        first_name,
+                    )
+                    summary += "\n\nDo any of these catch your eye, or should we refine by a different budget?"
+
+                    await send_meta_message(sender_id, summary)
+                    await send_meta_carousel(sender_id, prepare_meta_carousel(matches))
+                    return
+                else:
+                    # 🔹  World-Class "No Inventory" response
+                    final_reply = (
+                        f"I've completed a network-wide scan, {first_name}. 🛡️\n\n"
+                        "Our 'Truth-Moat' is currently auditing new arrivals. Because we only list "
+                        "properties with 100% physical GPS verification, our active portfolio "
+                        "is highly exclusive today.\n\n"
+                        "**Shall I set a 'Truth-Alert' for you?** I will notify you the "
+                        "moment a new property in Abuja passes our verification."
+                    )
+
             # 🔹 HANDSHAKE LOGIC: Handles the connection to the Agent
+            # 🔹 SOCKET 2: UPDATED HANDSHAKE WITH GOOGLE MAPS
             if final_reply == "handshake_flag":
                 last_id = prefs.get("last_viewed_id")
-                # Legacy check: Use db.get(Listing, id) for SQLAlchemy 2.0
+
+                # Fetch the listing from the DB
                 listing = db.get(Listing, last_id) if last_id else None
+
+                if listing:
+                    # 1. Build the Premium Navigation Message
+                    # We pass: Name, Property Title, and the GPS Coordinates from the DB
+                    connection_msg = build_inspection_confirmation(
+                        first_name, listing.title, listing.latitude, listing.longitude
+                    )
+
+                    # 2. Send the message with the Google Maps link
+                    await send_meta_message(sender_id, connection_msg)
+
+                    # 3. Trigger the Realtor Alert (Revenue Trigger)
+                    realtor_name = (
+                        listing.tenant.name if listing.tenant else "Lead Agent"
+                    )
+                    await alert_realtor_of_lead(db, last_id, sender_id, realtor_name)
+                    return  # Handshake complete
 
                 if listing and listing.tenant:
                     realtor_name = listing.tenant.name

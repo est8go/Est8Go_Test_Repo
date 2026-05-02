@@ -17,13 +17,23 @@ def determine_bot_voice(
     areas = tenant_profile.get("areas_covered", "Abuja")
 
     # 2. Smart Handshake Logic
-    if text_lower in ["yes", "yes please", "sure", "show me", "connect me"]:
+    if text_lower in [
+        "yes",
+        "yes please",
+        "inspect",
+        "let's go",
+        "i want to visit",
+        "sure",
+        "Alright",
+        "show me",
+        "connect me",
+    ]:
         last_id = tenant_profile.get("last_viewed_id")  # We'll pass this in
 
         if last_id:
             return "handshake_flag"  # Tell the controller to send agent details
 
-        return f"I'm pulling up our most trusted, verified deals across {areas} for you now... 🔄"
+        return "trigger_global_search"
 
     # 3. PROACTIVE GREETING
     # This uses 'get_response', satisfying the linter
@@ -31,7 +41,6 @@ def determine_bot_voice(
         greeting = get_response("greeting", first_name, tenant_profile)
         return f"{greeting}\n\nI currently have verified listings in *{areas}*. Which area are you interested in?"
 
-    # 🔹 SOCKET 1: Fresh Start Acknowledgment (Insert here)
     if raw_reply == "fresh_start_flag":
         return f"I've cleared our previous search, {first_name}. 🔄 What area or property type should we look for now?"
 
@@ -40,13 +49,16 @@ def determine_bot_voice(
         return f"✅ I've captured your preferences! A consultant from *{biz_name}* will contact you shortly."
 
     # 5. CONTEXT-AWARE NUDGES
-    # These also use 'get_response'
+    # 🔹 SOCKET 2: PROACTIVE GUIDANCE
     if "location" in raw_reply.lower() or "where" in raw_reply.lower():
-        return get_response("nudge_location", first_name, tenant_profile)
+        return f"Nice! 👍 I'm currently monitoring high trust deals in *{areas}*. Which of these areas should we look into first?"
 
     if "budget" in raw_reply.lower() or "price" in raw_reply.lower():
-        return get_response("nudge_budget", first_name, tenant_profile)
+        return f"Got the location! {first_name}, to filter the best verified options, what's our budget range? (e.g., '10m to 50m' or 'Under 100m')"
 
+    if "property_type" in raw_reply.lower() or "what kind" in raw_reply.lower():
+        # 🔹 FIX: Removed unnecessary f-prefix
+        return "Understood. Are we looking for a Plot of Land for development, or a Completed House/Apartment?"
     # 6. FINAL FALLBACK (Smarter Logic to prevent dead-ends)
     # If the logic flag is 'filler' but the user mentioned a known area, nudge for the type
     if raw_reply in ["filler_flag", ""] or not raw_reply:
