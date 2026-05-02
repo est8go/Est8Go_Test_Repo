@@ -120,50 +120,59 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
 
 async def handle_incoming_message(data: dict, db: Session):
     try:
-        # 🔹 1. LOG THE PAYLOAD (Surgical Diagnostic)
-        # This lets you see exactly what Meta sends in your Render logs
+        # 🔹 1. LOG FOR AUDIT
         logger.info(f"Incoming Meta Payload: {data}")
 
-        entry = data.get("entry", [{}])[0]
+        entries = data.get("entry", [])
+        if not entries:
+            return
+        entry = entries[0]
 
-        # 🔹 2. BULLETPROOF SENDER EXTRACTION
         sender_id = None
         text_body = ""
-        whatsapp_name = "Prospect"
-        channel = "whatsapp"  # Default
+        whatsapp_name = "there"
+        channel = "whatsapp"
 
-        # Path A: Messenger / Instagram (messaging list)
-        if "messaging" in entry:
-            messaging_event = entry["messaging"][0]
-            sender_id = messaging_event.get("sender", {}).get("id")
-            text_body = messaging_event.get("message", {}).get("text", "")
-            channel = "instagram" if "instagram" in str(data).lower() else "facebook"
-
-        # Path B: WhatsApp (changes list)
-        elif "changes" in entry:
+        # 🔹 2. SENDER EXTRACTION WITH STATUS FILTER
+        # Path A: WhatsApp (via 'changes')
+        if "changes" in entry:
             value = entry["changes"][0].get("value", {})
 
-            # Extract Name
+            # --- THE FIX: Ignore delivery receipts ---
+            if "messages" not in value:
+                logger.info(
+                    "ℹ️ Status Update (Read/Delivered) received. Skipping logic."
+                )
+                return
+
+            msg_obj = value["messages"][0]
+            sender_id = msg_obj.get("from")
+            text_body = msg_obj.get("text", {}).get("body", "")
+
             contacts = value.get("contacts", [])
             if contacts:
                 whatsapp_name = contacts[0].get("profile", {}).get("name", "there")
 
-            # Extract Phone and Message
-            messages = value.get("messages", [])
-            if messages:
-                msg = messages[0]
-                sender_id = msg.get("from")  # This is the phone number
-                text_body = msg.get("text", {}).get("body", "")
+        # Path B: Messenger / Instagram (via 'messaging')
+        elif "messaging" in entry:
+            msg_event = entry["messaging"][0]
+            sender_id = msg_event.get("sender", {}).get("id")
+            text_body = msg_event.get("message", {}).get("text", "")
+            channel = "instagram" if "instagram" in str(data).lower() else "facebook"
 
-        # 🔹 3. THE CRITICAL GUARD
+        # 🔹 3. THE SENDER GUARD
         if not sender_id:
-            logger.error("❌ PARSER ERROR: Could not find sender_id in Meta payload.")
+            logger.warning(
+                "⚠️ Meta event received without a valid sender_id. Skipping."
+            )
             return
 
-        # --- REST OF YOUR LOGIC (Identity, HITL, Search) ---
+        # 🔹 4. IDENTITY & IDENTITY SETUP
         tenant_id = 1
         tenant_profile = get_tenant_profile(db, tenant_id)
         first_name = whatsapp_name.split()[0] if whatsapp_name else "there"
+
+        # ... rest of your logic (HITL check, pipe, etc) ...
 
         # --- B. HITL & GREETING GUARD ---
         convo = (
