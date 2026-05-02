@@ -1,6 +1,4 @@
-# backend/app/services/chatbot/kora_behavior.py
-
-from app.conversations.responses import get_response
+from app.conversations.responses import get_executive_response
 
 
 def determine_bot_voice(
@@ -8,63 +6,50 @@ def determine_bot_voice(
 ) -> str:
     """
     World-Class Persona Controller:
-    Maps logic flags to branded, proactive responses.
+    Maps logic flags to executive, branded, and proactive responses.
     """
 
-    # 1. INITIALIZE IDENTITY (Prevents 'areas' undefined error)
+    # 1. INITIALIZE IDENTITY & CONTEXT
     text_lower = (text_body or "").lower().strip()
-    biz_name = tenant_profile.get("business_name", "our team")
-    areas = tenant_profile.get("areas_covered", "Abuja")
+    biz_name = tenant_profile.get("business_name", "our firm")
+    areas = tenant_profile.get("areas_covered", "Abuja")  # 🔹 Now used in Step 3 & 4
+    emoji = tenant_profile.get("emoji", "🏠")
 
-    # 2. Smart Handshake Logic
-    if text_lower in [
-        "yes",
-        "yes please",
-        "inspect",
-        "let's go",
-        "i want to visit",
-        "sure",
-        "Alright",
-        "show me",
-        "connect me",
-    ]:
-        last_id = tenant_profile.get("last_viewed_id")  # We'll pass this in
+    # 2. THE AGGRESSIVE HANDSHAKE (Agent Connection)
+    if any(
+        w in text_lower
+        for w in ["yes", "connect", "interested", "sure", "ok", "visit", "schedule"]
+    ):
+        return "handshake_flag"
 
-        if last_id:
-            return "handshake_flag"  # Tell the controller to send agent details
-
-        return "trigger_global_search"
-
-    # 3. PROACTIVE GREETING
-    # This uses 'get_response', satisfying the linter
-    if any(w in text_lower for w in ["hi", "hello", "hey", "start"]):
-        greeting = get_response("greeting", first_name, tenant_profile)
-        return f"{greeting}\n\nI currently have verified listings in *{areas}*. Which area are you interested in?"
+    # 3. RESUME VS START FRESH LOGIC
+    if raw_reply == "resume_flag":
+        return get_executive_response("resume_prompt", first_name, biz_name)
 
     if raw_reply == "fresh_start_flag":
-        return f"I've cleared our previous search, {first_name}. 🔄 What area or property type should we look for now?"
+        # 🔹 AREAS USED HERE: Proves local expertise
+        intro = f"I've reset our vault connection, {first_name}. 🔄 I am monitoring verified deals across **{areas}**."
+        question = get_executive_response("intent_location", first_name, biz_name)
+        return f"{intro}\n\n{question}"
 
-    # 4. COMPLETION FLAG
-    if raw_reply == "completed_flag":
-        return f"✅ I've captured your preferences! A consultant from *{biz_name}* will contact you shortly."
+    # 4. PROACTIVE GREETING (The Double-Tap identity)
+    if any(w in text_lower for w in ["hi", "hello", "hey", "start"]):
+        intro = get_executive_response("intro", first_name, biz_name)
+        question = get_executive_response("intent_location", first_name, biz_name)
+        # 🔹 AREAS & EMOJI USED HERE:
+        return f"{intro} {emoji}\n\nI currently have verified listings in **{areas}**. {question}"
 
-    # 5. CONTEXT-AWARE NUDGES
-    # 🔹 SOCKET 2: PROACTIVE GUIDANCE
-    if "location" in raw_reply.lower() or "where" in raw_reply.lower():
-        return f"Nice! 👍 I'm currently monitoring high trust deals in *{areas}*. Which of these areas should we look into first?"
+    # 5. THE REVENUE GATE: BUDGET NUDGE
+    if (
+        "budget" in raw_reply.lower()
+        or "price" in raw_reply.lower()
+        or raw_reply == "ask_budget_flag"
+    ):
+        return get_executive_response("budget_nudge", first_name, biz_name)
 
-    if "budget" in raw_reply.lower() or "price" in raw_reply.lower():
-        return f"Got the location! {first_name}, to filter the best verified options, what's our budget range? (e.g., '10m to 50m' or 'Under 100m')"
+    # 6. GLOBAL SEARCH TRIGGER (Agreement to see more)
+    if raw_reply == "trigger_global_search":
+        return "trigger_global_search"
 
-    if "property_type" in raw_reply.lower() or "what kind" in raw_reply.lower():
-        # 🔹 FIX: Removed unnecessary f-prefix
-        return "Understood. Are we looking for a Plot of Land for development, or a Completed House/Apartment?"
-    # 6. FINAL FALLBACK (Smarter Logic to prevent dead-ends)
-    # If the logic flag is 'filler' but the user mentioned a known area, nudge for the type
-    if raw_reply in ["filler_flag", ""] or not raw_reply:
-        if any(
-            loc in text_lower for loc in ["maitama", "kabusa", "asokoro", "gwarinpa"]
-        ):
-            return f"I've noted the location, {first_name}! 👍 Are you looking for a Plot of Land or a Completed House there?"
-
-    return get_response("filler", first_name, tenant_profile)
+    # 7. EXECUTIVE FALLBACK (Smarter Filler)
+    return get_executive_response("filler", first_name, biz_name)

@@ -3,6 +3,7 @@ import json
 from sqlalchemy.orm import Session
 from app.listings.models import Listing
 from app.services.notification_service import alert_realtor_of_lead
+from app.conversations.responses import get_executive_response
 
 # 1. DOMAIN & INFRASTRUCTURE
 # Removed 'ConversationMessage'
@@ -116,158 +117,180 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
 
 
 async def handle_incoming_message(data: dict, db: Session):
+    """
+    EST8GO MASTER ORCHESTRATOR (v2.1.0)
+    Surgical Logic: Unified Parser, Double-Tap Greetings, Truth-First Search, and Handshakes.
+    """
     try:
-        # 🔹 1. LOG FOR AUDIT
-        logger.info(f"Incoming Meta Payload: {data}")
+        # --- 1. UNIFIED PARSER (WhatsApp, IG, FB) ---
+        entry = data.get("entry", [{}])[0]
+        changes = entry.get("changes", [{}])[0]
+        value = changes.get("value", {})
 
-        entries = data.get("entry", [])
-        if not entries:
+        # Security Guard: Ignore Meta status receipts (Read/Delivered)
+        if "messages" not in value and "messaging" not in entry:
             return
-        entry = entries[0]
 
         sender_id = None
         text_body = ""
+        btn_payload = ""
         whatsapp_name = "there"
         channel = "whatsapp"
 
-        # 🔹 2. SENDER EXTRACTION WITH STATUS FILTER
-        # Path A: WhatsApp (via 'changes')
-        if "changes" in entry:
-            value = entry["changes"][0].get("value", {})
-
-            # --- THE FIX: Ignore delivery receipts ---
-            if "messages" not in value:
-                logger.info(
-                    "ℹ️ Status Update (Read/Delivered) received. Skipping logic."
-                )
-                return
-
+        # Path A: WhatsApp (Standard)
+        if "messages" in value:
             msg_obj = value["messages"][0]
             sender_id = msg_obj.get("from")
             text_body = msg_obj.get("text", {}).get("body", "")
-
+            btn_payload = msg_obj.get("button", {}).get("payload", "") or msg_obj.get(
+                "interactive", {}
+            ).get("button_reply", {}).get("id", "")
             contacts = value.get("contacts", [])
             if contacts:
                 whatsapp_name = contacts[0].get("profile", {}).get("name", "there")
 
-        # Path B: Messenger / Instagram (via 'messaging')
+        # Path B: Instagram / Messenger
         elif "messaging" in entry:
             msg_event = entry["messaging"][0]
             sender_id = msg_event.get("sender", {}).get("id")
             text_body = msg_event.get("message", {}).get("text", "")
             channel = "instagram" if "instagram" in str(data).lower() else "facebook"
 
-        # 🔹 3. THE SENDER GUARD
         if not sender_id:
-            logger.warning(
-                "⚠️ Meta event received without a valid sender_id. Skipping."
-            )
             return
 
-        # 🔹 4. IDENTITY & IDENTITY SETUP
+        # --- 2. IDENTITY & CONTEXT (Defined ONCE) ---
         tenant_id = 1
         tenant_profile = get_tenant_profile(db, tenant_id)
         first_name = whatsapp_name.split()[0] if whatsapp_name else "there"
 
-        # ... rest of your logic (HITL check, pipe, etc) ...
-
-        # --- B. HITL & GREETING GUARD ---
         convo = (
             db.query(Conversation)
             .filter_by(external_user_id=sender_id, tenant_id=tenant_id)
             .first()
         )
 
+        # --- 3. HUMAN-IN-THE-LOOP (HITL) CHECK ---
         if convo and hasattr(convo, "is_bot_active") and not convo.is_bot_active:
             return
 
-        # Trigger Reset and Greeting if 'Hi' or new user
-        if not convo or any(
-            w in text_body.lower() for w in ["hi", "hello", "hey", "start"]
-        ):
-            # 🔹 We pass 'channel' here, satisfying the 'not accessed' warning
-            res = start_conversation_service(
-                channel, sender_id, whatsapp_name, tenant_id, db
+        # --- 4. BUTTON HANDLER (Immediate Priority) ---
+        if btn_payload and "INTERESTED_IN_" in btn_payload:
+            list_id = int(btn_payload.split("_")[-1])
+            listing = db.get(Listing, list_id)
+            if listing:
+                # Premium Flash Confirmation
+                await send_meta_message(
+                    sender_id,
+                    f"✅ *Interest Verified, {first_name}* \n\nI am establishing a direct satellite link to the site for you... 🛰️",
+                )
+                # Deliver Google Maps Navigation
+                nav_msg = build_inspection_confirmation(
+                    first_name, listing.title, listing.latitude, listing.longitude
+                )
+                await send_meta_message(sender_id, nav_msg)
+                # Revenue Alert to Realtor
+                await alert_realtor_of_lead(
+                    db, list_id, sender_id, tenant_profile["business_name"]
+                )
+                return
+
+        # --- 5. THE EXECUTIVE SALES FUNNEL (Double-Tap & Persistence) ---
+        is_greeting = any(
+            w in text_body.lower() for w in ["hi", "hello", "hey", "start", "greetings"]
+        )
+        if is_greeting:
+            # A. Check for Existing Session
+            if convo and convo.data_json and convo.data_json != "{}":
+                resume_prompt = get_executive_response(
+                    "resume_prompt", first_name, tenant_profile["business_name"]
+                )
+                await send_meta_message(sender_id, resume_prompt)
+                return
+
+            # B. New User Setup
+            if not convo:
+                res = start_conversation_service(
+                    channel, sender_id, whatsapp_name, tenant_id, db
+                )
+                convo_id = res["conversation_id"]
+                convo = db.get(Conversation, convo_id)
+
+            # C. The Double-Tap Greeting
+            intro = get_executive_response(
+                "intro", first_name, tenant_profile["business_name"]
             )
-            await send_meta_message(sender_id, res["reply"])
+            await send_meta_message(sender_id, intro)
+
+            areas = tenant_profile.get("areas_covered", "Abuja")
+            emoji = tenant_profile.get("emoji", "🏠")
+            question = get_executive_response(
+                "intent_location", first_name, tenant_profile["business_name"]
+            )
+            await send_meta_message(
+                sender_id,
+                f"I am currently monitoring verified deals in **{areas}** {emoji}. {question}",
+            )
+
+            # Reset memory for fresh start
+            convo.state = "ACTIVE"
+            convo.data_json = "{}"
+            db.commit()
             return
 
-        # --- C. RUN LOGIC ENGINE (State Machine) ---
+            # --- 6. DATA EXTRACTION & SEARCH (The Hunter) ---
         pipe = add_message_service(convo.id, text_body, tenant_id, db)
         prefs = pipe.get("prefs", {})
 
-        # --- D. THE HUNTER: Execute Network-Aware Search ---
-        if prefs.get("location") and (
-            prefs.get("budget") or prefs.get("property_type")
-        ):
+        if prefs.get("location") and prefs.get("budget"):
             try:
-                # 1. Execute Search (Returns source, data, and total_count)
                 search_result = execute_premium_search(db, tenant_id, prefs)
                 matches = search_result.get("data", [])
                 total = search_result.get("total_count", 0)
-                source = search_result.get("source", "none")
+                source = search_result.get("source", "none")  # Check if it's a partner
 
                 if matches:
-                    # 2. THE ARCHITECT: Build Visuals based on the Source
+                    # 🔹 SOCKET: Use build_referral_summary for partner listings
                     if source == "referral":
-                        # Handshake logic for partner listings
                         summary = build_referral_summary(
-                            matches[0],
-                            tenant_profile.get("business_name", "this agency"),
+                            matches[0], tenant_profile.get("business_name", "our firm")
                         )
                     else:
-                        # Standard direct match with Boutique count
                         summary = build_property_summary(
                             matches[0], matches, total, first_name
                         )
 
-                    # 3. DISPATCH: Send results to WhatsApp
+                    # 1. Send text summary
                     await send_meta_message(sender_id, summary)
-                    await send_meta_carousel(sender_id, prepare_meta_carousel(matches))
-                    return
 
-                    # 4. RECOVERY: No matches found
+                    # 2. 🔹 SOCKET: Send visual carousel (Satisfies linter)
+                    carousel_data = prepare_meta_carousel(matches)
+                    await send_meta_carousel(sender_id, carousel_data)
+                    return
                 else:
-                    # 🔹 SOCKET: This call uses the imported function, clearing the Pylance/Ruff error
-                    header_msg = build_no_match_message(
-                        prefs.get("location", "that area")
+                    await send_meta_message(
+                        sender_id, build_no_match_message(prefs.get("location"))
                     )
-
-                    # Combine the elite header with our professional pivot options
-                    pivot_msg = (
-                        f"{header_msg}\n\n"
-                        f"**Here is what I suggest, {first_name}:**\n"
-                        "1. Search nearby areas with similar prices.\n"
-                        "2. Show you our 'Top 5 Exclusive Deals' in Abuja right now.\n"
-                        "3. Increase the budget filter.\n\n"
-                        "Which would you prefer?"
-                    )
-                    await send_meta_message(sender_id, pivot_msg)
                     return
-
             except Exception as e:
-                logger.error(f"❌ SEARCH BLOCK FAILURE: {e}", exc_info=True)
+                logger.error(f"Search Block Failure: {e}")
                 await send_meta_message(sender_id, handle_logic_error("search_failure"))
                 return
 
-        # --- E. THE PERSONALITY (Branded Response & Handshake) ---
+        # --- 7. FINAL RESPONSE (Kora Personality & Handshakes) ---
         try:
             raw_reply = pipe.get("reply", "")
-            # We use determine_bot_voice to get the branded content or 'handshake_flag'
             final_reply = determine_bot_voice(
                 raw_reply, text_body, first_name, tenant_profile
             )
 
-            # 🔹 SOCKET 4: THE 'YES' HANDOVER
+            # Handle the 'Yes' Handover or Global Search Trigger
             if final_reply == "trigger_global_search":
-                # 1. Physically perform the wide search
                 search_result = execute_premium_search(
                     db, tenant_id, {"location": "Abuja"}
                 )
                 matches = search_result.get("data", [])
-
                 if matches:
-                    # 2. Build the result with the next guide
                     summary = f"I've pulled our Top {len(matches)} most trusted deals in Abuja for you, {first_name}. 🔄\n\n"
                     summary += build_property_summary(
                         matches[0],
@@ -275,72 +298,35 @@ async def handle_incoming_message(data: dict, db: Session):
                         search_result.get("total_count"),
                         first_name,
                     )
-                    summary += "\n\nDo any of these catch your eye, or should we refine by a different budget?"
 
                     await send_meta_message(sender_id, summary)
+
+                    # 🔹 SOCKET: Trigger carousel for global deals
                     await send_meta_carousel(sender_id, prepare_meta_carousel(matches))
                     return
-                else:
-                    # 🔹  World-Class "No Inventory" response
-                    final_reply = (
-                        f"I've completed a network-wide scan, {first_name}. 🛡️\n\n"
-                        "Our 'Truth-Moat' is currently auditing new arrivals. Because we only list "
-                        "properties with 100% physical GPS verification, our active portfolio "
-                        "is highly exclusive today.\n\n"
-                        "**Shall I set a 'Truth-Alert' for you?** I will notify you the "
-                        "moment a new property in Abuja passes our verification."
-                    )
 
-            # 🔹 HANDSHAKE LOGIC: Handles the connection to the Agent
-            # 🔹 SOCKET 2: UPDATED HANDSHAKE WITH GOOGLE MAPS
             if final_reply == "handshake_flag":
                 last_id = prefs.get("last_viewed_id")
-
-                # Fetch the listing from the DB
                 listing = db.get(Listing, last_id) if last_id else None
-
                 if listing:
-                    # 1. Build the Premium Navigation Message
-                    # We pass: Name, Property Title, and the GPS Coordinates from the DB
                     connection_msg = build_inspection_confirmation(
                         first_name, listing.title, listing.latitude, listing.longitude
                     )
-
-                    # 2. Send the message with the Google Maps link
                     await send_meta_message(sender_id, connection_msg)
-
-                    # 3. Trigger the Realtor Alert (Revenue Trigger)
-                    realtor_name = (
-                        listing.tenant.name if listing.tenant else "Lead Agent"
+                    await alert_realtor_of_lead(
+                        db, last_id, sender_id, listing.tenant.name
                     )
-                    await alert_realtor_of_lead(db, last_id, sender_id, realtor_name)
-                    return  # Handshake complete
+                    return
 
-                if listing and listing.tenant:
-                    realtor_name = listing.tenant.name
-                    connection_msg = (
-                        f"Excellent choice, {first_name}! 🤝\n\n"
-                        f"I've notified the team at *{realtor_name}*. You can reach them directly here:\n\n"
-                        f"📱 *Realtor:* {realtor_name}\n\n"
-                        f"Shall I schedule a physical site inspection for you?"
-                    )
-                    await send_meta_message(sender_id, connection_msg)
-
-                    # 💰 THE REVENUE TRIGGER: Alert the Realtor of the lead
-                    await alert_realtor_of_lead(db, last_id, sender_id, realtor_name)
-                    return  # Stop here; handshake complete
-
-            # 📢 FINAL FALLBACK: Send the standard branded reply
+            # Default Voice Delivery
             await send_meta_message(sender_id, final_reply)
 
         except Exception as e:
-            # 🔹 THIS IS THE 'EXCEPT' CLAUSE THAT FIXES YOUR ERROR
-            logger.error(f"❌ PERSONALITY BLOCK FAILURE: {e}", exc_info=True)
+            logger.error(f"❌ PERSONALITY ERROR: {e}")
             await send_meta_message(
                 sender_id,
                 "I'm still here! I had a small glitch, could you please say that again? 🙏",
             )
 
     except Exception as e:
-        # This catches errors in the outer bridge (parsing, etc.)
-        logger.error(f"❌ BRIDGE ERROR: {e}", exc_info=True)
+        logger.error(f"❌ CRITICAL MASTER ERROR: {e}", exc_info=True)
