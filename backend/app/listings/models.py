@@ -83,6 +83,9 @@ class Listing(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     verified_at = Column(DateTime, nullable=True)
 
+    # 🔹 SOCKET: Add this among the other columns
+    trust_score = Column(Integer, default=0)
+
 
 class ListingImage(Base):  # the listing images
     __tablename__ = "listing_images"

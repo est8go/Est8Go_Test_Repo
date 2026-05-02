@@ -32,20 +32,19 @@ def execute_premium_search(db: Session, tenant_id: int, prefs: dict) -> dict:
     # 🔹 MULTI-TIER SORTING: High Trust Score first, then Lowest Price
     query = query.order_by(Listing.trust_score.desc(), Listing.price.asc())
 
-    primary_matches: List[Listing] = query.all()  # 🔹 SOCKET: Adds type hint
+    primary_matches: List[Listing] = query.all()
 
     if primary_matches:
-        # Save the ID of the top match so the bot remembers it
         prefs["last_viewed_id"] = primary_matches[0].id
 
-        # Calculate trust for the results
+        # We still calculate the 'Live' trust for the builder
         for prop in primary_matches:
             prop.calculated_trust = calculate_confidence_score(prop)
 
         return {
             "source": "direct",
-            "data": primary_matches[:5],  # Show top 5 in chat
-            "total_count": len(primary_matches),  # Count for the 'Boutique'
+            "data": primary_matches[:5],
+            "total_count": len(primary_matches),
             "prefs": prefs,
         }
 
