@@ -120,34 +120,48 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
 
 async def handle_incoming_message(data: dict, db: Session):
     try:
-        # --- A. UNIFIED META PARSER ---
+        # 🔹 1. LOG THE PAYLOAD (Surgical Diagnostic)
+        # This lets you see exactly what Meta sends in your Render logs
+        logger.info(f"Incoming Meta Payload: {data}")
+
         entry = data.get("entry", [{}])[0]
-        changes = entry.get("changes", [{}])[0]
-        field = changes.get("field", "")
-        value = changes.get("value", {})
 
-        # 1. CHANNEL DETECTION (Fixes 'channel' not used error)
-        if field == "messaging":
-            # Instagram or Facebook Messenger
-            sender_id = value.get("sender", {}).get("id")
-            text_body = value.get("message", {}).get("text", "")
-            whatsapp_name = "Social Prospect"
-            channel = "instagram" if "instagram" in str(data) else "facebook"
-        else:
-            # Standard WhatsApp
+        # 🔹 2. BULLETPROOF SENDER EXTRACTION
+        sender_id = None
+        text_body = ""
+        whatsapp_name = "Prospect"
+        channel = "whatsapp"  # Default
+
+        # Path A: Messenger / Instagram (messaging list)
+        if "messaging" in entry:
+            messaging_event = entry["messaging"][0]
+            sender_id = messaging_event.get("sender", {}).get("id")
+            text_body = messaging_event.get("message", {}).get("text", "")
+            channel = "instagram" if "instagram" in str(data).lower() else "facebook"
+
+        # Path B: WhatsApp (changes list)
+        elif "changes" in entry:
+            value = entry["changes"][0].get("value", {})
+
+            # Extract Name
             contacts = value.get("contacts", [])
-            whatsapp_name = (
-                contacts[0].get("profile", {}).get("name", "there")
-                if contacts
-                else "there"
-            )
-            msg = value.get("messages", [{}])[0]
-            sender_id = msg.get("from")
-            text_body = msg.get("text", {}).get("body", "")
-            channel = "whatsapp"
+            if contacts:
+                whatsapp_name = contacts[0].get("profile", {}).get("name", "there")
 
-        # 2. IDENTITY SETUP (Fixes 'Undefined name' errors)
-        tenant_id = 1  # Master Tenant ID
+            # Extract Phone and Message
+            messages = value.get("messages", [])
+            if messages:
+                msg = messages[0]
+                sender_id = msg.get("from")  # This is the phone number
+                text_body = msg.get("text", {}).get("body", "")
+
+        # 🔹 3. THE CRITICAL GUARD
+        if not sender_id:
+            logger.error("❌ PARSER ERROR: Could not find sender_id in Meta payload.")
+            return
+
+        # --- REST OF YOUR LOGIC (Identity, HITL, Search) ---
+        tenant_id = 1
         tenant_profile = get_tenant_profile(db, tenant_id)
         first_name = whatsapp_name.split()[0] if whatsapp_name else "there"
 
