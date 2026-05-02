@@ -11,11 +11,18 @@ PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_ID")
 
 async def send_meta_message(recipient_id: str, text: str):
     """
-    Sends a standard text message via Meta's Graph API.
-    Includes robust error checking to prevent silent failures.
+    Sends a standard text message.
+    The recipient_id must be a string (e.g. '2348030000000')
     """
     if not ACCESS_TOKEN or not PHONE_NUMBER_ID:
-        logger.error("❌ CRITICAL: Meta credentials (TOKEN/ID) missing in .env")
+        logger.error("❌ META ERROR: Credentials missing")
+        return
+
+    # 🔹 SOCKET: Ensure recipient_id is not empty
+    if not recipient_id:
+        logger.error(
+            "❌ META ERROR: Cannot send message, phone number (recipient_id) is empty!"
+        )
         return
 
     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
@@ -23,29 +30,27 @@ async def send_meta_message(recipient_id: str, text: str):
         "Authorization": f"Bearer {ACCESS_TOKEN}",
         "Content-Type": "application/json",
     }
+
+    # 🔹 SOCKET: Meta's payload structure
     payload = {
         "messaging_product": "whatsapp",
-        "to": recipient_id,
+        "to": str(recipient_id),  # Ensure it is a string
         "type": "text",
         "text": {"body": text},
     }
 
-    # Your standard httpx logic + Premium Response Validation
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(url, json=payload, headers=headers)
-
-            # --- PREMIUM ERROR CHECKING ---
             if response.status_code != 200:
+                # This log will help us see exactly what 'recipient_id' was sent
                 logger.error(
-                    f"❌ Meta API Error ({response.status_code}): {response.text}"
+                    f"❌ Meta Error: {response.text} | Sent to: {recipient_id}"
                 )
             else:
-                logger.info(f"✅ Message delivered to {recipient_id}")
-            # ------------------------------
-
-        except httpx.RequestError as e:
-            logger.error(f"❌ Network error connecting to Meta: {e}")
+                logger.info(f"✅ Message sent to {recipient_id}")
+        except Exception as e:
+            logger.error(f"❌ Connection Error: {e}")
 
 
 async def send_meta_carousel(recipient_id: str, cards: list):
