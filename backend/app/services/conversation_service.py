@@ -70,19 +70,15 @@ def start_conversation_service(
 
 def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Session):
     convo = db.query(Conversation).get(conversation_id)
-    text_clean = (text or "").strip()
+    text_clean = (text or "").strip().lower()
 
-    # Reset Logic: Breaks the 'Handoff' loop and clears memory
-    if any(k in text_clean.lower() for k in ["new search", "restart", "hi", "hello"]):
-        convo.data_json = "{}"
+    # 🔹 SOCKET: Atomic Memory Wipe
+    if any(k in text_clean for k in ["new search", "restart", "start again"]):
+        convo.data_json = "{}"  # 👈 Clears Katampe, Kabusa, everything.
         convo.state = "ACTIVE"
         db.commit()
-        if "new search" in text_clean.lower():
-            return {
-                "reply": "I've refreshed our search. 🔄 What area are we looking in now?",
-                "prefs": {},
-            }
-        return {"reply": "greeting_flag", "prefs": {}}
+        # Returns a specific "Fresh Start" voice
+        return {"reply": "fresh_start_flag", "prefs": {}}
 
     if is_filler(text_clean):
         return {"reply": "filler_flag", "prefs": {}}

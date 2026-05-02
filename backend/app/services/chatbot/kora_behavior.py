@@ -31,6 +31,10 @@ def determine_bot_voice(
         greeting = get_response("greeting", first_name, tenant_profile)
         return f"{greeting}\n\nI currently have verified listings in *{areas}*. Which area are you interested in?"
 
+    # 🔹 SOCKET 1: Fresh Start Acknowledgment (Insert here)
+    if raw_reply == "fresh_start_flag":
+        return f"I've cleared our previous search, {first_name}. 🔄 What area or property type should we look for now?"
+
     # 4. COMPLETION FLAG
     if raw_reply == "completed_flag":
         return f"✅ I've captured your preferences! A consultant from *{biz_name}* will contact you shortly."
@@ -43,5 +47,12 @@ def determine_bot_voice(
     if "budget" in raw_reply.lower() or "price" in raw_reply.lower():
         return get_response("nudge_budget", first_name, tenant_profile)
 
-    # 6. FINAL FALLBACK (Satisfies 'Accessed' check globally)
+    # 6. FINAL FALLBACK (Smarter Logic to prevent dead-ends)
+    # If the logic flag is 'filler' but the user mentioned a known area, nudge for the type
+    if raw_reply in ["filler_flag", ""] or not raw_reply:
+        if any(
+            loc in text_lower for loc in ["maitama", "kabusa", "asokoro", "gwarinpa"]
+        ):
+            return f"I've noted the location, {first_name}! 👍 Are you looking for a Plot of Land or a Completed House there?"
+
     return get_response("filler", first_name, tenant_profile)
