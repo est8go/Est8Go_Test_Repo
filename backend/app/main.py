@@ -1,5 +1,8 @@
 from fastapi.staticfiles import StaticFiles
+from app.services.reel_router import router as reel_router
+from app.listings.document_router import router as document_router
 from dotenv import load_dotenv
+from app.conversations.pipeline_router import router as pipeline_router
 
 # 1. Load keys first (MUST be the absolute first action)
 load_dotenv()
@@ -39,6 +42,9 @@ app.include_router(profile_router)
 app.include_router(listings_router)
 app.include_router(public_router)
 app.include_router(whatsapp_router)
+app.include_router(document_router)
+app.include_router(pipeline_router)
+app.include_router(reel_router)
 
 
 @app.api_route("/", methods=["GET", "HEAD"])
