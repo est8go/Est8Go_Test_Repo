@@ -343,6 +343,17 @@ def classify_intent(text: str, current_prefs: dict = None) -> IntentResult:
     budget = extract_budget_from_text(text_lower)
     if budget:
         extracted["budget"] = budget
+        # Also extract location if present in same message
+        location = extract_location_from_text(text_lower)
+        if location:
+            extracted["location"] = location
+            return IntentResult(
+                intent="search_ready",
+                confidence="high",
+                extracted=extracted,
+                response_key="search_trigger",
+                needs_gpt=False,
+            )
         return IntentResult(
             intent="price_query",
             confidence="high",

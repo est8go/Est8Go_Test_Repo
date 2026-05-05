@@ -480,6 +480,10 @@ async def handle_incoming_message(data: dict, db: Session):
             await send_meta_message(sender_id, response)
             return
 
+        # Also trigger search if intent is search_ready
+        if intent == "search_ready" and prefs.get("location") and prefs.get("budget"):
+            pass  # falls through to search block below
+
         # --- 10. SEARCH TRIGGER ---
         if prefs.get("location") and prefs.get("budget"):
             try:
