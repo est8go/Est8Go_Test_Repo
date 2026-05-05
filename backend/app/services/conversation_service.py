@@ -485,7 +485,15 @@ async def handle_incoming_message(data: dict, db: Session):
             pass  # falls through to search block below
 
         # --- 10. SEARCH TRIGGER ---
-        if prefs.get("location") and prefs.get("budget"):
+        # --- 10. SEARCH TRIGGER ---
+        # Only trigger search if intent is search_ready or unknown
+        # Never re-trigger if buyer is objecting or agreeing
+        if (
+            prefs.get("location")
+            and prefs.get("budget")
+            and intent
+            not in ("objection", "agreement", "filler", "greeting", "restart")
+        ):
             try:
                 search_result = execute_premium_search(db, tenant_id, prefs)
                 matches = search_result.get("data", [])
@@ -556,7 +564,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     get_executive_response("intent_location", first_name, biz_name),
                 )
                 return
-            if final_reply == "handshake_flag":
+            if final_reply == "handshake_flag" or intent == "agreement":
                 last_id = prefs.get("last_viewed_id")
                 listing = db.get(Listing, last_id) if last_id else None
                 if listing:
@@ -564,15 +572,18 @@ async def handle_incoming_message(data: dict, db: Session):
                         first_name, listing.title, listing.latitude, listing.longitude
                     )
                     await send_meta_message(sender_id, connection_msg)
-                    await alert_realtor_of_lead(
-                        db, last_id, sender_id, listing.tenant.name
-                    )
-
-                    # Advance to handshake stage
+                    await alert_realtor_of_lead(db, last_id, sender_id, biz_name)
                     convo.funnel_stage = "handshake"
-                    convo.lead_score = min(convo.lead_score + 20, 100)
+                    convo.lead_score = min((convo.lead_score or 0) + 20, 100)
                     convo.last_active_at = datetime.utcnow()
                     db.commit()
+                    return
+                else:
+                    # No listing viewed yet — ask what they want
+                    await send_meta_message(
+                        sender_id,
+                        get_executive_response("intent_location", first_name, biz_name),
+                    )
                     return
 
             # Media request — include showroom link
