@@ -308,16 +308,6 @@ def classify_intent(text: str, current_prefs: dict = None) -> IntentResult:
             needs_gpt=False,
         )
 
-    # --- 3. AGREEMENT / HANDSHAKE TRIGGER ---
-    if any(w in text_lower for w in AGREEMENT_WORDS):
-        return IntentResult(
-            intent="agreement",
-            confidence="high",
-            extracted={},
-            response_key="handshake_trigger",
-            needs_gpt=False,
-        )
-
     # --- 4. OBJECTION DETECTION (12 standard objections) ---
     for phrase, response_key in OBJECTION_MAP.items():
         if phrase in text_lower:
@@ -358,6 +348,16 @@ def classify_intent(text: str, current_prefs: dict = None) -> IntentResult:
             confidence="high",
             extracted=extracted,
             response_key="budget_captured",
+            needs_gpt=False,
+        )
+
+    # --- 3. AGREEMENT / HANDSHAKE TRIGGER ---
+    if any(w in text_lower for w in AGREEMENT_WORDS):
+        return IntentResult(
+            intent="agreement",
+            confidence="high",
+            extracted={},
+            response_key="handshake_trigger",
             needs_gpt=False,
         )
 

@@ -546,6 +546,12 @@ async def handle_incoming_message(data: dict, db: Session):
                 return
 
             # Handshake trigger
+            if raw_reply == "handshake_flag" and not prefs.get("last_viewed_id"):
+                await send_meta_message(
+                    sender_id,
+                    get_executive_response("intent_location", first_name, biz_name),
+                )
+                return
             if final_reply == "handshake_flag":
                 last_id = prefs.get("last_viewed_id")
                 listing = db.get(Listing, last_id) if last_id else None
