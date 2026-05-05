@@ -410,22 +410,24 @@ async def handle_incoming_message(data: dict, db: Session):
                 return
 
         # --- 6. GREETING HANDLER WITH SESSION MEMORY ---
-        is_greeting = any(
-            w in text_body.lower() for w in ["hi", "hello", "hey", "start", "greetings"]
+        is_greeting = (
+            any(
+                w in text_body.lower().split()
+                for w in ["hi", "hello", "hey", "start", "greetings"]
+            )
+            and len(text_body.strip().split()) <= 3
         )
 
         if is_greeting:
             session_state = get_session_state(convo)
 
             if session_state == "new" or not convo:
-                # Brand new user
                 if not convo:
                     res = start_conversation_service(
                         channel, sender_id, whatsapp_name, tenant_id, db
                     )
                     convo = db.get(Conversation, res["conversation_id"])
 
-                # Double-Tap Greeting
                 intro = get_executive_response("intro", first_name, biz_name)
                 await send_meta_message(sender_id, intro)
 
@@ -441,10 +443,8 @@ async def handle_incoming_message(data: dict, db: Session):
                 )
 
             else:
-                # Returning user — smart resume
+                # Returning user — ONE resume message only
                 prefs = json.loads(convo.data_json or "{}")
-
-                # Increment session count
                 convo.session_count = (convo.session_count or 1) + 1
                 db.commit()
 
