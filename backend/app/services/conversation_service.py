@@ -377,6 +377,7 @@ async def handle_incoming_message(data: dict, db: Session):
         convo = (
             db.query(Conversation)
             .filter_by(external_user_id=sender_id, tenant_id=tenant_id)
+            .order_by(Conversation.updated_at.desc())
             .first()
         )
 
@@ -509,6 +510,12 @@ async def handle_incoming_message(data: dict, db: Session):
                         )
 
                     await send_meta_message(sender_id, summary)
+                    # Save last viewed listing ID so handshake works
+                    prefs["last_viewed_id"] = matches[0].id
+                    convo.data_json = json.dumps(prefs)
+                    convo.funnel_stage = "commitment"
+                    convo.last_active_at = datetime.utcnow()
+                    db.commit()
                     carousel_data = prepare_meta_carousel(matches)
                     await send_meta_carousel(sender_id, carousel_data)
 
