@@ -297,9 +297,10 @@ def classify_intent(text: str, current_prefs: dict = None) -> IntentResult:
             response_key="fresh_start",
             needs_gpt=False,
         )
-
     # --- 2. GREETING ---
-    if any(w in text_lower for w in GREETING_WORDS):
+
+    words = set(text_lower.split())
+    if any(w in words for w in GREETING_WORDS):
         return IntentResult(
             intent="greeting",
             confidence="high",

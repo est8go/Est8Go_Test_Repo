@@ -14,6 +14,7 @@ Complete pipeline:
 
 import logging
 import json
+import json as _json
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
@@ -468,7 +469,13 @@ async def handle_incoming_message(data: dict, db: Session):
 
         # --- 8. INTENT PIPELINE ---
         pipe = add_message_service(convo.id, text_body, tenant_id, db)
-        prefs = pipe.get("prefs", {})
+        # Merge pipe prefs with saved conversation prefs
+        # so last_viewed_id is always available
+
+        saved_prefs = _json.loads(convo.data_json or "{}")
+        pipe_prefs = pipe.get("prefs", {})
+        saved_prefs.update({k: v for k, v in pipe_prefs.items() if v})
+        prefs = saved_prefs
         intent = pipe.get("intent", "unknown")
 
         # Update lead score and funnel stage after every message
