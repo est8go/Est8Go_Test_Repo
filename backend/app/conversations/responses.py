@@ -12,7 +12,7 @@ def get_executive_response(key: str, name: str, biz_name: str) -> str:
         ],
         "intent_location": [
             "To begin, are you interested in a **dry plot of land** for development, or a **finished apartment**? Also, which specific location appeals to you most?",
-            "What is your primary focus today—**prime land** or a **move-in ready home**? Please also share your preferred vicinity.",
+            "What is your primary focus today,**prime land** or a **move in ready home**? Please also share your preferred vicinity.",
             "Shall we look at **residential land** or **completed housing**? Please let me know which area in Abuja you are targeting.",
         ],
         "budget_nudge": [

@@ -91,7 +91,7 @@ def ask_openai_fallback(*, state: str, user_text: str) -> str:
         "If user is upset: apologize gently and reassure.\n"
         "Never sound academic, superior, or defensive.\n"
         "Never say: 'your confusion may stem', 'it seems you are', 'you are asking'.\n"
-        "No questions. No follow-up prompts. No greetings.\n"
+        "No questions. No follow up prompts. No greetings.\n"
         "No mention of system/flow/state."
     )
 

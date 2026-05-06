@@ -32,7 +32,7 @@ def is_filler(text: str) -> bool:
 def get_next_question(current_data: dict) -> Optional[str]:
     """Evaluates JSON natively and asks the next logical missing question."""
     if not current_data.get("intent"):
-        return "Quick one—are you looking to buy, rent, or invest?"
+        return "Quick one, are you looking to buy, rent, or invest?"
 
     if not current_data.get("property_type"):
         if current_data.get("intent", "").lower() == "rent":
