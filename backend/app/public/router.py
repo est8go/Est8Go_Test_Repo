@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import FileResponse
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
@@ -88,6 +89,11 @@ def get_public_listings(tenant_id: int, db: Session = Depends(get_db)):
         .filter(Listing.tenant_id == tenant_id, Listing.status == "verified")
         .all()
     )
+
+
+@router.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse("static/favicon.ico")
 
 
 @router.get("/login", response_class=HTMLResponse)
