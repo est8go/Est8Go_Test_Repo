@@ -269,6 +269,7 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
             get_next_question(current_data) if not intent_result.extracted else None
         )
 
+        # Handle all known intents without GPT
         if intent_result.intent == "objection":
             return {
                 "reply": intent_result.response_key,
@@ -282,6 +283,38 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
                 "reply": "handshake_flag",
                 "prefs": current_data,
                 "intent": "agreement",
+            }
+
+        if intent_result.intent == "search_ready":
+            return {
+                "reply": "completed_flag",
+                "prefs": current_data,
+                "intent": "search_ready",
+            }
+
+        if intent_result.intent == "property_type_query":
+            # Property type captured — ask for location next
+            next_q = get_next_question(current_data)
+            return {
+                "reply": next_q or "Which area or location are you targeting?",
+                "prefs": current_data,
+                "intent": "property_type_query",
+            }
+
+        if intent_result.intent == "location_query":
+            next_q = get_next_question(current_data)
+            return {
+                "reply": next_q or "What budget range are you working with?",
+                "prefs": current_data,
+                "intent": "location_query",
+            }
+
+        if intent_result.intent == "price_query":
+            next_q = get_next_question(current_data)
+            return {
+                "reply": next_q or "Which area or location are you targeting?",
+                "prefs": current_data,
+                "intent": "price_query",
             }
 
         if next_q is None:

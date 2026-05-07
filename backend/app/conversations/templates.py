@@ -44,7 +44,7 @@ def get_next_question(current_data: dict) -> Optional[str]:
     if not current_data.get("budget"):
         return (
             "What budget range are you comfortable with?\n"
-            "You can reply like: '5m–10m', '20m', or 'not sure'."
+            "You can reply like: '5m', '20m', '50m to 100m', or 'not sure'."
         )
 
     if not current_data.get("location"):
