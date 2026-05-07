@@ -1161,6 +1161,9 @@
 
         /* ── INIT ── */
         window.addEventListener('DOMContentLoaded', () => {
+            // Default user data (update when auth is wired)
+            if (!localStorage.getItem('user_name')) localStorage.setItem('user_name', 'Bravieshomz Admin');
+            if (!localStorage.getItem('biz_name')) localStorage.setItem('biz_name', 'Bravieshomz Ltd');
             loadUser();
             switchTab('hotline');
             renderNetwork();
