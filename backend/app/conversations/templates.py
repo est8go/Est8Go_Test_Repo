@@ -1,24 +1,22 @@
 # app/conversations/templates.py
-# (This file now exclusively holds your Python strings, routing questions, and UI formatting).
-
-
 from __future__ import annotations
-from typing import List, Optional
+from typing import Optional
 
-# ---------------------------------------------------------
+# ================================================================
 # FILLER BYPASS
-# ---------------------------------------------------------
+# ================================================================
+
+# Tightened — only pure noise words, not property-related words
 FILLER_WORDS = {
-    "ok",
-    "okay",
-    "alright",
+    "noted",
     "thanks",
     "thank you",
     "cool",
-    "great",
-    "yes",
-    "yep",
-    "noted",
+    "wow",
+    "nice one",
+    "amen",
+    "wonderful",
+    "seen",
 }
 
 
@@ -26,41 +24,75 @@ def is_filler(text: str) -> bool:
     return text.strip().lower() in FILLER_WORDS
 
 
-# ---------------------------------------------------------
-# STATE MANAGER (Next Question Router)
-# ---------------------------------------------------------
+# ================================================================
+# STATE MANAGER — Next Question Router
+# ================================================================
+
+
 def get_next_question(current_data: dict) -> Optional[str]:
-    """Evaluates JSON natively and asks the next logical missing question."""
-    if not current_data.get("intent"):
-        return "Quick one, are you looking to buy, rent, or invest?"
+    """
+    Asks the next missing question in the sales funnel.
 
+    Field priority (revised):
+        1. property_type  — land / house / apartment
+        2. location       — which area
+        3. budget         — how much
+        4. intent         — buy / rent / invest (lowest priority — inferred from context)
+
+    Intent is now OPTIONAL — if property_type is land or house,
+    we infer intent = "buy" automatically without asking.
+    This stops the bot from looping on "buy/rent/invest?" forever.
+    """
+
+    # Auto-infer intent from property_type to avoid asking unnecessary question
+    prop_type = (current_data.get("property_type") or "").lower()
+    if prop_type and not current_data.get("intent"):
+        if prop_type in ("land", "house", "apartment"):
+            current_data["intent"] = "buy"
+        elif prop_type == "commercial":
+            current_data["intent"] = "invest"
+
+    # Step 1: Need property type
     if not current_data.get("property_type"):
-        if current_data.get("intent", "").lower() == "rent":
-            return (
-                "Nice. Are you looking to rent a House/Apartment or a Commercial space?"
-            )
-        return "Great choice. Are you considering Land or a Built property (House/Apartment)?"
-
-    if not current_data.get("budget"):
         return (
-            "What budget range are you comfortable with?\n"
-            "You can reply like: '5m', '20m', '50m to 100m', or 'not sure'."
+            "Are you looking for *Land*, a *House/Duplex*, or an *Apartment*? "
+            "Also, which area are you targeting?"
         )
 
+    # Step 2: Need location
     if not current_data.get("location"):
-        return "Any preferred area or location? (e.g., Asokoro, Lekki, Wuse 2). If none, just say 'any good area'."
+        prop = current_data.get("property_type", "property").title()
+        return (
+            f"Great — {prop} noted! 📍\n"
+            f"Which area or location are you targeting? "
+            f"(e.g., Maitama, Asokoro, Lekki, Victoria Island)"
+        )
 
-    return None  # All fields are filled!
+    # Step 3: Need budget
+    if not current_data.get("budget"):
+        loc = current_data.get("location", "that area").title()
+        return (
+            f"Perfect — I'm scanning *{loc}* now. 🔍\n"
+            f"What budget range are you working with? "
+            f"(e.g., '50m', '20m to 80m', '₦45,000,000')"
+        )
+
+    # Step 4: Only ask intent if truly needed (rent vs buy matters for filtering)
+    if not current_data.get("intent"):
+        return "Are you looking to *buy* or *rent* this property?"
+
+    # All fields filled — trigger search
+    return None
 
 
-# ---------------------------------------------------------
+# ================================================================
 # UI FORMATTING
-# ---------------------------------------------------------
+# ================================================================
+
+
 def format_listings_text(listings: list) -> str:
-    """Hardcoded string templates for displaying properties."""
     if not listings:
         return ""
-
     response = ["Here are some top properties that match your criteria:\n"]
     for i, listing in enumerate(listings, 1):
         response.append(
@@ -68,7 +100,6 @@ def format_listings_text(listings: list) -> str:
             f"📍 {listing.location}\n"
             f"💰 ₦{listing.price:,}\n"
             f"🏠 {listing.property_type}\n"
-            f"🖼 {listing.image_url if listing.image_url else 'Image available on request'}\n"
         )
     return "\n".join(response)
 

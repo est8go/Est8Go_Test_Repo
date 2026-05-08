@@ -257,9 +257,11 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
     current_data = json.loads(convo.data_json or "{}")
     intent_result = classify_intent(text_clean, current_data)
 
-    # Merge extracted data into preferences
+    # ALWAYS merge extracted data immediately — before get_next_question
     if intent_result.extracted:
-        current_data.update(intent_result.extracted)
+        for k, v in intent_result.extracted.items():
+            if v:  # only update if value is not None/empty
+                current_data[k] = v
         convo.data_json = json.dumps(current_data)
         db.commit()
 
@@ -292,29 +294,26 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
                 "intent": "search_ready",
             }
 
-        if intent_result.intent == "property_type_query":
-            # Property type captured — ask for location next
+        if intent_result.intent in (
+            "property_type_query",
+            "location_query",
+            "price_query",
+            "search_ready",
+        ):
             next_q = get_next_question(current_data)
+            if not next_q:
+                # All data collected — trigger search
+                convo.state = "HANDOFF"
+                db.commit()
+                return {
+                    "reply": "completed_flag",
+                    "prefs": current_data,
+                    "intent": intent_result.intent,
+                }
             return {
-                "reply": next_q or "Which area or location are you targeting?",
+                "reply": next_q,
                 "prefs": current_data,
-                "intent": "property_type_query",
-            }
-
-        if intent_result.intent == "location_query":
-            next_q = get_next_question(current_data)
-            return {
-                "reply": next_q or "What budget range are you working with?",
-                "prefs": current_data,
-                "intent": "location_query",
-            }
-
-        if intent_result.intent == "price_query":
-            next_q = get_next_question(current_data)
-            return {
-                "reply": next_q or "Which area or location are you targeting?",
-                "prefs": current_data,
-                "intent": "price_query",
+                "intent": intent_result.intent,
             }
 
         if next_q is None:
