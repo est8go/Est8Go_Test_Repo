@@ -25,4 +25,5 @@ def get_executive_response(key: str, name: str, biz_name: str) -> str:
             "Welcome back! Should I pull up your **previous preferences**, or are we looking for something **entirely new** today?",
         ],
     }
-    return random.choice(RESPONSES.get(key, ["I am here to assist you."]))
+    template = random.choice(RESPONSES.get(key, ["I am here to assist you, {name}."]))
+    return template.format(name=name, biz_name=biz_name)

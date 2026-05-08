@@ -1,55 +1,71 @@
+"""
+EST8GO KORA BEHAVIOR ENGINE (v2.0)
+====================================
+Persona Controller — maps pipeline flags to executive responses.
+
+v2.0 Changes:
+    - Removed "interested", "ok", "sure", "visit" from handshake triggers
+      (these words appear in normal property queries)
+    - Budget nudge fixed — no longer intercepts budget responses
+    - Funnel-aware — respects state from conversation_service
+    - Falls through cleanly when intent filter has already handled the message
+"""
+
 from app.conversations.responses import get_executive_response
 
 
 def determine_bot_voice(
-    raw_reply: str, text_body: str, first_name: str, tenant_profile: dict
+    raw_reply: str,
+    text_body: str,
+    first_name: str,
+    tenant_profile: dict,
 ) -> str:
     """
-    World-Class Persona Controller:
-    Maps logic flags to executive, branded, and proactive responses.
+    Maps pipeline flags to branded Kora responses.
+    Only called AFTER intent filter and state machine have run.
     """
-
-    # 1. INITIALIZE IDENTITY & CONTEXT
     text_lower = (text_body or "").lower().strip()
     biz_name = tenant_profile.get("business_name", "our firm")
-    areas = tenant_profile.get("areas_covered", "Abuja")  # 🔹 Now used in Step 3 & 4
+    areas = tenant_profile.get("areas_covered", "Abuja")
     emoji = tenant_profile.get("emoji", "🏠")
 
-    # 2. THE AGGRESSIVE HANDSHAKE (Agent Connection)
-    if any(
-        w in text_lower
-        for w in ["yes", "connect", "interested", "sure", "ok", "visit", "schedule"]
-    ):
+    # ── 1. EXPLICIT HANDSHAKE TRIGGER ─────────────────────
+    # Only very clear agreement signals — no ambiguous words
+    if raw_reply == "handshake_flag":
         return "handshake_flag"
 
-    # 3. RESUME VS START FRESH LOGIC
-    if raw_reply == "resume_flag":
-        return get_executive_response("resume_prompt", first_name, biz_name)
-
+    # ── 2. FRESH START ────────────────────────────────────
     if raw_reply == "fresh_start_flag":
-        # 🔹 AREAS USED HERE: Proves local expertise
-        intro = f"I've reset our vault connection, {first_name}. 🔄 I am monitoring verified deals across **{areas}**."
+        intro = f"I've reset our vault connection, {first_name}. 🔄 I am monitoring verified deals across *{areas}*."
         question = get_executive_response("intent_location", first_name, biz_name)
         return f"{intro}\n\n{question}"
 
-    # 4. PROACTIVE GREETING (The Double-Tap identity)
-    if any(w in text_lower for w in ["hi", "hello", "hey", "start"]):
-        intro = get_executive_response("intro", first_name, biz_name)
-        question = get_executive_response("intent_location", first_name, biz_name)
-        # 🔹 AREAS & EMOJI USED HERE:
-        return f"{intro} {emoji}\n\nI currently have verified listings in **{areas}**. {question}"
+    # ── 3. RESUME PROMPT ──────────────────────────────────
+    if raw_reply == "resume_flag":
+        return get_executive_response("resume_prompt", first_name, biz_name)
 
-    # 5. THE REVENUE GATE: BUDGET NUDGE
-    if (
-        "budget" in raw_reply.lower()
-        or "price" in raw_reply.lower()
-        or raw_reply == "ask_budget_flag"
-    ):
-        return get_executive_response("budget_nudge", first_name, biz_name)
-
-    # 6. GLOBAL SEARCH TRIGGER (Agreement to see more)
+    # ── 4. GLOBAL SEARCH TRIGGER ──────────────────────────
     if raw_reply == "trigger_global_search":
         return "trigger_global_search"
 
-    # 7. EXECUTIVE FALLBACK (Smarter Filler)
+    # ── 5. COMPLETED FLAG (search should fire) ────────────
+    # Let conversation_service handle this — don't intercept
+    if raw_reply == "completed_flag":
+        return "completed_flag"
+
+    # ── 6. FILLER FLAG ────────────────────────────────────
+    if raw_reply == "filler_flag":
+        return get_executive_response("filler", first_name, biz_name)
+
+    # ── 7. PASS THROUGH QUESTION FROM TEMPLATES ───────────
+    # If raw_reply is already a proper question from get_next_question,
+    # return it directly without modification
+    if raw_reply and len(raw_reply) > 10 and "?" in raw_reply:
+        return raw_reply
+
+    if raw_reply and len(raw_reply) > 20:
+        return raw_reply
+
+    # ── 8. EXECUTIVE FALLBACK ─────────────────────────────
+    # Only fires if nothing else matched
     return get_executive_response("filler", first_name, biz_name)
