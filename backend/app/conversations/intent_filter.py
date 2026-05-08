@@ -186,7 +186,6 @@ LOCATION_WORDS = [
     "fct",
     # Lagos
     "lekki",
-    "vi",
     "victoria island",
     "ikoyi",
     "ajah",

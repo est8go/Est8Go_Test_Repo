@@ -601,7 +601,9 @@ async def handle_incoming_message(data: dict, db: Session):
             )
 
             # Intercept completed_flag — trigger search instead of sending raw text
-            if final_reply == "completed_flag" or raw_reply == "completed_flag":
+            if (
+                final_reply == "completed_flag" or raw_reply == "completed_flag"
+            ) and convo.state != "HANDOFF":
                 if prefs.get("location") and prefs.get("budget"):
                     try:
                         search_result = execute_premium_search(db, tenant_id, prefs)
