@@ -526,14 +526,25 @@ async def handle_incoming_message(data: dict, db: Session):
             pass  # falls through to search block below
 
         # --- 10. SEARCH TRIGGER ---
-        # --- 10. SEARCH TRIGGER ---
         # Only trigger search if intent is search_ready or unknown
         # Never re-trigger if buyer is objecting or agreeing
         if (
             prefs.get("location")
             and prefs.get("budget")
+            and convo.state != "HANDOFF"
             and intent
-            not in ("objection", "agreement", "filler", "greeting", "restart")
+            not in (
+                "objection",
+                "agreement",
+                "filler",
+                "greeting",
+                "restart",
+                "location_query",
+                "property_type_query",
+                "search_ready",
+                "media_request",
+                "availability",
+            )
         ):
             try:
                 search_result = execute_premium_search(db, tenant_id, prefs)
@@ -550,6 +561,14 @@ async def handle_incoming_message(data: dict, db: Session):
                         )
 
                     await send_meta_message(sender_id, summary)
+                    # Lock state to HANDOFF — prevents search re-triggering
+                    prefs["last_viewed_id"] = matches[0].id
+                    convo.data_json = json.dumps(prefs)
+                    convo.state = "HANDOFF"
+                    convo.funnel_stage = "commitment"
+                    convo.last_active_at = datetime.utcnow()
+                    db.commit()
+
                     # Save last viewed listing ID so handshake works
                     prefs["last_viewed_id"] = matches[0].id
                     convo.data_json = json.dumps(prefs)
@@ -575,7 +594,6 @@ async def handle_incoming_message(data: dict, db: Session):
                 logger.error(f"Search Block Failure: {e}")
                 await send_meta_message(sender_id, handle_logic_error("search_failure"))
                 return
-
         # --- 11. KORA PERSONALITY & HANDSHAKE ---
         try:
             raw_reply = pipe.get("reply", "")
@@ -644,7 +662,14 @@ async def handle_incoming_message(data: dict, db: Session):
                     await send_meta_message(sender_id, response)
                     return
 
-            # Default voice delivery
+            # Never send raw flag strings or generic fallback
+            if final_reply in ("I am here to assist you.", "filler_flag", ""):
+                next_q = get_next_question(prefs)
+                if next_q:
+                    await send_meta_message(sender_id, next_q)
+                return
+
+            # Default voice deliver
             await send_meta_message(sender_id, final_reply)
 
         except Exception as e:
