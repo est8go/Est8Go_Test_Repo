@@ -600,6 +600,41 @@ async def handle_incoming_message(data: dict, db: Session):
                 raw_reply, text_body, first_name, tenant_profile
             )
 
+            # Intercept completed_flag — trigger search instead of sending raw text
+            if final_reply == "completed_flag" or raw_reply == "completed_flag":
+                if prefs.get("location") and prefs.get("budget"):
+                    try:
+                        search_result = execute_premium_search(db, tenant_id, prefs)
+                        matches = search_result.get("data", [])
+                        total = search_result.get("total_count", 0)
+                        source = search_result.get("source", "none")
+                        if matches:
+                            if source == "referral":
+                                summary = build_referral_summary(matches[0], biz_name)
+                            else:
+                                summary = build_property_summary(
+                                    matches[0], matches, total, first_name
+                                )
+                            await send_meta_message(sender_id, summary)
+                            carousel_data = prepare_meta_carousel(matches)
+                            await send_meta_carousel(sender_id, carousel_data)
+                            prefs["last_viewed_id"] = matches[0].id
+                            convo.data_json = json.dumps(prefs)
+                            convo.state = "HANDOFF"
+                            convo.funnel_stage = "commitment"
+                            convo.last_active_at = datetime.utcnow()
+                            db.commit()
+                        else:
+                            await send_meta_message(
+                                sender_id, build_no_match_message(prefs.get("location"))
+                            )
+                    except Exception as e:
+                        logger.error(f"Search from completed_flag failed: {e}")
+                        await send_meta_message(
+                            sender_id, handle_logic_error("search_failure")
+                        )
+                    return
+
             # Global search trigger
             if final_reply == "trigger_global_search":
                 search_result = execute_premium_search(
