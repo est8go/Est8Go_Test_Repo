@@ -559,9 +559,27 @@ def classify_intent(text: str, current_prefs: dict = None) -> IntentResult:
         )
 
     # ── 8. AGREEMENT ────────────────────────────────────
-    # Only trigger if message is short and contains agreement words
-    # Never trigger on long property description messages
-    if len(text_clean.split()) <= 5 and any(w in words for w in AGREEMENT_WORDS):
+    is_agreement = (
+        (len(text_clean.split()) <= 5 and any(w in words for w in AGREEMENT_WORDS))
+        or text_lower.startswith("yes")
+        or any(
+            phrase in text_lower
+            for phrase in [
+                "schedule",
+                "i would like",
+                "i'd like",
+                "i want to visit",
+                "book inspection",
+                "let's meet",
+                "lets meet",
+                "i am interested",
+                "i'm interested",
+                "yes please",
+                "sure",
+            ]
+        )
+    )
+    if is_agreement:
         return IntentResult(
             intent="agreement",
             confidence="high",
