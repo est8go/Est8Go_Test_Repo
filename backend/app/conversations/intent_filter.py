@@ -362,24 +362,32 @@ def extract_budget_from_text(text: str) -> Optional[int]:
     return None
 
 
-def extract_location_from_text(text: str) -> Optional[str]:
+def extract_location_from_text(
+    text: str, dynamic_locations: list = None
+) -> Optional[str]:
     """
-    Extracts Nigerian location mentions.
-    Returns the most specific match found.
+    Extracts location — checks dynamic DB locations first, then static list.
     """
     text_lower = text.lower()
 
-    # Try multi-word locations first (more specific)
-    multi_word = [l for l in LOCATION_WORDS if " " in l]
-    for loc in multi_word:
-        if loc in text_lower:
+    # Layer 1: Dynamic locations from database (tenant-specific)
+    if dynamic_locations:
+        for loc in sorted(dynamic_locations, key=len, reverse=True):
+            if loc and loc in text_lower:
+                return loc
+
+    # Layer 2: Static fallback — major Nigerian areas
+    for loc in sorted(LOCATION_WORDS, key=len, reverse=True):
+        if " " in loc and loc in text_lower:
             return loc
 
-    # Then single word locations
     words = set(text_lower.split())
-    single_word = [l for l in LOCATION_WORDS if " " not in l]
-    for loc in single_word:
-        if loc in text_lower and loc not in {"area", "around", "near", "zone"}:
+    for loc in LOCATION_WORDS:
+        if (
+            " " not in loc
+            and loc not in {"area", "around", "near", "zone"}
+            and loc in text_lower
+        ):
             return loc
 
     return None
@@ -398,13 +406,10 @@ def extract_property_type(text: str) -> Optional[str]:
     return None
 
 
-def extract_intent_keywords(text: str) -> dict:
-    """
-    Master extractor — runs all extractors and returns everything found.
-    """
+def extract_intent_keywords(text: str, dynamic_locations: list = None) -> dict:
     result = {}
     budget = extract_budget_from_text(text)
-    location = extract_location_from_text(text)
+    location = extract_location_from_text(text, dynamic_locations or [])
     prop_type = extract_property_type(text)
     if budget:
         result["budget"] = budget
@@ -420,7 +425,9 @@ def extract_intent_keywords(text: str) -> dict:
 # ================================================================
 
 
-def classify_intent(text: str, current_prefs: dict = None) -> IntentResult:
+def classify_intent(
+    text: str, current_prefs: dict = None, dynamic_locations: list = None
+) -> IntentResult:
     """
     Classifies incoming message intent using pure Python rules.
     Priority order:
@@ -497,7 +504,7 @@ def classify_intent(text: str, current_prefs: dict = None) -> IntentResult:
 
     # ── 6. DATA EXTRACTION ──────────────────────────────
     # Run all extractors simultaneously
-    extracted = extract_intent_keywords(text_lower)
+    extracted = extract_intent_keywords(text_lower, dynamic_locations or [])
 
     # Merge with current prefs to get full picture
     merged = {**current_prefs, **{k: v for k, v in extracted.items() if v}}

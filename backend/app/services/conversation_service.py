@@ -255,7 +255,18 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
 
     # Intent Pre-Filter (Python — free)
     current_data = json.loads(convo.data_json or "{}")
-    intent_result = classify_intent(text_clean, current_data)
+    # Pull dynamic locations from this tenant's listings
+    from app.listings.models import Listing as ListingModel
+
+    tenant_locations = [
+        r[0].lower()
+        for r in db.query(ListingModel.location)
+        .filter(ListingModel.tenant_id == tenant_id)
+        .distinct()
+        .all()
+        if r[0]
+    ]
+    intent_result = classify_intent(text_clean, current_data, tenant_locations)
 
     # ALWAYS merge extracted data immediately — before get_next_question
     if intent_result.extracted:
