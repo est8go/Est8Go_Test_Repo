@@ -168,6 +168,7 @@ LOCATION_WORDS = [
     "katampe",
     "jabi",
     "wuse",
+    "gwagwalada",
     "wuse 2",
     "garki",
     "kubwa",
@@ -510,8 +511,10 @@ def classify_intent(
     merged = {**current_prefs, **{k: v for k, v in extracted.items() if v}}
 
     has_budget = bool(merged.get("budget"))
-    has_location = bool(merged.get("location"))
-    has_prop_type = bool(merged.get("property_type"))
+    has_location = bool(merged.get("location")) or bool(extracted.get("location"))
+    has_prop_type = bool(merged.get("property_type")) or bool(
+        extracted.get("property_type")
+    )
 
     # If we extracted anything useful — return immediately
     if extracted:

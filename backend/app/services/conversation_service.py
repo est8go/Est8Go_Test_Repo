@@ -67,6 +67,8 @@ from app.services.tenant_resolver import (
     extract_platform_id_from_webhook,
 )
 
+# In-memory deduplication set
+_processed_messages: set = set()
 logger = logging.getLogger(__name__)
 
 
@@ -401,6 +403,22 @@ async def handle_incoming_message(data: dict, db: Session):
 
         if not sender_id:
             return
+
+        # Deduplicate — ignore if we've seen this message ID before
+        msg_id = None
+        if "messages" in value:
+            msg_id = value["messages"][0].get("id", "")
+
+        # Store processed message IDs in a simple set (resets on restart)
+        if msg_id and msg_id in _processed_messages:
+            logger.info(f"⏭️ Duplicate message {msg_id} — ignored")
+            return
+        if msg_id:
+            _processed_messages.add(msg_id)
+            # Keep set small — only last 1000 messages
+            if len(_processed_messages) > 1000:
+                _processed_messages.clear()
+                return
 
         # --- 2. TENANT RESOLUTION (dynamic — no hardcoded IDs) ---
         platform, platform_id = extract_platform_id_from_webhook(data)
