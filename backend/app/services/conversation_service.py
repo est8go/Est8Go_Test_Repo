@@ -15,7 +15,7 @@ Complete pipeline:
 import logging
 import json
 import json as _json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
 from app.listings.models import Listing
@@ -87,7 +87,7 @@ def get_session_state(convo: Conversation) -> str:
     if not convo or not convo.last_active_at:
         return "new"
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     last_active = convo.last_active_at
 
     # Handle timezone-aware datetimes
@@ -180,7 +180,7 @@ def update_conversation_intelligence(
     # Update conversation
     convo.funnel_stage = final_stage
     convo.lead_score = new_score
-    convo.last_active_at = datetime.utcnow()
+    convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.commit()
 
     logger.info(
@@ -212,7 +212,7 @@ def start_conversation_service(
         lead_score=0,
         session_count=1,
         is_bot_active=True,
-        last_active_at=datetime.utcnow(),
+        last_active_at=datetime.now(timezone.utc).replace(tzinfo=None),
     )
     db.add(convo)
     db.commit()
@@ -450,7 +450,9 @@ async def handle_incoming_message(data: dict, db: Session):
                 if convo:
                     convo.funnel_stage = "handshake"
                     convo.lead_score = 85
-                    convo.last_active_at = datetime.utcnow()
+                    convo.last_active_at = datetime.now(timezone.utc).replace(
+                        tzinfo=None
+                    )
                     db.commit()
                 return
 
@@ -499,7 +501,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 await send_meta_message(sender_id, resume_msg)
 
             convo.state = "ACTIVE"
-            convo.last_active_at = datetime.utcnow()
+            convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
             db.commit()
             return
 
@@ -576,21 +578,27 @@ async def handle_incoming_message(data: dict, db: Session):
                     convo.data_json = json.dumps(prefs)
                     convo.state = "HANDOFF"
                     convo.funnel_stage = "commitment"
-                    convo.last_active_at = datetime.utcnow()
+                    convo.last_active_at = datetime.now(timezone.utc).replace(
+                        tzinfo=None
+                    )
                     db.commit()
 
                     # Save last viewed listing ID so handshake works
                     prefs["last_viewed_id"] = matches[0].id
                     convo.data_json = json.dumps(prefs)
                     convo.funnel_stage = "commitment"
-                    convo.last_active_at = datetime.utcnow()
+                    convo.last_active_at = datetime.now(timezone.utc).replace(
+                        tzinfo=None
+                    )
                     db.commit()
                     carousel_data = prepare_meta_carousel(matches)
                     await send_meta_carousel(sender_id, carousel_data)
 
                     # Advance funnel
                     convo.funnel_stage = "commitment"
-                    convo.last_active_at = datetime.utcnow()
+                    convo.last_active_at = datetime.now(timezone.utc).replace(
+                        tzinfo=None
+                    )
                     db.commit()
                     return
 
@@ -598,6 +606,12 @@ async def handle_incoming_message(data: dict, db: Session):
                     await send_meta_message(
                         sender_id, build_no_match_message(prefs.get("location"))
                     )
+                    # Keep state active so buyer can refine search
+                    convo.state = "ACTIVE"
+                    convo.last_active_at = datetime.now(timezone.utc).replace(
+                        tzinfo=None
+                    )
+                    db.commit()
                     return
 
             except Exception as e:
@@ -633,7 +647,9 @@ async def handle_incoming_message(data: dict, db: Session):
                             convo.data_json = json.dumps(prefs)
                             convo.state = "HANDOFF"
                             convo.funnel_stage = "commitment"
-                            convo.last_active_at = datetime.utcnow()
+                            convo.last_active_at = datetime.now(timezone.utc).replace(
+                                tzinfo=None
+                            )
                             db.commit()
                         else:
                             await send_meta_message(
@@ -685,7 +701,9 @@ async def handle_incoming_message(data: dict, db: Session):
                     await alert_realtor_of_lead(db, last_id, sender_id, biz_name)
                     convo.funnel_stage = "handshake"
                     convo.lead_score = min((convo.lead_score or 0) + 20, 100)
-                    convo.last_active_at = datetime.utcnow()
+                    convo.last_active_at = datetime.now(timezone.utc).replace(
+                        tzinfo=None
+                    )
                     db.commit()
                     return
                 else:
