@@ -1,37 +1,47 @@
 <!DOCTYPE html>
 <html lang="en" data-require-superuser="false">
+
 <head>
   <script src="/static/js/auth_guard.js"></script>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-  <meta name="theme-color" content="#030617"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="theme-color" content="#030617" />
   <title>Est8Go | Command Center</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
 
   <style>
     :root {
-      --navy:    #030617;
-      --navy2:   #0E1B40;
-      --navy3:   #091232;
-      --em:      #10B981;
-      --em-dim:  rgba(16,185,129,0.10);
-      --em-glow: rgba(16,185,129,0.22);
-      --em-hard: rgba(16,185,129,0.4);
-      --glass:   rgba(255,255,255,0.04);
-      --glass2:  rgba(255,255,255,0.07);
-      --border:  rgba(255,255,255,0.07);
-      --border2: rgba(255,255,255,0.12);
-      --hot:     #FF4060;
-      --warm:    #F59E0B;
-      --blue:    #3B82F6;
-      --purple:  #8B5CF6;
+      --navy: #030617;
+      --navy2: #0E1B40;
+      --navy3: #091232;
+      --em: #10B981;
+      --em-dim: rgba(16, 185, 129, 0.10);
+      --em-glow: rgba(16, 185, 129, 0.22);
+      --em-hard: rgba(16, 185, 129, 0.4);
+      --glass: rgba(255, 255, 255, 0.04);
+      --glass2: rgba(255, 255, 255, 0.07);
+      --border: rgba(255, 255, 255, 0.07);
+      --border2: rgba(255, 255, 255, 0.12);
+      --hot: #FF4060;
+      --warm: #F59E0B;
+      --blue: #3B82F6;
+      --purple: #8B5CF6;
     }
 
-    *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-    html, body {
-      height: 100%; overflow: hidden;
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
       font-family: 'Inter', sans-serif;
       background: var(--navy);
       color: white;
@@ -39,100 +49,184 @@
 
     body {
       background:
-        radial-gradient(ellipse 90% 50% at 50% -20%, rgba(16,185,129,0.08) 0%, transparent 60%),
-        radial-gradient(circle at 85% 90%, rgba(59,130,246,0.05) 0%, transparent 40%),
+        radial-gradient(ellipse 90% 50% at 50% -20%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 85% 90%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
         radial-gradient(circle at 20% -10%, #0E1B40 0%, #01020a 70%);
-      display: flex; flex-direction: column;
+      display: flex;
+      flex-direction: column;
     }
 
     /* ── GRID BG ── */
     body::before {
       content: '';
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
       background-image:
-        linear-gradient(rgba(16,185,129,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(16,185,129,0.03) 1px, transparent 1px);
+        linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
       background-size: 40px 40px;
     }
 
     /* ── LAYOUT ── */
-    #app { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; }
+    #app {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
 
     /* ── HEADER ── */
     .header {
       padding: 14px 18px 12px;
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
-      background: rgba(3,6,23,0.8);
+      background: rgba(3, 6, 23, 0.8);
       backdrop-filter: blur(20px);
     }
 
     .logo {
       font-family: 'Syne', sans-serif;
-      font-size: 20px; font-weight: 800;
-      letter-spacing: -1px; color: white; line-height: 1;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: white;
+      line-height: 1;
     }
-    .logo span { color: var(--em); }
+
+    .logo span {
+      color: var(--em);
+    }
 
     .platform-badge {
-      display: inline-flex; align-items: center; gap: 5px;
-      background: rgba(255,64,96,0.1); border: 1px solid rgba(255,64,96,0.2);
-      border-radius: 100px; padding: 3px 10px;
-      font-size: 9px; font-weight: 700; color: #FF6080;
-      letter-spacing: 0.2em; text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 64, 96, 0.1);
+      border: 1px solid rgba(255, 64, 96, 0.2);
+      border-radius: 100px;
+      padding: 3px 10px;
+      font-size: 9px;
+      font-weight: 700;
+      color: #FF6080;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
     }
 
     .live-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--em); box-shadow: 0 0 8px var(--em);
-      animation: pulse 2s infinite; flex-shrink: 0;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--em);
+      box-shadow: 0 0 8px var(--em);
+      animation: pulse 2s infinite;
+      flex-shrink: 0;
     }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.3
+      }
+    }
 
     /* ── SCROLL ── */
     #scrollArea {
-      flex: 1; overflow-y: auto; overflow-x: hidden;
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
       padding-bottom: 90px;
     }
-    #scrollArea::-webkit-scrollbar { display: none; }
+
+    #scrollArea::-webkit-scrollbar {
+      display: none;
+    }
 
     /* ── TABS ── */
-    .tab { display: none; }
-    .tab.active { display: block; }
+    .tab {
+      display: none;
+    }
+
+    .tab.active {
+      display: block;
+    }
 
     /* ── BOTTOM NAV ── */
     .bottom-nav {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: rgba(9,18,50,0.95);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(9, 18, 50, 0.95);
       backdrop-filter: blur(30px);
       border-top: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-around;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
       padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
       z-index: 100;
     }
 
     .nav-item {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-      padding: 6px 12px; border-radius: 14px; cursor: pointer;
-      transition: all 0.2s; border: none; background: none; color: rgba(255,255,255,0.35);
-      font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-      font-family: 'Inter', sans-serif; min-width: 56px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      background: none;
+      color: rgba(255, 255, 255, 0.35);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-family: 'Inter', sans-serif;
+      min-width: 56px;
     }
-    .nav-item svg { width: 20px; height: 20px; }
-    .nav-item.active { color: var(--em); }
+
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .nav-item.active {
+      color: var(--em);
+    }
+
     .nav-item.active .nav-icon-wrap {
-      background: var(--em-dim); border-radius: 12px; padding: 6px;
+      background: var(--em-dim);
+      border-radius: 12px;
+      padding: 6px;
     }
 
     .nav-center {
-      width: 52px; height: 52px; border-radius: 16px;
-      background: var(--em); border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: var(--em);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       box-shadow: 0 0 24px var(--em-glow);
       transition: transform 0.15s, box-shadow 0.15s;
     }
-    .nav-center:active { transform: scale(0.92); }
+
+    .nav-center:active {
+      transform: scale(0.92);
+    }
 
     /* ── GLASS CARD ── */
     .card {
@@ -141,77 +235,151 @@
       border-radius: 20px;
       backdrop-filter: blur(12px);
     }
-    .card-glow { box-shadow: 0 0 30px rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.15); }
+
+    .card-glow {
+      box-shadow: 0 0 30px rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.15);
+    }
 
     /* ── SECTION LABEL ── */
     .sep {
-      font-size: 9px; font-weight: 700; letter-spacing: 0.3em;
-      text-transform: uppercase; color: rgba(255,255,255,0.3);
-      padding: 16px 18px 8px; display: flex; align-items: center; gap-8px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.3);
+      padding: 16px 18px 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
+
     .sep::after {
-      content: ''; flex: 1; height: 1px;
-      background: var(--border); margin-left: 10px;
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+      margin-left: 10px;
     }
 
     /* ── METRICS ── */
     .metric-val {
       font-family: 'Syne', sans-serif;
-      font-size: 26px; font-weight: 800; line-height: 1;
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1;
     }
+
     .metric-label {
-      font-size: 9px; font-weight: 600; letter-spacing: 0.15em;
-      text-transform: uppercase; color: rgba(255,255,255,0.4); margin-top: 4px;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.4);
+      margin-top: 4px;
     }
+
     .metric-delta {
-      font-size: 10px; font-weight: 600;
+      font-size: 10px;
+      font-weight: 600;
       font-family: 'JetBrains Mono', monospace;
       margin-top: 2px;
     }
 
     /* ── TRUST BADGE PILL ── */
     .trust-pill {
-      display: inline-flex; align-items: center; gap: 4px;
-      border-radius: 100px; padding: 3px 10px;
-      font-size: 10px; font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 100px;
+      padding: 3px 10px;
+      font-size: 10px;
+      font-weight: 700;
     }
-    .trust-emerald { background: rgba(16,185,129,0.12); color: var(--em); border: 1px solid rgba(16,185,129,0.25); }
-    .trust-gold    { background: rgba(245,158,11,0.12); color: #F59E0B; border: 1px solid rgba(245,158,11,0.25); }
-    .trust-silver  { background: rgba(156,163,175,0.12); color: #9CA3AF; border: 1px solid rgba(156,163,175,0.2); }
-    .trust-unver   { background: rgba(255,64,96,0.10); color: #FF6080; border: 1px solid rgba(255,64,96,0.2); }
+
+    .trust-emerald {
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--em);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .trust-gold {
+      background: rgba(245, 158, 11, 0.12);
+      color: #F59E0B;
+      border: 1px solid rgba(245, 158, 11, 0.25);
+    }
+
+    .trust-silver {
+      background: rgba(156, 163, 175, 0.12);
+      color: #9CA3AF;
+      border: 1px solid rgba(156, 163, 175, 0.2);
+    }
+
+    .trust-unver {
+      background: rgba(255, 64, 96, 0.10);
+      color: #FF6080;
+      border: 1px solid rgba(255, 64, 96, 0.2);
+    }
 
     /* ── SEVERITY ── */
-    .sev-low    { color: var(--em); }
-    .sev-med    { color: var(--warm); }
-    .sev-high   { color: var(--hot); }
+    .sev-low {
+      color: var(--em);
+    }
+
+    .sev-med {
+      color: var(--warm);
+    }
+
+    .sev-high {
+      color: var(--hot);
+    }
 
     /* ── TENANT ROW ── */
     .tenant-row {
       padding: 14px 16px;
       border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 12px;
-      transition: background 0.15s; cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.15s;
+      cursor: pointer;
     }
-    .tenant-row:last-child { border-bottom: none; }
-    .tenant-row:hover { background: rgba(255,255,255,0.03); }
+
+    .tenant-row:last-child {
+      border-bottom: none;
+    }
+
+    .tenant-row:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
 
     .tenant-avatar {
-      width: 40px; height: 40px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 14px;
       flex-shrink: 0;
     }
 
     /* ── HEALTH BAR ── */
     .health-bar {
-      height: 3px; border-radius: 100px;
-      background: rgba(255,255,255,0.06);
-      overflow: hidden; margin-top: 6px;
+      height: 3px;
+      border-radius: 100px;
+      background: rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+      margin-top: 6px;
     }
+
     .health-fill {
-      height: 100%; border-radius: 100px;
+      height: 100%;
+      border-radius: 100px;
       background: linear-gradient(90deg, var(--em), #34D399);
-      transition: width 0.6s cubic-bezier(0.2,0.8,0.2,1);
+      transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
 
     /* ── VERIFICATION CARD ── */
@@ -224,859 +392,1148 @@
     }
 
     /* ── SCORE RING ── */
-    .score-ring-wrap { position: relative; width: 52px; height: 52px; flex-shrink: 0; }
+    .score-ring-wrap {
+      position: relative;
+      width: 52px;
+      height: 52px;
+      flex-shrink: 0;
+    }
+
     .score-ring-val {
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 800;
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 800;
     }
 
     /* ── AUDIT ROW ── */
     .audit-row {
       padding: 12px 16px;
       border-bottom: 1px solid var(--border);
-      display: flex; align-items: flex-start; gap: 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
     }
-    .audit-row:last-child { border-bottom: none; }
+
+    .audit-row:last-child {
+      border-bottom: none;
+    }
+
     .audit-icon {
-      width: 32px; height: 32px; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
     }
 
     /* ── ACTION BTN ── */
     .btn-em {
-      background: var(--em); color: var(--navy);
-      border: none; border-radius: 10px;
+      background: var(--em);
+      color: var(--navy);
+      border: none;
+      border-radius: 10px;
       padding: 8px 16px;
-      font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 800;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      cursor: pointer; transition: filter 0.15s, transform 0.1s;
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: filter 0.15s, transform 0.1s;
     }
-    .btn-em:hover { filter: brightness(1.1); }
-    .btn-em:active { transform: scale(0.95); }
+
+    .btn-em:hover {
+      filter: brightness(1.1);
+    }
+
+    .btn-em:active {
+      transform: scale(0.95);
+    }
 
     .btn-ghost {
-      background: var(--glass2); color: rgba(255,255,255,0.6);
-      border: 1px solid var(--border2); border-radius: 10px;
+      background: var(--glass2);
+      color: rgba(255, 255, 255, 0.6);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
       padding: 8px 14px;
-      font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600;
-      cursor: pointer; transition: background 0.15s;
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
     }
-    .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
 
     .btn-danger {
-      background: rgba(255,64,96,0.1); color: #FF6080;
-      border: 1px solid rgba(255,64,96,0.2); border-radius: 10px;
+      background: rgba(255, 64, 96, 0.1);
+      color: #FF6080;
+      border: 1px solid rgba(255, 64, 96, 0.2);
+      border-radius: 10px;
       padding: 8px 14px;
-      font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
       cursor: pointer;
     }
 
     /* ── MODAL ── */
     .modal-overlay {
-      position: fixed; inset: 0; z-index: 200;
-      background: rgba(3,6,23,0.85); backdrop-filter: blur(8px);
-      display: none; align-items: flex-end;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(3, 6, 23, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: flex-end;
     }
-    .modal-overlay.open { display: flex; }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
     .modal-sheet {
-      width: 100%; background: #0A1535;
+      width: 100%;
+      background: #0A1535;
       border-radius: 28px 28px 0 0;
       border-top: 1px solid var(--border2);
       padding: 0 0 calc(24px + env(safe-area-inset-bottom));
-      max-height: 85vh; overflow-y: auto;
-      animation: slideUp 0.3s cubic-bezier(0.2,0.8,0.2,1);
+      max-height: 85vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
-    @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%)
+      }
+
+      to {
+        transform: translateY(0)
+      }
+    }
+
     .modal-handle {
-      width: 36px; height: 4px; border-radius: 2px;
-      background: rgba(255,255,255,0.15); margin: 12px auto 0;
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.15);
+      margin: 12px auto 0;
     }
+
     .modal-header {
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       padding: 16px 20px 12px;
       border-bottom: 1px solid var(--border);
     }
+
     .modal-title {
-      font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800;
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
     }
 
     /* ── INPUT ── */
-    .field-group { padding: 14px 20px 0; }
-    .field-label {
-      display: block; font-size: 9px; font-weight: 700;
-      letter-spacing: 0.25em; text-transform: uppercase;
-      color: rgba(255,255,255,0.35); margin-bottom: 8px;
+    .field-group {
+      padding: 14px 20px 0;
     }
+
+    .field-label {
+      display: block;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.35);
+      margin-bottom: 8px;
+    }
+
     .field-input {
       width: 100%;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border2); border-radius: 12px;
-      padding: 13px 14px; font-family: 'Inter', sans-serif;
-      font-size: 14px; color: white; outline: none;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 13px 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      color: white;
+      outline: none;
       transition: border-color 0.2s;
     }
-    .field-input:focus { border-color: rgba(16,185,129,0.4); }
+
+    .field-input:focus {
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
     .field-select {
       width: 100%;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border2); border-radius: 12px;
-      padding: 13px 14px; font-family: 'Inter', sans-serif;
-      font-size: 14px; color: white; outline: none;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 13px 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      color: white;
+      outline: none;
       -webkit-appearance: none;
     }
-    .field-select option { background: #0E1B40; }
+
+    .field-select option {
+      background: #0E1B40;
+    }
 
     /* ── ANIMATIONS ── */
-    .fade-in { animation: fadeIn 0.4s ease both; }
-    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+    .fade-in {
+      animation: fadeIn 0.4s ease both;
+    }
 
-    .stagger > * { animation: fadeIn 0.4s ease both; }
-    .stagger > *:nth-child(1){animation-delay:0.05s}
-    .stagger > *:nth-child(2){animation-delay:0.10s}
-    .stagger > *:nth-child(3){animation-delay:0.15s}
-    .stagger > *:nth-child(4){animation-delay:0.20s}
-    .stagger > *:nth-child(5){animation-delay:0.25s}
-    .stagger > *:nth-child(6){animation-delay:0.30s}
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .stagger>* {
+      animation: fadeIn 0.4s ease both;
+    }
+
+    .stagger>*:nth-child(1) {
+      animation-delay: 0.05s
+    }
+
+    .stagger>*:nth-child(2) {
+      animation-delay: 0.10s
+    }
+
+    .stagger>*:nth-child(3) {
+      animation-delay: 0.15s
+    }
+
+    .stagger>*:nth-child(4) {
+      animation-delay: 0.20s
+    }
+
+    .stagger>*:nth-child(5) {
+      animation-delay: 0.25s
+    }
+
+    .stagger>*:nth-child(6) {
+      animation-delay: 0.30s
+    }
 
     /* ── RISK TAG ── */
     .risk-tag {
-      font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
-      text-transform: uppercase; padding: 3px 8px; border-radius: 6px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 6px;
     }
-    .risk-low    { background: rgba(16,185,129,0.1);  color: var(--em); }
-    .risk-medium { background: rgba(245,158,11,0.1);  color: var(--warm); }
-    .risk-high   { background: rgba(255,64,96,0.12);  color: #FF6080; }
+
+    .risk-low {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--em);
+    }
+
+    .risk-medium {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--warm);
+    }
+
+    .risk-high {
+      background: rgba(255, 64, 96, 0.12);
+      color: #FF6080;
+    }
 
     /* ── USER MENU ── */
     .user-menu {
-      display: none; position: absolute; right: 16px; top: 62px;
-      background: #0E1B40; border: 1px solid var(--border2);
-      border-radius: 16px; padding: 8px; min-width: 200px;
-      z-index: 999; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      display: none;
+      position: absolute;
+      right: 16px;
+      top: 62px;
+      background: #0E1B40;
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      padding: 8px;
+      min-width: 200px;
+      z-index: 999;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
     }
-    .user-menu.open { display: block; }
+
+    .user-menu.open {
+      display: block;
+    }
 
     /* ── EMPTY STATE ── */
-    .empty { text-align: center; padding: 48px 24px; color: rgba(255,255,255,0.3); }
-    .empty-icon { font-size: 36px; margin-bottom: 12px; }
+    .empty {
+      text-align: center;
+      padding: 48px 24px;
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    .empty-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+    }
 
     /* ── FUNNEL ── */
     .funnel-stage {
       margin-bottom: 10px;
     }
+
     .funnel-label {
-      display: flex; justify-content: space-between;
-      font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 4px;
     }
+
     .funnel-bar-wrap {
-      height: 8px; background: rgba(255,255,255,0.05); border-radius: 100px; overflow: hidden;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 100px;
+      overflow: hidden;
     }
+
     .funnel-bar {
-      height: 100%; border-radius: 100px;
-      transition: width 1s cubic-bezier(0.2,0.8,0.2,1);
+      height: 100%;
+      border-radius: 100px;
+      transition: width 1s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
 
     /* ── VERIFY CARD ── */
     .verify-signal {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 7px 0; border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
       font-size: 12px;
     }
-    .verify-signal:last-child { border-bottom: none; }
-    .signal-bar-wrap { width: 80px; height: 4px; background: rgba(255,255,255,0.06); border-radius: 100px; }
-    .signal-bar { height: 100%; border-radius: 100px; }
+
+    .verify-signal:last-child {
+      border-bottom: none;
+    }
+
+    .signal-bar-wrap {
+      width: 80px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 100px;
+    }
+
+    .signal-bar {
+      height: 100%;
+      border-radius: 100px;
+    }
 
     /* ── NAV ITEM ── */
-    .nav-item { min-width: 40px; padding: 5px 6px; font-size: 8px; }
-    .nav-center { width: 44px; height: 44px; border-radius: 14px; }
-    
+    .nav-item {
+      min-width: 40px;
+      padding: 5px 6px;
+      font-size: 8px;
+    }
+
+    .nav-center {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+    }
   </style>
 </head>
-<body>
-<div id="app">
 
-  <!-- ══════════════════════════════════
+<body>
+  <div id="app">
+
+    <!-- ══════════════════════════════════
    HEADER
   ══════════════════════════════════ -->
-  <div class="header">
-    <div class="flex items-center justify-between">
-      <div>
-        <div class="flex items-center gap-2">
-          <div class="logo">Est<span>8</span>Go</div>
-          <span class="platform-badge">Command Center</span>
+    <div class="header">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <div class="logo">Est<span>8</span>Go</div>
+            <span class="platform-badge">Command Center</span>
+          </div>
+          <div class="flex items-center gap-1.5 mt-1">
+            <span class="live-dot"></span>
+            <span style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:500">Platform Live</span>
+            <span style="font-size:10px;color:rgba(255,255,255,0.15);margin:0 4px">·</span>
+            <span id="staffName" style="font-size:10px;color:rgba(255,255,255,0.4)">Loading...</span>
+          </div>
         </div>
-        <div class="flex items-center gap-1.5 mt-1">
-          <span class="live-dot"></span>
-          <span style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:500">Platform Live</span>
-          <span style="font-size:10px;color:rgba(255,255,255,0.15);margin:0 4px">·</span>
-          <span id="staffName" style="font-size:10px;color:rgba(255,255,255,0.4)">Loading...</span>
-        </div>
-      </div>
-      <!-- Avatar -->
-      <div style="position:relative">
-        <div id="userAvatar" onclick="toggleUserMenu()" style="width:40px;height:40px;border-radius:12px;
+        <!-- Avatar -->
+        <div style="position:relative">
+          <div id="userAvatar" onclick="toggleUserMenu()" style="width:40px;height:40px;border-radius:12px;
              border:1.5px solid var(--em-hard);display:flex;align-items:center;justify-content:center;
              font-family:'Syne',sans-serif;font-weight:800;font-size:14px;
              background:linear-gradient(135deg,#162860,#0E1B40);cursor:pointer;flex-shrink:0">
-          SA
-        </div>
-        <div class="user-menu" id="userMenu">
-          <div style="padding:10px 12px 8px;border-bottom:1px solid var(--border);margin-bottom:6px">
-            <div style="font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3)">Signed in as</div>
-            <div id="menuEmail" style="font-size:12px;color:white;margin-top:2px"></div>
-            <div id="menuRole" style="font-size:10px;color:var(--em);margin-top:1px;text-transform:capitalize"></div>
+            SA
           </div>
-          <button onclick="Auth.logout()" style="width:100%;text-align:left;background:none;border:none;
+          <div class="user-menu" id="userMenu">
+            <div style="padding:10px 12px 8px;border-bottom:1px solid var(--border);margin-bottom:6px">
+              <div
+                style="font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3)">
+                Signed in as</div>
+              <div id="menuEmail" style="font-size:12px;color:white;margin-top:2px"></div>
+              <div id="menuRole" style="font-size:10px;color:var(--em);margin-top:1px;text-transform:capitalize"></div>
+            </div>
+            <button onclick="Auth.logout()" style="width:100%;text-align:left;background:none;border:none;
                   padding:10px 12px;border-radius:10px;cursor:pointer;font-size:13px;color:#FF6080;
                   font-family:'Inter',sans-serif;display:flex;align-items:center;gap:8px"
-                  onmouseover="this.style.background='rgba(255,64,96,0.08)'"
-                  onmouseout="this.style.background='none'">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/>
-            </svg>
-            Sign Out
-          </button>
+              onmouseover="this.style.background='rgba(255,64,96,0.08)'" onmouseout="this.style.background='none'">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+              </svg>
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Platform pulse metrics -->
+      <div class="grid grid-cols-4 gap-2 mt-3 stagger">
+        <div class="card card-glow p-3 text-center">
+          <div class="metric-val" id="hdrTenants">—</div>
+          <div class="metric-label">Tenants</div>
+        </div>
+        <div class="card p-3 text-center">
+          <div class="metric-val" style="color:var(--em)" id="hdrVerified">—</div>
+          <div class="metric-label">Verified</div>
+        </div>
+        <div class="card p-3 text-center">
+          <div class="metric-val" style="color:var(--warm)" id="hdrPending">—</div>
+          <div class="metric-label">Pending</div>
+        </div>
+        <div class="card p-3 text-center">
+          <div class="metric-val" style="color:var(--hot)" id="hdrRisks">—</div>
+          <div class="metric-label">Risks</div>
         </div>
       </div>
     </div>
 
-    <!-- Platform pulse metrics -->
-    <div class="grid grid-cols-4 gap-2 mt-3 stagger">
-      <div class="card card-glow p-3 text-center">
-        <div class="metric-val" id="hdrTenants">—</div>
-        <div class="metric-label">Tenants</div>
-      </div>
-      <div class="card p-3 text-center">
-        <div class="metric-val" style="color:var(--em)" id="hdrVerified">—</div>
-        <div class="metric-label">Verified</div>
-      </div>
-      <div class="card p-3 text-center">
-        <div class="metric-val" style="color:var(--warm)" id="hdrPending">—</div>
-        <div class="metric-label">Pending</div>
-      </div>
-      <div class="card p-3 text-center">
-        <div class="metric-val" style="color:var(--hot)" id="hdrRisks">—</div>
-        <div class="metric-label">Risks</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════
+    <!-- ══════════════════════════════════
    SCROLL AREA
   ══════════════════════════════════ -->
-  <div id="scrollArea">
+    <div id="scrollArea">
 
-    <!-- ══ TAB: PULSE ══ -->
-    <div id="pulseTab" class="tab active" style="padding-top:4px">
+      <!-- ══ TAB: PULSE ══ -->
+      <div id="pulseTab" class="tab active" style="padding-top:4px">
 
-      <div class="sep">Platform Health</div>
+        <div class="sep">Platform Health</div>
 
-      <!-- Primary metrics grid -->
-      <div class="grid grid-cols-2 gap-3 px-4 stagger">
-        <div class="card card-glow p-4">
-          <div style="font-size:10px;color:var(--em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Trust Score</div>
-          <div class="metric-val mt-2" id="avgTrustScore">—</div>
-          <div class="metric-label">Platform Average</div>
-          <div class="health-bar mt-3"><div class="health-fill" id="trustBar" style="width:0%"></div></div>
-        </div>
-        <div class="card p-4">
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Conversations</div>
-          <div class="metric-val mt-2" id="dailyConvos">—</div>
-          <div class="metric-label">Today</div>
-          <div class="metric-delta" style="color:var(--em)" id="convoDelta">+0 vs yesterday</div>
-        </div>
-        <div class="card p-4">
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Inspections</div>
-          <div class="metric-val mt-2" id="dailyInspections">—</div>
-          <div class="metric-label">Booked Today</div>
-        </div>
-        <div class="card p-4">
-          <div style="font-size:10px;color:var(--warm);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">AI Usage</div>
-          <div class="metric-val mt-2" id="aiCalls">—</div>
-          <div class="metric-label">GPT Calls Today</div>
-        </div>
-      </div>
-
-      <!-- Trust badge distribution -->
-      <div class="sep" style="margin-top:8px">Trust Badge Distribution</div>
-      <div class="px-4">
-        <div class="card p-4">
-          <div class="grid grid-cols-4 gap-2 text-center stagger">
-            <div>
-              <div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:800;color:var(--em)" id="bdgEmerald">—</div>
-              <span class="trust-pill trust-emerald mt-1" style="font-size:8px">Emerald</span>
-            </div>
-            <div>
-              <div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:800;color:var(--warm)" id="bdgGold">—</div>
-              <span class="trust-pill trust-gold mt-1" style="font-size:8px">Gold</span>
-            </div>
-            <div>
-              <div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:800;color:#9CA3AF" id="bdgSilver">—</div>
-              <span class="trust-pill trust-silver mt-1" style="font-size:8px">Silver</span>
-            </div>
-            <div>
-              <div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:800;color:#FF6080" id="bdgUnver">—</div>
-              <span class="trust-pill trust-unver mt-1" style="font-size:8px">Unverified</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Realtor activity -->
-      <div class="sep" style="margin-top:8px">Realtor Activity</div>
-      <div class="grid grid-cols-3 gap-3 px-4">
-        <div class="card p-3 text-center">
-          <div class="metric-val" style="font-size:20px" id="activeRealtors">—</div>
-          <div class="metric-label">Active Today</div>
-        </div>
-        <div class="card p-3 text-center">
-          <div class="metric-val" style="font-size:20px;color:var(--hot)" id="ignoredLeads">—</div>
-          <div class="metric-label">Ignored Leads</div>
-        </div>
-        <div class="card p-3 text-center">
-          <div class="metric-val" style="font-size:20px;color:var(--warm)" id="humanTakeovers">—</div>
-          <div class="metric-label">Takeovers</div>
-        </div>
-      </div>
-
-      <!-- Risk alerts -->
-      <div class="sep" style="margin-top:8px">Risk Alerts</div>
-      <div class="px-4">
-        <div class="card" id="riskList">
-          <div class="empty"><div class="empty-icon">🛡️</div><p style="font-size:13px">No active risks detected</p></div>
-        </div>
-      </div>
-
-      <div style="height:8px"></div>
-    </div>
-
-    <!-- ══ TAB: TENANTS ══ -->
-    <div id="tenantsTab" class="tab">
-      <div class="flex items-center justify-between px-4 pt-4 pb-2">
-        <div style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.3)">All Tenants</div>
-        <button class="btn-em" onclick="openModal('newTenantModal')" style="padding:7px 14px;font-size:10px">+ New Tenant</button>
-      </div>
-      <!-- Filter pills -->
-      <div class="flex gap-2 px-4 pb-3 overflow-x-auto" style="-webkit-overflow-scrolling:touch;scrollbar-width:none">
-        <button class="trust-pill trust-emerald filter-pill active-filter" onclick="filterTenants('all')" data-filter="all" style="white-space:nowrap;cursor:pointer">All</button>
-        <button class="trust-pill trust-silver filter-pill" onclick="filterTenants('agency')" data-filter="agency" style="white-space:nowrap;cursor:pointer">Agency</button>
-        <button class="trust-pill trust-silver filter-pill" onclick="filterTenants('freelance')" data-filter="freelance" style="white-space:nowrap;cursor:pointer">Freelance</button>
-        <button class="trust-pill trust-silver filter-pill" onclick="filterTenants('developer')" data-filter="developer" style="white-space:nowrap;cursor:pointer">Developer</button>
-        <button class="trust-pill trust-silver filter-pill" onclick="filterTenants('investor')" data-filter="investor" style="white-space:nowrap;cursor:pointer">Investor</button>
-      </div>
-      <div class="card mx-4" id="tenantList">
-        <div class="empty"><div class="empty-icon">🏢</div><p>Loading tenants...</p></div>
-      </div>
-    </div>
-
-    <!-- ══ TAB: VERIFY ══ -->
-    <div id="verifyTab" class="tab">
-      <div class="flex items-center justify-between px-4 pt-4 pb-1">
-        <div style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.3)">Verification Queue</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--warm)" id="queueCount">— pending</div>
-      </div>
-      <div class="flex gap-2 px-4 pb-3 mt-1 overflow-x-auto" style="scrollbar-width:none">
-        <button class="trust-pill trust-emerald vq-filter" data-filter="all" onclick="filterQueue('all')" style="cursor:pointer;white-space:nowrap">All</button>
-        <button class="trust-pill trust-silver vq-filter" data-filter="suspicious" onclick="filterQueue('suspicious')" style="cursor:pointer;white-space:nowrap">⚠ Suspicious</button>
-        <button class="trust-pill trust-silver vq-filter" data-filter="high_value" onclick="filterQueue('high_value')" style="cursor:pointer;white-space:nowrap">💎 High Value</button>
-        <button class="trust-pill trust-silver vq-filter" data-filter="new_tenant" onclick="filterQueue('new_tenant')" style="cursor:pointer;white-space:nowrap">🆕 New Tenant</button>
-      </div>
-      <div id="verifyQueue" style="padding:0 14px">
-        <div class="empty"><div class="empty-icon">✅</div><p style="font-size:13px">Queue is clear — all listings verified</p></div>
-      </div>
-    </div>
-
-    <!-- ══ TAB: AUDIT ══ -->
-    <div id="auditTab" class="tab">
-      <div class="sep pt-4">Audit & Forensics</div>
-      <div class="px-4 mb-2">
-        <input type="text" id="auditSearch" placeholder="Search by tenant, action, staff..." class="field-input" style="font-size:13px" oninput="filterAudit(this.value)"/>
-      </div>
-      <div class="flex gap-2 px-4 pb-3 overflow-x-auto" style="scrollbar-width:none">
-        <button class="risk-tag risk-low" onclick="filterAuditSev('all')" style="cursor:pointer">All</button>
-        <button class="risk-tag risk-low" onclick="filterAuditSev('low')" style="cursor:pointer">Low</button>
-        <button class="risk-tag risk-medium" onclick="filterAuditSev('medium')" style="cursor:pointer">Medium</button>
-        <button class="risk-tag risk-high" onclick="filterAuditSev('high')" style="cursor:pointer">High</button>
-      </div>
-      <div class="card mx-4" id="auditList">
-        <div class="empty"><div class="empty-icon">🗂️</div><p>Loading audit logs...</p></div>
-      </div>
-      <!-- Immutability notice -->
-      <div style="margin:12px 14px 4px;padding:10px 14px;background:rgba(16,185,129,0.04);
-           border:1px solid rgba(16,185,129,0.1);border-radius:12px;
-           font-size:10px;color:rgba(255,255,255,0.3);display:flex;align-items:center;gap:6px">
-        <span>🔒</span>
-        <span>Audit logs are immutable. No record can be edited or deleted.</span>
-      </div>
-    </div>
-
-    <!-- ══ TAB: STAFF ══ -->
-    <div id="staffTab" class="tab">
-      <div class="flex items-center justify-between px-4 pt-4 pb-2">
-        <div style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.3)">Platform Staff</div>
-        <button class="btn-em" id="addStaffBtn" onclick="openModal('newStaffModal')" style="padding:7px 14px;font-size:10px">+ Add Staff</button>
-      </div>
-      <!-- Department breakdown -->
-      <div class="grid grid-cols-3 gap-2 px-4 mb-3 stagger">
-        <div class="card p-3 text-center">
-          <div style="font-size:20px;font-family:'Syne',sans-serif;font-weight:800;color:var(--em)" id="staffTotal">—</div>
-          <div class="metric-label">Total Staff</div>
-        </div>
-        <div class="card p-3 text-center">
-          <div style="font-size:20px;font-family:'Syne',sans-serif;font-weight:800;color:var(--blue)" id="staffActive">—</div>
-          <div class="metric-label">Active</div>
-        </div>
-        <div class="card p-3 text-center">
-          <div style="font-size:20px;font-family:'Syne',sans-serif;font-weight:800;color:var(--warm)" id="staffRoles">—</div>
-          <div class="metric-label">Roles Used</div>
-        </div>
-      </div>
-      <div class="card mx-4" id="staffList">
-        <div class="empty"><div class="empty-icon">👥</div><p>Loading staff...</p></div>
-      </div>
-    </div>
-
-    <!-- ══ TAB: BILLING (superuser only) ══ -->
-    <div id="billingTab" class="tab">
-      <div class="sep pt-4">Billing & Plans</div>
-      <!-- Superuser gate banner -->
-      <div id="billingGate" style="display:none;margin:0 14px 16px;padding:14px 16px;
-           background:rgba(255,64,96,0.06);border:1px solid rgba(255,64,96,0.15);
-           border-radius:16px;text-align:center">
-        <div style="font-size:20px;margin-bottom:6px">🔐</div>
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Superuser Only</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px">Billing controls require superuser access</div>
-      </div>
-      <div id="billingContent">
-        <!-- Revenue summary -->
+        <!-- Primary metrics grid -->
         <div class="grid grid-cols-2 gap-3 px-4 stagger">
           <div class="card card-glow p-4">
-            <div style="font-size:10px;color:var(--em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">MRR</div>
-            <div class="metric-val mt-2" id="billingMRR">₦—</div>
-            <div class="metric-label">Monthly Recurring</div>
+            <div style="font-size:10px;color:var(--em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">
+              Trust Score</div>
+            <div class="metric-val mt-2" id="avgTrustScore">—</div>
+            <div class="metric-label">Platform Average</div>
+            <div class="health-bar mt-3">
+              <div class="health-fill" id="trustBar" style="width:0%"></div>
+            </div>
           </div>
           <div class="card p-4">
-            <div style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Overdue</div>
-            <div class="metric-val mt-2" style="color:var(--hot)" id="billingOverdue">—</div>
-            <div class="metric-label">Accounts</div>
+            <div
+              style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">
+              Conversations</div>
+            <div class="metric-val mt-2" id="dailyConvos">—</div>
+            <div class="metric-label">Today</div>
+            <div class="metric-delta" style="color:var(--em)" id="convoDelta">+0 vs yesterday</div>
           </div>
           <div class="card p-4">
-            <div style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">AI Cost</div>
-            <div class="metric-val mt-2" style="color:var(--warm);font-size:20px" id="billingAICost">₦—</div>
-            <div class="metric-label">This Month</div>
+            <div
+              style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">
+              Inspections</div>
+            <div class="metric-val mt-2" id="dailyInspections">—</div>
+            <div class="metric-label">Booked Today</div>
           </div>
           <div class="card p-4">
-            <div style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Margin</div>
-            <div class="metric-val mt-2" style="color:var(--em);font-size:20px" id="billingMargin">—%</div>
-            <div class="metric-label">Est. This Month</div>
+            <div style="font-size:10px;color:var(--warm);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">
+              AI Usage</div>
+            <div class="metric-val mt-2" id="aiCalls">—</div>
+            <div class="metric-label">GPT Calls Today</div>
           </div>
         </div>
 
-        <!-- Plan distribution -->
-        <div class="sep" style="margin-top:8px">Plan Distribution</div>
-        <div class="card mx-4 p-4">
-          <div id="planDist" class="stagger">
-            <div class="empty"><div class="empty-icon">📊</div><p>Loading plan data...</p></div>
+        <!-- Trust badge distribution -->
+        <div class="sep" style="margin-top:8px">Trust Badge Distribution</div>
+        <div class="px-4">
+          <div class="card p-4">
+            <div class="grid grid-cols-4 gap-2 text-center stagger">
+              <div>
+                <div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:800;color:var(--em)"
+                  id="bdgEmerald">—</div>
+                <span class="trust-pill trust-emerald mt-1" style="font-size:8px">Emerald</span>
+              </div>
+              <div>
+                <div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:800;color:var(--warm)"
+                  id="bdgGold">—</div>
+                <span class="trust-pill trust-gold mt-1" style="font-size:8px">Gold</span>
+              </div>
+              <div>
+                <div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:800;color:#9CA3AF" id="bdgSilver">—
+                </div>
+                <span class="trust-pill trust-silver mt-1" style="font-size:8px">Silver</span>
+              </div>
+              <div>
+                <div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:800;color:#FF6080" id="bdgUnver">—
+                </div>
+                <span class="trust-pill trust-unver mt-1" style="font-size:8px">Unverified</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- AI Usage forecast -->
-        <div class="sep" style="margin-top:8px">AI Usage Forecast</div>
-        <div class="card mx-4 p-4" id="aiForecast">
-          <div class="empty"><div class="empty-icon">🤖</div><p>Loading usage data...</p></div>
+        <!-- Realtor activity -->
+        <div class="sep" style="margin-top:8px">Realtor Activity</div>
+        <div class="grid grid-cols-3 gap-3 px-4">
+          <div class="card p-3 text-center">
+            <div class="metric-val" style="font-size:20px" id="activeRealtors">—</div>
+            <div class="metric-label">Active Today</div>
+          </div>
+          <div class="card p-3 text-center">
+            <div class="metric-val" style="font-size:20px;color:var(--hot)" id="ignoredLeads">—</div>
+            <div class="metric-label">Ignored Leads</div>
+          </div>
+          <div class="card p-3 text-center">
+            <div class="metric-val" style="font-size:20px;color:var(--warm)" id="humanTakeovers">—</div>
+            <div class="metric-label">Takeovers</div>
+          </div>
+        </div>
+
+        <!-- Risk alerts -->
+        <div class="sep" style="margin-top:8px">Risk Alerts</div>
+        <div class="px-4">
+          <div class="card" id="riskList">
+            <div class="empty">
+              <div class="empty-icon">🛡️</div>
+              <p style="font-size:13px">No active risks detected</p>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:8px"></div>
+      </div>
+
+      <!-- ══ TAB: TENANTS ══ -->
+      <div id="tenantsTab" class="tab">
+        <div class="flex items-center justify-between px-4 pt-4 pb-2">
+          <div
+            style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.3)">
+            All Tenants</div>
+          <button class="btn-em" onclick="openModal('newTenantModal')" style="padding:7px 14px;font-size:10px">+ New
+            Tenant</button>
+        </div>
+        <!-- Filter pills -->
+        <div class="flex gap-2 px-4 pb-3 overflow-x-auto" style="-webkit-overflow-scrolling:touch;scrollbar-width:none">
+          <button class="trust-pill trust-emerald filter-pill active-filter" onclick="filterTenants('all')"
+            data-filter="all" style="white-space:nowrap;cursor:pointer">All</button>
+          <button class="trust-pill trust-silver filter-pill" onclick="filterTenants('agency')" data-filter="agency"
+            style="white-space:nowrap;cursor:pointer">Agency</button>
+          <button class="trust-pill trust-silver filter-pill" onclick="filterTenants('freelance')"
+            data-filter="freelance" style="white-space:nowrap;cursor:pointer">Freelance</button>
+          <button class="trust-pill trust-silver filter-pill" onclick="filterTenants('developer')"
+            data-filter="developer" style="white-space:nowrap;cursor:pointer">Developer</button>
+          <button class="trust-pill trust-silver filter-pill" onclick="filterTenants('investor')" data-filter="investor"
+            style="white-space:nowrap;cursor:pointer">Investor</button>
+        </div>
+        <div class="card mx-4" id="tenantList">
+          <div class="empty">
+            <div class="empty-icon">🏢</div>
+            <p>Loading tenants...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ TAB: VERIFY ══ -->
+      <div id="verifyTab" class="tab">
+        <div class="flex items-center justify-between px-4 pt-4 pb-1">
+          <div
+            style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.3)">
+            Verification Queue</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--warm)" id="queueCount">— pending
+          </div>
+        </div>
+        <div class="flex gap-2 px-4 pb-3 mt-1 overflow-x-auto" style="scrollbar-width:none">
+          <button class="trust-pill trust-emerald vq-filter" data-filter="all" onclick="filterQueue('all')"
+            style="cursor:pointer;white-space:nowrap">All</button>
+          <button class="trust-pill trust-silver vq-filter" data-filter="suspicious" onclick="filterQueue('suspicious')"
+            style="cursor:pointer;white-space:nowrap">⚠ Suspicious</button>
+          <button class="trust-pill trust-silver vq-filter" data-filter="high_value" onclick="filterQueue('high_value')"
+            style="cursor:pointer;white-space:nowrap">💎 High Value</button>
+          <button class="trust-pill trust-silver vq-filter" data-filter="new_tenant" onclick="filterQueue('new_tenant')"
+            style="cursor:pointer;white-space:nowrap">🆕 New Tenant</button>
+        </div>
+        <div id="verifyQueue" style="padding:0 14px">
+          <div class="empty">
+            <div class="empty-icon">✅</div>
+            <p style="font-size:13px">Queue is clear — all listings verified</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ TAB: AUDIT ══ -->
+      <div id="auditTab" class="tab">
+        <div class="sep pt-4">Audit & Forensics</div>
+        <div class="px-4 mb-2">
+          <input type="text" id="auditSearch" placeholder="Search by tenant, action, staff..." class="field-input"
+            style="font-size:13px" oninput="filterAudit(this.value)" />
+        </div>
+        <div class="flex gap-2 px-4 pb-3 overflow-x-auto" style="scrollbar-width:none">
+          <button class="risk-tag risk-low" onclick="filterAuditSev('all')" style="cursor:pointer">All</button>
+          <button class="risk-tag risk-low" onclick="filterAuditSev('low')" style="cursor:pointer">Low</button>
+          <button class="risk-tag risk-medium" onclick="filterAuditSev('medium')" style="cursor:pointer">Medium</button>
+          <button class="risk-tag risk-high" onclick="filterAuditSev('high')" style="cursor:pointer">High</button>
+        </div>
+        <div class="card mx-4" id="auditList">
+          <div class="empty">
+            <div class="empty-icon">🗂️</div>
+            <p>Loading audit logs...</p>
+          </div>
+        </div>
+        <!-- Immutability notice -->
+        <div style="margin:12px 14px 4px;padding:10px 14px;background:rgba(16,185,129,0.04);
+           border:1px solid rgba(16,185,129,0.1);border-radius:12px;
+           font-size:10px;color:rgba(255,255,255,0.3);display:flex;align-items:center;gap:6px">
+          <span>🔒</span>
+          <span>Audit logs are immutable. No record can be edited or deleted.</span>
+        </div>
+      </div>
+
+      <!-- ══ TAB: STAFF ══ -->
+      <div id="staffTab" class="tab">
+        <div class="flex items-center justify-between px-4 pt-4 pb-2">
+          <div
+            style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.3)">
+            Platform Staff</div>
+          <button class="btn-em" id="addStaffBtn" onclick="openModal('newStaffModal')"
+            style="padding:7px 14px;font-size:10px">+ Add Staff</button>
+        </div>
+        <!-- Department breakdown -->
+        <div class="grid grid-cols-3 gap-2 px-4 mb-3 stagger">
+          <div class="card p-3 text-center">
+            <div style="font-size:20px;font-family:'Syne',sans-serif;font-weight:800;color:var(--em)" id="staffTotal">—
+            </div>
+            <div class="metric-label">Total Staff</div>
+          </div>
+          <div class="card p-3 text-center">
+            <div style="font-size:20px;font-family:'Syne',sans-serif;font-weight:800;color:var(--blue)"
+              id="staffActive">—</div>
+            <div class="metric-label">Active</div>
+          </div>
+          <div class="card p-3 text-center">
+            <div style="font-size:20px;font-family:'Syne',sans-serif;font-weight:800;color:var(--warm)" id="staffRoles">
+              —</div>
+            <div class="metric-label">Roles Used</div>
+          </div>
+        </div>
+        <div class="card mx-4" id="staffList">
+          <div class="empty">
+            <div class="empty-icon">👥</div>
+            <p>Loading staff...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ TAB: BILLING (superuser only) ══ -->
+      <div id="billingTab" class="tab">
+        <div class="sep pt-4">Billing & Plans</div>
+        <!-- Superuser gate banner -->
+        <div id="billingGate" style="display:none;margin:0 14px 16px;padding:14px 16px;
+           background:rgba(255,64,96,0.06);border:1px solid rgba(255,64,96,0.15);
+           border-radius:16px;text-align:center">
+          <div style="font-size:20px;margin-bottom:6px">🔐</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Superuser Only</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px">Billing controls require superuser
+            access</div>
+        </div>
+        <div id="billingContent">
+          <!-- Revenue summary -->
+          <div class="grid grid-cols-2 gap-3 px-4 stagger">
+            <div class="card card-glow p-4">
+              <div style="font-size:10px;color:var(--em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">
+                MRR</div>
+              <div class="metric-val mt-2" id="billingMRR">₦—</div>
+              <div class="metric-label">Monthly Recurring</div>
+            </div>
+            <div class="card p-4">
+              <div
+                style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">
+                Overdue</div>
+              <div class="metric-val mt-2" style="color:var(--hot)" id="billingOverdue">—</div>
+              <div class="metric-label">Accounts</div>
+            </div>
+            <div class="card p-4">
+              <div
+                style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">
+                AI Cost</div>
+              <div class="metric-val mt-2" style="color:var(--warm);font-size:20px" id="billingAICost">₦—</div>
+              <div class="metric-label">This Month</div>
+            </div>
+            <div class="card p-4">
+              <div
+                style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">
+                Margin</div>
+              <div class="metric-val mt-2" style="color:var(--em);font-size:20px" id="billingMargin">—%</div>
+              <div class="metric-label">Est. This Month</div>
+            </div>
+          </div>
+
+          <!-- Plan distribution -->
+          <div class="sep" style="margin-top:8px">Plan Distribution</div>
+          <div class="card mx-4 p-4">
+            <div id="planDist" class="stagger">
+              <div class="empty">
+                <div class="empty-icon">📊</div>
+                <p>Loading plan data...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Usage forecast -->
+          <div class="sep" style="margin-top:8px">AI Usage Forecast</div>
+          <div class="card mx-4 p-4" id="aiForecast">
+            <div class="empty">
+              <div class="empty-icon">🤖</div>
+              <p>Loading usage data...</p>
+            </div>
+          </div>
+          <div style="height:8px"></div>
+        </div>
+      </div>
+
+      <!-- ══ TAB: RISK ══ -->
+      <div id="riskTab" class="tab">
+        <div class="sep pt-4">Risk & Conversion Intelligence</div>
+
+        <!-- Conversion funnel -->
+        <div
+          style="margin:0 14px 12px;padding:16px;background:var(--glass2);border:1px solid var(--border);border-radius:18px">
+          <div
+            style="font-size:10px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:14px">
+            Conversion Funnel</div>
+          <div id="funnelStages">
+            <div class="funnel-stage" data-label="Search" data-val="100" data-color="var(--em)"></div>
+            <div class="funnel-stage" data-label="Engaged" data-val="68" data-color="var(--blue)"></div>
+            <div class="funnel-stage" data-label="Inspection" data-val="31" data-color="var(--warm)"></div>
+            <div class="funnel-stage" data-label="Payment" data-val="12" data-color="var(--hot)"></div>
+          </div>
+        </div>
+
+        <!-- Buyer confidence -->
+        <div class="sep">Buyer Confidence Signals</div>
+        <div class="grid grid-cols-2 gap-3 px-4">
+          <div class="card p-4">
+            <div style="font-size:22px;margin-bottom:4px">🔍</div>
+            <div class="metric-val" style="font-size:20px" id="trustQuestions">—</div>
+            <div class="metric-label">Trust Questions Asked</div>
+          </div>
+          <div class="card p-4">
+            <div style="font-size:22px;margin-bottom:4px">🏅</div>
+            <div class="metric-val" style="font-size:20px" id="badgeClicks">—</div>
+            <div class="metric-label">Badge Interactions</div>
+          </div>
+          <div class="card p-4">
+            <div style="font-size:22px;margin-bottom:4px">🔄</div>
+            <div class="metric-val" style="font-size:20px" id="returnBuyers">—</div>
+            <div class="metric-label">Return Buyers</div>
+          </div>
+          <div class="card p-4">
+            <div style="font-size:22px;margin-bottom:4px">📍</div>
+            <div class="metric-val" style="font-size:20px" id="verifyEngagement">—</div>
+            <div class="metric-label">Verification Checks</div>
+          </div>
+        </div>
+
+        <!-- Active risk flags -->
+        <div class="sep" style="margin-top:8px">Active Risk Flags</div>
+        <div class="card mx-4" id="riskFlagList">
+          <div class="empty">
+            <div class="empty-icon">🛡️</div>
+            <p style="font-size:13px">No active risk flags</p>
+          </div>
+        </div>
+
+        <!-- Suspicious tenants -->
+        <div class="sep" style="margin-top:8px">Suspicious Activity</div>
+        <div class="card mx-4" id="suspiciousList">
+          <div class="empty">
+            <div class="empty-icon">👁️</div>
+            <p style="font-size:13px">No suspicious patterns detected</p>
+          </div>
         </div>
         <div style="height:8px"></div>
       </div>
-    </div>
 
-    <!-- ══ TAB: RISK ══ -->
-    <div id="riskTab" class="tab">
-      <div class="sep pt-4">Risk & Conversion Intelligence</div>
+    </div><!-- /scrollArea -->
 
-      <!-- Conversion funnel -->
-      <div style="margin:0 14px 12px;padding:16px;background:var(--glass2);border:1px solid var(--border);border-radius:18px">
-        <div style="font-size:10px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:14px">Conversion Funnel</div>
-        <div id="funnelStages">
-          <div class="funnel-stage" data-label="Search" data-val="100" data-color="var(--em)"></div>
-          <div class="funnel-stage" data-label="Engaged" data-val="68" data-color="var(--blue)"></div>
-          <div class="funnel-stage" data-label="Inspection" data-val="31" data-color="var(--warm)"></div>
-          <div class="funnel-stage" data-label="Payment" data-val="12" data-color="var(--hot)"></div>
-        </div>
-      </div>
-
-      <!-- Buyer confidence -->
-      <div class="sep">Buyer Confidence Signals</div>
-      <div class="grid grid-cols-2 gap-3 px-4">
-        <div class="card p-4">
-          <div style="font-size:22px;margin-bottom:4px">🔍</div>
-          <div class="metric-val" style="font-size:20px" id="trustQuestions">—</div>
-          <div class="metric-label">Trust Questions Asked</div>
-        </div>
-        <div class="card p-4">
-          <div style="font-size:22px;margin-bottom:4px">🏅</div>
-          <div class="metric-val" style="font-size:20px" id="badgeClicks">—</div>
-          <div class="metric-label">Badge Interactions</div>
-        </div>
-        <div class="card p-4">
-          <div style="font-size:22px;margin-bottom:4px">🔄</div>
-          <div class="metric-val" style="font-size:20px" id="returnBuyers">—</div>
-          <div class="metric-label">Return Buyers</div>
-        </div>
-        <div class="card p-4">
-          <div style="font-size:22px;margin-bottom:4px">📍</div>
-          <div class="metric-val" style="font-size:20px" id="verifyEngagement">—</div>
-          <div class="metric-label">Verification Checks</div>
-        </div>
-      </div>
-
-      <!-- Active risk flags -->
-      <div class="sep" style="margin-top:8px">Active Risk Flags</div>
-      <div class="card mx-4" id="riskFlagList">
-        <div class="empty"><div class="empty-icon">🛡️</div><p style="font-size:13px">No active risk flags</p></div>
-      </div>
-
-      <!-- Suspicious tenants -->
-      <div class="sep" style="margin-top:8px">Suspicious Activity</div>
-      <div class="card mx-4" id="suspiciousList">
-        <div class="empty"><div class="empty-icon">👁️</div><p style="font-size:13px">No suspicious patterns detected</p></div>
-      </div>
-      <div style="height:8px"></div>
-    </div>
-
-  </div><!-- /scrollArea -->
-
-  <!-- ══════════════════════════════════
+    <!-- ══════════════════════════════════
    BOTTOM NAV
   ══════════════════════════════════ -->
-  <div class="bottom-nav" style="justify-content:space-around;padding:8px 4px calc(8px + env(safe-area-inset-bottom))">
-    <button class="nav-item active" id="nav-pulse" onclick="switchTab('pulse')">
-      <div class="nav-icon-wrap">
-        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 12h3l3-9 4 18 3-9h5"/>
+    <div class="bottom-nav"
+      style="justify-content:space-around;padding:8px 4px calc(8px + env(safe-area-inset-bottom))">
+      <button class="nav-item active" id="nav-pulse" onclick="switchTab('pulse')">
+        <div class="nav-icon-wrap">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12h3l3-9 4 18 3-9h5" />
+          </svg>
+        </div>
+        <span>Pulse</span>
+      </button>
+      <button class="nav-item" id="nav-tenants" onclick="switchTab('tenants')">
+        <div class="nav-icon-wrap">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+          </svg>
+        </div>
+        <span>Tenants</span>
+      </button>
+      <button class="nav-item" id="nav-verify" onclick="switchTab('verify')">
+        <div class="nav-icon-wrap">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+          </svg>
+        </div>
+        <span>Verify</span>
+      </button>
+      <button class="nav-center" onclick="openModal('quickActionModal')">
+        <svg width="22" height="22" fill="none" stroke="#030617" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
-      </div>
-      <span>Pulse</span>
-    </button>
-    <button class="nav-item" id="nav-tenants" onclick="switchTab('tenants')">
-      <div class="nav-icon-wrap">
-        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"/>
-        </svg>
-      </div>
-      <span>Tenants</span>
-    </button>
-    <button class="nav-item" id="nav-verify" onclick="switchTab('verify')">
-      <div class="nav-icon-wrap">
-        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
-        </svg>
-      </div>
-      <span>Verify</span>
-    </button>
-    <button class="nav-center" onclick="openModal('quickActionModal')">
-      <svg width="22" height="22" fill="none" stroke="#030617" stroke-width="2.5" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-      </svg>
-    </button>
-    <button class="nav-item" id="nav-audit" onclick="switchTab('audit')">
-      <div class="nav-icon-wrap">
-        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/>
-        </svg>
-      </div>
-      <span>Audit</span>
-    </button>
-    <button class="nav-item" id="nav-staff" onclick="switchTab('staff')">
-      <div class="nav-icon-wrap">
-        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/>
-        </svg>
-      </div>
-      <span>Staff</span>
-    </button>
-    <button class="nav-item" id="nav-billing" onclick="switchTab('billing')">
-      <div class="nav-icon-wrap">
-        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/>
-        </svg>
-      </div>
-      <span>Billing</span>
-    </button>
-  </div>
+      </button>
+      <button class="nav-item" id="nav-audit" onclick="switchTab('audit')">
+        <div class="nav-icon-wrap">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
+          </svg>
+        </div>
+        <span>Audit</span>
+      </button>
+      <button class="nav-item" id="nav-staff" onclick="switchTab('staff')">
+        <div class="nav-icon-wrap">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+          </svg>
+        </div>
+        <span>Staff</span>
+      </button>
+      <button class="nav-item" id="nav-billing" onclick="switchTab('billing')">
+        <div class="nav-icon-wrap">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+          </svg>
+        </div>
+        <span>Billing</span>
+      </button>
+    </div>
 
-</div><!-- /app -->
+  </div><!-- /app -->
 
-<!-- ══════════════════════════════════
+  <!-- ══════════════════════════════════
  MODALS
 ══════════════════════════════════ -->
 
-<!-- Quick Action -->
-<div class="modal-overlay" id="quickActionModal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-header">
-      <div class="modal-title">Quick Actions</div>
-      <button onclick="closeModal('quickActionModal')" style="background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:20px">✕</button>
-    </div>
-    <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <button class="card p-4 text-left" style="border:none;cursor:pointer;background:var(--glass2)" onclick="closeModal('quickActionModal');openModal('newTenantModal')">
-        <div style="font-size:24px">🏢</div>
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-top:8px">New Tenant</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Onboard a company</div>
-      </button>
-      <button class="card p-4 text-left" style="border:none;cursor:pointer;background:var(--glass2)" onclick="closeModal('quickActionModal');switchTab('staff');openModal('newStaffModal')">
-        <div style="font-size:24px">👤</div>
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-top:8px">Add Staff</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Est8Go team member</div>
-      </button>
-      <button class="card p-4 text-left" style="border:none;cursor:pointer;background:var(--glass2)" onclick="closeModal('quickActionModal');switchTab('verify')">
-        <div style="font-size:24px">🔍</div>
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-top:8px">Verify Queue</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Review listings</div>
-      </button>
-      <button class="card p-4 text-left" style="border:none;cursor:pointer;background:var(--glass2)" onclick="closeModal('quickActionModal');switchTab('audit')">
-        <div style="font-size:24px">🗂️</div>
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-top:8px">Audit Logs</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Platform black box</div>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- New Tenant Modal -->
-<div class="modal-overlay" id="newTenantModal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-header">
-      <div class="modal-title">Onboard New Tenant</div>
-      <button onclick="closeModal('newTenantModal')" style="background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:20px">✕</button>
-    </div>
-    <div class="field-group">
-      <label class="field-label">Company Name</label>
-      <input type="text" id="nt_name" class="field-input" placeholder="e.g. TrustHomes Ltd"/>
-    </div>
-    <div class="field-group">
-      <label class="field-label">Business Type</label>
-      <select id="nt_type" class="field-select">
-        <option value="agency">Real Estate Agency</option>
-        <option value="freelance">Independent Realtor</option>
-        <option value="developer">Property Developer</option>
-        <option value="investor">Investor Group</option>
-      </select>
-    </div>
-    <div class="field-group">
-      <label class="field-label">Subscription Plan</label>
-      <select id="nt_plan" class="field-select">
-        <option value="pilot">Pilot (Free)</option>
-        <option value="starter">Starter</option>
-        <option value="growth">Growth</option>
-        <option value="enterprise">Enterprise</option>
-      </select>
-    </div>
-    <div class="field-group">
-      <label class="field-label">WhatsApp Phone Number ID</label>
-      <input type="text" id="nt_wa" class="field-input" placeholder="Meta Phone Number ID"/>
-    </div>
-    <div class="field-group">
-      <label class="field-label">Admin Email</label>
-      <input type="email" id="nt_email" class="field-input" placeholder="admin@company.com"/>
-    </div>
-    <div class="field-group">
-      <label class="field-label">Admin Password</label>
-      <input type="password" id="nt_pass" class="field-input" placeholder="Temporary password"/>
-    </div>
-    <div style="padding:20px 20px 8px;display:flex;gap:10px">
-      <button class="btn-ghost" onclick="closeModal('newTenantModal')" style="flex:1">Cancel</button>
-      <button class="btn-em" onclick="createTenant()" style="flex:2">Create Tenant</button>
+  <!-- Quick Action -->
+  <div class="modal-overlay" id="quickActionModal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <div class="modal-title">Quick Actions</div>
+        <button onclick="closeModal('quickActionModal')"
+          style="background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:20px">✕</button>
+      </div>
+      <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <button class="card p-4 text-left" style="border:none;cursor:pointer;background:var(--glass2)"
+          onclick="closeModal('quickActionModal');openModal('newTenantModal')">
+          <div style="font-size:24px">🏢</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-top:8px">New Tenant</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Onboard a company</div>
+        </button>
+        <button class="card p-4 text-left" style="border:none;cursor:pointer;background:var(--glass2)"
+          onclick="closeModal('quickActionModal');switchTab('staff');openModal('newStaffModal')">
+          <div style="font-size:24px">👤</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-top:8px">Add Staff</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Est8Go team member</div>
+        </button>
+        <button class="card p-4 text-left" style="border:none;cursor:pointer;background:var(--glass2)"
+          onclick="closeModal('quickActionModal');switchTab('verify')">
+          <div style="font-size:24px">🔍</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-top:8px">Verify Queue</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Review listings</div>
+        </button>
+        <button class="card p-4 text-left" style="border:none;cursor:pointer;background:var(--glass2)"
+          onclick="closeModal('quickActionModal');switchTab('audit')">
+          <div style="font-size:24px">🗂️</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-top:8px">Audit Logs</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Platform black box</div>
+        </button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- New Staff Modal -->
-<div class="modal-overlay" id="newStaffModal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-header">
-      <div class="modal-title">Add Platform Staff</div>
-      <button onclick="closeModal('newStaffModal')" style="background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:20px">✕</button>
-    </div>
-    <div class="field-group">
-      <label class="field-label">Full Name</label>
-      <input type="text" id="ns_name" class="field-input" placeholder="Staff member name"/>
-    </div>
-    <div class="field-group">
-      <label class="field-label">Email Address</label>
-      <input type="email" id="ns_email" class="field-input" placeholder="staff@est8go.com"/>
-    </div>
-    <div class="field-group">
-      <label class="field-label">Password</label>
-      <input type="password" id="ns_pass" class="field-input" placeholder="Temporary password"/>
-    </div>
-    <div class="field-group">
-      <label class="field-label">Role</label>
-      <select id="ns_role" class="field-select">
-        <option value="super_staff">Super Staff (General)</option>
-        <option value="super_staff">Trust Moderator</option>
-        <option value="super_staff">Operations Staff</option>
-        <option value="super_staff">Support Staff</option>
-      </select>
-    </div>
-    <div style="padding:20px 20px 8px;display:flex;gap:10px">
-      <button class="btn-ghost" onclick="closeModal('newStaffModal')" style="flex:1">Cancel</button>
-      <button class="btn-em" id="createStaffBtn" onclick="createStaff()" style="flex:2">Add Staff Member</button>
+  <!-- New Tenant Modal -->
+  <div class="modal-overlay" id="newTenantModal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <div class="modal-title">Onboard New Tenant</div>
+        <button onclick="closeModal('newTenantModal')"
+          style="background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:20px">✕</button>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Company Name</label>
+        <input type="text" id="nt_name" class="field-input" placeholder="e.g. TrustHomes Ltd" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Business Type</label>
+        <select id="nt_type" class="field-select">
+          <option value="agency">Real Estate Agency</option>
+          <option value="freelance">Independent Realtor</option>
+          <option value="developer">Property Developer</option>
+          <option value="investor">Investor Group</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Subscription Plan</label>
+        <select id="nt_plan" class="field-select">
+          <option value="pilot">Pilot (Free)</option>
+          <option value="starter">Starter</option>
+          <option value="growth">Growth</option>
+          <option value="enterprise">Enterprise</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">WhatsApp Phone Number ID</label>
+        <input type="text" id="nt_wa" class="field-input" placeholder="Meta Phone Number ID" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Admin Email</label>
+        <input type="email" id="nt_email" class="field-input" placeholder="admin@company.com" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Admin Password</label>
+        <input type="password" id="nt_pass" class="field-input" placeholder="Temporary password" />
+      </div>
+      <div style="padding:20px 20px 8px;display:flex;gap:10px">
+        <button class="btn-ghost" onclick="closeModal('newTenantModal')" style="flex:1">Cancel</button>
+        <button class="btn-em" onclick="createTenant()" style="flex:2">Create Tenant</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Override Modal -->
-<div class="modal-overlay" id="overrideModal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-header">
-      <div class="modal-title">Manual Trust Override</div>
-      <button onclick="closeModal('overrideModal')" style="background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:20px">✕</button>
+  <!-- New Staff Modal -->
+  <div class="modal-overlay" id="newStaffModal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <div class="modal-title">Add Platform Staff</div>
+        <button onclick="closeModal('newStaffModal')"
+          style="background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:20px">✕</button>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Full Name</label>
+        <input type="text" id="ns_name" class="field-input" placeholder="Staff member name" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Email Address</label>
+        <input type="email" id="ns_email" class="field-input" placeholder="staff@est8go.com" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Password</label>
+        <input type="password" id="ns_pass" class="field-input" placeholder="Temporary password" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Role</label>
+        <select id="ns_role" class="field-select">
+          <option value="super_staff">Super Staff (General)</option>
+          <option value="super_staff">Trust Moderator</option>
+          <option value="super_staff">Operations Staff</option>
+          <option value="super_staff">Support Staff</option>
+        </select>
+      </div>
+      <div style="padding:20px 20px 8px;display:flex;gap:10px">
+        <button class="btn-ghost" onclick="closeModal('newStaffModal')" style="flex:1">Cancel</button>
+        <button class="btn-em" id="createStaffBtn" onclick="createStaff()" style="flex:2">Add Staff Member</button>
+      </div>
     </div>
-    <div style="padding:12px 18px 6px;background:rgba(245,158,11,0.06);border-bottom:1px solid var(--border);
+  </div>
+
+  <!-- Override Modal -->
+  <div class="modal-overlay" id="overrideModal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <div class="modal-title">Manual Trust Override</div>
+        <button onclick="closeModal('overrideModal')"
+          style="background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:20px">✕</button>
+      </div>
+      <div style="padding:12px 18px 6px;background:rgba(245,158,11,0.06);border-bottom:1px solid var(--border);
          font-size:11px;color:var(--warm);display:flex;align-items:center;gap:6px">
-      <span>⚠</span>
-      <span>Manual overrides are logged in the audit trail and are legally significant.</span>
-    </div>
-    <div class="field-group">
-      <label class="field-label">Override Trust Grade</label>
-      <select id="overrideGrade" class="field-select">
-        <option value="Emerald">🟢 Emerald (90–100)</option>
-        <option value="Gold">🟡 Gold (70–89)</option>
-        <option value="Silver" selected>⚪ Silver (50–69)</option>
-        <option value="Bronze">🟤 Bronze (30–49)</option>
-      </select>
-    </div>
-    <div class="field-group">
-      <label class="field-label">Override Reason (Required)</label>
-      <textarea id="overrideNotes" class="field-input" rows="3"
-        placeholder="e.g. Physical inspection confirmed. Title verified by Lagos State registry."
-        style="resize:none;line-height:1.5"></textarea>
-    </div>
-    <div style="padding:16px 20px 8px;display:flex;gap:10px">
-      <button class="btn-ghost" onclick="closeModal('overrideModal')" style="flex:1">Cancel</button>
-      <button class="btn-em" onclick="submitOverride()" style="flex:2;background:var(--warm);color:#000">Apply Override</button>
+        <span>⚠</span>
+        <span>Manual overrides are logged in the audit trail and are legally significant.</span>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Override Trust Grade</label>
+        <select id="overrideGrade" class="field-select">
+          <option value="Emerald">🟢 Emerald (90–100)</option>
+          <option value="Gold">🟡 Gold (70–89)</option>
+          <option value="Silver" selected>⚪ Silver (50–69)</option>
+          <option value="Bronze">🟤 Bronze (30–49)</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Override Reason (Required)</label>
+        <textarea id="overrideNotes" class="field-input" rows="3"
+          placeholder="e.g. Physical inspection confirmed. Title verified by Lagos State registry."
+          style="resize:none;line-height:1.5"></textarea>
+      </div>
+      <div style="padding:16px 20px 8px;display:flex;gap:10px">
+        <button class="btn-ghost" onclick="closeModal('overrideModal')" style="flex:1">Cancel</button>
+        <button class="btn-em" onclick="submitOverride()" style="flex:2;background:var(--warm);color:#000">Apply
+          Override</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Toast notification -->
-<div id="toast" style="position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);
+  <!-- Toast notification -->
+  <div id="toast" style="position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);
      background:#0E1B40;border:1px solid var(--border2);border-radius:12px;
      padding:12px 20px;font-size:13px;font-weight:500;z-index:300;
      opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap"></div>
 
-<script>
-// ── AUTH INIT ──────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
-  const email = localStorage.getItem('user_email') || '';
-  const role  = localStorage.getItem('user_role')  || '';
-  document.getElementById('menuEmail').textContent = email;
-  document.getElementById('menuRole').textContent  = role;
-  document.getElementById('staffName').textContent = email.split('@')[0] || 'Admin';
+  <script>
+    // ── AUTH INIT ──────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', () => {
+      const email = localStorage.getItem('user_email') || '';
+      const role = localStorage.getItem('user_role') || '';
+      document.getElementById('menuEmail').textContent = email;
+      document.getElementById('menuRole').textContent = role;
+      document.getElementById('staffName').textContent = email.split('@')[0] || 'Admin';
 
-  // Set avatar initials
-  const initials = email.split('@')[0].slice(0,2).toUpperCase();
-  document.getElementById('userAvatar').textContent = initials;
+      // Set avatar initials
+      const initials = email.split('@')[0].slice(0, 2).toUpperCase();
+      document.getElementById('userAvatar').textContent = initials;
 
-  // Hide billing-sensitive actions from super_staff
-  if (role !== 'superuser') {
-    const el = document.getElementById('addStaffBtn');
-    if (el) el.style.display = 'none';
-  }
+      // Hide billing-sensitive actions from super_staff
+      if (role !== 'superuser') {
+        const el = document.getElementById('addStaffBtn');
+        if (el) el.style.display = 'none';
+      }
 
-  loadPulseData();
-  loadTenants();
-  loadAuditLogs();
-  loadStaff();
-});
+      loadPulseData();
+      loadTenants();
+      loadAuditLogs();
+      loadStaff();
+    });
 
-// ── USER MENU ──────────────────────────────────────
-function toggleUserMenu() {
-  document.getElementById('userMenu').classList.toggle('open');
-}
-document.addEventListener('click', e => {
-  const av = document.getElementById('userAvatar');
-  const mn = document.getElementById('userMenu');
-  if (!av.contains(e.target) && !mn.contains(e.target)) {
-    mn.classList.remove('open');
-  }
-});
-
-// ── TAB SWITCHING ──────────────────────────────────
-function switchTab(name) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById(name + 'Tab').classList.add('active');
-  const nav = document.getElementById('nav-' + name);
-  if (nav) nav.classList.add('active');
-  document.getElementById('scrollArea').scrollTop = 0;
-}
-
-// ── MODALS ──────────────────────────────────────────
-function openModal(id)  { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-// Close modal when tapping overlay
-document.querySelectorAll('.modal-overlay').forEach(el => {
-  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
-});
-
-// ── TOAST ───────────────────────────────────────────
-function toast(msg, color = 'var(--em)') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.borderColor = color;
-  t.style.opacity = '1';
-  t.style.transform = 'translateX(-50%) translateY(0)';
-  setTimeout(() => {
-    t.style.opacity = '0';
-    t.style.transform = 'translateX(-50%) translateY(20px)';
-  }, 2800);
-}
-
-// ── PULSE DATA ──────────────────────────────────────
-async function loadPulseData() {
-  try {
-    const res = await Auth.fetch('/admin/pulse');
-    if (!res) return;
-    const d = await res.json();
-
-    setValue('hdrTenants',      d.total_tenants      ?? '—');
-    setValue('hdrVerified',     d.verified_listings  ?? '—');
-    setValue('hdrPending',      d.pending_queue      ?? '—');
-    setValue('hdrRisks',        d.risk_count         ?? '—');
-    setValue('avgTrustScore',   d.avg_trust_score    ?? '—');
-    setValue('dailyConvos',     d.daily_conversations ?? '—');
-    setValue('dailyInspections',d.daily_inspections  ?? '—');
-    setValue('aiCalls',         d.ai_calls_today     ?? '—');
-    setValue('activeRealtors',  d.active_realtors    ?? '—');
-    setValue('ignoredLeads',    d.ignored_leads      ?? '—');
-    setValue('humanTakeovers',  d.human_takeovers    ?? '—');
-    setValue('bdgEmerald',      d.badges?.emerald    ?? '—');
-    setValue('bdgGold',         d.badges?.gold       ?? '—');
-    setValue('bdgSilver',       d.badges?.silver     ?? '—');
-    setValue('bdgUnver',        d.badges?.unverified ?? '—');
-
-    const score = d.avg_trust_score || 0;
-    document.getElementById('trustBar').style.width = score + '%';
-
-    if (d.risk_alerts && d.risk_alerts.length > 0) {
-      renderRisks(d.risk_alerts);
+    // ── USER MENU ──────────────────────────────────────
+    function toggleUserMenu() {
+      document.getElementById('userMenu').classList.toggle('open');
     }
-  } catch(e) {
-    // Silently fail — API not ready yet
-  }
-}
+    document.addEventListener('click', e => {
+      const av = document.getElementById('userAvatar');
+      const mn = document.getElementById('userMenu');
+      if (!av.contains(e.target) && !mn.contains(e.target)) {
+        mn.classList.remove('open');
+      }
+    });
 
-function renderRisks(risks) {
-  const list = document.getElementById('riskList');
-  list.innerHTML = risks.map(r => `
+    // ── TAB SWITCHING ──────────────────────────────────
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(name + 'Tab').classList.add('active');
+      const nav = document.getElementById('nav-' + name);
+      if (nav) nav.classList.add('active');
+      document.getElementById('scrollArea').scrollTop = 0;
+    }
+
+    // ── MODALS ──────────────────────────────────────────
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    // Close modal when tapping overlay
+    document.querySelectorAll('.modal-overlay').forEach(el => {
+      el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+    });
+
+    // ── TOAST ───────────────────────────────────────────
+    function toast(msg, color = 'var(--em)') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.borderColor = color;
+      t.style.opacity = '1';
+      t.style.transform = 'translateX(-50%) translateY(0)';
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateX(-50%) translateY(20px)';
+      }, 2800);
+    }
+
+    // ── PULSE DATA ──────────────────────────────────────
+    async function loadPulseData() {
+      try {
+        const res = await Auth.fetch('/admin/pulse');
+        if (!res) return;
+        const d = await res.json();
+
+        setValue('hdrTenants', d.total_tenants ?? '—');
+        setValue('hdrVerified', d.verified_listings ?? '—');
+        setValue('hdrPending', d.pending_queue ?? '—');
+        setValue('hdrRisks', d.risk_count ?? '—');
+        setValue('avgTrustScore', d.avg_trust_score ?? '—');
+        setValue('dailyConvos', d.daily_conversations ?? '—');
+        setValue('dailyInspections', d.daily_inspections ?? '—');
+        setValue('aiCalls', d.ai_calls_today ?? '—');
+        setValue('activeRealtors', d.active_realtors ?? '—');
+        setValue('ignoredLeads', d.ignored_leads ?? '—');
+        setValue('humanTakeovers', d.human_takeovers ?? '—');
+        setValue('bdgEmerald', d.badges?.emerald ?? '—');
+        setValue('bdgGold', d.badges?.gold ?? '—');
+        setValue('bdgSilver', d.badges?.silver ?? '—');
+        setValue('bdgUnver', d.badges?.unverified ?? '—');
+
+        const score = d.avg_trust_score || 0;
+        document.getElementById('trustBar').style.width = score + '%';
+
+        if (d.risk_alerts && d.risk_alerts.length > 0) {
+          renderRisks(d.risk_alerts);
+        }
+      } catch (e) {
+        // Silently fail — API not ready yet
+      }
+    }
+
+    function renderRisks(risks) {
+      const list = document.getElementById('riskList');
+      list.innerHTML = risks.map(r => `
     <div class="audit-row">
       <div class="audit-icon" style="background:rgba(255,64,96,0.1)">⚠️</div>
       <div style="flex:1;min-width:0">
@@ -1086,138 +1543,138 @@ function renderRisks(risks) {
       <span class="risk-tag risk-${r.severity || 'medium'}">${r.severity || 'medium'}</span>
     </div>
   `).join('');
-}
+    }
 
-// ── TENANTS ─────────────────────────────────────────
-let allTenants = [];
+    // ── TENANTS ─────────────────────────────────────────
+    let allTenants = [];
 
-async function loadTenants() {
-  try {
-    const res = await Auth.fetch('/admin/tenants');
-    if (!res) return;
-    allTenants = await res.json();
-    renderTenants(allTenants);
-  } catch(e) {}
-}
+    async function loadTenants() {
+      try {
+        const res = await Auth.fetch('/admin/tenants');
+        if (!res) return;
+        allTenants = await res.json();
+        renderTenants(allTenants);
+      } catch (e) { }
+    }
 
-const TENANT_COLORS = ['#162860','#1a1040','#0d3040','#1a2e10','#401020'];
-const TYPE_LABELS   = { agency:'Agency', freelance:'Freelance', developer:'Developer', investor:'Investor' };
+    const TENANT_COLORS = ['#162860', '#1a1040', '#0d3040', '#1a2e10', '#401020'];
+    const TYPE_LABELS = { agency: 'Agency', freelance: 'Freelance', developer: 'Developer', investor: 'Investor' };
 
-function renderTenants(tenants) {
-  const list = document.getElementById('tenantList');
-  if (!tenants.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-icon">🏢</div><p>No tenants found</p></div>';
-    return;
-  }
-  list.innerHTML = tenants.map((t, i) => {
-    const initials = t.name.slice(0,2).toUpperCase();
-    const health   = t.health_score || 0;
-    const color    = TENANT_COLORS[i % TENANT_COLORS.length];
-    const badge    = t.is_active
-      ? '<span class="risk-tag risk-low">Active</span>'
-      : '<span class="risk-tag risk-high">Suspended</span>';
-    return `
+    function renderTenants(tenants) {
+      const list = document.getElementById('tenantList');
+      if (!tenants.length) {
+        list.innerHTML = '<div class="empty"><div class="empty-icon">🏢</div><p>No tenants found</p></div>';
+        return;
+      }
+      list.innerHTML = tenants.map((t, i) => {
+        const initials = t.name.slice(0, 2).toUpperCase();
+        const health = t.health_score || 0;
+        const color = TENANT_COLORS[i % TENANT_COLORS.length];
+        const badge = t.is_active
+          ? '<span class="risk-tag risk-low">Active</span>'
+          : '<span class="risk-tag risk-high">Suspended</span>';
+        return `
       <div class="tenant-row fade-in" onclick="viewTenant(${t.id})">
         <div class="tenant-avatar" style="background:${color}">${initials}</div>
         <div style="flex:1;min-width:0">
           <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;
                overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.name}</div>
           <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">
-            ${TYPE_LABELS[t.tenant_type]||t.tenant_type} · ${t.plan} · ${t.listings_count||0} listings
+            ${TYPE_LABELS[t.tenant_type] || t.tenant_type} · ${t.plan} · ${t.listings_count || 0} listings
           </div>
           <div class="health-bar"><div class="health-fill" style="width:${health}%"></div></div>
         </div>
         <div style="text-align:right;flex-shrink:0">
           ${badge}
-          <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:4px">${t.users_count||0} users</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:4px">${t.users_count || 0} users</div>
         </div>
       </div>
     `;
-  }).join('');
-}
-
-function filterTenants(type) {
-  document.querySelectorAll('.filter-pill').forEach(p => {
-    p.classList.remove('trust-emerald');
-    p.classList.add('trust-silver');
-  });
-  event.target.classList.remove('trust-silver');
-  event.target.classList.add('trust-emerald');
-  if (type === 'all') renderTenants(allTenants);
-  else renderTenants(allTenants.filter(t => t.tenant_type === type));
-}
-
-function viewTenant(id) {
-  toast('Tenant detail view — coming soon');
-}
-
-async function createTenant() {
-  const name  = document.getElementById('nt_name').value.trim();
-  const type  = document.getElementById('nt_type').value;
-  const plan  = document.getElementById('nt_plan').value;
-  const wa    = document.getElementById('nt_wa').value.trim();
-  const email = document.getElementById('nt_email').value.trim();
-  const pass  = document.getElementById('nt_pass').value;
-
-  if (!name || !email || !pass) { toast('Please fill all required fields', 'var(--hot)'); return; }
-
-  try {
-    const res = await Auth.fetch('/admin/tenants', {
-      method: 'POST',
-      body: JSON.stringify({ name, tenant_type: type, plan, whatsapp_phone_number_id: wa, admin_email: email, admin_password: pass })
-    });
-    if (!res) return;
-    if (res.ok) {
-      toast('✓ Tenant created successfully');
-      closeModal('newTenantModal');
-      loadTenants();
-    } else {
-      const d = await res.json();
-      toast(d.detail || 'Failed to create tenant', 'var(--hot)');
+      }).join('');
     }
-  } catch(e) { toast('Connection error', 'var(--hot)'); }
-}
 
-// ── AUDIT LOGS ──────────────────────────────────────
-let allLogs = [];
+    function filterTenants(type) {
+      document.querySelectorAll('.filter-pill').forEach(p => {
+        p.classList.remove('trust-emerald');
+        p.classList.add('trust-silver');
+      });
+      event.target.classList.remove('trust-silver');
+      event.target.classList.add('trust-emerald');
+      if (type === 'all') renderTenants(allTenants);
+      else renderTenants(allTenants.filter(t => t.tenant_type === type));
+    }
 
-async function loadAuditLogs() {
-  try {
-    const res = await Auth.fetch('/admin/audit-logs?limit=50');
-    if (!res) return;
-    allLogs = await res.json();
-    renderAudit(allLogs);
-  } catch(e) {}
-}
+    function viewTenant(id) {
+      toast('Tenant detail view — coming soon');
+    }
 
-const ACTION_ICONS = {
-  role_changed:       { icon:'🔑', sev:'high' },
-  tenant_created:     { icon:'🏢', sev:'low' },
-  tenant_deactivated: { icon:'🚫', sev:'high' },
-  listing_verified:   { icon:'✅', sev:'low' },
-  listing_flagged:    { icon:'⚠️', sev:'medium' },
-  user_created:       { icon:'👤', sev:'low' },
-  user_deactivated:   { icon:'🔒', sev:'medium' },
-  trust_override:     { icon:'🛡️', sev:'high' },
-};
+    async function createTenant() {
+      const name = document.getElementById('nt_name').value.trim();
+      const type = document.getElementById('nt_type').value;
+      const plan = document.getElementById('nt_plan').value;
+      const wa = document.getElementById('nt_wa').value.trim();
+      const email = document.getElementById('nt_email').value.trim();
+      const pass = document.getElementById('nt_pass').value;
 
-function renderAudit(logs) {
-  const list = document.getElementById('auditList');
-  if (!logs.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-icon">🗂️</div><p>No audit logs yet</p></div>';
-    return;
-  }
-  list.innerHTML = logs.map(l => {
-    const meta = ACTION_ICONS[l.action] || { icon:'📋', sev:'low' };
-    const time = l.created_at ? new Date(l.created_at).toLocaleString('en-NG', {
-      day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'
-    }) : '';
-    return `
+      if (!name || !email || !pass) { toast('Please fill all required fields', 'var(--hot)'); return; }
+
+      try {
+        const res = await Auth.fetch('/admin/tenants', {
+          method: 'POST',
+          body: JSON.stringify({ name, tenant_type: type, plan, whatsapp_phone_number_id: wa, admin_email: email, admin_password: pass })
+        });
+        if (!res) return;
+        if (res.ok) {
+          toast('✓ Tenant created successfully');
+          closeModal('newTenantModal');
+          loadTenants();
+        } else {
+          const d = await res.json();
+          toast(d.detail || 'Failed to create tenant', 'var(--hot)');
+        }
+      } catch (e) { toast('Connection error', 'var(--hot)'); }
+    }
+
+    // ── AUDIT LOGS ──────────────────────────────────────
+    let allLogs = [];
+
+    async function loadAuditLogs() {
+      try {
+        const res = await Auth.fetch('/admin/audit-logs?limit=50');
+        if (!res) return;
+        allLogs = await res.json();
+        renderAudit(allLogs);
+      } catch (e) { }
+    }
+
+    const ACTION_ICONS = {
+      role_changed: { icon: '🔑', sev: 'high' },
+      tenant_created: { icon: '🏢', sev: 'low' },
+      tenant_deactivated: { icon: '🚫', sev: 'high' },
+      listing_verified: { icon: '✅', sev: 'low' },
+      listing_flagged: { icon: '⚠️', sev: 'medium' },
+      user_created: { icon: '👤', sev: 'low' },
+      user_deactivated: { icon: '🔒', sev: 'medium' },
+      trust_override: { icon: '🛡️', sev: 'high' },
+    };
+
+    function renderAudit(logs) {
+      const list = document.getElementById('auditList');
+      if (!logs.length) {
+        list.innerHTML = '<div class="empty"><div class="empty-icon">🗂️</div><p>No audit logs yet</p></div>';
+        return;
+      }
+      list.innerHTML = logs.map(l => {
+        const meta = ACTION_ICONS[l.action] || { icon: '📋', sev: 'low' };
+        const time = l.created_at ? new Date(l.created_at).toLocaleString('en-NG', {
+          day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+        }) : '';
+        return `
       <div class="audit-row">
         <div class="audit-icon" style="background:var(--glass2)">${meta.icon}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:600;text-transform:capitalize">
-            ${(l.action||'').replace(/_/g,' ')}
+            ${(l.action || '').replace(/_/g, ' ')}
           </div>
           <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">
             ${l.actor_email || 'System'} · ${time}
@@ -1229,43 +1686,43 @@ function renderAudit(logs) {
         <span class="risk-tag risk-${meta.sev}">${meta.sev}</span>
       </div>
     `;
-  }).join('');
-}
+      }).join('');
+    }
 
-function filterAudit(q) {
-  if (!q) { renderAudit(allLogs); return; }
-  const ql = q.toLowerCase();
-  renderAudit(allLogs.filter(l =>
-    (l.action||'').includes(ql) ||
-    (l.actor_email||'').toLowerCase().includes(ql) ||
-    (l.target_table||'').includes(ql)
-  ));
-}
+    function filterAudit(q) {
+      if (!q) { renderAudit(allLogs); return; }
+      const ql = q.toLowerCase();
+      renderAudit(allLogs.filter(l =>
+        (l.action || '').includes(ql) ||
+        (l.actor_email || '').toLowerCase().includes(ql) ||
+        (l.target_table || '').includes(ql)
+      ));
+    }
 
-function filterAuditSev(sev) {
-  if (sev === 'all') { renderAudit(allLogs); return; }
-  renderAudit(allLogs.filter(l => (ACTION_ICONS[l.action]||{sev:'low'}).sev === sev));
-}
+    function filterAuditSev(sev) {
+      if (sev === 'all') { renderAudit(allLogs); return; }
+      renderAudit(allLogs.filter(l => (ACTION_ICONS[l.action] || { sev: 'low' }).sev === sev));
+    }
 
-// ── STAFF ────────────────────────────────────────────
-async function loadStaff() {
-  try {
-    const res = await Auth.fetch('/users/?platform=true');
-    if (!res) return;
-    const staff = await res.json();
-    renderStaff(staff.filter(u => u.is_platform_user));
-  } catch(e) {}
-}
+    // ── STAFF ────────────────────────────────────────────
+    async function loadStaff() {
+      try {
+        const res = await Auth.fetch('/users/?platform=true');
+        if (!res) return;
+        const staff = await res.json();
+        renderStaff(staff.filter(u => u.is_platform_user));
+      } catch (e) { }
+    }
 
-function renderStaff(staff) {
-  const list = document.getElementById('staffList');
-  if (!staff.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><p>No platform staff yet</p></div>';
-    return;
-  }
-  list.innerHTML = staff.map(s => {
-    const initials = (s.first_name || s.email).slice(0,2).toUpperCase();
-    return `
+    function renderStaff(staff) {
+      const list = document.getElementById('staffList');
+      if (!staff.length) {
+        list.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><p>No platform staff yet</p></div>';
+        return;
+      }
+      list.innerHTML = staff.map(s => {
+        const initials = (s.first_name || s.email).slice(0, 2).toUpperCase();
+        return `
       <div class="tenant-row">
         <div class="tenant-avatar" style="background:#162860">${initials}</div>
         <div style="flex:1;min-width:0">
@@ -1273,86 +1730,86 @@ function renderStaff(staff) {
           <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">${s.email}</div>
         </div>
         <div style="text-align:right">
-          <span class="risk-tag ${s.role==='superuser'?'risk-high':'risk-low'}" style="text-transform:capitalize">${s.role}</span>
-          <div style="font-size:10px;color:${s.is_active?'var(--em)':'#FF6080'};margin-top:4px">
+          <span class="risk-tag ${s.role === 'superuser' ? 'risk-high' : 'risk-low'}" style="text-transform:capitalize">${s.role}</span>
+          <div style="font-size:10px;color:${s.is_active ? 'var(--em)' : '#FF6080'};margin-top:4px">
             ${s.is_active ? 'Active' : 'Inactive'}
           </div>
         </div>
       </div>
     `;
-  }).join('');
-}
-
-async function createStaff() {
-  const name  = document.getElementById('ns_name').value.trim();
-  const email = document.getElementById('ns_email').value.trim();
-  const pass  = document.getElementById('ns_pass').value;
-
-  if (!email || !pass) { toast('Email and password required', 'var(--hot)'); return; }
-
-  const btn = document.getElementById('createStaffBtn');
-  btn.textContent = 'Creating...'; btn.disabled = true;
-
-  try {
-    const res = await Auth.fetch('/users/platform', {
-      method: 'POST',
-      body: JSON.stringify({ email, password: pass, role: 'super_staff', first_name: name })
-    });
-    if (!res) return;
-    if (res.ok) {
-      toast('✓ Staff member added');
-      closeModal('newStaffModal');
-      loadStaff();
-    } else {
-      const d = await res.json();
-      toast(d.detail || 'Failed to add staff', 'var(--hot)');
+      }).join('');
     }
-  } catch(e) { toast('Connection error', 'var(--hot)'); }
-  finally { btn.textContent = 'Add Staff Member'; btn.disabled = false; }
-}
 
-// ── VERIFICATION QUEUE ──────────────────────────────
-let allQueueItems = [];
+    async function createStaff() {
+      const name = document.getElementById('ns_name').value.trim();
+      const email = document.getElementById('ns_email').value.trim();
+      const pass = document.getElementById('ns_pass').value;
 
-async function loadVerifyQueue() {
-  try {
-    const res = await Auth.fetch('/admin/verify-queue');
-    if (!res) return;
-    allQueueItems = await res.json();
-    document.getElementById('queueCount').textContent = allQueueItems.length + ' pending';
-    renderQueue(allQueueItems);
-  } catch(e) {
-    // API not wired yet — show empty state
-  }
-}
+      if (!email || !pass) { toast('Email and password required', 'var(--hot)'); return; }
 
-function renderQueue(items) {
-  const wrap = document.getElementById('verifyQueue');
-  if (!items.length) {
-    wrap.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><p style="font-size:13px">Queue is clear</p></div>';
-    return;
-  }
-  wrap.innerHTML = items.map(l => {
-    const gps  = l.gps_score       || 0;
-    const ai   = l.ai_score        || 0;
-    const docs = l.doc_score       || 0;
-    const wit  = l.witness_score   || 0;
-    const dup  = l.duplicate_risk_pct || 0;
-    const dupSafe = Math.max(0, 100 - dup);
-    const total= Math.round((gps*0.3)+(ai*0.2)+(docs*0.4)+(wit*0.1));
-    const scoreColor = total>=80?'var(--em)':total>=60?'var(--warm)':'var(--hot)';
-    const gpsColor  = gps  >= 70 ? 'var(--em)' : gps  >= 40 ? 'var(--warm)' : 'var(--hot)';
-    const aiColor   = ai   >= 70 ? 'var(--em)' : ai   >= 40 ? 'var(--warm)' : 'var(--hot)';
-    const docsColor = docs >= 70 ? 'var(--em)' : docs >= 40 ? 'var(--warm)' : 'var(--hot)';
-    const witColor  = wit  >= 70 ? 'var(--em)' : wit  >= 40 ? 'var(--warm)' : 'var(--hot)';
-    const dupColor  = dup  <= 20 ? 'var(--em)' : dup  <= 50 ? 'var(--warm)' : 'var(--hot)';
-    const flags = (l.flags || []);
+      const btn = document.getElementById('createStaffBtn');
+      btn.textContent = 'Creating...'; btn.disabled = true;
 
-    return `<div class="verify-card fade-in">
+      try {
+        const res = await Auth.fetch('/users/platform', {
+          method: 'POST',
+          body: JSON.stringify({ email, password: pass, role: 'super_staff', first_name: name })
+        });
+        if (!res) return;
+        if (res.ok) {
+          toast('✓ Staff member added');
+          closeModal('newStaffModal');
+          loadStaff();
+        } else {
+          const d = await res.json();
+          toast(d.detail || 'Failed to add staff', 'var(--hot)');
+        }
+      } catch (e) { toast('Connection error', 'var(--hot)'); }
+      finally { btn.textContent = 'Add Staff Member'; btn.disabled = false; }
+    }
+
+    // ── VERIFICATION QUEUE ──────────────────────────────
+    let allQueueItems = [];
+
+    async function loadVerifyQueue() {
+      try {
+        const res = await Auth.fetch('/admin/verify-queue');
+        if (!res) return;
+        allQueueItems = await res.json();
+        document.getElementById('queueCount').textContent = allQueueItems.length + ' pending';
+        renderQueue(allQueueItems);
+      } catch (e) {
+        // API not wired yet — show empty state
+      }
+    }
+
+    function renderQueue(items) {
+      const wrap = document.getElementById('verifyQueue');
+      if (!items.length) {
+        wrap.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><p style="font-size:13px">Queue is clear</p></div>';
+        return;
+      }
+      wrap.innerHTML = items.map(l => {
+        const gps = l.gps_score || 0;
+        const ai = l.ai_score || 0;
+        const docs = l.doc_score || 0;
+        const wit = l.witness_score || 0;
+        const dup = l.duplicate_risk_pct || 0;
+        const dupSafe = Math.max(0, 100 - dup);
+        const total = Math.round((gps * 0.3) + (ai * 0.2) + (docs * 0.4) + (wit * 0.1));
+        const scoreColor = total >= 80 ? 'var(--em)' : total >= 60 ? 'var(--warm)' : 'var(--hot)';
+        const gpsColor = gps >= 70 ? 'var(--em)' : gps >= 40 ? 'var(--warm)' : 'var(--hot)';
+        const aiColor = ai >= 70 ? 'var(--em)' : ai >= 40 ? 'var(--warm)' : 'var(--hot)';
+        const docsColor = docs >= 70 ? 'var(--em)' : docs >= 40 ? 'var(--warm)' : 'var(--hot)';
+        const witColor = wit >= 70 ? 'var(--em)' : wit >= 40 ? 'var(--warm)' : 'var(--hot)';
+        const dupColor = dup <= 20 ? 'var(--em)' : dup <= 50 ? 'var(--warm)' : 'var(--hot)';
+        const flags = (l.flags || []);
+
+        return `<div class="verify-card fade-in">
       <div class="flex items-start justify-between gap-3">
         <div style="flex:1;min-width:0">
           <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.title || 'Unnamed Listing'}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">${l.tenant_name||'—'} · ${l.location||'—'}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">${l.tenant_name || '—'} · ${l.location || '—'}</div>
           ${flags}
         </div>
         <div style="text-align:right;flex-shrink:0">
@@ -1385,13 +1842,13 @@ function renderQueue(items) {
         <div class="verify-signal">
           <span>🔁 Duplication</span>
           <div class="signal-bar-wrap"><div class="signal-bar" style="width:${dupSafe}%;background:${dupColor}"></div></div>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${dupColor};min-width:30px;text-align:right">${l.duplicate_risk||'OK'}</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${dupColor};min-width:30px;text-align:right">${l.duplicate_risk || 'OK'}</span>
         </div>
       </div>
       <!-- Why flagged explainability -->
-      ${(l.flags||[]).length ? `<div style="margin-top:10px;padding:10px 12px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);border-radius:10px">
+      ${(l.flags || []).length ? `<div style="margin-top:10px;padding:10px 12px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);border-radius:10px">
         <div style="font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--warm);margin-bottom:6px">Why Flagged</div>
-        ${(l.flags||[]).map(f => `<div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:3px;display:flex;gap:6px"><span style="color:var(--warm)">⚠</span>${f}</div>`).join('')}
+        ${(l.flags || []).map(f => `<div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:3px;display:flex;gap:6px"><span style="color:var(--warm)">⚠</span>${f}</div>`).join('')}
       </div>` : ''}
       <!-- Actions -->
       <div style="display:flex;gap:8px;margin-top:12px">
@@ -1400,114 +1857,114 @@ function renderQueue(items) {
         <button class="btn-danger" onclick="rejectListing(${l.id})" style="flex:1;font-size:11px">Reject</button>
       </div>
     </div>`;
-  }).join('');
-}
-
-function filterQueue(type) {
-  document.querySelectorAll('.vq-filter').forEach(b => {
-    b.classList.remove('trust-emerald'); b.classList.add('trust-silver');
-  });
-  event.target.classList.remove('trust-silver'); event.target.classList.add('trust-emerald');
-  if (type === 'all') { renderQueue(allQueueItems); return; }
-  renderQueue(allQueueItems.filter(l => {
-    if (type === 'suspicious') return (l.flags||[]).length > 0;
-    if (type === 'high_value') return (l.price||0) > 50000000;
-    if (type === 'new_tenant') return l.is_new_tenant;
-    return true;
-  }));
-}
-
-async function verifyListing(id) {
-  try {
-    const res = await Auth.fetch('/admin/listings/' + id + '/verify', { method: 'PATCH' });
-    if (res && res.ok) {
-      toast('✓ Listing verified');
-      loadVerifyQueue();
+      }).join('');
     }
-  } catch(e) { toast('Failed to verify', 'var(--hot)'); }
-}
 
-async function flagListing(id) {
-  try {
-    const res = await Auth.fetch('/admin/listings/' + id + '/flag', { method: 'PATCH' });
-    if (res && res.ok) { toast('⚠ Listing flagged', 'var(--warm)'); loadVerifyQueue(); }
-  } catch(e) {}
-}
+    function filterQueue(type) {
+      document.querySelectorAll('.vq-filter').forEach(b => {
+        b.classList.remove('trust-emerald'); b.classList.add('trust-silver');
+      });
+      event.target.classList.remove('trust-silver'); event.target.classList.add('trust-emerald');
+      if (type === 'all') { renderQueue(allQueueItems); return; }
+      renderQueue(allQueueItems.filter(l => {
+        if (type === 'suspicious') return (l.flags || []).length > 0;
+        if (type === 'high_value') return (l.price || 0) > 50000000;
+        if (type === 'new_tenant') return l.is_new_tenant;
+        return true;
+      }));
+    }
 
-async function rejectListing(id) {
-  if (!confirm('Reject this listing?')) return;
-  try {
-    const res = await Auth.fetch('/admin/listings/' + id + '/reject', { method: 'PATCH' });
-    if (res && res.ok) { toast('Listing rejected', 'var(--hot)'); loadVerifyQueue(); }
-  } catch(e) {}
-}
+    async function verifyListing(id) {
+      try {
+        const res = await Auth.fetch('/admin/listings/' + id + '/verify', { method: 'PATCH' });
+        if (res && res.ok) {
+          toast('✓ Listing verified');
+          loadVerifyQueue();
+        }
+      } catch (e) { toast('Failed to verify', 'var(--hot)'); }
+    }
 
-// ── BILLING ─────────────────────────────────────────
-async function loadBillingData() {
-  const role = localStorage.getItem('user_role');
-  if (role !== 'superuser') {
-    document.getElementById('billingGate').style.display = 'block';
-    document.getElementById('billingContent').style.display = 'none';
-    return;
-  }
-  try {
-    const res = await Auth.fetch('/admin/billing/summary');
-    if (!res) return;
-    const d = await res.json();
-    setValue('billingMRR',     '₦' + formatNum(d.mrr||0));
-    setValue('billingOverdue', d.overdue_count||0);
-    setValue('billingAICost',  '₦' + formatNum(d.ai_cost||0));
-    setValue('billingMargin',  (d.margin_pct||0) + '%');
-    renderPlanDist(d.plan_distribution || []);
-    renderAIForecast(d.ai_forecast || []);
-  } catch(e) {}
-}
+    async function flagListing(id) {
+      try {
+        const res = await Auth.fetch('/admin/listings/' + id + '/flag', { method: 'PATCH' });
+        if (res && res.ok) { toast('⚠ Listing flagged', 'var(--warm)'); loadVerifyQueue(); }
+      } catch (e) { }
+    }
 
-function renderPlanDist(plans) {
-  const el = document.getElementById('planDist');
-  if (!plans.length) { el.innerHTML = '<div class="empty"><p>No plan data</p></div>'; return; }
-  const total = plans.reduce((s, p) => s + p.count, 0);
-  const colors = { pilot:'var(--border2)', starter:'var(--blue)', growth:'var(--warm)', enterprise:'var(--em)' };
-  el.innerHTML = plans.map(p => {
-    const pct = total ? Math.round((p.count/total)*100) : 0;
-    return `<div style="margin-bottom:12px">
+    async function rejectListing(id) {
+      if (!confirm('Reject this listing?')) return;
+      try {
+        const res = await Auth.fetch('/admin/listings/' + id + '/reject', { method: 'PATCH' });
+        if (res && res.ok) { toast('Listing rejected', 'var(--hot)'); loadVerifyQueue(); }
+      } catch (e) { }
+    }
+
+    // ── BILLING ─────────────────────────────────────────
+    async function loadBillingData() {
+      const role = localStorage.getItem('user_role');
+      if (role !== 'superuser') {
+        document.getElementById('billingGate').style.display = 'block';
+        document.getElementById('billingContent').style.display = 'none';
+        return;
+      }
+      try {
+        const res = await Auth.fetch('/admin/billing/summary');
+        if (!res) return;
+        const d = await res.json();
+        setValue('billingMRR', '₦' + formatNum(d.mrr || 0));
+        setValue('billingOverdue', d.overdue_count || 0);
+        setValue('billingAICost', '₦' + formatNum(d.ai_cost || 0));
+        setValue('billingMargin', (d.margin_pct || 0) + '%');
+        renderPlanDist(d.plan_distribution || []);
+        renderAIForecast(d.ai_forecast || []);
+      } catch (e) { }
+    }
+
+    function renderPlanDist(plans) {
+      const el = document.getElementById('planDist');
+      if (!plans.length) { el.innerHTML = '<div class="empty"><p>No plan data</p></div>'; return; }
+      const total = plans.reduce((s, p) => s + p.count, 0);
+      const colors = { pilot: 'var(--border2)', starter: 'var(--blue)', growth: 'var(--warm)', enterprise: 'var(--em)' };
+      el.innerHTML = plans.map(p => {
+        const pct = total ? Math.round((p.count / total) * 100) : 0;
+        return `<div style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
         <span style="text-transform:capitalize;font-weight:600">${p.plan}</span>
         <span style="color:rgba(255,255,255,0.4)">${p.count} tenants · ${pct}%</span>
       </div>
-      <div class="health-bar"><div class="health-fill" style="width:${pct}%;background:${colors[p.plan]||'var(--em)'}"></div></div>
+      <div class="health-bar"><div class="health-fill" style="width:${pct}%;background:${colors[p.plan] || 'var(--em)'}"></div></div>
     </div>`;
-  }).join('');
-}
+      }).join('');
+    }
 
-function renderAIForecast(forecasts) {
-  const el = document.getElementById('aiForecast');
-  if (!forecasts.length) {
-    el.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,0.4)">Wire to AI usage tracker to see forecasts</div>';
-    return;
-  }
-  el.innerHTML = forecasts.map(f => `
+    function renderAIForecast(forecasts) {
+      const el = document.getElementById('aiForecast');
+      if (!forecasts.length) {
+        el.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,0.4)">Wire to AI usage tracker to see forecasts</div>';
+        return;
+      }
+      el.innerHTML = forecasts.map(f => `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;
          border-bottom:1px solid var(--border)">
       <div>
         <div style="font-size:13px;font-weight:600">${f.tenant_name}</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.4)">${f.calls_today} calls today</div>
       </div>
-      <div class="risk-tag ${f.risk==='high'?'risk-high':f.risk==='medium'?'risk-medium':'risk-low'}">
+      <div class="risk-tag ${f.risk === 'high' ? 'risk-high' : f.risk === 'medium' ? 'risk-medium' : 'risk-low'}">
         ${f.days_to_quota ? 'Quota in ' + f.days_to_quota + 'd' : 'OK'}
       </div>
     </div>
   `).join('');
-}
+    }
 
-// ── RISK & CONVERSION ────────────────────────────────
-async function loadRiskData() {
-  // Render funnel stages from DOM data attributes
-  document.querySelectorAll('.funnel-stage').forEach(el => {
-    const label = el.dataset.label;
-    const val   = parseInt(el.dataset.val);
-    const color = el.dataset.color;
-    el.innerHTML = `
+    // ── RISK & CONVERSION ────────────────────────────────
+    async function loadRiskData() {
+      // Render funnel stages from DOM data attributes
+      document.querySelectorAll('.funnel-stage').forEach(el => {
+        const label = el.dataset.label;
+        const val = parseInt(el.dataset.val);
+        const color = el.dataset.color;
+        el.innerHTML = `
       <div class="funnel-label">
         <span>${label}</span>
         <span style="font-family:'JetBrains Mono',monospace;color:white">${val}%</span>
@@ -1515,215 +1972,216 @@ async function loadRiskData() {
       <div class="funnel-bar-wrap">
         <div class="funnel-bar" style="width:${val}%;background:${color}"></div>
       </div>`;
-  });
+      });
 
-  // Try to fetch real risk data from API
-  try {
-    const res = await Auth.fetch('/admin/risk-summary');
-    if (res && res.ok) {
-      const d = await res.json();
-      setValue('trustQuestions',   d.trust_questions   ?? '—');
-      setValue('badgeClicks',      d.badge_interactions ?? '—');
-      setValue('returnBuyers',     d.return_buyers      ?? '—');
-      setValue('verifyEngagement', d.verify_engagements ?? '—');
+      // Try to fetch real risk data from API
+      try {
+        const res = await Auth.fetch('/admin/risk-summary');
+        if (res && res.ok) {
+          const d = await res.json();
+          setValue('trustQuestions', d.trust_questions ?? '—');
+          setValue('badgeClicks', d.badge_interactions ?? '—');
+          setValue('returnBuyers', d.return_buyers ?? '—');
+          setValue('verifyEngagement', d.verify_engagements ?? '—');
 
-      // Update funnel with real data if available
-      if (d.funnel) {
-        const stages = document.querySelectorAll('.funnel-stage');
-        const keys   = ['search','engaged','inspection','payment'];
-        stages.forEach((el, i) => {
-          const val = d.funnel[keys[i]] ?? parseInt(el.dataset.val);
-          el.querySelector('.funnel-bar').style.width = val + '%';
-          el.querySelector('.funnel-label span:last-child').textContent = val + '%';
-        });
+          // Update funnel with real data if available
+          if (d.funnel) {
+            const stages = document.querySelectorAll('.funnel-stage');
+            const keys = ['search', 'engaged', 'inspection', 'payment'];
+            stages.forEach((el, i) => {
+              const val = d.funnel[keys[i]] ?? parseInt(el.dataset.val);
+              el.querySelector('.funnel-bar').style.width = val + '%';
+              el.querySelector('.funnel-label span:last-child').textContent = val + '%';
+            });
+          }
+
+          // Populate risk flag list
+          renderRiskFlags(d.risk_flags || []);
+
+          // Populate suspicious tenants
+          renderSuspicious(d.suspicious_tenants || []);
+        }
+      } catch (e) {
+        // API not wired yet — show placeholders
+        setValue('trustQuestions', '—');
+        setValue('badgeClicks', '—');
+        setValue('returnBuyers', '—');
+        setValue('verifyEngagement', '—');
       }
-
-      // Populate risk flag list
-      renderRiskFlags(d.risk_flags || []);
-
-      // Populate suspicious tenants
-      renderSuspicious(d.suspicious_tenants || []);
     }
-  } catch(e) {
-    // API not wired yet — show placeholders
-    setValue('trustQuestions',   '—');
-    setValue('badgeClicks',      '—');
-    setValue('returnBuyers',     '—');
-    setValue('verifyEngagement', '—');
-  }
-}
 
-function renderRiskFlags(flags) {
-  const el = document.getElementById('riskFlagList');
-  if (!flags.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">🛡️</div><p style="font-size:13px">No active risk flags</p></div>';
-    return;
-  }
-  el.innerHTML = flags.map(f => `
+    function renderRiskFlags(flags) {
+      const el = document.getElementById('riskFlagList');
+      if (!flags.length) {
+        el.innerHTML = '<div class="empty"><div class="empty-icon">🛡️</div><p style="font-size:13px">No active risk flags</p></div>';
+        return;
+      }
+      el.innerHTML = flags.map(f => `
     <div class="audit-row">
       <div class="audit-icon" style="background:rgba(255,64,96,0.1)">⚠️</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600">${f.message}</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">
-          ${f.tenant||''} · ${f.detected_at||''}
+          ${f.tenant || ''} · ${f.detected_at || ''}
         </div>
         ${f.detail ? `<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px">${f.detail}</div>` : ''}
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
-        <span class="risk-tag risk-${f.severity||'medium'}">${f.severity||'medium'}</span>
+        <span class="risk-tag risk-${f.severity || 'medium'}">${f.severity || 'medium'}</span>
         <button onclick="dismissRisk('${f.id}')" style="font-size:9px;background:var(--glass2);color:rgba(255,255,255,0.4);border:none;border-radius:6px;padding:3px 8px;cursor:pointer">Dismiss</button>
       </div>
     </div>`).join('');
-}
+    }
 
-function renderSuspicious(tenants) {
-  const el = document.getElementById('suspiciousList');
-  if (!tenants.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">👁️</div><p style="font-size:13px">No suspicious patterns detected</p></div>';
-    return;
-  }
-  el.innerHTML = tenants.map(t => `
+    function renderSuspicious(tenants) {
+      const el = document.getElementById('suspiciousList');
+      if (!tenants.length) {
+        el.innerHTML = '<div class="empty"><div class="empty-icon">👁️</div><p style="font-size:13px">No suspicious patterns detected</p></div>';
+        return;
+      }
+      el.innerHTML = tenants.map(t => `
     <div class="tenant-row">
       <div class="tenant-avatar" style="background:rgba(255,64,96,0.1);border:1px solid rgba(255,64,96,0.2)">
-        ${t.name.slice(0,2).toUpperCase()}
+        ${t.name.slice(0, 2).toUpperCase()}
       </div>
       <div style="flex:1;min-width:0">
         <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">${t.name}</div>
         <div style="font-size:11px;color:var(--hot);margin-top:2px">${t.reason}</div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:1px">${t.detected_at||''}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:1px">${t.detected_at || ''}</div>
       </div>
       <div style="flex-shrink:0">
         <span class="risk-tag risk-high">Watch</span>
       </div>
     </div>`).join('');
-}
+    }
 
-async function dismissRisk(id) {
-  try {
-    await Auth.fetch('/admin/risks/' + id + '/dismiss', { method: 'PATCH' });
-    toast('Risk flag dismissed', 'var(--warm)');
-    loadRiskData();
-  } catch(e) {}
-}
+    async function dismissRisk(id) {
+      try {
+        await Auth.fetch('/admin/risks/' + id + '/dismiss', { method: 'PATCH' });
+        toast('Risk flag dismissed', 'var(--warm)');
+        loadRiskData();
+      } catch (e) { }
+    }
 
-// ── STAFF ENRICHMENT ─────────────────────────────────
-const origRenderStaff = window.renderStaff;
-function renderStaff(staff) {
-  setValue('staffTotal',  staff.length);
-  setValue('staffActive', staff.filter(s => s.is_active).length);
-  setValue('staffRoles',  [...new Set(staff.map(s => s.role))].length);
-  const list = document.getElementById('staffList');
-  if (!staff.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><p>No platform staff yet</p></div>';
-    return;
-  }
-  const DEPT_COLORS = { superuser:'rgba(255,64,96,0.1)', super_staff:'rgba(16,185,129,0.1)' };
-  list.innerHTML = staff.map(s => {
-    const initials = ((s.first_name || s.email)||'?').slice(0,2).toUpperCase();
-    const deptColor = DEPT_COLORS[s.role] || 'rgba(59,130,246,0.1)';
-    return `
+    // ── STAFF ENRICHMENT ─────────────────────────────────
+    const origRenderStaff = window.renderStaff;
+    function renderStaff(staff) {
+      setValue('staffTotal', staff.length);
+      setValue('staffActive', staff.filter(s => s.is_active).length);
+      setValue('staffRoles', [...new Set(staff.map(s => s.role))].length);
+      const list = document.getElementById('staffList');
+      if (!staff.length) {
+        list.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><p>No platform staff yet</p></div>';
+        return;
+      }
+      const DEPT_COLORS = { superuser: 'rgba(255,64,96,0.1)', super_staff: 'rgba(16,185,129,0.1)' };
+      list.innerHTML = staff.map(s => {
+        const initials = ((s.first_name || s.email) || '?').slice(0, 2).toUpperCase();
+        const deptColor = DEPT_COLORS[s.role] || 'rgba(59,130,246,0.1)';
+        return `
       <div class="tenant-row">
         <div class="tenant-avatar" style="background:${deptColor};border:1px solid var(--border2)">${initials}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">${s.first_name||s.email.split('@')[0]}</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">${s.first_name || s.email.split('@')[0]}</div>
           <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.email}</div>
           <div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:2px">
             Last active: ${s.last_active || 'Never'}
           </div>
         </div>
         <div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-          <span class="risk-tag ${s.role==='superuser'?'risk-high':'risk-low'}" style="text-transform:capitalize">${(s.role||'').replace('_',' ')}</span>
-          <div style="font-size:10px;color:${s.is_active?'var(--em)':'#FF6080'}">${s.is_active?'● Active':'○ Inactive'}</div>
+          <span class="risk-tag ${s.role === 'superuser' ? 'risk-high' : 'risk-low'}" style="text-transform:capitalize">${(s.role || '').replace('_', ' ')}</span>
+          <div style="font-size:10px;color:${s.is_active ? 'var(--em)' : '#FF6080'}">${s.is_active ? '● Active' : '○ Inactive'}</div>
           ${s.role !== 'superuser' ? `<button onclick="deactivateStaff(${s.id},'${s.email}')" style="font-size:9px;background:rgba(255,64,96,0.1);color:#FF6080;border:none;border-radius:6px;padding:3px 8px;cursor:pointer">Deactivate</button>` : ''}
         </div>
       </div>`;
-  }).join('');
-}
-
-// ── EXTENDED TAB SWITCH — patches original switchTab ──
-const _baseSwitchTab = switchTab;
-function switchTab(name) {
-  // Call original tab switcher
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const tabEl = document.getElementById(name + 'Tab');
-  if (tabEl) tabEl.classList.add('active');
-  const navEl = document.getElementById('nav-' + name);
-  if (navEl) navEl.classList.add('active');
-  document.getElementById('scrollArea').scrollTop = 0;
-  // Lazy-load tab data
-  if (name === 'verify')  loadVerifyQueue();
-  if (name === 'billing') loadBillingData();
-  if (name === 'risk')    loadRiskData();
-  if (name === 'staff')   loadStaff();
-  if (name === 'audit')   loadAuditLogs();
-}
-
-// ── UTILS ────────────────────────────────────────────
-function formatNum(n) {
-  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
-  if (n >= 1000)    return (n/1000).toFixed(0) + 'K';
-  return n;
-}
-
-// Init risk funnel on page load
-window.addEventListener('DOMContentLoaded', () => {
-  loadRiskData();
-});
-
-// ── STAFF ACTIONS ────────────────────────────────────
-async function deactivateStaff(id, email) {
-  if (!confirm('Deactivate ' + email + '? They will lose platform access immediately.')) return;
-  try {
-    const res = await Auth.fetch('/users/' + id + '/deactivate', { method: 'PATCH' });
-    if (res && res.ok) {
-      toast('Staff member deactivated', 'var(--warm)');
-      loadStaff();
-    } else {
-      toast('Failed to deactivate', 'var(--hot)');
+      }).join('');
     }
-  } catch(e) { toast('Connection error', 'var(--hot)'); }
-}
 
-// ── OVERRIDE MODAL ───────────────────────────────────
-let _overrideListingId = null;
+    // ── EXTENDED TAB SWITCH — patches original switchTab ──
+    const _baseSwitchTab = switchTab;
+    function switchTab(name) {
+      // Call original tab switcher
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      const tabEl = document.getElementById(name + 'Tab');
+      if (tabEl) tabEl.classList.add('active');
+      const navEl = document.getElementById('nav-' + name);
+      if (navEl) navEl.classList.add('active');
+      document.getElementById('scrollArea').scrollTop = 0;
+      // Lazy-load tab data
+      if (name === 'verify') loadVerifyQueue();
+      if (name === 'billing') loadBillingData();
+      if (name === 'risk') loadRiskData();
+      if (name === 'staff') loadStaff();
+      if (name === 'audit') loadAuditLogs();
+    }
 
-function openOverrideModal(listingId) {
-  _overrideListingId = listingId;
-  document.getElementById('overrideNotes').value = '';
-  document.getElementById('overrideGrade').value = 'Silver';
-  openModal('overrideModal');
-}
+    // ── UTILS ────────────────────────────────────────────
+    function formatNum(n) {
+      if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+      if (n >= 1000) return (n / 1000).toFixed(0) + 'K';
+      return n;
+    }
 
-async function submitOverride() {
-  const notes = document.getElementById('overrideNotes').value.trim();
-  const grade = document.getElementById('overrideGrade').value;
-  if (!notes) { toast('Please provide override reason', 'var(--warm)'); return; }
-
-  try {
-    const res = await Auth.fetch('/admin/listings/' + _overrideListingId + '/override', {
-      method: 'PATCH',
-      body: JSON.stringify({
-        trust_grade: grade,
-        override_reason: notes,
-        approved_by: localStorage.getItem('user_email')
-      })
+    // Init risk funnel on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadRiskData();
     });
-    if (res && res.ok) {
-      toast('✓ Trust grade overridden');
-      closeModal('overrideModal');
-      loadVerifyQueue();
-    } else {
-      toast('Override failed', 'var(--hot)');
-    }
-  } catch(e) { toast('Connection error', 'var(--hot)'); }
-}
 
-// ── ORIGINAL UTILS ───────────────────────────────────
-function setValue(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = val;
-}
-</script>
+    // ── STAFF ACTIONS ────────────────────────────────────
+    async function deactivateStaff(id, email) {
+      if (!confirm('Deactivate ' + email + '? They will lose platform access immediately.')) return;
+      try {
+        const res = await Auth.fetch('/users/' + id + '/deactivate', { method: 'PATCH' });
+        if (res && res.ok) {
+          toast('Staff member deactivated', 'var(--warm)');
+          loadStaff();
+        } else {
+          toast('Failed to deactivate', 'var(--hot)');
+        }
+      } catch (e) { toast('Connection error', 'var(--hot)'); }
+    }
+
+    // ── OVERRIDE MODAL ───────────────────────────────────
+    let _overrideListingId = null;
+
+    function openOverrideModal(listingId) {
+      _overrideListingId = listingId;
+      document.getElementById('overrideNotes').value = '';
+      document.getElementById('overrideGrade').value = 'Silver';
+      openModal('overrideModal');
+    }
+
+    async function submitOverride() {
+      const notes = document.getElementById('overrideNotes').value.trim();
+      const grade = document.getElementById('overrideGrade').value;
+      if (!notes) { toast('Please provide override reason', 'var(--warm)'); return; }
+
+      try {
+        const res = await Auth.fetch('/admin/listings/' + _overrideListingId + '/override', {
+          method: 'PATCH',
+          body: JSON.stringify({
+            trust_grade: grade,
+            override_reason: notes,
+            approved_by: localStorage.getItem('user_email')
+          })
+        });
+        if (res && res.ok) {
+          toast('✓ Trust grade overridden');
+          closeModal('overrideModal');
+          loadVerifyQueue();
+        } else {
+          toast('Override failed', 'var(--hot)');
+        }
+      } catch (e) { toast('Connection error', 'var(--hot)'); }
+    }
+
+    // ── ORIGINAL UTILS ───────────────────────────────────
+    function setValue(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    }
+  </script>
 </body>
+
 </html>

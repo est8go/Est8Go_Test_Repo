@@ -75,7 +75,9 @@ async def get_realtor_portal(request: Request):
 @router.get("/super-admin-portal", response_class=HTMLResponse)
 async def get_admin_dashboard(request: Request):
     try:
-        return templates.TemplateResponse(request=request, name="admin_dashboard.html")
+        return templates.TemplateResponse(
+            request=request, name="super_admin_dashboard.html"
+        )
     except Exception as e:
         logger.error(f"❌ Admin Portal Error: {e}")
         return HTMLResponse(content=f"Template Error: {e}", status_code=500)
