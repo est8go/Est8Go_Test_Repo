@@ -790,500 +790,501 @@
                 </div>
                 <p class="text-xs opacity-50 mt-0.5" style="white-space:nowrap">Revenue Command OS</p>
             </div>
+        </div>
+        <!-- User avatar + logout -->
 
-            <!-- User avatar + logout -->
-            <div style="position:relative;flex-shrink:0">
-                <div id="userAvatar" onclick="toggleUserMenu()" style="width:42px;height:42px;border-radius:13px;border:2px solid var(--em-glow);
+
+        <div style="position:relative;flex-shrink:0">
+            <div id="userAvatar" onclick="toggleUserMenu()" style="width:42px;height:42px;border-radius:13px;border:2px solid var(--em-glow);
      display:flex;align-items:center;justify-content:center;
      font-family:'Syne',sans-serif;font-weight:800;font-size:15px;
      flex-shrink:0;background:#162860;overflow:hidden;cursor:pointer">
-                    BA
-                </div>
-                <!-- Dropdown -->
-                <div id="userMenu" style="display:none;position:absolute;right:0;top:52px;
+                BA
+            </div>
+            <!-- Dropdown -->
+            <div id="userMenu" style="display:none;position:absolute;right:0;top:52px;
          background:#0E1B40;border:1px solid rgba(255,255,255,0.08);
          border-radius:14px;padding:8px;min-width:180px;z-index:999;
          box-shadow:0 20px 60px rgba(0,0,0,0.5)">
-                    <div style="padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:6px">
-                        <div style="font-size:10px;font-weight:700;letter-spacing:0.15em;
+                <div style="padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:6px">
+                    <div style="font-size:10px;font-weight:700;letter-spacing:0.15em;
                  text-transform:uppercase;color:rgba(255,255,255,0.35)">Signed in as</div>
-                        <div id="menuEmail" style="font-size:12px;color:white;margin-top:2px;
+                    <div id="menuEmail" style="font-size:12px;color:white;margin-top:2px;
                  overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
-                    </div>
-                    <button onclick="Auth.logout()" style="width:100%;text-align:left;background:none;
+                </div>
+                <button onclick="Auth.logout()" style="width:100%;text-align:left;background:none;
                 border:none;padding:10px 12px;border-radius:10px;cursor:pointer;
                 font-size:13px;color:#FF6080;font-family:'Inter',sans-serif;
                 display:flex;align-items:center;gap:8px;transition:background 0.15s"
-                        onmouseover="this.style.background='rgba(255,64,96,0.08)'"
-                        onmouseout="this.style.background='none'">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-                        </svg>
-                        Sign Out
-                    </button>
-                </div>
-            </div>
-
-            <!-- Stats row -->
-            <div class="grid grid-cols-3 gap-3 mt-4">
-                <div class="card glass">
-                    <div class="text-xs opacity-50" style="white-space:nowrap">Active</div>
-                    <div id="statLeads" class="metric">0</div>
-                </div>
-                <div class="card glass glow">
-                    <div class="text-xs" style="color:var(--em);opacity:.8;white-space:nowrap">🔥 Hot</div>
-                    <div id="statHot" class="metric" style="color:var(--em)">0</div>
-                </div>
-                <div class="card glass">
-                    <div class="text-xs opacity-50" style="white-space:nowrap">Pipeline</div>
-                    <div id="statPipeline" class="metric" style="font-size:18px">₦0</div>
-                </div>
+                    onmouseover="this.style.background='rgba(255,64,96,0.08)'"
+                    onmouseout="this.style.background='none'">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                    </svg>
+                    Sign Out
+                </button>
             </div>
         </div>
 
-        <!-- ══════════════════════════════════════
+        <!-- Stats row -->
+        <div class="grid grid-cols-3 gap-3 mt-4">
+            <div class="card glass">
+                <div class="text-xs opacity-50" style="white-space:nowrap">Active</div>
+                <div id="statLeads" class="metric">0</div>
+            </div>
+            <div class="card glass glow">
+                <div class="text-xs" style="color:var(--em);opacity:.8;white-space:nowrap">🔥 Hot</div>
+                <div id="statHot" class="metric" style="color:var(--em)">0</div>
+            </div>
+            <div class="card glass">
+                <div class="text-xs opacity-50" style="white-space:nowrap">Pipeline</div>
+                <div id="statPipeline" class="metric" style="font-size:18px">₦0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
      SCROLL AREA
 ══════════════════════════════════════ -->
-        <div id="scrollArea">
+    <div id="scrollArea">
 
-            <!-- HOTLINE TAB -->
-            <div id="hotlineTab" class="tab active" style="padding-top:16px">
-                <div class="sep">Live Hotline</div>
-                <div id="leadList">
-                    <div class="empty">
-                        <div class="empty-icon">📡</div>
-                        <h4>No active leads</h4>
-                        <p>Share your WhatsApp number to start receiving verified buyers</p>
-                    </div>
+        <!-- HOTLINE TAB -->
+        <div id="hotlineTab" class="tab active" style="padding-top:16px">
+            <div class="sep">Live Hotline</div>
+            <div id="leadList">
+                <div class="empty">
+                    <div class="empty-icon">📡</div>
+                    <h4>No active leads</h4>
+                    <p>Share your WhatsApp number to start receiving verified buyers</p>
                 </div>
             </div>
+        </div>
 
-            <!-- VAULT TAB -->
-            <div id="vaultTab" class="tab" style="padding-top:16px">
-                <div class="sep">Property Vault</div>
-                <div id="vaultList">
-                    <div class="empty">
-                        <div class="empty-icon">🏗️</div>
-                        <h4>Vault is empty</h4>
-                        <p>Tap + to list your first GPS-verified property</p>
-                    </div>
+        <!-- VAULT TAB -->
+        <div id="vaultTab" class="tab" style="padding-top:16px">
+            <div class="sep">Property Vault</div>
+            <div id="vaultList">
+                <div class="empty">
+                    <div class="empty-icon">🏗️</div>
+                    <h4>Vault is empty</h4>
+                    <p>Tap + to list your first GPS-verified property</p>
                 </div>
             </div>
+        </div>
 
-            <!-- STUDIO TAB -->
-            <div id="studioTab" class="tab" style="padding-top:16px">
-                <div class="sep">Reel Studio</div>
-                <div class="card glass" style="text-align:center;margin-bottom:14px;padding:24px">
-                    <div style="font-size:34px;margin-bottom:10px">🎬</div>
-                    <h3 style="font-size:18px;margin-bottom:6px">One-Click Reels</h3>
-                    <p class="text-xs opacity-60" style="line-height:1.6;margin-bottom:16px">
-                        Turn verified property photos into professional Instagram Reels with trending music and trust
-                        badge
-                        overlay.
-                    </p>
-                    <button class="btn btn-em btn-sm" onclick="switchTab('vault')">Select Property →</button>
-                </div>
-                <div class="sep">Recent Reels</div>
-                <div id="reelList">
-                    <div class="empty" style="padding:20px">
-                        <div class="empty-icon">🎞️</div>
-                        <h4>No reels yet</h4>
-                        <p>Select a property from your vault</p>
-                    </div>
+        <!-- STUDIO TAB -->
+        <div id="studioTab" class="tab" style="padding-top:16px">
+            <div class="sep">Reel Studio</div>
+            <div class="card glass" style="text-align:center;margin-bottom:14px;padding:24px">
+                <div style="font-size:34px;margin-bottom:10px">🎬</div>
+                <h3 style="font-size:18px;margin-bottom:6px">One-Click Reels</h3>
+                <p class="text-xs opacity-60" style="line-height:1.6;margin-bottom:16px">
+                    Turn verified property photos into professional Instagram Reels with trending music and trust
+                    badge
+                    overlay.
+                </p>
+                <button class="btn btn-em btn-sm" onclick="switchTab('vault')">Select Property →</button>
+            </div>
+            <div class="sep">Recent Reels</div>
+            <div id="reelList">
+                <div class="empty" style="padding:20px">
+                    <div class="empty-icon">🎞️</div>
+                    <h4>No reels yet</h4>
+                    <p>Select a property from your vault</p>
                 </div>
             </div>
+        </div>
 
-            <!-- NETWORK TAB -->
-            <div id="networkTab" class="tab" style="padding-top:16px">
-                <div class="sep">Referral Network</div>
-                <div class="card glass" style="margin-bottom:10px;padding:20px">
-                    <div style="font-size:28px;margin-bottom:8px">🤝</div>
-                    <h3 style="font-size:16px;margin-bottom:4px">Partner Network</h3>
-                    <p class="text-xs opacity-60" style="line-height:1.5">
-                        Earn split-commissions by referring Est8Go partners. Every verified deal earns you a cut.
-                    </p>
-                </div>
-                <div id="networkList">
-                    <!-- Populated by JS -->
-                </div>
+        <!-- NETWORK TAB -->
+        <div id="networkTab" class="tab" style="padding-top:16px">
+            <div class="sep">Referral Network</div>
+            <div class="card glass" style="margin-bottom:10px;padding:20px">
+                <div style="font-size:28px;margin-bottom:8px">🤝</div>
+                <h3 style="font-size:16px;margin-bottom:4px">Partner Network</h3>
+                <p class="text-xs opacity-60" style="line-height:1.5">
+                    Earn split-commissions by referring Est8Go partners. Every verified deal earns you a cut.
+                </p>
             </div>
+            <div id="networkList">
+                <!-- Populated by JS -->
+            </div>
+        </div>
 
-        </div><!-- end scrollArea -->
+    </div><!-- end scrollArea -->
 
-        <!-- ══════════════════════════════════════
+    <!-- ══════════════════════════════════════
      BOTTOM NAV
 ══════════════════════════════════════ -->
-        <div class="nav glass">
-            <button onclick="switchTab('hotline')" id="btnHotline" class="active">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span>Hotline</span>
-            </button>
-            <button onclick="switchTab('vault')" id="btnVault">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-                <span>Vault</span>
-            </button>
-            <div class="nav-add" onclick="openModal('uploadModal')">
-                <svg width="20" height="20" fill="none" stroke="#030617" viewBox="0 0 24 24" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-            </div>
-            <button onclick="switchTab('studio')" id="btnStudio">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                <span>Studio</span>
-            </button>
-            <button onclick="switchTab('network')" id="btnNetwork">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span>Network</span>
-            </button>
+    <div class="nav glass">
+        <button onclick="switchTab('hotline')" id="btnHotline" class="active">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>Hotline</span>
+        </button>
+        <button onclick="switchTab('vault')" id="btnVault">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <span>Vault</span>
+        </button>
+        <div class="nav-add" onclick="openModal('uploadModal')">
+            <svg width="20" height="20" fill="none" stroke="#030617" viewBox="0 0 24 24" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
         </div>
+        <button onclick="switchTab('studio')" id="btnStudio">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <span>Studio</span>
+        </button>
+        <button onclick="switchTab('network')" id="btnNetwork">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span>Network</span>
+        </button>
+    </div>
 
-        <!-- ══════════════════════════════════════
+    <!-- ══════════════════════════════════════
      MODAL: UPLOAD PROPERTY
 ══════════════════════════════════════ -->
-        <div class="modal-backdrop" id="uploadModal">
-            <div class="modal-sheet">
-                <div class="modal-handle"></div>
-                <div class="modal-header">
-                    <span class="modal-title">List Property</span>
-                    <button class="modal-close" onclick="closeModal('uploadModal')">✕</button>
-                </div>
-                <div class="modal-body">
-                    <form id="uploadForm" onsubmit="handleUpload(event)">
-                        <div class="gps-zone">
-                            <button type="button" class="btn btn-em btn-sm" id="gpsBtn" onclick="captureGPS()">
-                                📍 Capture Site GPS
-                            </button>
-                            <p style="font-size:10px;opacity:.5;margin-top:8px">You must be physically on the property
-                            </p>
-                            <input type="hidden" id="lat">
-                            <input type="hidden" id="lng">
-                        </div>
-                        <label class="field-label">Listing Title</label>
-                        <input class="field" name="title" placeholder="e.g. 3BR Duplex — Maitama" required>
-                        <label class="field-label">Price (₦)</label>
-                        <input class="field" name="price" type="number" placeholder="45000000" required>
-                        <label class="field-label">Location</label>
-                        <input class="field" list="areas" name="location_name" placeholder="e.g. Maitama" required>
-                        <datalist id="areas">
-                            <option value="Maitama">
-                            <option value="Asokoro">
-                            <option value="Gwarinpa">
-                            <option value="Jabi">
-                            <option value="Wuse 2">
-                            <option value="Katampe">
-                            <option value="Lekki">
-                            <option value="Victoria Island">
-                            <option value="Ikoyi">
-                            <option value="Ajah">
-                        </datalist>
-                        <label class="field-label">Property Type</label>
-                        <select class="field" name="prop_type">
-                            <option value="land">Land</option>
-                            <option value="house">House / Duplex</option>
-                            <option value="apartment">Apartment / Flat</option>
-                            <option value="commercial">Commercial</option>
-                        </select>
-                        <label class="field-label">Photos (min. 3)</label>
-                        <input class="field" type="file" name="images" multiple accept="image/*" required
-                            style="padding:10px 14px">
-                        <button type="submit" class="btn btn-navy btn-lg">Publish to Vault</button>
-                    </form>
-                </div>
+    <div class="modal-backdrop" id="uploadModal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <span class="modal-title">List Property</span>
+                <button class="modal-close" onclick="closeModal('uploadModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadForm" onsubmit="handleUpload(event)">
+                    <div class="gps-zone">
+                        <button type="button" class="btn btn-em btn-sm" id="gpsBtn" onclick="captureGPS()">
+                            📍 Capture Site GPS
+                        </button>
+                        <p style="font-size:10px;opacity:.5;margin-top:8px">You must be physically on the property
+                        </p>
+                        <input type="hidden" id="lat">
+                        <input type="hidden" id="lng">
+                    </div>
+                    <label class="field-label">Listing Title</label>
+                    <input class="field" name="title" placeholder="e.g. 3BR Duplex — Maitama" required>
+                    <label class="field-label">Price (₦)</label>
+                    <input class="field" name="price" type="number" placeholder="45000000" required>
+                    <label class="field-label">Location</label>
+                    <input class="field" list="areas" name="location_name" placeholder="e.g. Maitama" required>
+                    <datalist id="areas">
+                        <option value="Maitama">
+                        <option value="Asokoro">
+                        <option value="Gwarinpa">
+                        <option value="Jabi">
+                        <option value="Wuse 2">
+                        <option value="Katampe">
+                        <option value="Lekki">
+                        <option value="Victoria Island">
+                        <option value="Ikoyi">
+                        <option value="Ajah">
+                    </datalist>
+                    <label class="field-label">Property Type</label>
+                    <select class="field" name="prop_type">
+                        <option value="land">Land</option>
+                        <option value="house">House / Duplex</option>
+                        <option value="apartment">Apartment / Flat</option>
+                        <option value="commercial">Commercial</option>
+                    </select>
+                    <label class="field-label">Photos (min. 3)</label>
+                    <input class="field" type="file" name="images" multiple accept="image/*" required
+                        style="padding:10px 14px">
+                    <button type="submit" class="btn btn-navy btn-lg">Publish to Vault</button>
+                </form>
             </div>
         </div>
+    </div>
 
-        <!-- ══════════════════════════════════════
+    <!-- ══════════════════════════════════════
      MODAL: TRUST WIZARD
 ══════════════════════════════════════ -->
-        <div class="modal-backdrop" id="trustModal">
-            <div class="modal-sheet">
-                <div class="modal-handle"></div>
-                <div class="modal-header">
-                    <span class="modal-title">Trust Score Wizard</span>
-                    <button class="modal-close" onclick="closeModal('trustModal')">✕</button>
-                </div>
-                <div class="modal-body">
-                    <div
-                        style="display:flex;gap:14px;align-items:center;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:14px">
-                        <div class="score-ring"><span class="score-num" id="twScore">0</span></div>
-                        <div style="flex:1;min-width:0">
-                            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
-                                id="twTitle">—</div>
-                            <div style="font-size:10px;color:var(--em);font-weight:700;margin-top:2px" id="twGrade">
-                                UNGRADED
-                            </div>
-                            <div style="font-size:10px;opacity:.5;margin-top:3px" id="twPts">— pts to Emerald</div>
+    <div class="modal-backdrop" id="trustModal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <span class="modal-title">Trust Score Wizard</span>
+                <button class="modal-close" onclick="closeModal('trustModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div
+                    style="display:flex;gap:14px;align-items:center;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:14px">
+                    <div class="score-ring"><span class="score-num" id="twScore">0</span></div>
+                    <div style="flex:1;min-width:0">
+                        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+                            id="twTitle">—</div>
+                        <div style="font-size:10px;color:var(--em);font-weight:700;margin-top:2px" id="twGrade">
+                            UNGRADED
                         </div>
+                        <div style="font-size:10px;opacity:.5;margin-top:3px" id="twPts">— pts to Emerald</div>
                     </div>
-                    <div
-                        style="background:var(--em-dim);border:1px solid var(--em-glow);border-radius:14px;padding:12px;margin-bottom:14px">
-                        <div
-                            style="font-size:9px;font-weight:700;color:var(--em);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px">
-                            Next Action</div>
-                        <div style="font-size:11px;line-height:1.5" id="twUpgrade">—</div>
-                    </div>
-                    <div class="sep">Score Breakdown</div>
-                    <div id="twPillars"></div>
-                    <button class="btn btn-em btn-lg" onclick="closeModal('trustModal');openModal('docModal')">📄 Upload
-                        Documents</button>
                 </div>
+                <div
+                    style="background:var(--em-dim);border:1px solid var(--em-glow);border-radius:14px;padding:12px;margin-bottom:14px">
+                    <div
+                        style="font-size:9px;font-weight:700;color:var(--em);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px">
+                        Next Action</div>
+                    <div style="font-size:11px;line-height:1.5" id="twUpgrade">—</div>
+                </div>
+                <div class="sep">Score Breakdown</div>
+                <div id="twPillars"></div>
+                <button class="btn btn-em btn-lg" onclick="closeModal('trustModal');openModal('docModal')">📄 Upload
+                    Documents</button>
             </div>
         </div>
+    </div>
 
-        <!-- ══════════════════════════════════════
+    <!-- ══════════════════════════════════════
      MODAL: REEL STUDIO
 ══════════════════════════════════════ -->
-        <div class="modal-backdrop" id="reelModal">
-            <div class="modal-sheet">
-                <div class="modal-handle"></div>
-                <div class="modal-header">
-                    <span class="modal-title">Generate Reel</span>
-                    <button class="modal-close" onclick="closeModal('reelModal')">✕</button>
-                </div>
-                <div class="modal-body">
+    <div class="modal-backdrop" id="reelModal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <span class="modal-title">Generate Reel</span>
+                <button class="modal-close" onclick="closeModal('reelModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div
+                    style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:14px">
                     <div
-                        style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:14px">
-                        <div
-                            style="font-size:9px;opacity:.5;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">
-                            Property</div>
-                        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
-                            id="rmTitle">—</div>
-                        <div style="font-size:10px;color:var(--em);font-weight:700;margin-top:3px" id="rmScore">—</div>
-                        <div style="font-size:10px;margin-top:3px" id="rmReady">—</div>
-                    </div>
-                    <form id="reelForm" onsubmit="handleReel(event)">
-                        <label class="field-label">Music</label>
-                        <label class="music-opt">
-                            <input type="radio" name="music_choice" value="afrobeats">
-                            <span style="font-size:20px">🎵</span>
-                            <div>
-                                <div style="font-weight:700;font-size:12px">Afrobeats</div>
-                                <div style="font-size:9px;opacity:.5">Trending Nigerian instrumental</div>
-                            </div>
-                        </label>
-                        <label class="music-opt">
-                            <input type="radio" name="music_choice" value="corporate" checked>
-                            <span style="font-size:20px">🎼</span>
-                            <div>
-                                <div style="font-weight:700;font-size:12px">Corporate</div>
-                                <div style="font-size:9px;opacity:.5">Professional background</div>
-                            </div>
-                        </label>
-                        <label class="music-opt" style="margin-bottom:14px">
-                            <input type="radio" name="music_choice" value="ambient">
-                            <span style="font-size:20px">🌊</span>
-                            <div>
-                                <div style="font-weight:700;font-size:12px">Ambient</div>
-                                <div style="font-size:9px;opacity:.5">Calm luxury feel</div>
-                            </div>
-                        </label>
-                        <label class="field-label">Format</label>
-                        <select class="field" name="aspect_ratio">
-                            <option value="reels">📱 Instagram Reels / TikTok (9:16)</option>
-                            <option value="feed">⬜ Instagram Feed (1:1)</option>
-                            <option value="facebook">📺 Facebook / YouTube (16:9)</option>
-                        </select>
-                        <button type="submit" class="btn btn-em btn-lg">🚀 Generate Reel</button>
-                        <p style="text-align:center;font-size:10px;opacity:.4;margin-top:10px">WhatsApp notification
-                            when
-                            ready · ~30 seconds</p>
-                    </form>
+                        style="font-size:9px;opacity:.5;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">
+                        Property</div>
+                    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+                        id="rmTitle">—</div>
+                    <div style="font-size:10px;color:var(--em);font-weight:700;margin-top:3px" id="rmScore">—</div>
+                    <div style="font-size:10px;margin-top:3px" id="rmReady">—</div>
                 </div>
+                <form id="reelForm" onsubmit="handleReel(event)">
+                    <label class="field-label">Music</label>
+                    <label class="music-opt">
+                        <input type="radio" name="music_choice" value="afrobeats">
+                        <span style="font-size:20px">🎵</span>
+                        <div>
+                            <div style="font-weight:700;font-size:12px">Afrobeats</div>
+                            <div style="font-size:9px;opacity:.5">Trending Nigerian instrumental</div>
+                        </div>
+                    </label>
+                    <label class="music-opt">
+                        <input type="radio" name="music_choice" value="corporate" checked>
+                        <span style="font-size:20px">🎼</span>
+                        <div>
+                            <div style="font-weight:700;font-size:12px">Corporate</div>
+                            <div style="font-size:9px;opacity:.5">Professional background</div>
+                        </div>
+                    </label>
+                    <label class="music-opt" style="margin-bottom:14px">
+                        <input type="radio" name="music_choice" value="ambient">
+                        <span style="font-size:20px">🌊</span>
+                        <div>
+                            <div style="font-weight:700;font-size:12px">Ambient</div>
+                            <div style="font-size:9px;opacity:.5">Calm luxury feel</div>
+                        </div>
+                    </label>
+                    <label class="field-label">Format</label>
+                    <select class="field" name="aspect_ratio">
+                        <option value="reels">📱 Instagram Reels / TikTok (9:16)</option>
+                        <option value="feed">⬜ Instagram Feed (1:1)</option>
+                        <option value="facebook">📺 Facebook / YouTube (16:9)</option>
+                    </select>
+                    <button type="submit" class="btn btn-em btn-lg">🚀 Generate Reel</button>
+                    <p style="text-align:center;font-size:10px;opacity:.4;margin-top:10px">WhatsApp notification
+                        when
+                        ready · ~30 seconds</p>
+                </form>
             </div>
         </div>
+    </div>
 
-        <!-- ══════════════════════════════════════
+    <!-- ══════════════════════════════════════
      MODAL: DOCUMENT UPLOAD
 ══════════════════════════════════════ -->
-        <div class="modal-backdrop" id="docModal">
-            <div class="modal-sheet">
-                <div class="modal-handle"></div>
-                <div class="modal-header">
-                    <span class="modal-title">Upload Document</span>
-                    <button class="modal-close" onclick="closeModal('docModal')">✕</button>
-                </div>
-                <div class="modal-body">
-                    <form id="docForm" onsubmit="handleDoc(event)">
-                        <label class="field-label">Document Type</label>
-                        <select class="field" name="document_type">
-                            <optgroup label="Tier 1 — Statutory (Highest)">
-                                <option value="c_of_o">C of O — Certificate of Occupancy (+35 pts)</option>
-                                <option value="r_of_o">R of O — Right of Occupancy (+35 pts)</option>
-                                <option value="governors_consent">Governor's Consent (+30 pts)</option>
-                            </optgroup>
-                            <optgroup label="Tier 2 — Gazette / Excision">
-                                <option value="gazette">Gazette (+28 pts)</option>
-                                <option value="excision">Excision Document (+25 pts)</option>
-                                <option value="approved_layout">Approved Layout (+20 pts)</option>
-                            </optgroup>
-                            <optgroup label="Tier 3 — Transactional">
-                                <option value="deed_of_assignment">Deed of Assignment (+15 pts)</option>
-                                <option value="deed_of_conveyance">Deed of Conveyance (+15 pts)</option>
-                                <option value="contract_of_sale">Contract of Sale (+10 pts)</option>
-                            </optgroup>
-                            <optgroup label="Tier 4 — Survey">
-                                <option value="survey_plan">Survey Plan — Registered (+12 pts)</option>
-                                <option value="site_plan">Site Plan (+8 pts)</option>
-                                <option value="building_plan_approval">Building Plan Approval (+8 pts)</option>
-                            </optgroup>
-                            <optgroup label="Tier 5 — Supporting">
-                                <option value="tax_clearance">Tax Clearance (+5 pts)</option>
-                                <option value="purchase_receipts">Receipts of Purchase (+5 pts)</option>
-                                <option value="power_of_attorney">Power of Attorney (+5 pts)</option>
-                                <option value="probate">Probate / Letter of Admin (+5 pts)</option>
-                            </optgroup>
-                        </select>
-                        <label class="field-label">File (PDF or Image)</label>
-                        <input class="field" type="file" name="document" accept=".pdf,image/*" required
-                            style="padding:10px 14px">
-                        <button type="submit" class="btn btn-em btn-lg">Upload Document</button>
-                    </form>
-                </div>
+    <div class="modal-backdrop" id="docModal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <span class="modal-title">Upload Document</span>
+                <button class="modal-close" onclick="closeModal('docModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="docForm" onsubmit="handleDoc(event)">
+                    <label class="field-label">Document Type</label>
+                    <select class="field" name="document_type">
+                        <optgroup label="Tier 1 — Statutory (Highest)">
+                            <option value="c_of_o">C of O — Certificate of Occupancy (+35 pts)</option>
+                            <option value="r_of_o">R of O — Right of Occupancy (+35 pts)</option>
+                            <option value="governors_consent">Governor's Consent (+30 pts)</option>
+                        </optgroup>
+                        <optgroup label="Tier 2 — Gazette / Excision">
+                            <option value="gazette">Gazette (+28 pts)</option>
+                            <option value="excision">Excision Document (+25 pts)</option>
+                            <option value="approved_layout">Approved Layout (+20 pts)</option>
+                        </optgroup>
+                        <optgroup label="Tier 3 — Transactional">
+                            <option value="deed_of_assignment">Deed of Assignment (+15 pts)</option>
+                            <option value="deed_of_conveyance">Deed of Conveyance (+15 pts)</option>
+                            <option value="contract_of_sale">Contract of Sale (+10 pts)</option>
+                        </optgroup>
+                        <optgroup label="Tier 4 — Survey">
+                            <option value="survey_plan">Survey Plan — Registered (+12 pts)</option>
+                            <option value="site_plan">Site Plan (+8 pts)</option>
+                            <option value="building_plan_approval">Building Plan Approval (+8 pts)</option>
+                        </optgroup>
+                        <optgroup label="Tier 5 — Supporting">
+                            <option value="tax_clearance">Tax Clearance (+5 pts)</option>
+                            <option value="purchase_receipts">Receipts of Purchase (+5 pts)</option>
+                            <option value="power_of_attorney">Power of Attorney (+5 pts)</option>
+                            <option value="probate">Probate / Letter of Admin (+5 pts)</option>
+                        </optgroup>
+                    </select>
+                    <label class="field-label">File (PDF or Image)</label>
+                    <input class="field" type="file" name="document" accept=".pdf,image/*" required
+                        style="padding:10px 14px">
+                    <button type="submit" class="btn btn-em btn-lg">Upload Document</button>
+                </form>
             </div>
         </div>
+    </div>
 
-        <!-- TOAST -->
-        <div id="toast"></div>
+    <!-- TOAST -->
+    <div id="toast"></div>
 
-        <!-- ══════════════════════════════════════
+    <!-- ══════════════════════════════════════
      JAVASCRIPT ENGINE
 ══════════════════════════════════════ -->
-        <script>
-            /* ── CONFIG ── */
-            const CFG = {
-                get TID() { return new URLSearchParams(location.search).get('tenant_id') || '1'; },
-                get TOKEN() { return localStorage.getItem('access_token') || ''; },
-                get H() { return { 'X-Tenant-Id': this.TID, 'Authorization': `Bearer ${this.TOKEN}` }; },
-                get JH() { return { ...this.H, 'Content-Type': 'application/json' }; },
-                API: {
-                    pipeline: '/pipeline/active',
-                    stats: '/pipeline/summary/stats',
-                    takeover: id => `/pipeline/takeover/${id}`,
-                    reactivate: id => `/pipeline/reactivate/${id}`,
-                    alert: id => `/pipeline/alert/${id}`,
-                    listings: '/listings/',
-                    trustDash: id => `/listings/${id}/trust-dashboard`,
-                    uploadDoc: id => `/listings/${id}/upload-document`,
-                    reelOpts: id => `/reels/options/${id}`,
-                    reelGen: id => `/reels/generate/${id}`,
-                    upload: '/listings/realtor/upload',
-                },
-                REFRESH: 30000,
-            };
+    <script>
+        /* ── CONFIG ── */
+        const CFG = {
+            get TID() { return new URLSearchParams(location.search).get('tenant_id') || '1'; },
+            get TOKEN() { return localStorage.getItem('access_token') || ''; },
+            get H() { return { 'X-Tenant-Id': this.TID, 'Authorization': `Bearer ${this.TOKEN}` }; },
+            get JH() { return { ...this.H, 'Content-Type': 'application/json' }; },
+            API: {
+                pipeline: '/pipeline/active',
+                stats: '/pipeline/summary/stats',
+                takeover: id => `/pipeline/takeover/${id}`,
+                reactivate: id => `/pipeline/reactivate/${id}`,
+                alert: id => `/pipeline/alert/${id}`,
+                listings: '/listings/',
+                trustDash: id => `/listings/${id}/trust-dashboard`,
+                uploadDoc: id => `/listings/${id}/upload-document`,
+                reelOpts: id => `/reels/options/${id}`,
+                reelGen: id => `/reels/generate/${id}`,
+                upload: '/listings/realtor/upload',
+            },
+            REFRESH: 30000,
+        };
 
-            /* ── STATE ── */
-            let ST = {
-                leads: [], listings: [], stats: {},
-                tab: 'hotline', selListing: null,
-                reels: [], timer: null,
-            };
+        /* ── STATE ── */
+        let ST = {
+            leads: [], listings: [], stats: {},
+            tab: 'hotline', selListing: null,
+            reels: [], timer: null,
+        };
 
-            /* ── INIT ── */
-            window.addEventListener('DOMContentLoaded', () => {
-                // Default user data (update when auth is wired)
-                if (!localStorage.getItem('user_name')) localStorage.setItem('user_name', 'Bravieshomz Admin');
-                if (!localStorage.getItem('biz_name')) localStorage.setItem('biz_name', 'Bravieshomz Ltd');
-                loadUser();
-                switchTab('hotline');
-                renderNetwork();
-                ST.timer = setInterval(() => { if (ST.tab === 'hotline') loadLeads(); }, CFG.REFRESH);
+        /* ── INIT ── */
+        window.addEventListener('DOMContentLoaded', () => {
+            // Default user data (update when auth is wired)
+            if (!localStorage.getItem('user_name')) localStorage.setItem('user_name', 'Bravieshomz Admin');
+            if (!localStorage.getItem('biz_name')) localStorage.setItem('biz_name', 'Bravieshomz Ltd');
+            loadUser();
+            switchTab('hotline');
+            renderNetwork();
+            ST.timer = setInterval(() => { if (ST.tab === 'hotline') loadLeads(); }, CFG.REFRESH);
+        });
+
+        /* ── AVATAR ── */
+        function loadUser() {
+            const name = localStorage.getItem('user_name') || 'Realtor';
+            const biz = localStorage.getItem('biz_name') || 'Bravieshomz Ltd.';
+            const photo = localStorage.getItem('user_photo');
+            g('bizName').textContent = biz;
+            const av = g('userAvatar');
+            if (photo) {
+                av.innerHTML = `<img src="${photo}" style="width:100%;height:100%;object-fit:cover"/>`;
+            } else {
+                const init = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+                const hue = [...name].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+                av.style.background = `hsl(${hue},50%,25%)`;
+                av.style.color = `hsl(${hue},70%,75%)`;
+                av.textContent = init;
+            }
+        }
+
+        /* ── TABS ── */
+        function switchTab(tab) {
+            ST.tab = tab;
+            ['hotline', 'vault', 'studio', 'network'].forEach(t => {
+                g(t + 'Tab')?.classList.remove('active');
+                g('btn' + t[0].toUpperCase() + t.slice(1))?.classList.remove('active');
             });
+            g(tab + 'Tab')?.classList.add('active');
+            g('btn' + tab[0].toUpperCase() + tab.slice(1))?.classList.add('active');
+            if (tab === 'hotline') loadLeads();
+            if (tab === 'vault') loadVault();
+        }
 
-            /* ── AVATAR ── */
-            function loadUser() {
-                const name = localStorage.getItem('user_name') || 'Realtor';
-                const biz = localStorage.getItem('biz_name') || 'Bravieshomz Ltd.';
-                const photo = localStorage.getItem('user_photo');
-                g('bizName').textContent = biz;
-                const av = g('userAvatar');
-                if (photo) {
-                    av.innerHTML = `<img src="${photo}" style="width:100%;height:100%;object-fit:cover"/>`;
-                } else {
-                    const init = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-                    const hue = [...name].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
-                    av.style.background = `hsl(${hue},50%,25%)`;
-                    av.style.color = `hsl(${hue},70%,75%)`;
-                    av.textContent = init;
-                }
+        /* ── LEADS ── */
+        async function loadLeads() {
+            try {
+                const [pr, sr] = await Promise.all([
+                    fetch(CFG.API.pipeline, { headers: CFG.H }),
+                    fetch(CFG.API.stats, { headers: CFG.H }),
+                ]);
+                const pipe = await pr.json();
+                const stats = await sr.json();
+                ST.leads = pipe.leads || [];
+                animCount('statLeads', 0, pipe.total_leads || 0, 500);
+                animCount('statHot', 0, pipe.hot_leads || 0, 500);
+                g('statPipeline').textContent = stats.pipeline_value || '₦0';
+                renderLeads(ST.leads);
+            } catch (e) { toast('Failed to load leads', 'error'); }
+        }
+
+        function renderLeads(leads) {
+            const list = g('leadList');
+            if (!leads.length) {
+                list.innerHTML = `<div class="empty"><div class="empty-icon">📡</div><h4>No active leads</h4><p>Share your WhatsApp number to start receiving verified buyers</p></div>`;
+                return;
             }
 
-            /* ── TABS ── */
-            function switchTab(tab) {
-                ST.tab = tab;
-                ['hotline', 'vault', 'studio', 'network'].forEach(t => {
-                    g(t + 'Tab')?.classList.remove('active');
-                    g('btn' + t[0].toUpperCase() + t.slice(1))?.classList.remove('active');
-                });
-                g(tab + 'Tab')?.classList.add('active');
-                g('btn' + tab[0].toUpperCase() + tab.slice(1))?.classList.add('active');
-                if (tab === 'hotline') loadLeads();
-                if (tab === 'vault') loadVault();
-            }
+            const stageMap = {
+                awareness: { w: '10%', c: 'rgba(255,255,255,0.25)' },
+                verification: { w: '35%', c: '#F59E0B' },
+                commitment: { w: '65%', c: '#6366F1' },
+                handshake: { w: '85%', c: '#10B981' },
+                closed: { w: '100%', c: '#10B981' },
+            };
 
-            /* ── LEADS ── */
-            async function loadLeads() {
-                try {
-                    const [pr, sr] = await Promise.all([
-                        fetch(CFG.API.pipeline, { headers: CFG.H }),
-                        fetch(CFG.API.stats, { headers: CFG.H }),
-                    ]);
-                    const pipe = await pr.json();
-                    const stats = await sr.json();
-                    ST.leads = pipe.leads || [];
-                    animCount('statLeads', 0, pipe.total_leads || 0, 500);
-                    animCount('statHot', 0, pipe.hot_leads || 0, 500);
-                    g('statPipeline').textContent = stats.pipeline_value || '₦0';
-                    renderLeads(ST.leads);
-                } catch (e) { toast('Failed to load leads', 'error'); }
-            }
+            const chanSvg = {
+                instagram: `<svg width="9" height="9" viewBox="0 0 24 24" fill="#E1306C"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>`,
+                facebook: `<svg width="9" height="9" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
+                whatsapp: `<svg width="9" height="9" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`,
+            };
 
-            function renderLeads(leads) {
-                const list = g('leadList');
-                if (!leads.length) {
-                    list.innerHTML = `<div class="empty"><div class="empty-icon">📡</div><h4>No active leads</h4><p>Share your WhatsApp number to start receiving verified buyers</p></div>`;
-                    return;
-                }
+            list.innerHTML = leads.map(lead => {
+                const sm = stageMap[lead.funnel_stage] || stageMap.awareness;
+                const tc = lead.temp_code || 'cold';
+                const ci = chanSvg[lead.channel] || chanSvg.whatsapp;
+                const hue = [...(lead.name || '')].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+                const tempCls = { hot: 'hot', warm: 'warm', cold: 'cold' }[tc] || 'cold';
+                const tempBadge = {
+                    hot: '<span class="badge" style="background:rgba(255,64,96,.15);color:#FF4060">🔥 Hot</span>',
+                    warm: '<span class="badge" style="background:rgba(245,158,11,.15);color:#F59E0B">🌡️ Warm</span>',
+                    cold: '<span class="badge" style="background:rgba(255,255,255,.07);color:rgba(255,255,255,.4)">❄️ Cold</span>',
+                }[tc] || '';
 
-                const stageMap = {
-                    awareness: { w: '10%', c: 'rgba(255,255,255,0.25)' },
-                    verification: { w: '35%', c: '#F59E0B' },
-                    commitment: { w: '65%', c: '#6366F1' },
-                    handshake: { w: '85%', c: '#10B981' },
-                    closed: { w: '100%', c: '#10B981' },
-                };
-
-                const chanSvg = {
-                    instagram: `<svg width="9" height="9" viewBox="0 0 24 24" fill="#E1306C"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>`,
-                    facebook: `<svg width="9" height="9" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
-                    whatsapp: `<svg width="9" height="9" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`,
-                };
-
-                list.innerHTML = leads.map(lead => {
-                    const sm = stageMap[lead.funnel_stage] || stageMap.awareness;
-                    const tc = lead.temp_code || 'cold';
-                    const ci = chanSvg[lead.channel] || chanSvg.whatsapp;
-                    const hue = [...(lead.name || '')].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
-                    const tempCls = { hot: 'hot', warm: 'warm', cold: 'cold' }[tc] || 'cold';
-                    const tempBadge = {
-                        hot: '<span class="badge" style="background:rgba(255,64,96,.15);color:#FF4060">🔥 Hot</span>',
-                        warm: '<span class="badge" style="background:rgba(245,158,11,.15);color:#F59E0B">🌡️ Warm</span>',
-                        cold: '<span class="badge" style="background:rgba(255,255,255,.07);color:rgba(255,255,255,.4)">❄️ Cold</span>',
-                    }[tc] || '';
-
-                    return `
+                return `
     <div class="lead ${tempCls}" style="margin-bottom:10px">
       <div class="avatar" style="background:hsl(${hue},45%,22%);color:hsl(${hue},70%,75%)">
         ${(lead.name || '?')[0].toUpperCase()}
@@ -1317,49 +1318,49 @@
               </svg>
             </a>
             ${lead.is_bot_active
-                            ? `<button class="btn btn-dark btn-xs" onclick="takeover(${lead.id})">Take Over</button>`
-                            : `<button class="btn btn-em btn-xs" onclick="reactivate(${lead.id})">Hand Back</button>`
-                        }
+                        ? `<button class="btn btn-dark btn-xs" onclick="takeover(${lead.id})">Take Over</button>`
+                        : `<button class="btn btn-em btn-xs" onclick="reactivate(${lead.id})">Hand Back</button>`
+                    }
             ${tc === 'hot' ? `<button class="btn btn-alert" onclick="sendAlert(${lead.id})">🔔</button>` : ''}
           </div>
         </div>
       </div>
     </div>`;
-                }).join('');
+            }).join('');
+        }
+
+        /* ── VAULT ── */
+        async function loadVault() {
+            try {
+                const res = await fetch(CFG.API.listings, { headers: CFG.H });
+                const data = await res.json();
+                ST.listings = data;
+                renderVault(data);
+            } catch (e) { toast('Failed to load vault', 'error'); }
+        }
+
+        function renderVault(listings) {
+            const list = g('vaultList');
+            if (!listings.length) {
+                list.innerHTML = `<div class="empty"><div class="empty-icon">🏗️</div><h4>Vault is empty</h4><p>Tap + to list your first GPS-verified property</p></div>`;
+                return;
             }
 
-            /* ── VAULT ── */
-            async function loadVault() {
-                try {
-                    const res = await fetch(CFG.API.listings, { headers: CFG.H });
-                    const data = await res.json();
-                    ST.listings = data;
-                    renderVault(data);
-                } catch (e) { toast('Failed to load vault', 'error'); }
-            }
+            const gradeMap = {
+                emerald: { tag: 'bg-emerald-500/20 text-emerald-400', label: '🟢 Emerald', bar: '#10B981' },
+                gold: { tag: 'bg-yellow-500/20 text-yellow-400', label: '🔵 Gold', bar: '#F59E0B' },
+                silver: { tag: 'bg-slate-500/20 text-slate-300', label: '🟡 Silver', bar: 'rgba(255,255,255,.5)' },
+                bronze: { tag: 'bg-orange-500/20 text-orange-400', label: '🟠 Bronze', bar: '#CD7F32' },
+            };
 
-            function renderVault(listings) {
-                const list = g('vaultList');
-                if (!listings.length) {
-                    list.innerHTML = `<div class="empty"><div class="empty-icon">🏗️</div><h4>Vault is empty</h4><p>Tap + to list your first GPS-verified property</p></div>`;
-                    return;
-                }
+            const active = listings.filter(p => p.status !== 'sold');
+            const sold = listings.filter(p => p.status === 'sold');
 
-                const gradeMap = {
-                    emerald: { tag: 'bg-emerald-500/20 text-emerald-400', label: '🟢 Emerald', bar: '#10B981' },
-                    gold: { tag: 'bg-yellow-500/20 text-yellow-400', label: '🔵 Gold', bar: '#F59E0B' },
-                    silver: { tag: 'bg-slate-500/20 text-slate-300', label: '🟡 Silver', bar: 'rgba(255,255,255,.5)' },
-                    bronze: { tag: 'bg-orange-500/20 text-orange-400', label: '🟠 Bronze', bar: '#CD7F32' },
-                };
-
-                const active = listings.filter(p => p.status !== 'sold');
-                const sold = listings.filter(p => p.status === 'sold');
-
-                const card = p => {
-                    const g2 = gradeMap[p.trust_grade] || gradeMap.bronze;
-                    const score = p.trust_score || 0;
-                    const isSold = p.status === 'sold';
-                    return `
+            const card = p => {
+                const g2 = gradeMap[p.trust_grade] || gradeMap.bronze;
+                const score = p.trust_score || 0;
+                const isSold = p.status === 'sold';
+                return `
     <div class="vault-card" style="margin-bottom:10px">
       <div class="vault-img">
         ${p.images?.[0]?.url ? `<img src="${p.images[0].url}" alt=""/>` : '🏠'}
@@ -1380,35 +1381,35 @@
           <button class="btn btn-dark btn-xs" onclick="showReel(${p.id})">🎬 Reel</button>
           <button class="btn btn-dark btn-xs" onclick="showDoc(${p.id})">📄 Docs</button>
           ${!isSold
-                            ? `<button class="btn btn-sold btn-xs" onclick="markSold(${p.id})">🏷️ Sold</button>`
-                            : `<button class="btn btn-danger btn-xs" onclick="delListing(${p.id})">🗑️</button>`
-                        }
+                        ? `<button class="btn btn-sold btn-xs" onclick="markSold(${p.id})">🏷️ Sold</button>`
+                        : `<button class="btn btn-danger btn-xs" onclick="delListing(${p.id})">🗑️</button>`
+                    }
         </div>
       </div>
     </div>`;
-                };
+            };
 
-                let html = active.map(card).join('');
-                if (sold.length) {
-                    html += `<div class="sep">Sold Archive (${sold.length})</div>`;
-                    html += sold.map(card).join('');
-                }
-                list.innerHTML = html;
+            let html = active.map(card).join('');
+            if (sold.length) {
+                html += `<div class="sep">Sold Archive (${sold.length})</div>`;
+                html += sold.map(card).join('');
             }
+            list.innerHTML = html;
+        }
 
-            /* ── TRUST WIZARD ── */
-            async function showTrust(id) {
-                ST.selListing = id;
-                try {
-                    const res = await fetch(CFG.API.trustDash(id), { headers: CFG.H });
-                    const data = await res.json();
-                    g('twScore').textContent = data.trust_score || 0;
-                    g('twTitle').textContent = data.title || '—';
-                    g('twGrade').textContent = (data.trust_grade || 'ungraded').toUpperCase();
-                    g('twPts').textContent = data.emerald_ready ? '✅ Emerald Achieved!' : `${data.pts_to_emerald} pts to Emerald`;
-                    g('twUpgrade').textContent = data.upgrade_path || '—';
-                    const pillars = data.pillars || {};
-                    g('twPillars').innerHTML = Object.entries(pillars).map(([, p]) => `
+        /* ── TRUST WIZARD ── */
+        async function showTrust(id) {
+            ST.selListing = id;
+            try {
+                const res = await fetch(CFG.API.trustDash(id), { headers: CFG.H });
+                const data = await res.json();
+                g('twScore').textContent = data.trust_score || 0;
+                g('twTitle').textContent = data.title || '—';
+                g('twGrade').textContent = (data.trust_grade || 'ungraded').toUpperCase();
+                g('twPts').textContent = data.emerald_ready ? '✅ Emerald Achieved!' : `${data.pts_to_emerald} pts to Emerald`;
+                g('twUpgrade').textContent = data.upgrade_path || '—';
+                const pillars = data.pillars || {};
+                g('twPillars').innerHTML = Object.entries(pillars).map(([, p]) => `
       <div class="pillar-row">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
           <span style="font-size:11px;font-weight:700">${p.label}</span>
@@ -1419,48 +1420,48 @@
         </div>
         <div style="font-size:9px;opacity:.4;margin-top:5px">${p.action}</div>
       </div>`).join('');
-                    openModal('trustModal');
-                } catch (e) { toast('Failed to load trust data', 'error'); }
-            }
+                openModal('trustModal');
+            } catch (e) { toast('Failed to load trust data', 'error'); }
+        }
 
-            /* ── REEL ── */
-            async function showReel(id) {
-                ST.selListing = id;
-                try {
-                    const res = await fetch(CFG.API.reelOpts(id), { headers: CFG.H });
-                    const data = await res.json();
-                    g('rmTitle').textContent = data.title || '—';
-                    g('rmScore').textContent = `${data.trust_score}/100 · ${(data.trust_grade || '').toUpperCase()}`;
-                    g('rmReady').textContent = data.message || '';
-                    g('rmReady').style.color = data.ready_for_reel ? '#10B981' : '#F59E0B';
-                    openModal('reelModal');
-                } catch (e) { toast('Failed to load reel options', 'error'); }
-            }
+        /* ── REEL ── */
+        async function showReel(id) {
+            ST.selListing = id;
+            try {
+                const res = await fetch(CFG.API.reelOpts(id), { headers: CFG.H });
+                const data = await res.json();
+                g('rmTitle').textContent = data.title || '—';
+                g('rmScore').textContent = `${data.trust_score}/100 · ${(data.trust_grade || '').toUpperCase()}`;
+                g('rmReady').textContent = data.message || '';
+                g('rmReady').style.color = data.ready_for_reel ? '#10B981' : '#F59E0B';
+                openModal('reelModal');
+            } catch (e) { toast('Failed to load reel options', 'error'); }
+        }
 
-            async function handleReel(e) {
-                e.preventDefault();
-                if (!ST.selListing) return;
-                const fd = new FormData(e.target);
-                const btn = e.target.querySelector('button[type=submit]');
-                setBtn(btn, '⏳ Generating...');
-                try {
-                    const body = new FormData();
-                    body.append('music_choice', fd.get('music_choice') || 'corporate');
-                    body.append('aspect_ratio', fd.get('aspect_ratio') || 'reels');
-                    await fetch(CFG.API.reelGen(ST.selListing), { method: 'POST', headers: CFG.H, body });
-                    closeModal('reelModal');
-                    toast('🎬 Generating! WhatsApp notification incoming.', 'success');
-                    addReel();
-                } catch (e) { toast('Reel failed', 'error'); }
-                finally { setBtn(btn, '🚀 Generate Reel'); }
-            }
+        async function handleReel(e) {
+            e.preventDefault();
+            if (!ST.selListing) return;
+            const fd = new FormData(e.target);
+            const btn = e.target.querySelector('button[type=submit]');
+            setBtn(btn, '⏳ Generating...');
+            try {
+                const body = new FormData();
+                body.append('music_choice', fd.get('music_choice') || 'corporate');
+                body.append('aspect_ratio', fd.get('aspect_ratio') || 'reels');
+                await fetch(CFG.API.reelGen(ST.selListing), { method: 'POST', headers: CFG.H, body });
+                closeModal('reelModal');
+                toast('🎬 Generating! WhatsApp notification incoming.', 'success');
+                addReel();
+            } catch (e) { toast('Reel failed', 'error'); }
+            finally { setBtn(btn, '🚀 Generate Reel'); }
+        }
 
-            function addReel() {
-                const listing = ST.listings.find(l => l.id === ST.selListing);
-                if (!listing) return;
-                ST.reels.unshift({ title: listing.title, id: ST.selListing, ts: new Date() });
-                const list = g('reelList');
-                list.innerHTML = ST.reels.map(r => `
+        function addReel() {
+            const listing = ST.listings.find(l => l.id === ST.selListing);
+            if (!listing) return;
+            ST.reels.unshift({ title: listing.title, id: ST.selListing, ts: new Date() });
+            const list = g('reelList');
+            list.innerHTML = ST.reels.map(r => `
     <div class="reel-card">
       <div class="reel-thumb">🎬</div>
       <div style="flex:1;min-width:0">
@@ -1474,105 +1475,105 @@
         Share
       </button>
     </div>`).join('');
-            }
+        }
 
-            function shareReel(id) {
-                const text = `🏠 Verified Property — Check out this Est8Go listing!\nhttps://est8go-api.onrender.com/public/property/${id}\n\n✅ GPS Verified · AI Audited · Documents Checked`;
-                if (navigator.share) {
-                    navigator.share({ title: 'Est8Go Property', text, url: `https://est8go-api.onrender.com/public/property/${id}` }).catch(() => copyText(text));
-                } else { copyText(text); }
-            }
+        function shareReel(id) {
+            const text = `🏠 Verified Property — Check out this Est8Go listing!\nhttps://est8go-api.onrender.com/public/property/${id}\n\n✅ GPS Verified · AI Audited · Documents Checked`;
+            if (navigator.share) {
+                navigator.share({ title: 'Est8Go Property', text, url: `https://est8go-api.onrender.com/public/property/${id}` }).catch(() => copyText(text));
+            } else { copyText(text); }
+        }
 
-            /* ── DOCUMENT UPLOAD ── */
-            function showDoc(id) { ST.selListing = id; openModal('docModal'); }
+        /* ── DOCUMENT UPLOAD ── */
+        function showDoc(id) { ST.selListing = id; openModal('docModal'); }
 
-            async function handleDoc(e) {
-                e.preventDefault();
-                if (!ST.selListing) return;
-                const btn = e.target.querySelector('button[type=submit]');
-                setBtn(btn, 'Uploading...');
-                try {
-                    const fd = new FormData(e.target);
-                    const res = await fetch(CFG.API.uploadDoc(ST.selListing), { method: 'POST', headers: CFG.H, body: fd });
-                    const data = await res.json();
-                    closeModal('docModal');
-                    toast(`✅ ${data.document_label} — +${data.points_awarded} pts!`, 'success');
-                    loadVault();
-                } catch (e) { toast('Upload failed', 'error'); }
-                finally { setBtn(btn, 'Upload Document'); }
-            }
-
-            /* ── GPS ── */
-            function captureGPS() {
-                const btn = g('gpsBtn');
-                setBtn(btn, '📡 Locating...');
-                btn.disabled = true;
-                navigator.geolocation.getCurrentPosition(
-                    pos => {
-                        g('lat').value = pos.coords.latitude;
-                        g('lng').value = pos.coords.longitude;
-                        setBtn(btn, `✅ ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`);
-                        btn.style.background = '#059669';
-                        toast('📍 GPS captured!', 'success');
-                    },
-                    () => { setBtn(btn, '❌ GPS failed — retry'); btn.disabled = false; toast('GPS failed. Enable location.', 'error'); },
-                    { enableHighAccuracy: true, timeout: 12000 }
-                );
-            }
-
-            /* ── UPLOAD ── */
-            async function handleUpload(e) {
-                e.preventDefault();
-                if (!g('lat').value) { toast('⚠️ Capture GPS first', 'error'); return; }
+        async function handleDoc(e) {
+            e.preventDefault();
+            if (!ST.selListing) return;
+            const btn = e.target.querySelector('button[type=submit]');
+            setBtn(btn, 'Uploading...');
+            try {
                 const fd = new FormData(e.target);
-                fd.append('latitude', g('lat').value);
-                fd.append('longitude', g('lng').value);
-                const btn = e.target.querySelector('button[type=submit]');
-                setBtn(btn, 'Publishing...');
-                try {
-                    const res = await fetch(CFG.API.upload, { method: 'POST', headers: CFG.H, body: fd });
-                    const data = await res.json();
-                    closeModal('uploadModal');
-                    toast(`✅ Listed! Score: ${data.verification?.score}`, 'success');
-                    loadVault();
-                } catch (e) { toast('Upload failed. Try again.', 'error'); }
-                finally { setBtn(btn, 'Publish to Vault'); }
-            }
+                const res = await fetch(CFG.API.uploadDoc(ST.selListing), { method: 'POST', headers: CFG.H, body: fd });
+                const data = await res.json();
+                closeModal('docModal');
+                toast(`✅ ${data.document_label} — +${data.points_awarded} pts!`, 'success');
+                loadVault();
+            } catch (e) { toast('Upload failed', 'error'); }
+            finally { setBtn(btn, 'Upload Document'); }
+        }
 
-            /* ── PIPELINE ACTIONS ── */
-            async function takeover(id) {
-                try { await fetch(CFG.API.takeover(id), { method: 'POST', headers: CFG.JH }); toast('👤 You have control', 'success'); loadLeads(); }
-                catch (e) { toast('Takeover failed', 'error'); }
-            }
-            async function reactivate(id) {
-                try { await fetch(CFG.API.reactivate(id), { method: 'POST', headers: CFG.JH }); toast('🤖 Kora reactivated', 'success'); loadLeads(); }
-                catch (e) { toast('Failed', 'error'); }
-            }
-            async function sendAlert(id) {
-                try { await fetch(CFG.API.alert(id), { method: 'POST', headers: CFG.JH }); toast('🔔 Alert sent!', 'success'); }
-                catch (e) { toast('Alert failed', 'error'); }
-            }
+        /* ── GPS ── */
+        function captureGPS() {
+            const btn = g('gpsBtn');
+            setBtn(btn, '📡 Locating...');
+            btn.disabled = true;
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    g('lat').value = pos.coords.latitude;
+                    g('lng').value = pos.coords.longitude;
+                    setBtn(btn, `✅ ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`);
+                    btn.style.background = '#059669';
+                    toast('📍 GPS captured!', 'success');
+                },
+                () => { setBtn(btn, '❌ GPS failed — retry'); btn.disabled = false; toast('GPS failed. Enable location.', 'error'); },
+                { enableHighAccuracy: true, timeout: 12000 }
+            );
+        }
 
-            /* ── MARK SOLD ── */
-            function markSold(id) {
-                if (!confirm('Mark as SOLD? Stays visible for 90 days for social proof.')) return;
-                ST.listings = ST.listings.map(l => l.id === id ? { ...l, status: 'sold' } : l);
+        /* ── UPLOAD ── */
+        async function handleUpload(e) {
+            e.preventDefault();
+            if (!g('lat').value) { toast('⚠️ Capture GPS first', 'error'); return; }
+            const fd = new FormData(e.target);
+            fd.append('latitude', g('lat').value);
+            fd.append('longitude', g('lng').value);
+            const btn = e.target.querySelector('button[type=submit]');
+            setBtn(btn, 'Publishing...');
+            try {
+                const res = await fetch(CFG.API.upload, { method: 'POST', headers: CFG.H, body: fd });
+                const data = await res.json();
+                closeModal('uploadModal');
+                toast(`✅ Listed! Score: ${data.verification?.score}`, 'success');
+                loadVault();
+            } catch (e) { toast('Upload failed. Try again.', 'error'); }
+            finally { setBtn(btn, 'Publish to Vault'); }
+        }
+
+        /* ── PIPELINE ACTIONS ── */
+        async function takeover(id) {
+            try { await fetch(CFG.API.takeover(id), { method: 'POST', headers: CFG.JH }); toast('👤 You have control', 'success'); loadLeads(); }
+            catch (e) { toast('Takeover failed', 'error'); }
+        }
+        async function reactivate(id) {
+            try { await fetch(CFG.API.reactivate(id), { method: 'POST', headers: CFG.JH }); toast('🤖 Kora reactivated', 'success'); loadLeads(); }
+            catch (e) { toast('Failed', 'error'); }
+        }
+        async function sendAlert(id) {
+            try { await fetch(CFG.API.alert(id), { method: 'POST', headers: CFG.JH }); toast('🔔 Alert sent!', 'success'); }
+            catch (e) { toast('Alert failed', 'error'); }
+        }
+
+        /* ── MARK SOLD ── */
+        function markSold(id) {
+            if (!confirm('Mark as SOLD? Stays visible for 90 days for social proof.')) return;
+            ST.listings = ST.listings.map(l => l.id === id ? { ...l, status: 'sold' } : l);
+            renderVault(ST.listings);
+            toast('🏷️ Marked as SOLD', 'success');
+        }
+        async function delListing(id) {
+            if (!confirm('Permanently delete this listing?')) return;
+            try {
+                await fetch(`/listings/admin/delete/${id}`, { method: 'DELETE', headers: CFG.H });
+                ST.listings = ST.listings.filter(l => l.id !== id);
                 renderVault(ST.listings);
-                toast('🏷️ Marked as SOLD', 'success');
-            }
-            async function delListing(id) {
-                if (!confirm('Permanently delete this listing?')) return;
-                try {
-                    await fetch(`/listings/admin/delete/${id}`, { method: 'DELETE', headers: CFG.H });
-                    ST.listings = ST.listings.filter(l => l.id !== id);
-                    renderVault(ST.listings);
-                    toast('🗑️ Listing removed', 'success');
-                } catch (e) { toast('Delete failed', 'error'); }
-            }
+                toast('🗑️ Listing removed', 'success');
+            } catch (e) { toast('Delete failed', 'error'); }
+        }
 
-            /* ── NETWORK ── */
-            function renderNetwork() {
-                g('networkList').innerHTML = `
+        /* ── NETWORK ── */
+        function renderNetwork() {
+            g('networkList').innerHTML = `
     <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
       <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#1e3a8a,#1d4ed8);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;flex-shrink:0">JP</div>
       <div style="flex:1;min-width:0">
@@ -1589,78 +1590,78 @@
         </button>
       </div>
     </div>`;
-            }
+        }
 
-            function sharePartner(name) {
-                const text = `🏠 Looking for verified property in Nigeria?\nCheck out our Est8Go partner: ${name}\nhttps://est8go-api.onrender.com`;
-                if (navigator.share) { navigator.share({ title: 'Est8Go Partner', text }).catch(() => copyText(text)); }
-                else { copyText(text); }
-            }
+        function sharePartner(name) {
+            const text = `🏠 Looking for verified property in Nigeria?\nCheck out our Est8Go partner: ${name}\nhttps://est8go-api.onrender.com`;
+            if (navigator.share) { navigator.share({ title: 'Est8Go Partner', text }).catch(() => copyText(text)); }
+            else { copyText(text); }
+        }
 
-            /* ── MODALS ── */
-            function openModal(id) {
-                g(id)?.classList.add('open');
-                document.body.style.overflow = 'hidden';
-            }
-            function closeModal(id) {
-                g(id)?.classList.remove('open');
-                document.body.style.overflow = '';
-            }
-            // Backdrop tap to close
-            document.querySelectorAll('.modal-backdrop').forEach(m => {
-                m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
-            });
+        /* ── MODALS ── */
+        function openModal(id) {
+            g(id)?.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeModal(id) {
+            g(id)?.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+        // Backdrop tap to close
+        document.querySelectorAll('.modal-backdrop').forEach(m => {
+            m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
+        });
 
-            /* ── TOAST ── */
-            let toastTimer;
-            function toast(msg, type = 'success') {
-                const t = g('toast');
-                t.textContent = msg;
-                t.style.background = type === 'error' ? '#FF4060' : type === 'info' ? '#6366F1' : '#10B981';
-                t.classList.add('show');
-                clearTimeout(toastTimer);
-                toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
-            }
+        /* ── TOAST ── */
+        let toastTimer;
+        function toast(msg, type = 'success') {
+            const t = g('toast');
+            t.textContent = msg;
+            t.style.background = type === 'error' ? '#FF4060' : type === 'info' ? '#6366F1' : '#10B981';
+            t.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+        }
 
-            /* ── UTILS ── */
-            function g(id) { return document.getElementById(id); }
-            function setBtn(btn, txt) { if (btn) { btn.textContent = txt; btn.disabled = txt.includes('…') || txt.includes('ing'); } }
-            function copyText(text) {
-                if (navigator.clipboard) { navigator.clipboard.writeText(text).then(() => toast('📋 Copied!', 'success')); }
-                else { toast('Share unavailable', 'error'); }
-            }
-            function animCount(id, from, to, dur) {
-                const el = g(id); if (!el) return;
-                let start = null;
-                const step = ts => {
-                    if (!start) start = ts;
-                    const p = Math.min((ts - start) / dur, 1), v = Math.floor(p * (to - from) + from);
-                    el.textContent = v;
-                    if (p < 1) requestAnimationFrame(step);
-                };
-                requestAnimationFrame(step);
-            }
-        </script>
-        <script>
-            // Populate email from auth token
-            document.getElementById('menuEmail').textContent =
-                localStorage.getItem('user_email') || 'Unknown';
+        /* ── UTILS ── */
+        function g(id) { return document.getElementById(id); }
+        function setBtn(btn, txt) { if (btn) { btn.textContent = txt; btn.disabled = txt.includes('…') || txt.includes('ing'); } }
+        function copyText(text) {
+            if (navigator.clipboard) { navigator.clipboard.writeText(text).then(() => toast('📋 Copied!', 'success')); }
+            else { toast('Share unavailable', 'error'); }
+        }
+        function animCount(id, from, to, dur) {
+            const el = g(id); if (!el) return;
+            let start = null;
+            const step = ts => {
+                if (!start) start = ts;
+                const p = Math.min((ts - start) / dur, 1), v = Math.floor(p * (to - from) + from);
+                el.textContent = v;
+                if (p < 1) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+        }
+    </script>
+    <script>
+        // Populate email from auth token
+        document.getElementById('menuEmail').textContent =
+            localStorage.getItem('user_email') || 'Unknown';
 
-            // Toggle dropdown
-            function toggleUserMenu() {
-                const menu = document.getElementById('userMenu');
-                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-            }
+        // Toggle dropdown
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
 
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function (e) {
-                const avatar = document.getElementById('userAvatar');
-                const menu = document.getElementById('userMenu');
-                if (!avatar.contains(e.target) && !menu.contains(e.target)) {
-                    menu.style.display = 'none';
-                }
-            });
-        </script>
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (e) {
+            const avatar = document.getElementById('userAvatar');
+            const menu = document.getElementById('userMenu');
+            if (!avatar.contains(e.target) && !menu.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 
 </html>
