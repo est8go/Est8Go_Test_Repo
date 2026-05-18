@@ -774,26 +774,6 @@
         }
     </style>
 </head>
-<script>
-    // Populate email from auth token
-    document.getElementById('menuEmail').textContent =
-        localStorage.getItem('user_email') || 'Unknown';
-
-    // Toggle dropdown
-    function toggleUserMenu() {
-        const menu = document.getElementById('userMenu');
-        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-    }
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function (e) {
-        const avatar = document.getElementById('userAvatar');
-        const menu = document.getElementById('userMenu');
-        if (!avatar.contains(e.target) && !menu.contains(e.target)) {
-            menu.style.display = 'none';
-        }
-    });
-</script>
 
 <body>
 
@@ -1660,6 +1640,26 @@
                 };
                 requestAnimationFrame(step);
             }
+        </script>
+        <script>
+            // Populate email from auth token
+            document.getElementById('menuEmail').textContent =
+                localStorage.getItem('user_email') || 'Unknown';
+
+            // Toggle dropdown
+            function toggleUserMenu() {
+                const menu = document.getElementById('userMenu');
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            }
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function (e) {
+                const avatar = document.getElementById('userAvatar');
+                const menu = document.getElementById('userMenu');
+                if (!avatar.contains(e.target) && !menu.contains(e.target)) {
+                    menu.style.display = 'none';
+                }
+            });
         </script>
 </body>
 
