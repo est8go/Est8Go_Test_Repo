@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
 
-# Database & Security Imports
 from app.database.db import get_db
 from app.users.models import User
 from app.core.security import verify_password, create_access_token
@@ -11,19 +10,18 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 # ---------------------------------------------------------
-# CLEAN LOGIN ENDPOINT
+# LOGIN ENDPOINT — returns full role context for frontend routing
 # ---------------------------------------------------------
 @router.post("/login", response_model=TokenResponse)
 def login(
-    # By using 'Form' instead of the generic OAuth2 tool,
-    # we remove all the messy 'client_id' and 'scope' boxes from Swagger.
     username: str = Form(..., description="Your registered email address"),
     password: str = Form(..., description="Your secure password"),
     db: Session = Depends(get_db),
 ):
     """
-    PREMIUM LOGIN: Optimized for est8go Service Limited.
-    Only shows Email and Password fields.
+    EST8GO LOGIN: Returns token + role context for frontend redirect.
+    Superusers → Super Admin Portal
+    Regular users → Realtor Portal
     """
     # 1. Locate the User
     user = db.query(User).filter(User.email == username).first()
@@ -31,21 +29,33 @@ def login(
     # 2. Verify Credentials
     if not user or not verify_password(password, user.hashed_password):
         raise HTTPException(
-            status_code=401, detail="The credentials provided do not match our records."
+            status_code=401,
+            detail="The credentials provided do not match our records.",
         )
 
     # 3. Status Check
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Account is inactive.")
 
-    # 4. Success: Generate Secure Multi-tenant Token
+    # 4. Generate Token
     token_str = create_access_token(email=user.email, tenant_id=user.tenant_id)
 
-    return {"access_token": token_str, "token_type": "bearer"}
+    # 5. Determine Role for frontend routing
+    role = (
+        "superuser" if user.is_superuser else ("admin" if user.is_admin else "realtor")
+    )
+
+    return {
+        "access_token": token_str,
+        "token_type": "bearer",
+        "role": role,
+        "is_superuser": user.is_superuser,
+        "tenant_id": user.tenant_id,
+    }
 
 
 # ---------------------------------------------------------
-# MINIMAL STATUS CHECK
+# STATUS CHECK
 # ---------------------------------------------------------
 @router.get("/me")
 def get_me():

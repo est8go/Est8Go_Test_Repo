@@ -3,6 +3,29 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database.base import Base
 
+# ================================================================
+# TENANT TYPES — what kind of business is this tenant?
+# ================================================================
+#
+#   agency      → Traditional real estate company e.g. TrustHomes Ltd
+#   freelance   → Independent realtor operating as a micro-business
+#   developer   → Property developer managing multiple projects
+#   investor    → Active investor managing listings, leads, or teams
+#
+VALID_TENANT_TYPES = ("agency", "freelance", "developer", "investor")
+
+# ================================================================
+# TENANT-LEVEL ROLES — roles that exist inside any tenant
+# ================================================================
+#
+#   admin       → Company owner / tenant manager. Full control of their tenant.
+#   realtor     → Licensed agent managing listings and conversations.
+#   staff       → Office/admin support staff.
+#   support     → Customer-facing support representative.
+#   marketing   → Marketing team member.
+#
+VALID_TENANT_ROLES = ("admin", "realtor", "staff", "support", "marketing")
+
 
 class Tenant(Base):
     __tablename__ = "tenants"
@@ -12,6 +35,12 @@ class Tenant(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
     business_name = Column(String(255), nullable=True)
+
+    # What kind of business is this tenant?
+    # Enforced at DB level via CHECK constraint — see migration SQL.
+    tenant_type = Column(String(50), nullable=False, default="agency")
+
+    # Subscription plan: pilot | starter | growth | enterprise
     plan = Column(String(50), default="pilot")
     is_active = Column(Boolean, default=True)
 
@@ -21,7 +50,7 @@ class Tenant(Base):
     areas_covered = Column(String(500), default="Abuja")
 
     # --- DIRECT CHANNEL IDs (single channel per platform) ---
-    # For multiple numbers use TenantChannel table instead
+    # For multiple numbers per tenant use TenantChannel table instead
     whatsapp_phone_number_id = Column(String(100), unique=True, nullable=True)
     facebook_page_id = Column(String(100), unique=True, nullable=True)
     instagram_account_id = Column(String(100), unique=True, nullable=True)
@@ -47,6 +76,23 @@ class Tenant(Base):
         "Message", back_populates="tenant", cascade="all, delete-orphan"
     )
 
+    # ── HELPER PROPERTIES ────────────────────────────────────────
+
+    @property
+    def is_solo(self) -> bool:
+        """True for freelance realtors operating as solo micro-businesses."""
+        return self.tenant_type == "freelance"
+
+    @property
+    def display_type(self) -> str:
+        """Human-readable tenant type for UI display."""
+        return {
+            "agency": "Real Estate Agency",
+            "freelance": "Independent Realtor",
+            "developer": "Property Developer",
+            "investor": "Investor Group",
+        }.get(self.tenant_type, "Unknown")
+
 
 class TenantChannel(Base):
     """
@@ -68,10 +114,8 @@ class TenantChannel(Base):
         nullable=False,
         index=True,
     )
-    platform = Column(String(20), nullable=False)  # whatsapp, instagram, facebook
-    platform_id = Column(
-        String(100), nullable=False, unique=True
-    )  # the actual ID from Meta
+    platform = Column(String(20), nullable=False)  # whatsapp | instagram | facebook
+    platform_id = Column(String(100), nullable=False, unique=True)  # Meta platform ID
     label = Column(String(100), nullable=True)  # e.g. "Sales Line", "Rentals Line"
     is_active = Column(Boolean, default=True)
 

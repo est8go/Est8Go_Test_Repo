@@ -9,3 +9,6 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
+    role: str
+    is_superuser: bool
+    tenant_id: int
