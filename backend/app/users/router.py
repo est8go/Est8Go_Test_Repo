@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from app.database.db import get_db
-from app.users.models import User, VALID_ROLES, TENANT_ROLES
+from app.users.models import User, TENANT_ROLES
 from app.core.security import hash_password
 from app.auth.deps import get_current_user, require_tenant_admin, require_superuser
 
@@ -22,6 +22,13 @@ class CreateUserRequest(BaseModel):
     role: str = "realtor"
     first_name: str | None = None
     phone_number: str | None = None
+
+
+class CreatePlatformUserRequest(BaseModel):
+    email: EmailStr
+    password: str
+    role: str = "super_staff"
+    first_name: str | None = None
 
 
 class UserResponse(BaseModel):
@@ -51,21 +58,15 @@ def create_user(
     """
     Create a new user inside the current tenant.
     Only tenant admins and platform staff can do this.
-    Platform staff can specify any tenant_id.
-    Tenant admins can only create users in their own tenant.
     """
-    # Validate role
     if payload.role not in TENANT_ROLES:
         raise HTTPException(
             status_code=400,
             detail=f"Invalid role '{payload.role}'. Must be one of: {', '.join(TENANT_ROLES)}",
         )
 
-    # Tenant admins can only create users in their own tenant
-    tenant_id = current_user.tenant_id
-
     user = User(
-        tenant_id=tenant_id,
+        tenant_id=current_user.tenant_id,
         email=payload.email,
         hashed_password=hash_password(payload.password),
         role=payload.role,
@@ -93,13 +94,6 @@ def create_user(
 # ================================================================
 
 
-class CreatePlatformUserRequest(BaseModel):
-    email: EmailStr
-    password: str
-    role: str = "super_staff"
-    first_name: str | None = None
-
-
 @router.post("/platform", response_model=UserResponse)
 def create_platform_user(
     payload: CreatePlatformUserRequest,
@@ -117,13 +111,13 @@ def create_platform_user(
         )
 
     user = User(
-        tenant_id=None,  # platform users have no tenant
+        tenant_id=None,
         email=payload.email,
         hashed_password=hash_password(payload.password),
         role=payload.role,
         first_name=payload.first_name,
         is_active=True,
-        is_platform_user=True,  # marks this as Est8Go staff
+        is_platform_user=True,
     )
 
     db.add(user)
@@ -140,7 +134,7 @@ def create_platform_user(
 
 
 # ================================================================
-# LIST USERS (within a tenant)
+# LIST USERS
 # ================================================================
 
 
@@ -155,12 +149,10 @@ def list_users(
     """
     query = db.query(User)
 
-    # Tenant admins only see their own tenant's users
     if not current_user.is_platform_user:
         query = query.filter(User.tenant_id == current_user.tenant_id)
 
-    users = query.order_by(User.id.asc()).all()
-    return users
+    return query.order_by(User.id.asc()).all()
 
 
 # ================================================================
@@ -169,15 +161,13 @@ def list_users(
 
 
 @router.get("/me", response_model=UserResponse)
-def get_me(
-    current_user: User = Depends(get_current_user),
-):
+def get_me(current_user: User = Depends(get_current_user)):
     """Returns the currently authenticated user's profile."""
     return current_user
 
 
 # ================================================================
-# DEACTIVATE USER (admin only, within their tenant)
+# DEACTIVATE USER
 # ================================================================
 
 
@@ -193,11 +183,9 @@ def deactivate_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
 
-    # Tenant admins can only deactivate users in their own tenant
     if not current_user.is_platform_user and user.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=403, detail="Access denied.")
 
-    # Nobody can deactivate a superuser
     if user.effective_role == "superuser":
         raise HTTPException(
             status_code=403, detail="Cannot deactivate the superuser account."
