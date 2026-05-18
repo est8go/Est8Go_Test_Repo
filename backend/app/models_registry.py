@@ -8,6 +8,7 @@ from app.users.models import User
 from app.listings.models import Listing
 from app.conversations.models import Conversation, ConversationMessage
 from app.messages.models import Message
+from app.database.audit import AuditLog  # EST8GO AUDIT TRAIL
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +19,7 @@ def register_all_models():
     Explicitly registers all models to resolve cross-folder relationships.
     """
     try:
-        # 🛡️ THE SILENCER: Touching each class to satisfy Pylance/Ruff.
-        # This tells the IDE the imports are necessary.
+        # Touching each class satisfies Pylance/Ruff and ensures registration
         _models = [
             Tenant,
             CompanyProfile,
@@ -28,10 +28,10 @@ def register_all_models():
             Conversation,
             ConversationMessage,
             Message,
+            AuditLog,
         ]
 
-        # 🔥 THE HANDSHAKE
-        # Force SQLAlchemy to link "Tenant" and "CompanyProfile" strings to these classes.
+        # Force SQLAlchemy to link all string references to their classes
         configure_mappers()
 
         logger.info(
@@ -41,5 +41,4 @@ def register_all_models():
 
     except Exception as e:
         logger.error(f"❌ DATABASE HANDSHAKE FAILED: {e}", exc_info=True)
-        # Fail-Fast: Don't allow a broken app to start
         raise RuntimeError(f"Model registration failed: {e}") from e
