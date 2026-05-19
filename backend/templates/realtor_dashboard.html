@@ -786,7 +786,7 @@
             <div style="min-width:0;flex:1">
                 <div class="biz-name">
                     <span class="live-dot"></span>
-                    <span id="bizName">Bravieshomz Ltd.</span>
+                    <span id="bizName">Loading...</span>
                 </div>
                 <p class="text-xs opacity-50 mt-0.5" style="white-space:nowrap">Revenue Command OS</p>
             </div>
@@ -1165,9 +1165,10 @@
     <script>
         /* ── CONFIG ── */
         const CFG = {
-            get TID() { return new URLSearchParams(location.search).get('tenant_id') || '1'; },
+            _tid: null, // Set after /users/me resolves — never from URL
+            get TID() { return CFG._tid; },
             get TOKEN() { return localStorage.getItem('access_token') || ''; },
-            get H() { return { 'X-Tenant-Id': this.TID, 'Authorization': `Bearer ${this.TOKEN}` }; },
+            get H() { return { 'X-Tenant-Id': String(this.TID), 'Authorization': `Bearer ${this.TOKEN}` }; },
             get JH() { return { ...this.H, 'Content-Type': 'application/json' }; },
             API: {
                 pipeline: '/pipeline/active',
@@ -1193,22 +1194,62 @@
         };
 
         /* ── INIT ── */
-        window.addEventListener('DOMContentLoaded', () => {
-            // Default user data (update when auth is wired)
-            if (!localStorage.getItem('user_name')) localStorage.setItem('user_name', 'Bravieshomz Admin');
-            if (!localStorage.getItem('biz_name')) localStorage.setItem('biz_name', 'Bravieshomz Ltd');
-            loadUser();
+        window.addEventListener('DOMContentLoaded', async () => {
+            const ok = await resolveCurrentUser();
+            if (!ok) return; // redirected to login
             switchTab('hotline');
             renderNetwork();
             ST.timer = setInterval(() => { if (ST.tab === 'hotline') loadLeads(); }, CFG.REFRESH);
         });
 
+        /* ── RESOLVE USER FROM SERVER (never trust localStorage for identity) ── */
+        async function resolveCurrentUser() {
+            const token = localStorage.getItem('access_token');
+            if (!token) { window.location.replace('/public/login'); return false; }
+
+            try {
+                // Step 1: get authenticated user + tenant_id from server
+                const res = await fetch('/users/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) {
+                    localStorage.clear();
+                    window.location.replace('/public/login');
+                    return false;
+                }
+                const user = await res.json();
+
+                // Step 2: set tenant_id from server — never from URL or localStorage
+                CFG._tid = user.tenant_id;
+
+                // Step 3: render user identity
+                loadUser(user.first_name || user.email.split('@')[0]);
+                const menuEmailEl = g('menuEmail');
+                if (menuEmailEl) menuEmailEl.textContent = user.email || '';
+
+                // Step 4: fetch company profile to get real business name
+                try {
+                    const pr = await fetch('/tenants/me/profile', { headers: CFG.H });
+                    if (pr.ok) {
+                        const profile = await pr.json();
+                        const bizEl = g('bizName');
+                        if (bizEl) bizEl.textContent = profile.company_name || user.email.split('@')[0];
+                    }
+                } catch (_) { /* non-fatal — bizName stays as user name */ }
+
+                return true;
+            } catch (e) {
+                console.error('Auth resolution failed:', e);
+                localStorage.clear();
+                window.location.replace('/public/login');
+                return false;
+            }
+        }
+
         /* ── AVATAR ── */
-        function loadUser() {
-            const name = localStorage.getItem('user_name') || 'Realtor';
-            const biz = localStorage.getItem('biz_name') || 'Bravieshomz Ltd.';
+        function loadUser(name) {
+            name = name || 'Realtor';
             const photo = localStorage.getItem('user_photo');
-            g('bizName').textContent = biz;
             const av = g('userAvatar');
             if (photo) {
                 av.innerHTML = `<img src="${photo}" style="width:100%;height:100%;object-fit:cover"/>`;
@@ -1643,9 +1684,9 @@
         }
     </script>
     <script>
-        // Populate email from auth token
-        document.getElementById('menuEmail').textContent =
-            localStorage.getItem('user_email') || 'Unknown';
+        // Populate email from server — resolved in resolveCurrentUser()
+        // menuEmail is populated after /users/me resolves; set a placeholder for now
+        document.getElementById('menuEmail').textContent = '';
 
         // Toggle dropdown
         function toggleUserMenu() {
