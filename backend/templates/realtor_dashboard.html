@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <script src="/static/js/auth_guard.js"></script>
+    <script src="/static/js/auth_guard.js"></script> <!-- ADD THIS LINE -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#030617" />
@@ -790,12 +790,40 @@
                 </div>
                 <p class="text-xs opacity-50 mt-0.5" style="white-space:nowrap">Revenue Command OS</p>
             </div>
-            <!-- User avatar -->
-            <div id="userAvatar" style="width:42px;height:42px;border-radius:13px;border:2px solid var(--em-glow);
-             display:flex;align-items:center;justify-content:center;
-             font-family:'Syne',sans-serif;font-weight:800;font-size:15px;
-             flex-shrink:0;background:#162860;overflow:hidden">
+        </div>
+        <!-- User avatar + logout -->
+
+
+        <div style="position:relative;flex-shrink:0">
+            <div id="userAvatar" onclick="toggleUserMenu()" style="width:42px;height:42px;border-radius:13px;border:2px solid var(--em-glow);
+     display:flex;align-items:center;justify-content:center;
+     font-family:'Syne',sans-serif;font-weight:800;font-size:15px;
+     flex-shrink:0;background:#162860;overflow:hidden;cursor:pointer">
                 BA
+            </div>
+            <!-- Dropdown -->
+            <div id="userMenu" style="display:none;position:absolute;right:0;top:52px;
+         background:#0E1B40;border:1px solid rgba(255,255,255,0.08);
+         border-radius:14px;padding:8px;min-width:180px;z-index:999;
+         box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+                <div style="padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:6px">
+                    <div style="font-size:10px;font-weight:700;letter-spacing:0.15em;
+                 text-transform:uppercase;color:rgba(255,255,255,0.35)">Signed in as</div>
+                    <div id="menuEmail" style="font-size:12px;color:white;margin-top:2px;
+                 overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+                </div>
+                <button onclick="Auth.logout()" style="width:100%;text-align:left;background:none;
+                border:none;padding:10px 12px;border-radius:10px;cursor:pointer;
+                font-size:13px;color:#FF6080;font-family:'Inter',sans-serif;
+                display:flex;align-items:center;gap:8px;transition:background 0.15s"
+                    onmouseover="this.style.background='rgba(255,64,96,0.08)'"
+                    onmouseout="this.style.background='none'">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                    </svg>
+                    Sign Out
+                </button>
             </div>
         </div>
 
@@ -852,7 +880,8 @@
                 <div style="font-size:34px;margin-bottom:10px">🎬</div>
                 <h3 style="font-size:18px;margin-bottom:6px">One-Click Reels</h3>
                 <p class="text-xs opacity-60" style="line-height:1.6;margin-bottom:16px">
-                    Turn verified property photos into professional Instagram Reels with trending music and trust badge
+                    Turn verified property photos into professional Instagram Reels with trending music and trust
+                    badge
                     overlay.
                 </p>
                 <button class="btn btn-em btn-sm" onclick="switchTab('vault')">Select Property →</button>
@@ -938,7 +967,8 @@
                         <button type="button" class="btn btn-em btn-sm" id="gpsBtn" onclick="captureGPS()">
                             📍 Capture Site GPS
                         </button>
-                        <p style="font-size:10px;opacity:.5;margin-top:8px">You must be physically on the property</p>
+                        <p style="font-size:10px;opacity:.5;margin-top:8px">You must be physically on the property
+                        </p>
                         <input type="hidden" id="lat">
                         <input type="hidden" id="lng">
                     </div>
@@ -993,7 +1023,8 @@
                     <div style="flex:1;min-width:0">
                         <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
                             id="twTitle">—</div>
-                        <div style="font-size:10px;color:var(--em);font-weight:700;margin-top:2px" id="twGrade">UNGRADED
+                        <div style="font-size:10px;color:var(--em);font-weight:700;margin-top:2px" id="twGrade">
+                            UNGRADED
                         </div>
                         <div style="font-size:10px;opacity:.5;margin-top:3px" id="twPts">— pts to Emerald</div>
                     </div>
@@ -1067,7 +1098,8 @@
                         <option value="facebook">📺 Facebook / YouTube (16:9)</option>
                     </select>
                     <button type="submit" class="btn btn-em btn-lg">🚀 Generate Reel</button>
-                    <p style="text-align:center;font-size:10px;opacity:.4;margin-top:10px">WhatsApp notification when
+                    <p style="text-align:center;font-size:10px;opacity:.4;margin-top:10px">WhatsApp notification
+                        when
                         ready · ~30 seconds</p>
                 </form>
             </div>
@@ -1133,12 +1165,9 @@
     <script>
         /* ── CONFIG ── */
         const CFG = {
-            _tid: null, get TID() { return CFG._tid ? String(CFG._tid) : null; },
+            get TID() { return new URLSearchParams(location.search).get('tenant_id') || '1'; },
             get TOKEN() { return localStorage.getItem('access_token') || ''; },
-            get H() {
-                if (!this.TID) return { 'Authorization': `Bearer ${this.TOKEN}`, 'Content-Type': 'application/json' };
-                return { 'X-Tenant-Id': this.TID, 'Authorization': `Bearer ${this.TOKEN}`, 'Content-Type': 'application/json' };
-            },
+            get H() { return { 'X-Tenant-Id': this.TID, 'Authorization': `Bearer ${this.TOKEN}` }; },
             get JH() { return { ...this.H, 'Content-Type': 'application/json' }; },
             API: {
                 pipeline: '/pipeline/active',
@@ -1164,44 +1193,7 @@
         };
 
         /* ── INIT ── */
-
-        // ── TENANT RESOLVER (EST8GO SECURITY v3.1) ──────────────
-        async function resolveTenantFromServer() {
-            const token = localStorage.getItem('access_token');
-            if (!token) { window.location.replace('/public/login'); return false; }
-            try {
-                const res = await fetch('/users/me', {
-                    headers: {
-                        'Authorization': 'Bearer ' + token,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                if (res.status === 401) {
-                    localStorage.clear();
-                    window.location.replace('/public/login');
-                    return false;
-                }
-                if (!res.ok) { console.error('[Est8Go] /users/me failed:', res.status); return false; }
-                const user = await res.json();
-                CFG._tid = user.tenant_id;
-                const avatarEl = document.getElementById('userAvatar');
-                const menuEmail = document.getElementById('menuEmail');
-                if (avatarEl) avatarEl.textContent = (user.first_name || user.email || 'U').slice(0, 2).toUpperCase();
-                if (menuEmail) menuEmail.textContent = user.email || '';
-                console.log('[Est8Go] Tenant resolved:', CFG._tid, 'Role:', user.role);
-                return true;
-            } catch (e) {
-                console.error('[Est8Go] Tenant resolution error:', e);
-                return false;
-            }
-        }
-        // ────────────────────────────────────────────────────────
-
-        window.addEventListener('DOMContentLoaded', async () => {
-            // SECURITY: Always resolve tenant from server first
-            const ok = await resolveTenantFromServer();
-            if (!ok) return;
-
+        window.addEventListener('DOMContentLoaded', () => {
             // Default user data (update when auth is wired)
             if (!localStorage.getItem('user_name')) localStorage.setItem('user_name', 'Bravieshomz Admin');
             if (!localStorage.getItem('biz_name')) localStorage.setItem('biz_name', 'Bravieshomz Ltd');
@@ -1649,6 +1641,26 @@
             };
             requestAnimationFrame(step);
         }
+    </script>
+    <script>
+        // Populate email from auth token
+        document.getElementById('menuEmail').textContent =
+            localStorage.getItem('user_email') || 'Unknown';
+
+        // Toggle dropdown
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (e) {
+            const avatar = document.getElementById('userAvatar');
+            const menu = document.getElementById('userMenu');
+            if (!avatar.contains(e.target) && !menu.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
     </script>
 </body>
 
