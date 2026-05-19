@@ -45,20 +45,30 @@ def get_current_user(
     token: str = Depends(oauth2_scheme),
 ) -> User:
     """
-    EST8GO Auth Guard v3.1 — Definitive tenant isolation.
+    EST8GO Auth Guard v4.0 — Iron-clad tenant isolation.
 
-    Flow:
-      1. Decode JWT
-      2. Fetch user from DB
-      3. Check is_active
-      4. IF platform user → bypass tenant check, enforce IP binding
-      5. IF tenant user  → enforce X-Tenant-Id matches their tenant
+    Three-layer verification for tenant users:
+      Layer 1 — JWT token:    tenant_id embedded at login time (server-signed)
+      Layer 2 — Database:     user record must be active and own that tenant_id
+      Layer 3 — Header:       X-Tenant-Id must match layers 1 & 2 (all endpoints
+                               except /users/me which resolves identity for the client)
+
+    /users/me exemption is NOT a security bypass — the token itself is the
+    credential. The JWT tenant_id is verified against the database record.
+    The header is a client-side confirmation that is enforced on every
+    subsequent call once the client has received their tenant_id.
+
+    Platform users (superuser, super_staff):
+      - No tenant_id — cross-tenant access by design
+      - IP binding enforced on every request
+      - Re-auth tokens required for destructive actions
     """
 
-    # ── 1. DECODE TOKEN ──────────────────────────────
+    # ── 1. DECODE TOKEN ──────────────────────────────────────────
     try:
         payload = decode_token(token)
         email: str = payload.get("sub")
+        token_tenant_id: Optional[int] = payload.get("tenant_id")
         if not email:
             raise HTTPException(status_code=401, detail="Invalid token.")
     except JWTError:
@@ -67,51 +77,61 @@ def get_current_user(
             detail="Session expired. Please log in again.",
         )
 
-    # ── 2. FETCH USER FROM DATABASE ──────────────────
-    # Always fetch from DB — never trust token claims alone
+    # ── 2. FETCH AND VALIDATE USER FROM DATABASE ─────────────────
+    # Never trust token claims alone — always verify against DB
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=401, detail="Account not found.")
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account has been deactivated.")
 
-    # ── 3. PLATFORM USERS — bypass tenant check ──────
-    # Superuser and super_staff have is_platform_user = True
-    # They have no tenant_id and need no X-Tenant-Id header
+    # ── 3. PLATFORM USERS — elevated access with IP binding ──────
     if user.is_platform_user or user.effective_role in PLATFORM_ROLES:
-        # Enforce IP binding for platform accounts
         ip = get_client_ip(request)
         if not verify_ip_binding(payload, ip):
             raise HTTPException(
                 status_code=401,
                 detail="Security violation: IP mismatch. Please log in again.",
             )
-        return user  # ✅ Platform user — full access granted
+        return user  # ✅ Platform user — IP-bound access granted
 
-    # ── 4. TENANT USERS — strict isolation ───────────
-    # Step 4a: Header must exist
-    header_tenant = request.headers.get("x-tenant-id")
-    if not header_tenant:
-        raise HTTPException(
-            status_code=400,
-            detail="Missing X-Tenant-Id header.",
-        )
+    # ── 4. TENANT USERS — three-layer isolation ──────────────────
 
-    # Step 4b: Header must be a valid integer
-    try:
-        header_tenant_int = int(header_tenant)
-    except ValueError:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid X-Tenant-Id header — must be an integer.",
-        )
-
-    # Step 4c: Header must match user's own tenant — no exceptions
-    if header_tenant_int != user.tenant_id:
+    # Layer 1 + 2: Cross-check JWT tenant_id against DB record.
+    # If these differ, the token was tampered with or the account
+    # was reassigned — reject hard regardless of endpoint.
+    if token_tenant_id is None or token_tenant_id != user.tenant_id:
         raise HTTPException(
             status_code=403,
-            detail="Access denied: you can only access your own tenant data.",
+            detail="Token/account tenant mismatch. Please log in again.",
         )
+
+    # Layer 3: X-Tenant-Id header confirmation.
+    # /users/me is the ONE endpoint exempt from this layer — its sole
+    # purpose is to return the tenant_id to the client so they can
+    # send it on all subsequent requests. Layers 1+2 already verified
+    # identity above, so this is not a bypass.
+    is_identity_endpoint = request.url.path.rstrip("/") in ("/users/me",)
+    if not is_identity_endpoint:
+        header_tenant = request.headers.get("x-tenant-id", "").strip()
+        if not header_tenant:
+            raise HTTPException(
+                status_code=400,
+                detail="Missing X-Tenant-Id header.",
+            )
+        try:
+            header_tenant_int = int(header_tenant)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid X-Tenant-Id header — must be an integer.",
+            )
+        # All three layers must agree: token == DB == header
+        if header_tenant_int != user.tenant_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Tenant ID mismatch. Access denied.",
+            )
 
     return user  # ✅ Tenant user — isolated access granted
 
