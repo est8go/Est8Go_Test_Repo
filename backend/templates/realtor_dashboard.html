@@ -1,58 +1,3 @@
-// ── RESOLVE TENANT FROM SERVER ──────────────────────────
-// Called on page load. Sets CFG._tenantId from /users/me
-// so ALL subsequent API calls use the correct tenant.
-async function resolveTenantFromServer() {
-const token = localStorage.getItem('access_token');
-if (!token) { window.location.replace('/public/login'); return false; }
-
-try {
-const res = await fetch('/users/me', {
-headers: {
-'Authorization': 'Bearer ' + token,
-'Content-Type': 'application/json',
-}
-});
-
-if (res.status === 401) {
-localStorage.clear();
-window.location.replace('/public/login');
-return false;
-}
-
-if (!res.ok) {
-console.error('Failed to resolve user:', res.status);
-return false;
-}
-
-const user = await res.json();
-
-// Set tenant from SERVER — never from URL
-CFG._tenantId = user.tenant_id;
-
-// Populate user info in UI
-const emailEl = document.getElementById('userEmail');
-const nameEl = document.getElementById('userName');
-const roleEl = document.getElementById('userRole');
-if (emailEl) emailEl.textContent = user.email || '';
-if (nameEl) nameEl.textContent = user.first_name || user.email.split('@')[0];
-if (roleEl) roleEl.textContent = user.role || '';
-
-// Set avatar initials
-const avatarEl = document.getElementById('userAvatar');
-if (avatarEl) {
-const name = user.first_name || user.email || 'U';
-avatarEl.textContent = name.slice(0,2).toUpperCase();
-}
-
-console.log('Tenant resolved:', CFG._tenantId);
-return true;
-
-} catch(e) {
-console.error('Tenant resolution failed:', e);
-return false;
-}
-}
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -1188,28 +1133,21 @@ return false;
     <script>
         /* ── CONFIG ── */
         const CFG = {
-            get TID() { return new URLSearchParams(location.search).get('tenant_id') || '1'; },
+            _tid: null, get TID() { return CFG._tid ? String(CFG._tid) : null; },
             get TOKEN() { return localStorage.getItem('access_token') || ''; },
             get H() {
-                if (!this.TID) {
-                    console.warn('Tenant not resolved yet');
-                    return { 'Authorization': 'Bearer ' + this.TOKEN, 'Content-Type': 'application/json' };
-                }
-                return {
-                    'X-Tenant-Id': this.TID,
-                    'Authorization': 'Bearer ' + this.TOKEN,
-                    'Content-Type': 'application/json'
-                };
+                if (!this.TID) return { 'Authorization': `Bearer ${this.TOKEN}`, 'Content-Type': 'application/json' };
+                return { 'X-Tenant-Id': this.TID, 'Authorization': `Bearer ${this.TOKEN}`, 'Content-Type': 'application/json' };
             },
             get JH() { return { ...this.H, 'Content-Type': 'application/json' }; },
             API: {
                 pipeline: '/pipeline/active',
                 stats: '/pipeline/summary/stats',
-                takeover: id => `/ pipeline / takeover / ${id}`,
-                reactivate: id => `/ pipeline / reactivate / ${id} `,
-                alert: id => `/ pipeline / alert / ${id} `,
+                takeover: id => `/pipeline/takeover/${id}`,
+                reactivate: id => `/pipeline/reactivate/${id}`,
+                alert: id => `/pipeline/alert/${id}`,
                 listings: '/listings/',
-                trustDash: id => `/ listings / ${id}/trust-dashboard`,
+                trustDash: id => `/listings/${id}/trust-dashboard`,
                 uploadDoc: id => `/listings/${id}/upload-document`,
                 reelOpts: id => `/reels/options/${id}`,
                 reelGen: id => `/reels/generate/${id}`,
@@ -1226,7 +1164,44 @@ return false;
         };
 
         /* ── INIT ── */
-        window.addEventListener('DOMContentLoaded', () => {
+
+        // ── TENANT RESOLVER (EST8GO SECURITY v3.1) ──────────────
+        async function resolveTenantFromServer() {
+            const token = localStorage.getItem('access_token');
+            if (!token) { window.location.replace('/public/login'); return false; }
+            try {
+                const res = await fetch('/users/me', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (res.status === 401) {
+                    localStorage.clear();
+                    window.location.replace('/public/login');
+                    return false;
+                }
+                if (!res.ok) { console.error('[Est8Go] /users/me failed:', res.status); return false; }
+                const user = await res.json();
+                CFG._tid = user.tenant_id;
+                const avatarEl = document.getElementById('userAvatar');
+                const menuEmail = document.getElementById('menuEmail');
+                if (avatarEl) avatarEl.textContent = (user.first_name || user.email || 'U').slice(0, 2).toUpperCase();
+                if (menuEmail) menuEmail.textContent = user.email || '';
+                console.log('[Est8Go] Tenant resolved:', CFG._tid, 'Role:', user.role);
+                return true;
+            } catch (e) {
+                console.error('[Est8Go] Tenant resolution error:', e);
+                return false;
+            }
+        }
+        // ────────────────────────────────────────────────────────
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            // SECURITY: Always resolve tenant from server first
+            const ok = await resolveTenantFromServer();
+            if (!ok) return;
+
             // Default user data (update when auth is wired)
             if (!localStorage.getItem('user_name')) localStorage.setItem('user_name', 'Bravieshomz Admin');
             if (!localStorage.getItem('biz_name')) localStorage.setItem('biz_name', 'Bravieshomz Ltd');
