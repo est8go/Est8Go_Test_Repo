@@ -1,22 +1,27 @@
-# ================================================================
-# EST8GO — MAIN APPLICATION ENTRY POINT
-# ================================================================
+"""
+EST8GO SERVICE LIMITED
+=======================
+The Global Multi-Tenant Infrastructure for Real Estate Trust.
+Version: 3.0.0 — Fort Knox Security Edition
+"""
 
-# 1. Load environment variables FIRST — before anything else
+# ── 1. ENV FIRST — always before any app imports ──────────────
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# 2. Register all models BEFORE routers are imported
+# ── 2. REGISTER ALL MODELS ────────────────────────────────────
 from app.models_registry import register_all_models  # noqa: E402
 
 register_all_models()
 
-# 3. FastAPI core
-from fastapi import FastAPI  # noqa: E402
+# ── 3. FASTAPI CORE ───────────────────────────────────────────
+from fastapi import FastAPI, Request  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
+from fastapi.responses import JSONResponse  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
-# 4. Import all routers (one place, no duplicates)
+# ── 4. ALL ROUTERS ────────────────────────────────────────────
 from app.auth.router import router as auth_router  # noqa: E402
 from app.users.router import router as users_router  # noqa: E402
 from app.tenants.router import router as tenants_router  # noqa: E402
@@ -30,17 +35,48 @@ from app.services.reel_router import router as reel_router  # noqa: E402
 from app.public.router import router as public_router  # noqa: E402
 from app.admin.router import router as admin_router  # noqa: E402
 
-# 5. Initialize the platform
+# ── 5. SECURITY MIDDLEWARE ────────────────────────────────────
+from app.auth.deps import audit_platform_actions  # noqa: E402
+
+# ── 6. INITIALISE APP ─────────────────────────────────────────
 app = FastAPI(
     title="Est8Go Service Limited",
-    description="The Global Multi-tenant Infrastructure for Real Estate Trust.",
-    version="2.0.0",
+    description="The Global Multi-Tenant Infrastructure for Real Estate Trust.",
+    version="3.0.0",
 )
 
-# 6. Mount static files
+# ── 7. CORS ───────────────────────────────────────────────────
+# Tighten allowed_origins before going to production
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ── 8. AUTO-AUDIT MIDDLEWARE ──────────────────────────────────
+# Automatically logs every mutating API call by platform users
+app.middleware("http")(audit_platform_actions)
+
+
+# ── 9. GLOBAL EXCEPTION HANDLER ──────────────────────────────
+# Never leak stack traces to the client
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    import logging
+
+    logging.getLogger("est8go").error(f"Unhandled error: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal error occurred. Our team has been notified."},
+    )
+
+
+# ── 10. STATIC FILES ──────────────────────────────────────────
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# 7. Include all routers
+# ── 11. INCLUDE ALL ROUTERS ───────────────────────────────────
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(tenants_router)
@@ -55,13 +91,12 @@ app.include_router(public_router)
 app.include_router(admin_router)
 
 
-# 8. Health check
+# ── 12. HEALTH CHECK ──────────────────────────────────────────
 @app.api_route("/", methods=["GET", "HEAD"])
 def root():
-    """Health check for Est8Go Service Limited."""
     return {
-        "message": "Est8Go Service Limited API is Live",
-        "status": "Healthy",
-        "version": "2.0.0",
-        "docs": "/docs",
+        "platform": "Est8Go Service Limited",
+        "status": "Operational",
+        "version": "3.0.0",
+        "security": "Fort Knox Edition",
     }
