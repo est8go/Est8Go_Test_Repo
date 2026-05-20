@@ -39,6 +39,7 @@ class UserResponse(BaseModel):
     tenant_id: int | None
     is_active: bool
     is_platform_user: bool
+    tenant_type: str | None = None  # agency | freelance | developer | investor
 
     class Config:
         from_attributes = True
