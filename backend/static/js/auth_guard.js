@@ -8,6 +8,19 @@
  *   <html lang="en" data-require-superuser="true">
  */
 
+/**
+ * EST8GO AUTH GUARD v3.0
+ * ========================
+ * Drop this <script> tag at the TOP of any protected page:
+ *   <script src="/static/js/auth_guard.js"></script>
+ *
+ * For superuser-only pages, add data-require-superuser="true" to <html>:
+ *   <html lang="en" data-require-superuser="true">
+ *
+ * Tenant dashboard: /public/business
+ * Admin dashboard:  /public/super-admin-portal
+ */
+
 (function () {
   const token = localStorage.getItem("access_token");
   const role = localStorage.getItem("user_role");
@@ -21,9 +34,9 @@
     return;
   }
 
-  // Superuser-only page but user isn't superuser → kick to realtor portal
+  // Superuser-only page but user isn't superuser → send to business dashboard
   if (requiresSuperuser && !isSuperuser) {
-    window.location.replace("/public/realtor-portal");
+    window.location.replace("/public/business");
     return;
   }
 
@@ -58,10 +71,7 @@
 
     /** Clear session and redirect to login */
     logout() {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("user_role");
-      localStorage.removeItem("tenant_id");
-      localStorage.removeItem("user_email");
+      localStorage.clear();
       window.location.replace("/public/login");
     },
   };
