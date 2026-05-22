@@ -344,8 +344,9 @@
     }
 
     .im-card.ind {
-      background: rgba(67,56,202,0.18);
-      border-color: rgba(79,70,229,0.35);
+      background: rgba(67,56,202,0.22);
+      border-color: rgba(99,102,241,0.45);
+      box-shadow: 0 0 0 1px rgba(99,102,241,0.12) inset;
     }
 
     .im-label {
@@ -375,7 +376,7 @@
     }
 
     .im-val.ind {
-      color: var(--indigo);
+      color: #818CF8;
     }
 
     .im-val.warn {
@@ -1112,6 +1113,7 @@
       padding-bottom: env(safe-area-inset-bottom);
       background: rgba(15,23,42,0.97);
       border-top: 1px solid var(--border);
+      overflow: visible;
     }
 
     .nav-btn {
@@ -1621,6 +1623,7 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      overflow: visible;
     }
 
     #fabOptions {
@@ -1940,7 +1943,7 @@
       </div>
       <div class="im-card ind" id="imTrustCard" onclick="switchTab('trust')">
         <div class="im-inner">
-          <div class="im-label">🛡️ Trust</div>
+          <div class="im-label" style="color:rgba(129,140,248,0.8)">🛡️ Trust</div>
           <div class="im-val ind" id="imTrust">—</div>
         </div>
       </div>
