@@ -341,8 +341,8 @@
     }
 
     .im-card.ind {
-      background: var(--indigo-dim);
-      border-color: var(--indigo-glow);
+      background: rgba(67,56,202,0.18);
+      border-color: rgba(79,70,229,0.35);
     }
 
     .im-label {
@@ -1637,13 +1637,14 @@
       gap: 12px;
       height: 52px;
       border-radius: 16px;
-      padding: 0 16px;
-      background: var(--surface2);
-      border: 1px solid var(--border2);
+      padding: 0 18px;
+      background: #1E293B;
+      border: 1px solid rgba(255,255,255,0.18);
       cursor: pointer;
-      animation: fabItem 0.2s ease both;
+      animation: fabItem 0.22s cubic-bezier(0.2,0.8,0.2,1) both;
       white-space: nowrap;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.06) inset;
+      min-width: 160px;
     }
 
     .fab-item:active {
@@ -1651,9 +1652,10 @@
     }
 
     .fab-label {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      color: #F8FAFC;
+      letter-spacing: 0.01em;
     }
 
     #fabMain {
@@ -2985,7 +2987,7 @@
           warm: `<span class="badge" style="background:rgba(245,158,11,.12);color:var(--warn)">🌡️ Warm</span>`,
           cold: `<span class="badge" style="background:rgba(255,255,255,.06);color:var(--muted)">❄️ Cold</span>`,
         }[tc] || '';
-        const safePhone = (lead.phone || '').replace(/[^0-9+]/g, '');
+        const safePhone = (lead.phone || '').replace(/[^0-9]/g, '');
         const safeName = (lead.name || 'Buyer').replace(/'/g, "\\'");
 
         return `
@@ -3257,13 +3259,17 @@
 
     /* ── LEAD ACTIONS ────────────────────────── */
     async function takeover(id, phone, buyerName, channel) {
+      console.log('Takeover:', { id, phone, buyerName, channel });
       try {
         const r = await fetch(CFG.API.takeover(id), { method: 'POST', headers: CFG.JH });
         if (r.ok) {
           toast('Bot paused — connecting you to buyer');
           const bizName = localStorage.getItem('biz_name') || 'our team';
           const ch = CHANNELS[channel] || CHANNELS.whatsapp;
-          setTimeout(() => ch.takeoverFn(phone, buyerName, bizName), 600);
+          const msg = `Hi ${buyerName}, this is ${bizName}. I am personally taking over to assist you directly.`;
+          const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+          console.log('Opening:', waUrl);
+          setTimeout(() => window.open(waUrl, '_blank'), 600);
           loadPipeline();
         } else {
           toast('Takeover failed', 'error');
@@ -3519,10 +3525,18 @@
       if (backdrop) backdrop.style.display = 'block';
       if (!opts || !_fabActions.length) return;
       opts.innerHTML = _fabActions.map((a, i) => `
-        <div class="fab-item" style="animation-delay:${i * 70}ms" onclick="execFabAction(${i})">
+        <div class="fab-item" style="animation-delay:${i * 70}ms" data-fab-index="${i}">
           <span style="font-size:20px">${a.icon}</span>
           <span class="fab-label">${a.label}</span>
         </div>`).join('');
+      opts.querySelectorAll('.fab-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const idx = parseInt(el.dataset.fabIndex);
+          closeFAB();
+          const act = _fabActions[idx];
+          if (act) act.action();
+        });
+      });
     }
 
     function closeFAB() {
