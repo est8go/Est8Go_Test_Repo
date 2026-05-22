@@ -1,846 +1,3362 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <script src="/static/js/auth_guard.js"></script>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-  <meta name="theme-color" content="#0F172A"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0F172A" />
   <title>Est8Go | Business Command Center</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
   <style>
+    /* ═══════════════════════════════════════════
+       BRAND TOKENS — Est8Go Trust OS
+    ═══════════════════════════════════════════ */
     :root {
-      --bg:#0F172A; --s1:#111827; --s2:#1E293B; --s3:#263348;
-      --ind:#4338CA; --ind-sm:#4F46E5; --ind-dim:rgba(67,56,202,.10); --ind-bdr:rgba(79,70,229,.22);
-      --em:#10B981;  --em-dim:rgba(16,185,129,.09);  --em-bdr:rgba(16,185,129,.20);
-      --amb:#F59E0B; --amb-dim:rgba(245,158,11,.09); --amb-bdr:rgba(245,158,11,.20);
-      --cri:#F43F5E; --cri-dim:rgba(244,63,94,.09);  --cri-bdr:rgba(244,63,94,.18);
-      --tx:#F8FAFC; --tx-mid:#CBD5E1; --tx-muted:#94A3B8;
-      --bdr:rgba(255,255,255,.07); --bdr2:rgba(255,255,255,.11);
-      --nav-h:70px;
+      --bg: #0F172A;
+      --surface: #111827;
+      --surface2: #1F2937;
+      --indigo: #4F46E5;
+      --indigo-lg: #4338CA;
+      --indigo-dim: rgba(67,56,202,0.12);
+      --indigo-glow: rgba(67,56,202,0.25);
+      --em: #10B981;
+      --em-dim: rgba(16,185,129,0.10);
+      --em-glow: rgba(16,185,129,0.22);
+      --warn: #F59E0B;
+      --warn-dim: rgba(245,158,11,0.10);
+      --risk: #F43F5E;
+      --risk-dim: rgba(244,63,94,0.10);
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+      --border: rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.11);
+      --r: 16px;
+      --r-lg: 20px;
+      --r-pill: 999px;
+      --nav-h: 64px;
     }
-    *,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
-    html,body{height:100%;overflow:hidden}
-    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);display:flex;flex-direction:column}
-    h1,h2,h3,h4,.syne{font-family:'Syne',sans-serif}
 
-    /* HEADER */
-    #appHeader{flex-shrink:0;z-index:100;position:relative;padding:14px 16px 0;background:var(--bg);border-bottom:1px solid var(--bdr);transition:padding .26s ease}
-    #appHeader.collapsed{padding:10px 16px 0}
-    .brand-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:11px;transition:margin .26s}
-    #appHeader.collapsed .brand-row{margin-bottom:6px}
-    .wordmark{font-family:'Syne',sans-serif;font-weight:800;font-size:21px;letter-spacing:-.5px;color:var(--tx)}
-    .wordmark span{color:var(--em)}
-    .cc-pill{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;background:rgba(244,63,94,.11);border:1px solid rgba(244,63,94,.22);font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#FB7185}
-    .live-row{display:flex;align-items:center;gap:7px;margin-top:4px}
-    .live-dot{width:6px;height:6px;border-radius:50%;background:var(--em);animation:livePulse 2.4s ease-in-out infinite;flex-shrink:0}
-    @keyframes livePulse{0%,100%{opacity:1}50%{opacity:.3}}
-    .live-text{font-size:11px;font-weight:500;color:var(--em)}
-    .live-sep{font-size:11px;color:var(--tx-muted)}
-    .type-badge{font-size:10px;font-weight:600;color:var(--tx-muted);text-transform:uppercase;letter-spacing:.07em}
-    .hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
-    .health-pill{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;transition:all .3s}
-    .health-pill.stable{background:var(--em-dim);border:1px solid var(--em-bdr);color:var(--em)}
-    .health-pill.risk{background:var(--cri-dim);border:1px solid var(--cri-bdr);color:var(--cri)}
-    .h-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
-    #userAvatar{width:38px;height:38px;border-radius:11px;border:1px solid var(--bdr2);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;background:var(--s2);cursor:pointer;flex-shrink:0;transition:transform .18s;position:relative}
-    #userAvatar:active{transform:scale(.92)}
+    /* ═══════════════════════════════════════════
+       RESET
+    ═══════════════════════════════════════════ */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      padding: 0;
+    }
 
-    /* BIZ BAR — collapses on scroll */
-    .biz-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--s1);border:1px solid var(--bdr);margin-bottom:11px;overflow:hidden;max-height:64px;opacity:1;transition:max-height .28s ease,opacity .22s ease,margin .26s ease,padding .26s ease}
-    #appHeader.collapsed .biz-bar{max-height:0;opacity:0;margin-bottom:0;padding-top:0;padding-bottom:0}
-    .biz-logo{width:36px;height:36px;border-radius:10px;background:var(--s2);border:1px solid var(--bdr2);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:var(--em);flex-shrink:0}
-    .biz-name{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
-    .biz-meta{display:flex;align-items:center;gap:6px;margin-top:3px}
-    .trust-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:999px;background:var(--em-dim);border:1px solid var(--em-bdr);font-size:9px;font-weight:700;color:var(--em);letter-spacing:.06em;text-transform:uppercase}
-    .plan-badge{padding:2px 7px;border-radius:999px;background:var(--ind-dim);border:1px solid var(--ind-bdr);font-size:9px;font-weight:600;color:var(--ind-sm);letter-spacing:.05em;text-transform:uppercase}
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
 
-    /* COMPACT ID — shows when collapsed */
-    .compact-id{display:flex;align-items:center;gap:7px;max-height:0;opacity:0;overflow:hidden;transition:max-height .28s ease,opacity .22s ease,margin .26s ease}
-    #appHeader.collapsed .compact-id{max-height:28px;opacity:1;margin-bottom:8px}
-    .compact-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--tx-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
 
-    /* INSTANT METRICS */
-    .im-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-    .im-card{border-radius:14px;padding:12px 11px;border:1px solid var(--bdr);background:var(--s1);transition:transform .18s}
-    .im-card:active{transform:scale(.96)}
-    .im-card.hot{background:var(--cri-dim);border-color:var(--cri-bdr)}
-    .im-card.em{background:var(--em-dim);border-color:var(--em-bdr)}
-    .im-card.ind{background:var(--ind-dim);border-color:var(--ind-bdr)}
-    .im-lbl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tx-muted);margin-bottom:5px;white-space:nowrap}
-    .im-val{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1;letter-spacing:-.5px}
-    .im-val.hot{color:var(--cri)}.im-val.em{color:var(--em)}.im-val.ind{color:var(--ind-sm)}.im-val.amb{color:var(--amb)}
+    h1,
+    h2,
+    h3,
+    h4,
+    .syne {
+      font-family: 'Syne', sans-serif;
+    }
 
-    /* SCROLL AREA */
-    #scrollArea{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;z-index:10;padding:0 14px;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nav-h) + 20px);background:var(--bg)}
-    #scrollArea::-webkit-scrollbar{display:none}
+    /* ═══════════════════════════════════════════
+       HEADER
+    ═══════════════════════════════════════════ */
+    #appHeader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px 0;
+      transition: transform 0.28s ease;
+    }
 
-    /* TABS */
-    .tab{display:none}
-    .tab.active{display:block;animation:tabIn .22s ease}
-    @keyframes tabIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    #appHeader.header-hidden {
+      transform: translateY(-100%);
+    }
 
-    /* SECTION LABELS */
-    .sep{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--tx-muted);padding:20px 0 10px;display:flex;align-items:center;gap:8px}
-    .sep::after{content:'';flex:1;height:1px;background:var(--bdr)}
+    /* Wordmark row */
+    .brand-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
 
-    /* CARDS */
-    .card{border-radius:16px;padding:16px;background:var(--s1);border:1px solid var(--bdr);box-shadow:0 1px 3px rgba(0,0,0,.22);transition:transform .18s;margin-bottom:10px}
-    .card:active{transform:scale(.985)}
-    .card.em-card{background:var(--em-dim);border-color:var(--em-bdr)}
-    .card.ind-card{background:var(--ind-dim);border-color:var(--ind-bdr)}
-    .card.amb-card{background:var(--amb-dim);border-color:var(--amb-bdr)}
-    .card.cri-card{background:var(--cri-dim);border-color:var(--cri-bdr)}
+    .wordmark {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
 
-    /* BADGE */
-    .badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:999px;font-size:9px;font-weight:700;letter-spacing:.05em;white-space:nowrap}
+    .wordmark span {
+      color: var(--em);
+    }
 
-    /* LEAD CARDS */
-    .lead{border-radius:16px;padding:15px;background:var(--s1);border:1px solid var(--bdr);border-left:3px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,.18);margin-bottom:9px;transition:transform .18s}
-    .lead.hot{border-left-color:var(--cri);background:rgba(244,63,94,.04)}
-    .lead.warm{border-left-color:var(--amb)}
-    .lead.cold{border-left-color:var(--bdr2)}
-    .lead:active{transform:scale(.985)}
-    .lead-top{display:flex;align-items:center;gap:10px}
-    .lead-av{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;flex-shrink:0;border:1px solid var(--bdr)}
-    .lead-info{flex:1;min-width:0}
-    .lead-name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .lead-sub{font-size:11px;color:var(--tx-muted);margin-top:2px;display:flex;align-items:center;gap:5px}
-    .lead-score{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;flex-shrink:0}
-    .funnel-bar{height:3px;border-radius:3px;background:var(--s2);margin-top:11px;overflow:hidden}
-    .funnel-fill{height:100%;border-radius:3px;transition:width .6s ease}
-    .lead-actions{display:flex;gap:7px;margin-top:11px}
-    .lead-btn{flex:1;padding:9px;border-radius:10px;border:1px solid var(--bdr2);background:var(--s2);font-size:11px;font-weight:600;color:var(--tx);cursor:pointer;font-family:'Inter',sans-serif;transition:transform .15s;text-align:center}
-    .lead-btn:active{transform:scale(.95)}
-    .lead-btn.em{background:var(--em-dim);border-color:var(--em-bdr);color:var(--em)}
-    .lead-btn.ind{background:var(--ind-dim);border-color:var(--ind-bdr);color:var(--ind-sm)}
-    .lead-btn.red{background:var(--cri-dim);border-color:var(--cri-bdr);color:var(--cri)}
+    .cc-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(244, 63, 94, 0.12);
+      border: 1px solid rgba(244, 63, 94, 0.22);
+      font-family: 'Syne', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #FB7185;
+    }
 
-    /* TRUST CENTER */
-    .trust-ring{width:90px;height:90px;position:relative;flex-shrink:0}
-    .trust-ring svg{transform:rotate(-90deg)}
-    .ring-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-    .ring-num{font-family:'Syne',sans-serif;font-size:23px;font-weight:800;line-height:1}
-    .ring-lbl{font-size:8px;font-weight:700;color:var(--tx-muted);letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
-    .trust-item{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--bdr)}
-    .trust-item:last-child{border-bottom:none}
-    .trust-icon{width:38px;height:38px;border-radius:10px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
-    .trust-detail{flex:1;min-width:0}
-    .trust-title{font-size:13px;font-weight:600}
-    .trust-sub{font-size:11px;color:var(--tx-muted);margin-top:2px}
-    .trust-status{font-size:11px;font-weight:700;flex-shrink:0}
-    .trust-action{padding:7px 12px;border-radius:8px;border:1px solid var(--ind-bdr);background:var(--ind-dim);color:var(--ind-sm);font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:transform .15s;flex-shrink:0}
-    .trust-action:active{transform:scale(.94)}
-    .warn-item{display:flex;align-items:center;gap:10px;padding:12px;border-radius:13px;margin-bottom:8px}
-    .warn-item.risk{background:var(--cri-dim);border:1px solid var(--cri-bdr)}
-    .warn-item.amb{background:var(--amb-dim);border:1px solid var(--amb-bdr)}
+    .live-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 4px;
+    }
 
-    /* LISTINGS */
-    .prop-card{border-radius:16px;overflow:hidden;background:var(--s1);border:1px solid var(--bdr);box-shadow:0 1px 3px rgba(0,0,0,.18);margin-bottom:10px;transition:transform .18s}
-    .prop-card:active{transform:scale(.985)}
-    .prop-img{width:100%;height:140px;background:linear-gradient(135deg,var(--s2) 0%,var(--s3) 100%);display:flex;align-items:center;justify-content:center;font-size:44px;position:relative}
-    .prop-overlay{position:absolute;top:10px;right:10px;padding:4px 10px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.05em;background:rgba(15,23,42,.88);border:1px solid var(--bdr2)}
-    .trust-mini{display:flex;align-items:center;gap:6px;margin-top:8px;padding:6px 10px;border-radius:8px;background:var(--s2)}
-    .t-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-    .trust-mini-text{font-size:10px;font-weight:600;color:var(--tx-muted)}
-    .trust-mini-score{font-family:'Syne',sans-serif;font-size:11px;font-weight:800;margin-left:auto}
-    .prop-body{padding:14px}
-    .prop-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:5px}
-    .prop-meta{font-size:11px;color:var(--tx-muted);display:flex;gap:10px;flex-wrap:wrap}
-    .prop-price{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--em);margin-top:8px}
-    .prop-actions{display:flex;gap:7px;margin-top:12px}
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--em);
+      animation: livePulse 2.4s ease-in-out infinite;
+    }
 
-    /* TEAM */
-    .team-row{display:flex;align-items:center;gap:11px;padding:13px;border-radius:14px;background:var(--s1);border:1px solid var(--bdr);margin-bottom:8px;transition:transform .18s}
-    .team-row:active{transform:scale(.985)}
-    .team-av{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;flex-shrink:0;border:1px solid var(--bdr)}
-    .team-info{flex:1;min-width:0}
-    .team-name{font-size:13px;font-weight:600}
-    .team-sub{font-size:11px;color:var(--tx-muted);margin-top:1px}
+    @keyframes livePulse {
 
-    /* STUDIO */
-    .reel-card{display:flex;gap:12px;align-items:center;background:var(--s1);border:1px solid var(--bdr);border-radius:14px;padding:13px 14px;margin-bottom:8px;transition:transform .18s}
-    .reel-card:active{transform:scale(.985)}
-    .reel-thumb{width:46px;height:46px;background:var(--s2);border-radius:11px;flex-shrink:0;border:1px solid var(--bdr2);display:flex;align-items:center;justify-content:center;font-size:20px}
+      0%,
+      100% {
+        opacity: 1;
+      }
 
-    /* PIPELINE BARS */
-    .p-bar-wrap{margin-bottom:13px}
-    .p-bar-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--tx-muted);margin-bottom:6px}
-    .p-bar{height:4px;border-radius:3px;background:var(--s2);overflow:hidden}
-    .p-fill{height:100%;border-radius:3px;transition:width .9s ease}
+      50% {
+        opacity: 0.35;
+      }
+    }
 
-    /* KORA */
-    .kora-fab{width:50px;height:50px;border-radius:16px;background:var(--ind);border:1px solid rgba(79,70,229,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;box-shadow:0 4px 16px rgba(67,56,202,.3);transition:transform .18s}
-    .kora-fab:active{transform:scale(.91)}
-    #koraChatBox{position:fixed;bottom:calc(var(--nav-h) + 68px);right:14px;left:14px;background:#0D1526;border:1px solid var(--ind-bdr);border-top:2px solid var(--ind);border-radius:18px;padding:16px;box-shadow:0 8px 32px rgba(0,0,0,.5);max-height:48vh;display:none;flex-direction:column;gap:10px;z-index:600}
-    #koraChatBox.open{display:flex;animation:tabIn .25s ease}
-    .kora-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
-    .kora-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--ind-sm)}
-    .kora-close{background:none;border:none;color:var(--tx-muted);font-size:20px;cursor:pointer;padding:4px}
-    .kora-msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-bottom:4px}
-    .kora-msgs::-webkit-scrollbar{display:none}
-    .kora-msg{padding:10px 12px;border-radius:13px;font-size:12px;line-height:1.55;max-width:86%}
-    .kora-msg.k{background:var(--ind-dim);border:1px solid var(--ind-bdr);color:var(--tx);align-self:flex-start}
-    .kora-msg.u{background:var(--s2);border:1px solid var(--bdr2);align-self:flex-end}
-    .kora-row{display:flex;gap:8px}
-    .kora-input{flex:1;background:var(--s2);border:1px solid var(--bdr2);border-radius:11px;padding:10px 14px;font-size:13px;color:var(--tx);font-family:'Inter',sans-serif;outline:none;transition:border-color .2s}
-    .kora-input:focus{border-color:var(--ind-bdr)}
-    .kora-input::placeholder{color:var(--tx-muted)}
-    .kora-send{width:40px;height:40px;border-radius:11px;background:var(--ind);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s}
-    .kora-send:active{transform:scale(.91)}
+    .live-text {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--em);
+    }
 
-    /* BOTTOM NAV */
-    #bottomNav{height:var(--nav-h);flex-shrink:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:0 12px 8px;background:var(--bg);border-top:1px solid var(--bdr)}
-    .nav-pill{display:flex;align-items:center;justify-content:space-around;background:var(--s1);border:1px solid var(--bdr2);border-radius:22px;padding:7px 5px;width:100%;box-shadow:0 2px 12px rgba(0,0,0,.4)}
-    .nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 7px;border-radius:13px;background:none;border:none;color:var(--tx-muted);cursor:pointer;transition:color .2s;flex:1;font-family:'Inter',sans-serif;min-width:0}
-    .nav-btn span{font-size:9px;font-weight:500;white-space:nowrap}
-    .nav-btn svg{flex-shrink:0;transition:all .2s}
-    .nav-btn.active{color:var(--ind-sm)}
-    .nav-btn:active{transform:scale(.89)}
-    .nav-add{width:46px;height:46px;border-radius:14px;background:var(--ind);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;border:none;box-shadow:0 3px 12px rgba(67,56,202,.4);transition:transform .18s}
-    .nav-add:active{transform:scale(.89)}
+    .live-sep {
+      font-size: 11px;
+      color: var(--muted);
+    }
 
-    /* BUTTONS */
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:11px;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;transition:transform .15s}
-    .btn:active{transform:scale(.94)}
-    .btn-em{background:var(--em);color:#0F172A;box-shadow:0 2px 10px rgba(16,185,129,.22)}
-    .btn-ind{background:var(--ind);color:#fff;box-shadow:0 2px 10px rgba(67,56,202,.28)}
-    .btn-gh{background:var(--s2);border:1px solid var(--bdr2);color:var(--tx)}
-    .btn-sm{font-size:12px;padding:8px 15px}
-    .btn-md{font-size:13px;padding:12px 20px}
-    .btn-full{width:100%}
+    .tenant-type-badge {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
 
-    /* MODALS */
-    .modal-bd{display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.6);align-items:flex-end}
-    .modal-bd.open{display:flex;animation:fadeIn .18s ease}
-    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-    .modal-sheet{width:100%;background:#0D1526;border:1px solid var(--bdr2);border-bottom:none;border-top:2px solid var(--ind);border-radius:22px 22px 0 0;padding:0 0 24px;max-height:92vh;overflow-y:auto;animation:slideUp .28s cubic-bezier(.2,.8,.2,1)}
-    @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-    .modal-handle{width:36px;height:4px;border-radius:2px;background:var(--bdr2);margin:12px auto 0}
-    .modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 12px;border-bottom:1px solid var(--bdr)}
-    .modal-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
-    .modal-close{background:none;border:none;color:var(--tx-muted);font-size:20px;cursor:pointer}
-    .modal-body{padding:16px 20px}
-    .f-lbl{display:block;font-size:10px;font-weight:700;color:var(--tx-muted);text-transform:uppercase;letter-spacing:.09em;margin-bottom:6px;margin-top:15px}
-    .field{width:100%;background:var(--s2);border:1px solid var(--bdr2);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--tx);font-family:'Inter',sans-serif;outline:none;transition:border-color .2s}
-    .field:focus{border-color:var(--ind-bdr)}
-    .field::placeholder{color:var(--tx-muted)}
-    select.field option{background:#0D1526}
-    .gps-zone{background:var(--em-dim);border:1px dashed var(--em-bdr);border-radius:14px;padding:16px;text-align:center;margin-bottom:4px}
+    /* Header right */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
 
-    /* USER MENU */
-    #userMenu{display:none;position:absolute;right:0;top:46px;background:#0D1526;border:1px solid var(--bdr2);border-radius:16px;padding:8px;min-width:192px;z-index:999;box-shadow:0 12px 40px rgba(0,0,0,.6)}
-    .menu-hdr{padding:10px 12px;border-bottom:1px solid var(--bdr);margin-bottom:6px}
-    .menu-lbl{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--tx-muted)}
-    #menuEmail{font-size:12px;color:var(--tx);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .menu-item{width:100%;text-align:left;background:none;border:none;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:13px;color:var(--tx);font-family:'Inter',sans-serif;display:flex;align-items:center;gap:8px;transition:background .14s}
-    .menu-item:hover{background:var(--s2)}
-    .menu-item.danger{color:var(--cri)}
-    .menu-item.danger:hover{background:var(--cri-dim)}
+    .health-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      transition: all 0.3s;
+    }
 
-    /* TOAST */
-    #toast{position:fixed;bottom:calc(var(--nav-h) + 14px);left:14px;right:14px;padding:12px 16px;border-radius:13px;font-size:12px;font-weight:600;color:#fff;z-index:9999;transform:translateY(14px);opacity:0;transition:all .28s cubic-bezier(.4,0,.2,1);pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.4)}
-    #toast.show{transform:translateY(0);opacity:1}
+    .health-pill.stable {
+      background: var(--em-dim);
+      border: 1px solid var(--em-glow);
+      color: var(--em);
+    }
 
-    /* EMPTY STATES */
-    .empty{text-align:center;padding:40px 24px;background:var(--s1);border-radius:16px;border:1px solid var(--bdr);margin-top:8px}
-    .empty-icon{font-size:36px;margin-bottom:14px}
-    .empty-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--tx);margin-bottom:8px}
-    .empty-body{font-size:13px;line-height:1.7;color:var(--tx-muted);margin-bottom:18px}
+    .health-pill.risk {
+      background: var(--risk-dim);
+      border: 1px solid rgba(244,63,94,0.22);
+      color: var(--risk);
+    }
 
-    /* UTILITY */
-    .agency-only{display:none}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .health-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* Avatar */
+    #userAvatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      border: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 13px;
+      background: var(--surface2);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.18s;
+      position: relative;
+    }
+
+    #userAvatar:active {
+      transform: scale(0.92);
+    }
+
+    /* Biz identity bar */
+    .biz-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+
+    .biz-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 12px;
+      color: var(--em);
+      flex-shrink: 0;
+    }
+
+    .biz-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 160px;
+    }
+
+    .biz-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 3px;
+    }
+
+    .trust-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--em-dim);
+      border: 1px solid var(--em-glow);
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--em);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .plan-badge {
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--indigo-dim);
+      border: 1px solid var(--indigo-glow);
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--indigo);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* Instant metrics */
+    .instant-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .im-card {
+      border-radius: 14px;
+      padding: 12px 11px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      transition: transform 0.18s;
+    }
+
+    .im-card:active {
+      transform: scale(0.96);
+    }
+
+    .im-card.hot {
+      background: var(--risk-dim);
+      border-color: rgba(244,63,94,0.22);
+    }
+
+    .im-card.em {
+      background: var(--em-dim);
+      border-color: var(--em-glow);
+    }
+
+    .im-card.ind {
+      background: var(--indigo-dim);
+      border-color: var(--indigo-glow);
+    }
+
+    .im-label {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 5px;
+      white-space: nowrap;
+    }
+
+    .im-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.5px;
+    }
+
+    .im-val.hot {
+      color: var(--risk);
+    }
+
+    .im-val.em {
+      color: var(--em);
+    }
+
+    .im-val.ind {
+      color: var(--indigo);
+    }
+
+    .im-val.warn {
+      color: var(--warn);
+    }
+
+    /* ═══════════════════════════════════════════
+       SCROLL AREA
+    ═══════════════════════════════════════════ */
+    #scrollArea {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+      z-index: 10;
+      padding: 0 14px;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: calc(var(--nav-h) + 20px);
+      background: var(--bg);
+    }
+
+    #scrollArea::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* ═══════════════════════════════════════════
+       TABS
+    ═══════════════════════════════════════════ */
+    .tab {
+      display: none;
+    }
+
+    .tab.active {
+      display: block;
+      animation: tabIn 0.22s ease;
+    }
+
+    @keyframes tabIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ═══════════════════════════════════════════
+       SECTION LABELS
+    ═══════════════════════════════════════════ */
+    .sep {
+      font-family: 'Syne', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 20px 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sep::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ═══════════════════════════════════════════
+       CARDS — SOLID SURFACE SYSTEM
+    ═══════════════════════════════════════════ */
+    .card {
+      border-radius: 16px;
+      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      transition: transform 0.18s;
+      margin-bottom: 10px;
+    }
+
+    .card:active {
+      transform: scale(0.985);
+    }
+
+    .card.em-card {
+      background: var(--em-dim);
+      border-color: var(--em-glow);
+    }
+
+    .card.hot-card {
+      background: var(--risk-dim);
+      border-color: rgba(244,63,94,0.22);
+    }
+
+    .card.warn-card {
+      background: var(--warn-dim);
+      border-color: rgba(245,158,11,0.22);
+    }
+
+    .card.ind-card {
+      background: var(--indigo-dim);
+      border-color: var(--indigo-glow);
+    }
+
+    /* ═══════════════════════════════════════════
+       BADGE
+    ═══════════════════════════════════════════ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+
+    /* ═══════════════════════════════════════════
+       LEAD / PIPELINE CARDS
+    ═══════════════════════════════════════════ */
+    .lead {
+      border-radius: 16px;
+      padding: 15px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid transparent;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      margin-bottom: 9px;
+      transition: transform 0.18s;
+    }
+
+    .lead.hot {
+      border-left-color: var(--risk);
+      background: rgba(244, 63, 94, 0.04);
+    }
+
+    .lead.warm {
+      border-left-color: var(--warn);
+    }
+
+    .lead.cold {
+      border-left-color: var(--border2);
+    }
+
+    .lead:active {
+      transform: scale(0.985);
+    }
+
+    .lead-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lead-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+
+    .lead-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .lead-name {
+      font-weight: 600;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lead-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .lead-score {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .funnel-bar {
+      height: 3px;
+      border-radius: 3px;
+      background: var(--surface2);
+      margin-top: 11px;
+      overflow: hidden;
+    }
+
+    .funnel-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    .lead-actions {
+      display: flex;
+      gap: 7px;
+      margin-top: 11px;
+    }
+
+    .lead-btn {
+      flex: 1;
+      padding: 9px;
+      border-radius: 10px;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .lead-btn:active {
+      transform: scale(0.95);
+    }
+
+    .lead-btn.em {
+      background: var(--em-dim);
+      border-color: var(--em-glow);
+      color: var(--em);
+    }
+
+    .lead-btn.red {
+      background: var(--risk-dim);
+      border-color: rgba(244,63,94,0.22);
+      color: var(--risk);
+    }
+
+    .lead-btn.ind {
+      background: var(--indigo-dim);
+      border-color: var(--indigo-glow);
+      color: var(--indigo);
+    }
+
+    /* ═══════════════════════════════════════════
+       TRUST CENTER
+    ═══════════════════════════════════════════ */
+    .trust-score-ring {
+      width: 90px;
+      height: 90px;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .trust-score-ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .trust-score-ring .score-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .trust-score-ring .score-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 23px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .trust-score-ring .score-label {
+      font-size: 8px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .trust-item:last-child {
+      border-bottom: none;
+    }
+
+    .trust-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+      background: var(--surface2);
+    }
+
+    .trust-detail {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .trust-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .trust-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .trust-status {
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .trust-action-btn {
+      padding: 7px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--indigo-glow);
+      background: var(--indigo-dim);
+      color: var(--indigo);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .trust-action-btn:active {
+      transform: scale(0.94);
+    }
+
+    .warn-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 13px;
+      margin-bottom: 8px;
+    }
+
+    .warn-item.risk {
+      background: var(--risk-dim);
+      border: 1px solid rgba(244,63,94,0.22);
+    }
+
+    .warn-item.amber {
+      background: var(--warn-dim);
+      border: 1px solid rgba(245,158,11,0.22);
+    }
+
+    /* ═══════════════════════════════════════════
+       LISTINGS (was Vault)
+    ═══════════════════════════════════════════ */
+    .prop-card {
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      margin-bottom: 10px;
+      transition: transform 0.18s;
+    }
+
+    .prop-card:active {
+      transform: scale(0.985);
+    }
+
+    .prop-img {
+      width: 100%;
+      height: 140px;
+      background: linear-gradient(135deg, var(--surface2) 0%, #263348 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+      position: relative;
+    }
+
+    .prop-trust-overlay {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border2);
+    }
+
+    /* Mini trust indicator on listing cards */
+    .trust-mini {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: var(--surface2);
+    }
+
+    .trust-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .trust-mini-text {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .trust-mini-score {
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 800;
+      margin-left: auto;
+    }
+
+    .prop-body {
+      padding: 14px;
+    }
+
+    .prop-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .prop-meta {
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .prop-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--em);
+      margin-top: 8px;
+    }
+
+    .prop-actions {
+      display: flex;
+      gap: 7px;
+      margin-top: 12px;
+    }
+
+    /* ═══════════════════════════════════════════
+       TEAM ROWS (Agency)
+    ═══════════════════════════════════════════ */
+    .team-row {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 13px;
+      border-radius: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      margin-bottom: 8px;
+      transition: transform 0.18s;
+    }
+
+    .team-row:active {
+      transform: scale(0.985);
+    }
+
+    .team-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+
+    .team-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .team-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .team-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    /* ═══════════════════════════════════════════
+       STUDIO
+    ═══════════════════════════════════════════ */
+    .reel-card {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 13px 14px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      transition: transform 0.18s;
+    }
+
+    .reel-card:active {
+      transform: scale(0.985);
+    }
+
+    .reel-thumb {
+      width: 46px;
+      height: 46px;
+      background: var(--surface2);
+      border-radius: 11px;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    /* ═══════════════════════════════════════════
+       PIPELINE BARS (analytics)
+    ═══════════════════════════════════════════ */
+    .pipeline-bar-wrap {
+      margin-bottom: 13px;
+    }
+
+    .pipeline-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .pipeline-bar {
+      height: 4px;
+      border-radius: 3px;
+      background: var(--surface2);
+      overflow: hidden;
+    }
+
+    .pipeline-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.9s ease;
+    }
+
+    /* ═══════════════════════════════════════════
+       KORA — calm and minimal
+    ═══════════════════════════════════════════ */
+    .kora-bubble {
+      width: 50px;
+      height: 50px;
+      border-radius: 16px;
+      background: var(--indigo);
+      border: 1px solid rgba(79, 70, 229, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 20px;
+      box-shadow: 0 4px 16px rgba(67, 56, 202, 0.3);
+      transition: transform 0.18s;
+    }
+
+    .kora-bubble:active {
+      transform: scale(0.91);
+    }
+
+    .kora-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--indigo);
+    }
+
+    .kora-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .kora-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .kora-msgs {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-bottom: 4px;
+    }
+
+    .kora-msgs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .kora-msg {
+      padding: 10px 12px;
+      border-radius: 13px;
+      font-size: 12px;
+      line-height: 1.55;
+      max-width: 86%;
+    }
+
+    .kora-msg.kora {
+      background: var(--indigo-dim);
+      border: 1px solid var(--indigo-glow);
+      color: var(--text);
+      align-self: flex-start;
+    }
+
+    .kora-msg.user {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      align-self: flex-end;
+    }
+
+    .kora-input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .kora-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 11px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .kora-input:focus {
+      border-color: var(--indigo-glow);
+    }
+
+    .kora-input::placeholder {
+      color: var(--muted);
+    }
+
+    .kora-send {
+      width: 40px;
+      height: 40px;
+      border-radius: 11px;
+      background: var(--indigo);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.15s;
+    }
+
+    .kora-send:active {
+      transform: scale(0.91);
+    }
+
+    /* ═══════════════════════════════════════════
+       BOTTOM NAV — FLOATING PILL
+    ═══════════════════════════════════════════ */
+    #bottomNav {
+      height: var(--nav-h);
+      position: relative;
+      z-index: 100;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px 8px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+
+    .nav-pill {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 22px;
+      padding: 7px 5px;
+      width: 100%;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 6px 7px;
+      border-radius: 13px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      transition: color 0.2s;
+      flex: 1;
+      font-family: 'Inter', sans-serif;
+      min-width: 0;
+    }
+
+    .nav-btn span {
+      font-size: 9px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .nav-btn svg {
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .nav-btn.active {
+      color: var(--indigo);
+    }
+
+    .nav-btn:active {
+      transform: scale(0.89);
+    }
+
+    .nav-add {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: var(--indigo);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      border: none;
+      box-shadow: 0 3px 12px rgba(67, 56, 202, 0.4);
+      transition: transform 0.18s;
+    }
+
+    .nav-add:active {
+      transform: scale(0.89);
+    }
+
+    /* ═══════════════════════════════════════════
+       BUTTONS
+    ═══════════════════════════════════════════ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-radius: 11px;
+      border: none;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      transition: transform 0.15s;
+    }
+
+    .btn:active {
+      transform: scale(0.94);
+    }
+
+    .btn-em {
+      background: var(--em);
+      color: #0F172A;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.25);
+    }
+
+    .btn-ind {
+      background: var(--indigo);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(67, 56, 202, 0.3);
+    }
+
+    .btn-ghost {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      color: var(--text);
+    }
+
+    .btn-sm {
+      font-size: 12px;
+      padding: 8px 15px;
+    }
+
+    .btn-md {
+      font-size: 13px;
+      padding: 12px 20px;
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    /* ═══════════════════════════════════════════
+       MODALS
+    ═══════════════════════════════════════════ */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 800;
+      background: rgba(0, 0, 0, 0.6);
+      align-items: flex-end;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+      animation: fadeIn 0.18s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .modal-sheet {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-bottom: none;
+      border-top: 2px solid var(--indigo);
+      border-radius: 22px 22px 0 0;
+      padding: 0 0 24px;
+      max-height: 92vh;
+      overflow-y: auto;
+      animation: slideUp 0.28s cubic-bezier(.2, .8, .2, 1);
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+      }
+
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    .modal-handle {
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border2);
+      margin: 12px auto 0;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 16px 20px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      margin-bottom: 6px;
+      margin-top: 15px;
+    }
+
+    .field {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 14px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field:focus {
+      border-color: var(--indigo-glow);
+    }
+
+    .field::placeholder {
+      color: var(--muted);
+    }
+
+    select.field option {
+      background: var(--surface);
+    }
+
+    .gps-zone {
+      background: var(--em-dim);
+      border: 1px dashed var(--em-glow);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    /* ═══════════════════════════════════════════
+       USER DROPDOWN
+    ═══════════════════════════════════════════ */
+    #userMenu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 46px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      padding: 8px;
+      min-width: 192px;
+      z-index: 999;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .menu-header {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 6px;
+    }
+
+    .menu-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    #menuEmail {
+      font-size: 12px;
+      color: var(--text);
+      margin-top: 3px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .menu-item {
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.14s;
+    }
+
+    .menu-item:hover {
+      background: var(--surface2);
+    }
+
+    .menu-item.danger {
+      color: var(--risk);
+    }
+
+    .menu-item.danger:hover {
+      background: var(--risk-dim);
+    }
+
+    /* ═══════════════════════════════════════════
+       TOAST
+    ═══════════════════════════════════════════ */
+    #toast {
+      position: fixed;
+      bottom: calc(var(--nav-h) + 14px);
+      left: 14px;
+      right: 14px;
+      padding: 12px 16px;
+      border-radius: 13px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      z-index: 9999;
+      transform: translateY(14px);
+      opacity: 0;
+      transition: all 0.28s cubic-bezier(.4, 0, .2, 1);
+      pointer-events: none;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    #toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* ═══════════════════════════════════════════
+       EMPTY STATES — BRANDED ONBOARDING
+    ═══════════════════════════════════════════ */
+    .empty {
+      text-align: center;
+      padding: 40px 24px;
+      background: var(--surface);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      margin-top: 8px;
+    }
+
+    .empty-icon {
+      font-size: 36px;
+      margin-bottom: 14px;
+    }
+
+    .empty-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .empty-body {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .empty-cta {
+      display: inline-flex;
+    }
+
+    /* ═══════════════════════════════════════════
+       UTILITY
+    ═══════════════════════════════════════════ */
+    .agency-only {
+      display: none;
+    }
+
+    .flex {
+      display: flex;
+    }
+
+    .items-center {
+      align-items: center;
+    }
+
+    .justify-between {
+      justify-content: space-between;
+    }
+
+    .gap-2 {
+      gap: 8px;
+    }
+
+    .gap-3 {
+      gap: 12px;
+    }
+
+    .mt-1 {
+      margin-top: 4px;
+    }
+
+    .mt-2 {
+      margin-top: 8px;
+    }
+
+    .mt-3 {
+      margin-top: 12px;
+    }
+
+    .text-em {
+      color: var(--em);
+    }
+
+    .text-ind {
+      color: var(--indigo);
+    }
+
+    .text-hot {
+      color: var(--risk);
+    }
+
+    .text-warn {
+      color: var(--warn);
+    }
+
+    .text-muted {
+      color: var(--muted);
+    }
+
+    .text-mid {
+      color: var(--muted);
+    }
+
+    .font-bold {
+      font-weight: 700;
+    }
+
+    .text-xs {
+      font-size: 11px;
+    }
+
+    .text-sm {
+      font-size: 13px;
+    }
+
+    .w-full {
+      width: 100%;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    /* ═══════════════════════════════════════════
+       MENU DRAWER ITEMS
+    ═══════════════════════════════════════════ */
+    .menu-drawer-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 12px;
+      border-radius: 14px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      text-align: left;
+      transition: background 0.15s;
+    }
+
+    .menu-drawer-item:active {
+      background: var(--surface2);
+    }
+
+    .menu-drawer-icon {
+      font-size: 20px;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .menu-drawer-label {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .menu-drawer-chevron {
+      font-size: 18px;
+      color: var(--muted);
+    }
+
+    .menu-drawer-item.danger .menu-drawer-label {
+      color: var(--risk);
+    }
+
+    /* ═══════════════════════════════════════════
+       FLOATING ACTION BUTTON
+    ═══════════════════════════════════════════ */
+    #fabContainer {
+      position: fixed;
+      bottom: calc(var(--nav-h) + 16px);
+      right: 16px;
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    #fabOptions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .fab-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: fabItem 0.2s ease both;
+    }
+
+    .fab-label {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      padding: 7px 13px;
+      border-radius: var(--r-pill);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .fab-dot {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .fab-dot:active {
+      transform: scale(0.9);
+    }
+
+    #fabMain {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: var(--indigo);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px var(--indigo-glow);
+      transition: transform 0.22s ease;
+      flex-shrink: 0;
+    }
+
+    #fabMain:active {
+      transform: scale(0.9);
+    }
+
+    #fabMain.is-open {
+      transform: rotate(45deg);
+    }
+
+    @keyframes fabItem {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ═══════════════════════════════════════════
+       OPERATIONS TAB
+    ═══════════════════════════════════════════ */
+    .ops-task {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      margin-bottom: 8px;
+      transition: transform 0.18s;
+    }
+
+    .ops-task:active { transform: scale(0.985); }
+
+    .ops-task-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+      background: var(--surface2);
+    }
+
+    .ops-task-info { flex: 1; min-width: 0; }
+
+    .ops-task-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .ops-task-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
   </style>
 </head>
+
 <body>
 
-<!-- HEADER -->
-<div id="appHeader">
-  <div class="brand-row">
-    <div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
-        <div class="wordmark">Est<span>8</span>Go</div>
-        <div class="cc-pill">Command Center</div>
+  <!-- ══════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════ -->
+  <div id="appHeader">
+
+    <!-- ── Row 1: Est8Go Wordmark + Actions ── -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px">
+
+      <div>
+        <!-- Wordmark -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <div class="wordmark">Est<span>8</span>Go</div>
+          <div class="cc-pill">Command Center</div>
+        </div>
+        <!-- Live + tenant identity -->
+        <div class="live-row">
+          <div class="live-dot"></div>
+          <span class="live-text">Platform Live</span>
+          <span class="live-sep">·</span>
+          <span class="tenant-type-badge" id="tenantTypeBadge">Loading</span>
+        </div>
       </div>
-      <div class="live-row">
-        <div class="live-dot"></div>
-        <span class="live-text">Platform Live</span>
-        <span class="live-sep">·</span>
-        <span class="type-badge" id="tenantTypeBadge">—</span>
-      </div>
-    </div>
-    <div class="hdr-right">
-      <div class="health-pill stable" id="healthPill"><span class="h-dot"></span><span id="healthText">Trust Stable</span></div>
-      <div style="position:relative">
-        <div id="userAvatar" onclick="toggleUserMenu()">—</div>
-        <div id="userMenu">
-          <div class="menu-hdr"><div class="menu-lbl">Signed in as</div><div id="menuEmail"></div></div>
-          <button class="menu-item" onclick="switchTab('trust');closeMenu()">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-            Trust Center
-          </button>
-          <button class="menu-item danger" onclick="Auth.logout()">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/></svg>
-            Sign Out
-          </button>
+
+      <!-- Right: health pill + avatar -->
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <div class="health-pill stable" id="healthPill">
+          <span class="health-dot"></span>
+          <span id="healthText">Trust Stable</span>
+        </div>
+        <div style="position:relative">
+          <div id="userAvatar" onclick="toggleUserMenu()">BA</div>
+          <div id="userMenu">
+            <div class="menu-header">
+              <div class="menu-label">Signed in as</div>
+              <div id="menuEmail"></div>
+            </div>
+            <button class="menu-item" onclick="switchTab('trust'); closeMenu()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              Trust Center
+            </button>
+            <button class="menu-item danger" onclick="Auth.logout()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+              </svg>
+              Sign Out
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Full identity bar -->
-  <div class="biz-bar">
-    <div class="biz-logo" id="bizLogo">E8</div>
-    <div style="flex:1;min-width:0">
-      <div class="biz-name" id="bizName">Loading...</div>
-      <div class="biz-meta">
-        <span class="trust-badge"><span>●</span> Verified</span>
-        <span class="plan-badge" id="planBadge">—</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Compact identity (shows on scroll) -->
-  <div class="compact-id">
-    <div class="live-dot"></div>
-    <span class="compact-name" id="compactBizName">—</span>
-    <span class="live-sep">·</span>
-    <span class="health-pill stable" id="healthPillC" style="padding:3px 8px;font-size:8px"><span class="h-dot"></span><span id="healthTextC">Stable</span></span>
-  </div>
-
-  <!-- Instant metrics -->
-  <div class="im-grid">
-    <div class="im-card hot"><div class="im-lbl">🔥 Hot Leads</div><div class="im-val hot" id="imHot">—</div></div>
-    <div class="im-card em"> <div class="im-lbl">💬 Convos</div>  <div class="im-val em"  id="imConvos">—</div></div>
-    <div class="im-card ind" id="imTrustCard"><div class="im-lbl">🛡️ Trust</div><div class="im-val ind" id="imTrust">—</div></div>
-  </div>
-</div>
-
-<!-- SCROLL AREA -->
-<div id="scrollArea">
-
-  <!-- HOME -->
-  <div id="homeTab" class="tab active" style="padding-top:4px">
-    <div id="alertsZone"></div>
-    <div class="sep">Pending Follow-ups</div>
-    <div id="followupList">
-      <div class="empty" style="padding:24px 20px"><div class="empty-icon">✅</div><div class="empty-title">All Caught Up</div><div class="empty-body">No pending follow-ups right now. Your pipeline is responding well.</div></div>
-    </div>
-    <div class="sep">Pipeline Intelligence</div>
-    <div class="card" id="pipelineCard">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-        <div><div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tx-muted)">Projected Value</div><div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--em);margin-top:2px" id="pipelineValue">Calculating...</div></div>
-        <div style="text-align:right"><div style="font-size:10px;color:var(--tx-muted);margin-bottom:2px">Est. Commission</div><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--amb)" id="commissionEst">—</div></div>
-      </div>
-      <div id="funnelBars"></div>
-      <div style="font-size:10px;color:var(--tx-muted);margin-top:8px;font-style:italic">* Projected estimates from active pipeline data</div>
-    </div>
-    <div class="agency-only" id="agencyHomeBlock"><div class="sep">Team Snapshot</div><div id="teamSnapshot"></div></div>
-  </div>
-
-  <!-- PIPELINE -->
-  <div id="pipelineTab" class="tab" style="padding-top:4px">
-    <div class="sep">Live Pipeline</div>
-    <div id="leadList">
-      <div class="empty"><div class="empty-icon">⚡</div><div class="empty-title">Your Pipeline is Quiet</div><div class="empty-body">Your active buyer conversations will appear here. Once leads begin interacting with your listings, Pipeline helps you track momentum and follow-ups.</div><button class="btn btn-ind btn-sm" onclick="switchTab('listings')" style="margin:0 auto">View Active Listings →</button></div>
-    </div>
-  </div>
-
-  <!-- TRUST -->
-  <div id="trustTab" class="tab" style="padding-top:4px">
-    <div class="sep">Trust Overview</div>
-    <div class="card" style="margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:14px">
-        <div class="trust-ring">
-          <svg width="90" height="90" viewBox="0 0 90 90">
-            <circle cx="45" cy="45" r="37" fill="none" stroke="var(--s2)" stroke-width="8"/>
-            <circle id="trustRingFill" cx="45" cy="45" r="37" fill="none" stroke="var(--em)" stroke-width="8" stroke-linecap="round" stroke-dasharray="232" stroke-dashoffset="232" style="transition:stroke-dashoffset 1.2s ease"/>
-          </svg>
-          <div class="ring-text"><div class="ring-num" style="color:var(--em)" id="trustScoreNum">—</div><div class="ring-lbl">/ 100</div></div>
+    <!-- ── Row 2: Business Identity Bar ── -->
+    <div class="biz-bar">
+      <div class="biz-logo" id="bizLogo">E8</div>
+      <div style="flex:1;min-width:0">
+        <div class="biz-name" id="bizName">Loading...</div>
+        <div class="biz-meta">
+          <span class="trust-badge" id="trustBadge"><span>●</span> Verified</span>
+          <span class="plan-badge" id="planBadge">—</span>
         </div>
-        <div style="flex:1"><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800" id="trustGradeText">—</div><div style="font-size:12px;color:var(--tx-muted);margin-top:4px;line-height:1.5" id="trustGradeDesc">Loading trust profile...</div></div>
       </div>
     </div>
-    <div class="sep">Verification Breakdown</div>
-    <div class="card">
-      <div class="trust-item"><div class="trust-icon">📍</div><div class="trust-detail"><div class="trust-title">GPS Verification</div><div class="trust-sub" id="gpsStatus">Checking...</div></div><div class="trust-status" style="color:var(--em)" id="gpsScore">+30</div><button class="trust-action" onclick="toast('Visit the property to re-verify GPS','info')">Re-verify</button></div>
-      <div class="trust-item"><div class="trust-icon">🤖</div><div class="trust-detail"><div class="trust-title">AI Media Audit</div><div class="trust-sub" id="aiStatus">Analysing images...</div></div><div class="trust-status" style="color:#818CF8" id="aiScore">+20</div><button class="trust-action" onclick="switchTab('listings')">Upload</button></div>
-      <div class="trust-item"><div class="trust-icon">📄</div><div class="trust-detail"><div class="trust-title">Document Verification</div><div class="trust-sub" id="docStatus">C of O · Deed · Survey</div></div><div class="trust-status" style="color:var(--amb)" id="docScore">+40</div><button class="trust-action" onclick="openModal('uploadModal')">Upload</button></div>
-      <div class="trust-item"><div class="trust-icon">👥</div><div class="trust-detail"><div class="trust-title">Witness Attestation</div><div class="trust-sub" id="witnessStatus">Independent witnesses</div></div><div class="trust-status" style="color:var(--tx-mid)" id="witnessScore">+10</div></div>
-    </div>
-    <div class="sep">Listing Health</div>
-    <div id="listingHealthList">
-      <div class="empty"><div class="empty-icon">🛡️</div><div class="empty-title">No Listings to Verify</div><div class="empty-body">Trust verification helps buyers identify reliable listings faster. Add a property and complete verification to unlock trust visibility.</div><button class="btn btn-ind btn-sm" onclick="openModal('uploadModal')" style="margin:0 auto">Start Verification →</button></div>
-    </div>
-    <div class="sep">Risk & Warnings</div>
-    <div id="fraudAlerts">
-      <div class="card em-card" style="text-align:center;padding:20px"><div style="font-size:28px;margin-bottom:8px">🛡️</div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--em)">No Active Alerts</div><div style="font-size:12px;color:var(--tx-muted);margin-top:6px">Your trust infrastructure is clean.</div></div>
-    </div>
-  </div>
 
-  <!-- LISTINGS -->
-  <div id="listingsTab" class="tab" style="padding-top:4px">
-    <div class="sep">Property Listings</div>
-    <div id="vaultList">
-      <div class="empty"><div class="empty-icon">🏠</div><div class="empty-title">Your Vault is Empty</div><div class="empty-body">Your listings become the operational foundation of your business. Add your first GPS-verified property to begin receiving buyer interest and trust scoring.</div><button class="btn btn-em btn-sm" onclick="openModal('uploadModal')" style="margin:0 auto">Add First Listing →</button></div>
-    </div>
-  </div>
-
-  <!-- STUDIO -->
-  <div id="studioTab" class="tab" style="padding-top:4px">
-    <div class="sep">Marketing Studio</div>
-    <div class="card" style="text-align:center;padding:28px 20px;margin-bottom:10px">
-      <div style="font-size:40px;margin-bottom:12px">🎬</div>
-      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px">One-Click Reels</div>
-      <p style="font-size:12px;color:var(--tx-muted);line-height:1.7;margin-bottom:18px">Turn verified property photos into professional Instagram Reels with trust badge overlays and trending audio.</p>
-      <button class="btn btn-ind btn-sm btn-full" onclick="switchTab('listings')">Select Property →</button>
-    </div>
-    <div class="sep">Recent Reels</div>
-    <div id="reelList">
-      <div class="empty"><div class="empty-icon">🎬</div><div class="empty-title">Studio is Ready</div><div class="empty-body">Select a verified listing to generate a professional property reel with trust badge overlay and AI-assisted content.</div><button class="btn btn-ind btn-sm" onclick="switchTab('listings')" style="margin:0 auto">Choose a Listing →</button></div>
-    </div>
-  </div>
-
-  <!-- NETWORK -->
-  <div id="networkTab" class="tab" style="padding-top:4px">
-    <div class="agency-only" id="agencyNetworkBlock">
-      <div class="sep">Team Management</div>
-      <div id="teamList">
-        <div class="empty"><div class="empty-icon">👥</div><div class="empty-title">Build Your Team</div><div class="empty-body">Invite realtors to your agency to track their lead activity, assignments, and performance from one dashboard.</div></div>
-      </div>
-      <div class="grid2" style="margin-top:10px">
-        <button class="btn btn-gh btn-sm btn-full" onclick="openModal('inviteModal')">+ Invite Realtor</button>
-        <button class="btn btn-gh btn-sm btn-full" onclick="toast('Team reports coming soon','info')">📊 Reports</button>
-      </div>
-      <div class="sep">Lead Assignment</div>
-      <div class="card" style="text-align:center;padding:20px"><div style="font-size:24px;margin-bottom:8px">⚡</div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">Smart Assignment</div><div style="font-size:12px;color:var(--tx-muted);margin-top:6px;line-height:1.5">Assign hot leads to your best available realtor. Auto-routing coming soon.</div><button class="btn btn-ind btn-sm" style="margin-top:12px" onclick="switchTab('pipeline')">View Hot Leads →</button></div>
-    </div>
-    <div class="sep">Partner Network</div>
-    <div class="card" style="padding:20px;margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:14px"><div style="font-size:36px">🤝</div><div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:4px">Est8Go Partner Network</div><p style="font-size:12px;color:var(--tx-muted);line-height:1.6">Refer verified properties and buyers to partner agents. Every closed deal earns a split commission tracked on the platform.</p></div></div>
-    </div>
-    <div class="grid2" style="margin-bottom:10px">
-      <div class="card" style="text-align:center;padding:16px;margin-bottom:0"><div style="font-size:9px;font-weight:700;color:var(--tx-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Referrals Sent</div><div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--em)" id="netReferrals">0</div></div>
-      <div class="card" style="text-align:center;padding:16px;margin-bottom:0"><div style="font-size:9px;font-weight:700;color:var(--tx-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Est. Commission</div><div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--amb)" id="netCommission">₦0</div></div>
-    </div>
-    <div class="sep">Trusted Professionals</div>
-    <div class="card em-card" style="margin-bottom:8px"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:28px">🔍</div><div style="flex:1"><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">Inspector Registry</div><div style="font-size:12px;color:var(--tx-muted);margin-top:3px">Est8Go-verified independent inspectors</div></div><button class="btn btn-em btn-sm" onclick="toast('Inspector registry coming soon','info')">Browse</button></div></div>
-    <div class="card" style="margin-bottom:8px"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:28px">⚖️</div><div style="flex:1"><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">Legal Partners</div><div style="font-size:12px;color:var(--tx-muted);margin-top:3px">Verified lawyers for title searches and transactions</div></div><button class="btn btn-gh btn-sm" onclick="toast('Legal network launching soon','info')">Soon</button></div></div>
-    <div id="networkList"></div>
-  </div>
-
-</div><!-- /scrollArea -->
-
-<!-- KORA -->
-<div id="koraChatBox">
-  <div class="kora-hdr">
-    <div><div class="kora-title">Kora · Operational Intelligence</div><div style="font-size:11px;color:var(--tx-muted);margin-top:2px">Your Est8Go business assistant</div></div>
-    <button class="kora-close" onclick="toggleKora()">✕</button>
-  </div>
-  <div class="kora-msgs" id="koraMsgs">
-    <div class="kora-msg k">Good day. I'm monitoring your pipeline and trust signals. What do you need right now?</div>
-  </div>
-  <div class="kora-row">
-    <input class="kora-input" id="koraInput" placeholder="Ask Kora anything..." onkeydown="if(event.key==='Enter')sendKora()"/>
-    <button class="kora-send" onclick="sendKora()"><svg width="16" height="16" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg></button>
-  </div>
-</div>
-<div style="position:fixed;bottom:calc(var(--nav-h) + 12px);right:14px;z-index:601">
-  <div class="kora-fab" onclick="toggleKora()">✦</div>
-</div>
-
-<!-- BOTTOM NAV -->
-<nav id="bottomNav">
-  <div class="nav-pill">
-    <button class="nav-btn active" id="btnHome" onclick="switchTab('home')"><svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg><span>Home</span></button>
-    <button class="nav-btn" id="btnPipeline" onclick="switchTab('pipeline')"><svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg><span>Pipeline</span></button>
-    <button class="nav-btn" id="btnListings" onclick="switchTab('listings')"><svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg><span>Listings</span></button>
-    <button class="nav-add" onclick="openModal('quickModal')"><svg width="21" height="21" fill="none" stroke="#fff" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></button>
-    <button class="nav-btn" id="btnTrust" onclick="switchTab('trust')"><svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg><span>Trust</span></button>
-    <button class="nav-btn" id="btnStudio" onclick="switchTab('studio')"><svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg><span>Studio</span></button>
-    <button class="nav-btn" id="btnNetwork" onclick="switchTab('network')"><svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span>Network</span></button>
-  </div>
-</nav>
-
-<!-- MODALS -->
-<div class="modal-bd" id="uploadModal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-hdr"><span class="modal-title">List Property</span><button class="modal-close" onclick="closeModal('uploadModal')">✕</button></div>
-    <div class="modal-body">
-      <form id="uploadForm" onsubmit="handleUpload(event)">
-        <div class="gps-zone">
-          <button type="button" class="btn btn-em btn-sm" id="gpsBtn" onclick="captureGPS()">📍 Capture Site GPS</button>
-          <p style="font-size:10px;color:var(--tx-muted);margin-top:8px">You must be physically on the property</p>
-          <input type="hidden" id="lat"><input type="hidden" id="lng">
+    <!-- ── Row 3: Instant Metrics ── -->
+    <div class="instant-metrics">
+      <div class="im-card hot">
+        <div class="im-inner">
+          <div class="im-label">🔥 Hot</div>
+          <div class="im-val hot" id="imHot">—</div>
         </div>
-        <label class="f-lbl">Listing Title</label><input class="field" name="title" placeholder="e.g. 3BR Duplex — Maitama" required>
-        <label class="f-lbl">Price (₦)</label><input class="field" name="price" type="number" placeholder="45000000" required>
-        <label class="f-lbl">Location</label>
-        <input class="field" list="areas" name="location_name" placeholder="e.g. Maitama" required>
-        <datalist id="areas"><option value="Maitama"><option value="Asokoro"><option value="Gwarinpa"><option value="Jabi"><option value="Wuse 2"><option value="Lekki"><option value="Victoria Island"><option value="Ikoyi"><option value="Ajah"></datalist>
-        <label class="f-lbl">Property Type</label>
-        <select class="field" name="prop_type"><option value="land">Land</option><option value="house">House / Duplex</option><option value="apartment">Apartment / Flat</option><option value="commercial">Commercial</option></select>
-        <label class="f-lbl">Photos (min. 3)</label>
-        <input class="field" type="file" name="images" multiple accept="image/*" style="padding:10px">
-        <button type="submit" class="btn btn-em btn-md btn-full" style="margin-top:18px">Submit for Verification →</button>
-      </form>
+      </div>
+      <div class="im-card em">
+        <div class="im-inner">
+          <div class="im-label">💬 Convos</div>
+          <div class="im-val em" id="imConvos">—</div>
+        </div>
+      </div>
+      <div class="im-card ind" id="imTrustCard">
+        <div class="im-inner">
+          <div class="im-label">🛡️ Trust</div>
+          <div class="im-val ind" id="imTrust">—</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCROLL AREA
+  ══════════════════════════════════════ -->
+  <div id="scrollArea">
+
+    <!-- ─────────────── HOME TAB ─────────────── -->
+    <div id="homeTab" class="tab active" style="padding-top:4px">
+
+      <!-- Verification Alerts (instant) -->
+      <div id="alertsZone"></div>
+
+      <!-- Pending Follow-ups (instant) -->
+      <div class="sep">Pending Follow-ups</div>
+      <div id="followupList">
+        <div class="empty" style="padding:28px 20px">
+          <div class="empty-icon">🏠</div>
+          <div class="empty-title">Welcome to your Command Center</div>
+          <div class="empty-body">Add your first property and connect your WhatsApp to start seeing live activity.</div>
+          <button class="btn btn-ind btn-sm empty-cta" onclick="openModal('uploadModal')">Get Started</button>
+        </div>
+      </div>
+
+      <!-- Pipeline (lazy) -->
+      <div class="sep">Pipeline Intelligence</div>
+      <div class="card" id="pipelineCard">
+        <div class="flex items-center justify-between" style="margin-bottom:14px">
+          <div>
+            <div class="text-xs text-muted" style="text-transform:uppercase;letter-spacing:0.08em;font-weight:600">
+              Projected Value</div>
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--em);margin-top:2px"
+              id="pipelineValue">Calculating...</div>
+          </div>
+          <div style="text-align:right">
+            <div class="text-xs text-muted" style="margin-bottom:2px">Est. Commission</div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--warn)"
+              id="commissionEst">—</div>
+          </div>
+        </div>
+        <div id="funnelBars"></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:10px;font-style:italic">* Projected estimates
+          based on active pipeline data</div>
+      </div>
+
+      <!-- Agency Only: Team Snapshot -->
+      <div class="agency-only" id="agencyHomeBlock">
+        <div class="sep">Team Snapshot</div>
+        <div id="teamSnapshot"></div>
+      </div>
+
+    </div>
+
+    <!-- ─────────────── PIPELINE TAB ─────────────── -->
+    <div id="pipelineTab" class="tab" style="padding-top:4px">
+      <div class="sep">Live Pipeline</div>
+      <div id="leadList">
+        <div class="empty">
+          <div class="empty-icon">⚡</div>
+          <div class="empty-title">No active pipeline yet</div>
+          <div class="empty-body">Once buyers interact with your listings via WhatsApp, their journey appears here.</div>
+          <button class="btn btn-ind btn-sm empty-cta" onclick="switchTab('properties')">View Listings</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────── OPERATIONS TAB ─────────────── -->
+    <div id="operationsTab" class="tab" style="padding-top:4px">
+      <div class="sep">Operations Board</div>
+      <div id="operationsList">
+        <div class="empty">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">Your operations board is clear</div>
+          <div class="empty-body">Schedule site visits, set follow-up reminders, and manage your daily workflow here.</div>
+          <button class="btn btn-ind btn-sm empty-cta" onclick="toast('Scheduling coming soon','info')">Schedule a Visit</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────── TRUST CENTER TAB ─────────────── -->
+    <div id="trustTab" class="tab" style="padding-top:4px">
+
+      <!-- Score Overview -->
+      <div class="sep">Trust Overview</div>
+      <div class="card" style="margin-bottom:10px">
+        <div class="flex items-center gap-3">
+          <div class="trust-score-ring">
+            <svg width="88" height="88" viewBox="0 0 88 88">
+              <circle cx="44" cy="44" r="36" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8" />
+              <circle id="trustRingFill" cx="44" cy="44" r="36" fill="none" stroke="var(--em)" stroke-width="8"
+                stroke-linecap="round" stroke-dasharray="226" stroke-dashoffset="226"
+                style="transition:stroke-dashoffset 1.2s ease" />
+            </svg>
+            <div class="score-text">
+              <div class="score-num text-em" id="trustScoreNum">—</div>
+              <div class="score-label">/ 100</div>
+            </div>
+          </div>
+          <div style="flex:1">
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800" id="trustGradeText">—</div>
+            <div class="text-xs text-muted mt-1" id="trustGradeDesc">Loading trust profile...</div>
+            <div style="margin-top:10px">
+              <div class="trust-badge" id="trustBadgeLarge">
+                <span>●</span> <span id="trustBadgeLabel">Loading</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Verification Breakdown -->
+      <div class="sep">Verification Breakdown</div>
+      <div class="card">
+        <div class="trust-item">
+          <div class="trust-icon" style="background:rgba(16,185,129,0.1)">📍</div>
+          <div class="trust-detail">
+            <div class="trust-title">GPS Verification</div>
+            <div class="trust-sub" id="gpsStatus">Checking location records...</div>
+          </div>
+          <div class="trust-status text-em" id="gpsScore">+30</div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon" style="background:rgba(99,102,241,0.1)">🤖</div>
+          <div class="trust-detail">
+            <div class="trust-title">AI Media Audit</div>
+            <div class="trust-sub" id="aiStatus">Analysing property images...</div>
+          </div>
+          <div class="trust-status" style="color:#818CF8" id="aiScore">+20</div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon" style="background:rgba(251,191,36,0.1)">📄</div>
+          <div class="trust-detail">
+            <div class="trust-title">Document Verification</div>
+            <div class="trust-sub" id="docStatus">C of O · Deed · Survey</div>
+          </div>
+          <div class="trust-status text-warn" id="docScore">+40</div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon" style="background:rgba(255,255,255,0.06)">👥</div>
+          <div class="trust-detail">
+            <div class="trust-title">Witness Attestation</div>
+            <div class="trust-sub" id="witnessStatus">Independent witnesses</div>
+          </div>
+          <div class="trust-status text-mid" id="witnessScore">+10</div>
+        </div>
+      </div>
+
+      <!-- Listing Health -->
+      <div class="sep">Listing Health</div>
+      <div id="listingHealthList">
+        <div class="empty">
+          <div class="empty-icon">🛡️</div>
+          <div class="empty-title">No Listings to Verify</div>
+          <div class="empty-body">Trust verification helps buyers identify reliable listings faster. Add a property and
+            complete verification to unlock trust visibility across the platform.</div>
+          <button class="btn btn-ind btn-sm empty-cta" onclick="openModal('uploadModal')">Start Verification →</button>
+        </div>
+      </div>
+
+      <!-- Fraud Alerts -->
+      <div class="sep">Risk & Warnings</div>
+      <div id="fraudAlerts">
+        <div class="card em-card" style="text-align:center;padding:20px">
+          <div style="font-size:28px;margin-bottom:8px">🛡️</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--em)">No Active Alerts
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px">Your trust infrastructure is clean. All
+            listings are passing verification checks.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ─────────────── PROPERTIES TAB ─────────────── -->
+    <div id="propertiesTab" class="tab" style="padding-top:4px">
+      <div class="sep">Properties</div>
+      <div id="vaultList">
+        <div class="empty">
+          <div class="empty-icon">🏗️</div>
+          <div class="empty-title">Your listings live here</div>
+          <div class="empty-body">Add your first verified property to start receiving buyer interest and trust scoring.</div>
+          <button class="btn btn-em btn-sm empty-cta" onclick="openModal('uploadModal')">Add First Listing</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────── STUDIO TAB ─────────────── -->
+    <div id="studioTab" class="tab" style="padding-top:4px">
+      <div class="sep">Marketing Studio</div>
+      <div class="card" style="text-align:center;padding:28px 20px;margin-bottom:10px">
+        <div style="font-size:40px;margin-bottom:12px">🎬</div>
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px">One-Click Reels
+        </div>
+        <p class="text-xs text-muted" style="line-height:1.7;margin-bottom:18px">Turn verified property photos into
+          professional Instagram Reels with trust badge overlays and trending audio.</p>
+        <button class="btn btn-em btn-sm btn-full" onclick="switchTab('properties')">Select Property →</button>
+      </div>
+      <div class="sep">Recent Reels</div>
+      <div id="reelList">
+        <div class="empty">
+          <div class="empty-icon">🎬</div>
+          <div class="empty-title">Studio is Ready</div>
+          <div class="empty-body">Select a verified listing from your vault to generate a professional property reel
+            with trust badge overlay and AI-assisted content.</div>
+          <button class="btn btn-ind btn-sm empty-cta" onclick="switchTab('properties')">Choose a Listing →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────── NETWORK TAB ─────────────── -->
+    <div id="networkTab" class="tab" style="padding-top:4px">
+
+      <!-- Agency Only: Team Management -->
+      <div class="agency-only" id="agencyNetworkBlock">
+        <div class="sep">Team Management</div>
+        <div id="teamList">
+          <div class="empty">
+            <div class="empty-icon">👥</div>
+            <div class="empty-title">Build Your Team</div>
+            <div class="empty-body">Invite realtors to your agency to track their lead activity, assignments, and
+              performance from one dashboard.</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+          <button class="btn btn-ghost btn-sm btn-full" onclick="openModal('inviteModal')">+ Invite Realtor</button>
+          <button class="btn btn-ghost btn-sm btn-full" onclick="toast('Team reports coming soon','info')">📊
+            Reports</button>
+        </div>
+
+        <div class="sep">Lead Assignment</div>
+        <div id="leadAssignList">
+          <div class="card" style="text-align:center;padding:20px">
+            <div style="font-size:24px;margin-bottom:8px">⚡</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">Smart Assignment</div>
+            <div class="text-xs text-muted mt-1" style="line-height:1.5">Assign hot leads to your best available
+              realtor. Auto-routing coming in next release.</div>
+            <button class="btn btn-em btn-sm" style="margin-top:12px" onclick="switchTab('pipeline')">View Hot Leads
+              →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Universal: Partner Network -->
+      <div class="sep">Partner Network</div>
+      <div class="card" style="padding:20px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="font-size:36px">🤝</div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:4px">Est8Go Partner
+              Network</div>
+            <p class="text-xs text-muted" style="line-height:1.6">Refer verified properties and buyers to partner
+              agents. Every closed deal earns a split commission tracked on the platform.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Referral Stats -->
+      <div class="grid-2" style="margin-bottom:10px">
+        <div class="card" style="text-align:center;padding:16px">
+          <div
+            style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">
+            Referrals Sent</div>
+          <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--em)"
+            id="netReferralsSent">0</div>
+        </div>
+        <div class="card" style="text-align:center;padding:16px">
+          <div
+            style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">
+            Est. Commission</div>
+          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--warn)"
+            id="netCommission">₦0</div>
+        </div>
+      </div>
+
+      <!-- Inspector / Legal Network -->
+      <div class="sep">Trusted Professionals</div>
+      <div class="card em-card" style="margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:28px">🔍</div>
+          <div style="flex:1">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">Inspector Registry</div>
+            <div class="text-xs text-muted mt-1">Connect with Est8Go-verified independent inspectors for on-site
+              property checks</div>
+          </div>
+          <button class="btn btn-em btn-sm" onclick="toast('Inspector registry coming soon','info')">Browse</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:28px">⚖️</div>
+          <div style="flex:1">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">Legal Partners</div>
+            <div class="text-xs text-muted mt-1">Verified lawyers and conveyancers for title searches and transaction
+              support</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="toast('Legal network launching soon','info')">Soon</button>
+        </div>
+      </div>
+
+      <div id="networkList"></div>
+    </div>
+
+    <!-- ─────────────── ANALYTICS TAB (menu only) ─────────────── -->
+    <div id="analyticsTab" class="tab" style="padding-top:4px">
+      <div class="sep">Analytics</div>
+      <div class="empty">
+        <div class="empty-icon">📊</div>
+        <div class="empty-title">Analytics Dashboard</div>
+        <div class="empty-body">Performance metrics, conversion rates, and revenue trends across your portfolio.</div>
+        <button class="btn btn-ind btn-sm empty-cta" onclick="toast('Full analytics coming soon','info')">Coming Soon</button>
+      </div>
+    </div>
+
+  </div><!-- /scrollArea -->
+
+  <!-- ══════════════════════════════════════
+       KORA ASSISTANT
+  ══════════════════════════════════════ -->
+  <!-- KORA CHAT BOX -->
+  <div id="koraChatBox" style="
+    position:fixed; bottom:calc(var(--nav-h) + 70px); right:14px; left:14px;
+    background:var(--surface); border:1px solid var(--indigo-glow); border-top:2px solid var(--indigo-lg); border-radius:18px;
+    padding:16px; box-shadow:0 8px 32px rgba(0,0,0,0.5);
+    max-height:48vh; display:none; flex-direction:column; gap:10px; z-index:600;
+  ">
+    <div class="kora-header">
+      <div>
+        <div class="kora-title">Kora · Operational Intelligence</div>
+        <div class="text-xs text-muted" style="margin-top:2px">Your Est8Go business assistant</div>
+      </div>
+      <button class="kora-close" onclick="toggleKora()">✕</button>
+    </div>
+    <div class="kora-msgs" id="koraMsgs">
+      <div class="kora-msg kora">Good day. I'm monitoring your pipeline and trust signals. What do you need right now?
+      </div>
+    </div>
+    <div class="kora-input-row">
+      <input class="kora-input" id="koraInput" placeholder="Ask Kora anything..."
+        onkeydown="if(event.key==='Enter')sendKora()" />
+      <button class="kora-send" onclick="sendKora()">
+        <svg width="16" height="16" fill="none" stroke="#020812" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+        </svg>
+      </button>
     </div>
   </div>
-</div>
+  <!-- KORA FAB -->
+  <div style="position:fixed;bottom:calc(var(--nav-h) + 16px);left:16px;z-index:501">
+    <div class="kora-bubble" onclick="toggleKora()">✦</div>
+  </div>
 
-<div class="modal-bd" id="quickModal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-hdr"><span class="modal-title">Quick Actions</span><button class="modal-close" onclick="closeModal('quickModal')">✕</button></div>
-    <div class="modal-body" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:16px">
-      <button class="card" style="text-align:center;cursor:pointer;padding:20px 10px" onclick="closeModal('quickModal');openModal('uploadModal')"><div style="font-size:28px;margin-bottom:8px">🏠</div><div style="font-size:12px;font-weight:600">List Property</div></button>
-      <button class="card" style="text-align:center;cursor:pointer;padding:20px 10px" onclick="closeModal('quickModal');switchTab('trust')"><div style="font-size:28px;margin-bottom:8px">🛡️</div><div style="font-size:12px;font-weight:600">Trust Center</div></button>
-      <button class="card" style="text-align:center;cursor:pointer;padding:20px 10px" onclick="closeModal('quickModal');switchTab('pipeline')"><div style="font-size:28px;margin-bottom:8px">⚡</div><div style="font-size:12px;font-weight:600">Pipeline</div></button>
-      <button class="card" style="text-align:center;cursor:pointer;padding:20px 10px" onclick="closeModal('quickModal');switchTab('studio')"><div style="font-size:28px;margin-bottom:8px">🎬</div><div style="font-size:12px;font-weight:600">Create Reel</div></button>
-      <button class="card agency-only" id="qaInvite" style="text-align:center;cursor:pointer;padding:20px 10px;display:none" onclick="closeModal('quickModal');openModal('inviteModal')"><div style="font-size:28px;margin-bottom:8px">👥</div><div style="font-size:12px;font-weight:600">Invite Realtor</div></button>
-      <button class="card" style="text-align:center;cursor:pointer;padding:20px 10px" onclick="closeModal('quickModal');switchTab('network')"><div style="font-size:28px;margin-bottom:8px">🤝</div><div style="font-size:12px;font-weight:600">Network</div></button>
+  <!-- ══════════════════════════════════════
+       FLOATING ACTION BUTTON
+  ══════════════════════════════════════ -->
+  <div id="fabContainer">
+    <div id="fabOptions"></div>
+    <button id="fabMain" aria-label="Quick actions">
+      <svg width="22" height="22" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       BOTTOM NAV
+  ══════════════════════════════════════ -->
+  <nav id="bottomNav">
+    <div class="nav-pill">
+      <button class="nav-btn active" id="btnHome" onclick="switchTab('home')">
+        <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+        </svg>
+        <span>Home</span>
+      </button>
+      <button class="nav-btn" id="btnProperties" onclick="switchTab('properties')">
+        <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        <span>Properties</span>
+      </button>
+      <button class="nav-btn" id="btnPipeline" onclick="switchTab('pipeline')">
+        <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        <span>Pipeline</span>
+      </button>
+      <button class="nav-btn" id="btnOperations" onclick="switchTab('operations')">
+        <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+        <span>Operations</span>
+      </button>
+      <button class="nav-btn" id="btnMenu" onclick="openMenuDrawer()">
+        <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <span>Menu</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════
+       MODAL: UPLOAD PROPERTY
+  ══════════════════════════════════════ -->
+  <div class="modal-backdrop" id="uploadModal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span class="modal-title">List Property</span>
+        <button class="modal-close" onclick="closeModal('uploadModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="uploadForm" onsubmit="handleUpload(event)">
+          <div class="gps-zone">
+            <button type="button" class="btn btn-em btn-sm" id="gpsBtn" onclick="captureGPS()">📍 Capture Site
+              GPS</button>
+            <p style="font-size:10px;color:var(--muted);margin-top:8px">You must be physically on the property</p>
+            <input type="hidden" id="lat"><input type="hidden" id="lng">
+          </div>
+          <label class="field-label">Listing Title</label>
+          <input class="field" name="title" placeholder="e.g. 3BR Duplex — Maitama" required>
+          <label class="field-label">Price (₦)</label>
+          <input class="field" name="price" type="number" placeholder="45000000" required>
+          <label class="field-label">Location</label>
+          <input class="field" list="areas" name="location_name" placeholder="e.g. Maitama" required>
+          <datalist id="areas">
+            <option value="Maitama">
+            <option value="Asokoro">
+            <option value="Gwarinpa">
+            <option value="Jabi">
+            <option value="Wuse 2">
+            <option value="Katampe">
+            <option value="Lekki">
+            <option value="Victoria Island">
+            <option value="Ikoyi">
+            <option value="Ajah">
+          </datalist>
+          <label class="field-label">Property Type</label>
+          <select class="field" name="prop_type">
+            <option value="land">Land</option>
+            <option value="house">House / Duplex</option>
+            <option value="apartment">Apartment / Flat</option>
+            <option value="commercial">Commercial</option>
+          </select>
+          <label class="field-label">Photos (min. 3)</label>
+          <input class="field" type="file" name="images" multiple accept="image/*" style="padding:10px">
+          <button type="submit" class="btn btn-em btn-md btn-full" style="margin-top:18px">Submit for Verification
+            →</button>
+        </form>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="modal-bd" id="inviteModal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-hdr"><span class="modal-title">Invite Realtor</span><button class="modal-close" onclick="closeModal('inviteModal')">✕</button></div>
-    <div class="modal-body">
-      <label class="f-lbl">Email Address</label><input class="field" id="inviteEmail" type="email" placeholder="realtor@agency.com">
-      <label class="f-lbl">Role</label>
-      <select class="field" id="inviteRole"><option value="realtor">Realtor</option><option value="staff">Support Staff</option><option value="marketing">Marketing</option></select>
-      <button class="btn btn-ind btn-md btn-full" style="margin-top:18px" onclick="sendInvite()">Send Invitation →</button>
+  <!-- ══════════════════════════════════════
+       MODAL: QUICK ACTIONS
+  ══════════════════════════════════════ -->
+  <div class="modal-backdrop" id="quickModal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span class="modal-title">Quick Actions</span>
+        <button class="modal-close" onclick="closeModal('quickModal')">✕</button>
+      </div>
+      <div class="modal-body" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:16px">
+        <button class="card" style="text-align:center;cursor:pointer;padding:20px 10px"
+          onclick="closeModal('quickModal');openModal('uploadModal')">
+          <div style="font-size:28px;margin-bottom:8px">🏠</div>
+          <div style="font-size:12px;font-weight:600">List Property</div>
+        </button>
+        <button class="card" style="text-align:center;cursor:pointer;padding:20px 10px"
+          onclick="closeModal('quickModal');switchTab('trust')">
+          <div style="font-size:28px;margin-bottom:8px">🛡️</div>
+          <div style="font-size:12px;font-weight:600">Trust Center</div>
+        </button>
+        <button class="card" style="text-align:center;cursor:pointer;padding:20px 10px"
+          onclick="closeModal('quickModal');switchTab('pipeline')">
+          <div style="font-size:28px;margin-bottom:8px">⚡</div>
+          <div style="font-size:12px;font-weight:600">Pipeline</div>
+        </button>
+        <button class="card" style="text-align:center;cursor:pointer;padding:20px 10px"
+          onclick="closeModal('quickModal');switchTab('studio')">
+          <div style="font-size:28px;margin-bottom:8px">🎬</div>
+          <div style="font-size:12px;font-weight:600">Create Reel</div>
+        </button>
+        <button class="card agency-only" id="qaInvite"
+          style="text-align:center;cursor:pointer;padding:20px 10px;display:none"
+          onclick="closeModal('quickModal');openModal('inviteModal')">
+          <div style="font-size:28px;margin-bottom:8px">👥</div>
+          <div style="font-size:12px;font-weight:600">Invite Realtor</div>
+        </button>
+        <button class="card" style="text-align:center;cursor:pointer;padding:20px 10px"
+          onclick="closeModal('quickModal');switchTab('network')">
+          <div style="font-size:28px;margin-bottom:8px">🤝</div>
+          <div style="font-size:12px;font-weight:600">Network</div>
+        </button>
+      </div>
     </div>
   </div>
-</div>
 
-<div id="toast"></div>
+  <!-- ══════════════════════════════════════
+       MODAL: INVITE (AGENCY ONLY)
+  ══════════════════════════════════════ -->
+  <div class="modal-backdrop" id="inviteModal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span class="modal-title">Invite Realtor</span>
+        <button class="modal-close" onclick="closeModal('inviteModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="field-label">Email Address</label>
+        <input class="field" id="inviteEmail" type="email" placeholder="realtor@agency.com">
+        <label class="field-label">Role</label>
+        <select class="field" id="inviteRole">
+          <option value="realtor">Realtor</option>
+          <option value="staff">Support Staff</option>
+          <option value="marketing">Marketing</option>
+        </select>
+        <button class="btn btn-em btn-md btn-full" style="margin-top:18px" onclick="sendInvite()">Send Invitation
+          →</button>
+      </div>
+    </div>
+  </div>
 
-<script>
-  const CFG={_tid:null,_type:null,get TID(){return CFG._tid},get TOKEN(){return localStorage.getItem('access_token')||''},get H(){return{'X-Tenant-Id':String(this.TID),'Authorization':`Bearer ${this.TOKEN}`}},get JH(){return{...this.H,'Content-Type':'application/json'}},API:{me:'/users/me',pipeline:'/pipeline/active',stats:'/pipeline/summary/stats',listings:'/listings/',takeover:id=>`/pipeline/takeover/${id}`,reactivate:id=>`/pipeline/reactivate/${id}`,alert:id=>`/pipeline/alert/${id}`,reelOpts:id=>`/reels/options/${id}`,reelGen:id=>`/reels/generate/${id}`,upload:'/listings/realtor/upload'},REFRESH:25000};
-  const ST={tab:'home',leads:[],listings:[],timer:null,koraOpen:false,trustLoaded:false,pipeLoaded:false};
-  const g=id=>document.getElementById(id);
+  <!-- ══════════════════════════════════════
+       MODAL: MENU DRAWER
+  ══════════════════════════════════════ -->
+  <div class="modal-backdrop" id="menuDrawer">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span class="modal-title">Menu</span>
+        <button class="modal-close" onclick="closeModal('menuDrawer')">✕</button>
+      </div>
+      <div class="modal-body" style="padding:8px 12px 32px">
 
-  window.addEventListener('DOMContentLoaded',async()=>{
-    const ok=await resolveCurrentUser();
-    if(!ok)return;
-    applyTenantType(CFG._type);
-    initScrollCollapse();
-    switchTab('home');
-    ST.timer=setInterval(()=>{if(ST.tab==='pipeline'||ST.tab==='home')loadPipeline();},CFG.REFRESH);
-  });
+        <button class="menu-drawer-item" onclick="closeModal('menuDrawer');switchTab('studio')">
+          <div class="menu-drawer-icon">🎬</div>
+          <div class="menu-drawer-label">Studio</div>
+          <div class="menu-drawer-chevron">›</div>
+        </button>
 
-  async function resolveCurrentUser(){
-    const token=localStorage.getItem('access_token');
-    if(!token){window.location.replace('/public/login');return false;}
-    try{
-      const res=await fetch(CFG.API.me,{headers:{'Authorization':`Bearer ${token}`}});
-      if(!res.ok){localStorage.clear();window.location.replace('/public/login');return false;}
-      const user=await res.json();
-      CFG._tid=user.tenant_id;
-      CFG._type=user.tenant_type||'agency';
-      const bizName=user.business_name||user.first_name||user.email.split('@')[0];
-      const initials=(user.first_name||user.email).slice(0,2).toUpperCase();
-      if(g('userAvatar'))     g('userAvatar').textContent    =initials;
-      if(g('menuEmail'))      g('menuEmail').textContent      =user.email||'';
-      if(g('bizName'))        g('bizName').textContent        =bizName;
-      if(g('bizLogo'))        g('bizLogo').textContent        =bizName.slice(0,2).toUpperCase();
-      if(g('compactBizName')) g('compactBizName').textContent =bizName;
-      if(g('planBadge'))      g('planBadge').textContent      =user.tenant_plan||'pilot';
-      if(g('tenantTypeBadge'))g('tenantTypeBadge').textContent=CFG._type==='agency'?'Agency':'Realtor';
-      return true;
-    }catch(e){console.error('Auth:',e);localStorage.clear();window.location.replace('/public/login');return false;}
-  }
+        <button class="menu-drawer-item" onclick="closeModal('menuDrawer');switchTab('trust')">
+          <div class="menu-drawer-icon">🛡️</div>
+          <div class="menu-drawer-label">Trust Center</div>
+          <div class="menu-drawer-chevron">›</div>
+        </button>
 
-  function applyTenantType(type){
-    const isAgency=type==='agency';
-    document.querySelectorAll('.agency-only').forEach(el=>{el.style.display=isAgency?'block':'none';});
-  }
+        <button class="menu-drawer-item" onclick="closeModal('menuDrawer');switchTab('analytics')">
+          <div class="menu-drawer-icon">📊</div>
+          <div class="menu-drawer-label">Analytics</div>
+          <div class="menu-drawer-chevron">›</div>
+        </button>
 
-  function initScrollCollapse(){
-    const hdr=g('appHeader'),scroll=g('scrollArea');
-    let lastY=0,ticking=false;
-    scroll.addEventListener('scroll',()=>{
-      if(ticking)return;
-      requestAnimationFrame(()=>{
-        const y=scroll.scrollTop;
-        if(y>55&&y>lastY)hdr.classList.add('collapsed');
-        else if(y<lastY||y<=20)hdr.classList.remove('collapsed');
-        lastY=y;ticking=false;
-      });
-      ticking=true;
-    }, { passive: true });
-  }
+        <button class="menu-drawer-item" onclick="closeModal('menuDrawer');switchTab('network')">
+          <div class="menu-drawer-icon">🤝</div>
+          <div class="menu-drawer-label">Network</div>
+          <div class="menu-drawer-chevron">›</div>
+        </button>
 
-  function switchTab(tab){
-    ST.tab=tab;
-    ['home','pipeline','trust','listings','studio','network'].forEach(t=>{
-      g(t+'Tab')?.classList.remove('active');
-      g('btn'+t.charAt(0).toUpperCase()+t.slice(1))?.classList.remove('active');
+        <button class="menu-drawer-item" onclick="closeModal('menuDrawer');toast('Settings coming soon','info')">
+          <div class="menu-drawer-icon">⚙️</div>
+          <div class="menu-drawer-label">Settings</div>
+          <div class="menu-drawer-chevron">›</div>
+        </button>
+
+        <div style="height:1px;background:var(--border);margin:8px 0"></div>
+
+        <button class="menu-drawer-item danger" onclick="Auth.logout()">
+          <div class="menu-drawer-icon" style="background:var(--risk-dim);border-color:rgba(244,63,94,0.22)">
+            <svg width="18" height="18" fill="none" stroke="var(--risk)" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+            </svg>
+          </div>
+          <div class="menu-drawer-label">Logout</div>
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast"></div>
+
+  <!-- ══════════════════════════════════════
+       JAVASCRIPT ENGINE
+  ══════════════════════════════════════ -->
+  <script>
+    /* ── GLOBAL STATE ────────────────────────── */
+    const CFG = {
+      _tid: null,
+      _tenantType: null, // 'agency' | 'freelance'
+      _role: null,
+      get TID() { return CFG._tid; },
+      get TOKEN() { return localStorage.getItem('access_token') || ''; },
+      get H() { return { 'X-Tenant-Id': String(this.TID), 'Authorization': `Bearer ${this.TOKEN}` }; },
+      get JH() { return { ...this.H, 'Content-Type': 'application/json' }; },
+      API: {
+        me: '/users/me',
+        profile: '/tenants/me/profile',
+        pipeline: '/pipeline/active',
+        stats: '/pipeline/summary/stats',
+        listings: '/listings/',
+        takeover: id => `/pipeline/takeover/${id}`,
+        reactivate: id => `/pipeline/reactivate/${id}`,
+        alert: id => `/pipeline/alert/${id}`,
+        trustDash: id => `/listings/${id}/trust-dashboard`,
+        upload: '/listings/realtor/upload',
+        reelOpts: id => `/reels/options/${id}`,
+        reelGen: id => `/reels/generate/${id}`,
+      },
+      REFRESH: 25000,
+    };
+
+    let ST = {
+      tab: 'home', leads: [], listings: [], timer: null,
+      koraOpen: false, trustLoaded: false, pipelineLoaded: false,
+    };
+
+    const g = id => document.getElementById(id);
+
+    /* ── INIT ────────────────────────────────── */
+    window.addEventListener('DOMContentLoaded', async () => {
+      const ok = await resolveCurrentUser();
+      if (!ok) return;
+      initHeaderCollapse();
+      applyRole(CFG._role);
+      updateFAB('home');
+      switchTab('home');
+      ST.timer = setInterval(() => {
+        if (ST.tab === 'pipeline' || ST.tab === 'home') loadPipeline();
+      }, CFG.REFRESH);
     });
-    g(tab+'Tab')?.classList.add('active');
-    g('btn'+tab.charAt(0).toUpperCase()+tab.slice(1))?.classList.add('active');
-    if(g('scrollArea'))g('scrollArea').scrollTop=0;
-    if(tab==='home')    loadHome();
-    if(tab==='pipeline')loadPipeline();
-    if(tab==='trust')   loadTrust();
-    if(tab==='listings')loadListings();
-    if(tab==='studio')  loadStudio();
-    if(tab==='network') loadNetwork();
-  }
 
-  async function loadHome(){
-    loadInstantMetrics();loadAlerts();loadFollowups();
-    setTimeout(()=>{if(!ST.pipeLoaded)loadPipelineCard();if(CFG._type==='agency')loadTeamSnapshot();},400);
-  }
+    /* ── RESOLVE USER ────────────────────────── */
+    async function resolveCurrentUser() {
+      const token = localStorage.getItem('access_token');
+      if (!token) { window.location.replace('/public/login'); return false; }
 
-  async function loadInstantMetrics(){
-    try{
-      const[pr,sr]=await Promise.all([fetch(CFG.API.pipeline,{headers:CFG.H}),fetch(CFG.API.stats,{headers:CFG.H})]);
-      if(!pr.ok||!sr.ok)return;
-      const pipe=await pr.json(),stats=await sr.json();
-      animCount('imHot',0,pipe.hot_leads||0,600);
-      animCount('imConvos',0,pipe.total_leads||0,600);
-      const ts=stats.avg_trust_score||stats.trust_score||0;
-      if(g('imTrust'))g('imTrust').textContent=ts||'—';
-      const iCard=g('imTrustCard');if(iCard)iCard.className='im-card '+(ts>=75?'em':ts>=50?'amb':'hot');
-      const iVal=g('imTrust');if(iVal)iVal.className='im-val '+(ts>=75?'em':ts>=50?'amb':'hot');
-      const isRisk=(pipe.hot_leads||0)>5||ts<50;
-      const cls=isRisk?'health-pill risk':'health-pill stable',txt=isRisk?'Risk Elevated':'Trust Stable',txtS=isRisk?'Risk':'Stable';
-      if(g('healthPill'))g('healthPill').className=cls;
-      if(g('healthText'))g('healthText').textContent=txt;
-      if(g('healthPillC')){g('healthPillC').className=cls;g('healthPillC').style.cssText='padding:3px 8px;font-size:8px';}
-      if(g('healthTextC'))g('healthTextC').textContent=txtS;
-      ST.leads=pipe.leads||[];renderLeads(ST.leads);
-    }catch(e){console.error('Metrics:',e);}
-  }
+      try {
+        // Single call — /users/me now returns tenant fields directly
+        const res = await fetch(CFG.API.me, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-  async function loadAlerts(){
-    const zone=g('alertsZone');if(!zone)return;
-    try{
-      const r=await fetch(CFG.API.listings,{headers:CFG.H});if(!r.ok)return;
-      const listings=await r.json();const now=new Date();
-      const unv=listings.filter(l=>!l.trust_grade||l.trust_grade==='ungraded'||l.trust_grade==='flagged');
-      const exp=listings.filter(l=>l.gps_expires_at&&new Date(l.gps_expires_at)<now);
-      const risky=listings.filter(l=>l.trust_score&&l.trust_score<40);
-      if(!unv.length&&!exp.length&&!risky.length){zone.innerHTML='';return;}
-      const items=[
-        ...unv.slice(0,2).map(l=>`<div class="warn-item amb"><div style="font-size:20px">🏠</div><div style="flex:1"><div style="font-size:13px;font-weight:600">${l.title||'Untitled'}</div><div style="font-size:11px;color:var(--tx-muted);margin-top:2px">${l.trust_grade==='flagged'?'🚨 Flagged':'📋 Verification pending'}</div></div><button class="btn btn-gh btn-sm" onclick="switchTab('trust')">Review</button></div>`),
-        ...exp.slice(0,1).map(l=>`<div class="warn-item risk"><div style="font-size:20px">📍</div><div style="flex:1"><div style="font-size:13px;font-weight:600">${l.title||'Untitled'}</div><div style="font-size:11px;color:var(--tx-muted);margin-top:2px">🗓️ GPS expired — re-verify on-site</div></div><button class="btn btn-gh btn-sm" onclick="switchTab('trust')">Re-Verify</button></div>`),
-        ...risky.slice(0,1).map(l=>`<div class="warn-item risk"><div style="font-size:20px">⚠️</div><div style="flex:1"><div style="font-size:13px;font-weight:600">${l.title||'Untitled'}</div><div style="font-size:11px;color:var(--tx-muted);margin-top:2px">Trust score ${l.trust_score}/100 — below threshold</div></div><button class="btn btn-gh btn-sm" onclick="switchTab('trust')">Fix Now</button></div>`),
-      ];
-      zone.innerHTML=`<div class="sep">Attention Required</div>${items.join('')}`;
-    }catch(_){}
-  }
+        if (!res.ok) {
+          localStorage.clear();
+          window.location.replace('/public/login');
+          return false;
+        }
 
-  async function loadFollowups(){
-    const list=g('followupList');if(!list)return;
-    try{
-      const r=await fetch(CFG.API.pipeline,{headers:CFG.H});if(!r.ok)return;
-      const pipe=await r.json();
-      const stale=(pipe.leads||[]).filter(l=>l.reminder_count>0||l.funnel_stage==='awareness');
-      if(!stale.length)return;
-      list.innerHTML=stale.slice(0,4).map(l=>{
-        const hue=[...(l.name||'')].reduce((a,c)=>a+c.charCodeAt(0),0)%360;
-        return `<div class="lead ${l.temp_code||'cold'}" onclick="switchTab('pipeline')" style="cursor:pointer"><div class="lead-top"><div class="lead-av" style="background:hsl(${hue},35%,18%);color:hsl(${hue},65%,70%)">${(l.name||'?').slice(0,2).toUpperCase()}</div><div class="lead-info"><div class="lead-name">${l.name||'Unknown'}</div><div class="lead-sub">${stageLabel(l.funnel_stage)} · ${l.reminder_count||0} reminder${l.reminder_count!==1?'s':''}</div></div><div class="lead-score" style="color:${scoreColor(l.lead_score)}">${l.lead_score||0}</div></div></div>`;
-      }).join('');
-    }catch(_){}
-  }
+        const user = await res.json();
 
-  async function loadPipelineCard(){
-    ST.pipeLoaded=true;
-    try{
-      const r=await fetch(CFG.API.stats,{headers:CFG.H});if(!r.ok)return;
-      const s=await r.json();
-      const pv=s.pipeline_value||s.total_pipeline_value||0;
-      if(g('pipelineValue'))g('pipelineValue').textContent='₦'+formatMoney(pv);
-      if(g('commissionEst'))g('commissionEst').textContent='₦'+formatMoney(pv*0.05);
-      const stages=[{label:'Awareness',color:'rgba(255,255,255,.25)',count:s.awareness_count||0},{label:'Verification',color:'var(--amb)',count:s.verification_count||0},{label:'Commitment',color:'var(--ind-sm)',count:s.commitment_count||0},{label:'Handshake',color:'var(--em)',count:s.handshake_count||0}];
-      const total=stages.reduce((a,s)=>a+s.count,0)||1;
-      if(g('funnelBars'))g('funnelBars').innerHTML=stages.map(s=>`<div class="p-bar-wrap"><div class="p-bar-lbl"><span>${s.label}</span><span style="color:var(--tx);font-weight:600">${s.count}</span></div><div class="p-bar"><div class="p-fill" style="width:${(s.count/total*100).toFixed(1)}%;background:${s.color}"></div></div></div>`).join('');
-    }catch(_){}
-  }
+        // ── Set tenant context ────────────────────────────────
+        CFG._tid = user.tenant_id;
+        CFG._tenantType = user.tenant_type || 'agency';
 
-  async function loadTeamSnapshot(){
-    const snap=g('teamSnapshot');if(!snap)return;
-    snap.innerHTML=`<div class="card" style="text-align:center;padding:20px"><div style="font-size:28px;margin-bottom:8px">👥</div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Team Activity</div><div style="font-size:12px;color:var(--tx-muted);margin-top:6px">Invite realtors to see their performance here</div><button class="btn btn-gh btn-sm" style="margin-top:14px" onclick="openModal('inviteModal')">+ Invite Realtor</button></div>`;
-  }
+        // ── Resolve display name ──────────────────────────────
+        // Priority: business_name (from tenant) → first_name → email prefix
+        const bizName = user.business_name || user.first_name || user.email.split('@')[0];
+        const userInitials = (user.first_name || user.email).slice(0, 2).toUpperCase();
+        const bizInitials = bizName.slice(0, 2).toUpperCase();
 
-  async function loadPipeline(){
-    try{
-      const r=await fetch(CFG.API.pipeline,{headers:CFG.H});if(!r.ok)return;
-      const pipe=await r.json();ST.leads=pipe.leads||[];renderLeads(ST.leads);
-    }catch(e){toast('Failed to load pipeline','error');}
-  }
+        // ── Populate UI ───────────────────────────────────────
+        const avatar = g('userAvatar');
+        if (avatar) avatar.textContent = userInitials;
 
-  function renderLeads(leads){
-    const list=g('leadList');
-    if(!leads.length){list.innerHTML=`<div class="empty"><div class="empty-icon">⚡</div><div class="empty-title">Your Pipeline is Quiet</div><div class="empty-body">Your active buyer conversations will appear here. Once leads begin interacting with your listings, Pipeline helps you track momentum and follow-ups.</div><button class="btn btn-ind btn-sm" onclick="switchTab('listings')" style="margin:0 auto">View Active Listings →</button></div>`;return;}
-    const chanIcon={whatsapp:`<svg width="10" height="10" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`};
-    const sm={awareness:{w:'12%',c:'rgba(255,255,255,.2)'},verification:{w:'35%',c:'var(--amb)'},commitment:{w:'65%',c:'var(--ind-sm)'},handshake:{w:'85%',c:'var(--em)'},closed:{w:'100%',c:'var(--em)'}};
-    const tb={hot:`<span class="badge" style="background:var(--cri-dim);color:var(--cri)">🔥 Hot</span>`,warm:`<span class="badge" style="background:var(--amb-dim);color:var(--amb)">🌡️ Warm</span>`,cold:`<span class="badge" style="background:var(--s2);color:var(--tx-muted)">❄️ Cold</span>`};
-    list.innerHTML=leads.map(l=>{
-      const s=sm[l.funnel_stage]||sm.awareness,tc=l.temp_code||'cold';
-      const hue=[...(l.name||'')].reduce((a,c)=>a+c.charCodeAt(0),0)%360;
-      return `<div class="lead ${tc}"><div class="lead-top"><div class="lead-av" style="background:hsl(${hue},35%,18%);color:hsl(${hue},65%,70%)">${(l.name||'?').slice(0,2).toUpperCase()}</div><div class="lead-info"><div class="lead-name">${l.name||'Unknown Buyer'}</div><div class="lead-sub">${chanIcon[l.channel]||chanIcon.whatsapp} ${l.channel||'whatsapp'} · ${stageLabel(l.funnel_stage)}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">${tb[tc]||''}<div class="lead-score" style="color:${scoreColor(l.lead_score)}">${l.lead_score||0}</div></div></div><div class="funnel-bar"><div class="funnel-fill" style="width:${s.w};background:${s.c}"></div></div><div class="lead-actions"><button class="lead-btn" onclick="takeover(${l.id})">👤 Take Over</button><button class="lead-btn ind" onclick="sendAlert(${l.id})">🔔 Alert</button>${l.is_bot_active===false?`<button class="lead-btn red" onclick="reactivate(${l.id})">🤖 Reactivate</button>`:''}</div></div>`;
-    }).join('');
-  }
+        const menuEmail = g('menuEmail');
+        if (menuEmail) menuEmail.textContent = user.email || '';
 
-  async function loadTrust(){
-    if(ST.trustLoaded)return;ST.trustLoaded=true;
-    try{
-      const r=await fetch(CFG.API.listings,{headers:CFG.H});if(!r.ok)return;
-      const listings=await r.json();if(!listings.length)return;
-      const avg=Math.round(listings.reduce((a,l)=>a+(l.trust_score||0),0)/listings.length);
-      const grade=listings[0].trust_grade||'ungraded';
-      const circ=232,offset=circ-(avg/100*circ);
-      const rc=avg>=75?'var(--em)':avg>=50?'var(--amb)':'var(--cri)';
-      if(g('trustRingFill')){g('trustRingFill').style.strokeDashoffset=offset;g('trustRingFill').style.stroke=rc;}
-      if(g('trustScoreNum'))g('trustScoreNum').textContent=avg;
-      const gm={emerald:{text:'🟢 Emerald Grade',desc:'Highest trust — fully verified'},gold:{text:'🔵 Gold Grade',desc:'Strong verification — minor gaps'},amber:{text:'🟡 Amber Grade',desc:'Verification in progress'},flagged:{text:'🔴 Flagged',desc:'Risk detected — action required'},ungraded:{text:'⚪ Ungraded',desc:'Verification not started'}};
-      const gr=gm[grade]||gm.ungraded;
-      if(g('trustGradeText'))g('trustGradeText').textContent=gr.text;
-      if(g('trustGradeDesc'))g('trustGradeDesc').textContent=gr.desc;
-      const l=listings[0];
-      if(g('gpsStatus'))g('gpsStatus').textContent=l.gps_verified_at?`Verified ${timeSince(l.gps_verified_at)} ago`:'Not yet verified';
-      if(g('gpsScore'))g('gpsScore').textContent=`+${l.latitude&&l.longitude?30:0}`;
-      if(g('aiStatus'))g('aiStatus').textContent=l.ai_verified_real?'Images passed AI audit':'Awaiting AI audit';
-      if(g('aiScore'))g('aiScore').textContent=`+${l.ai_verified_real?20:0}`;
-      if(g('docStatus'))g('docStatus').textContent=`C of O: ${l.cof_uploaded?'✓':'✗'} · Deed: ${l.deed_uploaded?'✓':'✗'} · Survey: ${l.survey_uploaded?'✓':'✗'}`;
-      if(g('docScore'))g('docScore').textContent=`+${l.document_score||0}`;
-      if(g('witnessStatus'))g('witnessStatus').textContent=`${l.witness_count||0} witness${l.witness_count!==1?'es':''} recorded`;
-      if(g('witnessScore'))g('witnessScore').textContent=`+${Math.min((l.witness_count||0)*5,10)}`;
-      const lh=g('listingHealthList');
-      if(lh)lh.innerHTML=listings.map(l=>{const ts=l.trust_score||0,c=ts>=75?'var(--em)':ts>=50?'var(--amb)':'var(--cri)';return `<div class="card" style="margin-bottom:8px"><div style="display:flex;align-items:center;justify-content:space-between"><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.title||'Untitled'}</div><div style="font-size:11px;color:var(--tx-muted);margin-top:1px">${l.location||'—'} · ${l.trust_grade||'ungraded'}</div></div><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${c};margin-left:12px">${ts}</div></div><div class="p-bar" style="margin-top:8px"><div class="p-fill" style="width:${ts}%;background:${c}"></div></div></div>`;}).join('');
-      const flagged=listings.filter(l=>l.trust_grade==='flagged');
-      const fa=g('fraudAlerts');
-      if(fa&&flagged.length)fa.innerHTML=flagged.map(l=>`<div class="warn-item risk"><div style="font-size:22px">🚨</div><div style="flex:1"><div style="font-size:13px;font-weight:600">${l.title||'Untitled'}</div><div style="font-size:11px;color:var(--tx-muted);margin-top:2px">Flagged — verification required immediately</div></div></div>`).join('');
-    }catch(e){console.error('Trust:',e);}
-  }
+        const bizNameEl = g('bizName');
+        if (bizNameEl) bizNameEl.textContent = bizName;
 
-  async function loadListings(){
-    const list=g('vaultList');
-    try{
-      const r=await fetch(CFG.API.listings,{headers:CFG.H});if(!r.ok)return;
-      const listings=await r.json();ST.listings=listings;
-      if(!listings.length){list.innerHTML=`<div class="empty"><div class="empty-icon">🏠</div><div class="empty-title">Your Vault is Empty</div><div class="empty-body">Your listings become the operational foundation of your business. Add your first GPS-verified property to begin receiving buyer interest and trust scoring.</div><button class="btn btn-em btn-sm" onclick="openModal('uploadModal')" style="margin:0 auto">Add First Listing →</button></div>`;return;}
-      const gt={emerald:'🟢 Emerald',gold:'🔵 Gold',amber:'🟡 Amber',flagged:'🔴 Flagged'};
-      list.innerHTML=listings.map(l=>{
-        const ts=l.trust_score||0,dot=ts>=75?'var(--em)':ts>=50?'var(--amb)':'var(--cri)',lbl=ts>=75?'Verified':ts>=50?'Pending':'At Risk';
-        const gpsOk=l.latitude&&l.longitude,docOk=l.cof_uploaded||l.deed_uploaded;
-        return `<div class="prop-card"><div class="prop-img">🏠<div class="prop-overlay">${gt[l.trust_grade]||'⚪ Ungraded'}</div></div><div class="prop-body"><div class="prop-title">${l.title||'Untitled Property'}</div><div class="prop-meta"><span>📍 ${l.location||'—'}</span><span>🏷️ ${l.property_type||'—'}</span></div><div class="trust-mini"><div class="t-dot" style="background:${dot}"></div><span class="trust-mini-text">${lbl} · ${gpsOk?'GPS ✓':'GPS ✗'} · ${docOk?'Docs ✓':'Docs ✗'}</span><span class="trust-mini-score" style="color:${dot}">${ts}/100</span></div><div class="prop-price">₦${formatMoney(l.price||0)}</div><div class="prop-actions"><button class="btn btn-gh btn-sm" onclick="loadReelOptions(${l.id})">🎬 Reel</button><button class="btn btn-ind btn-sm" onclick="switchTab('trust')">🛡️ Trust</button></div></div></div>`;
-      }).join('');
-    }catch(e){toast('Failed to load listings','error');}
-  }
+        const bizLogoEl = g('bizLogo');
+        if (bizLogoEl) bizLogoEl.textContent = bizInitials;
 
-  async function loadStudio(){
-    if(!ST.listings.length){try{const r=await fetch(CFG.API.listings,{headers:CFG.H});if(r.ok)ST.listings=await r.json();}catch(_){}}
-    if(!ST.listings.length)return;
-    const rl=g('reelList');
-    if(rl)rl.innerHTML=`<div class="sep">Select Property for Reel</div>${ST.listings.slice(0,5).map(l=>`<div class="reel-card" onclick="loadReelOptions(${l.id})" style="cursor:pointer"><div class="reel-thumb">🏠</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.title||'Untitled'}</div><div style="font-size:11px;color:var(--tx-muted);margin-top:2px">📍 ${l.location||'—'} · Trust: ${l.trust_score||0}pts</div></div><div style="color:var(--ind-sm);font-size:12px;font-weight:600">Select →</div></div>`).join('')}`;
-  }
+        const planBadge = g('planBadge');
+        if (planBadge) planBadge.textContent = user.tenant_plan || 'pilot';
 
-  async function loadReelOptions(id){
-    switchTab('studio');
-    try{
-      const r=await fetch(CFG.API.reelOpts(id),{headers:CFG.H});if(!r.ok)return;
-      const opts=await r.json();const rl=g('reelList');
-      if(rl)rl.innerHTML=(opts.options||[]).map((o,i)=>`<div class="reel-card"><div class="reel-thumb">🎬</div><div style="flex:1"><div style="font-size:13px;font-weight:600">${o.title||'Reel '+(i+1)}</div><div style="font-size:11px;color:var(--tx-muted);margin-top:2px">${o.music||'Trending audio'}</div></div><button class="btn btn-ind btn-sm" onclick="generateReel(${id},'${o.id||i}')">Generate</button></div>`).join('');
-    }catch(_){}
-  }
+        const ttBadge = g('tenantTypeBadge');
+        if (ttBadge) ttBadge.textContent = CFG._tenantType === 'agency' ? 'Agency' : 'Realtor';
 
-  async function generateReel(id,optId){
-    toast('Generating reel...','info');
-    try{const r=await fetch(CFG.API.reelGen(id),{method:'POST',headers:CFG.JH,body:JSON.stringify({option_id:optId})});r.ok?toast('Reel generated!'):toast('Reel generation failed','error');}catch(_){toast('Reel error','error');}
-  }
+        CFG._role = user.role || (CFG._tenantType === 'agency' ? 'tenant_admin' : 'realtor');
 
-  async function loadNetwork(){
-    try{const r=await fetch(CFG.API.stats,{headers:CFG.H});if(r.ok){const s=await r.json();const pv=s.pipeline_value||0;if(g('netReferrals'))g('netReferrals').textContent=s.closed_count||0;if(g('netCommission'))g('netCommission').textContent='₦'+formatMoney(pv*0.025);}}catch(_){}
-    if(CFG._type==='agency')loadTeamList();
-  }
+        return true;
 
-  async function loadTeamList(){
-    const list=g('teamList');if(!list)return;
-    try{
-      const r=await fetch('/users/',{headers:CFG.H});if(!r.ok)return;
-      const users=await r.json();const members=users.filter(u=>!u.is_superuser&&!u.is_platform_user);
-      if(!members.length)return;
-      const rc={realtor:'var(--em)',staff:'var(--amb)',marketing:'#818CF8',manager:'#F472B6'};
-      list.innerHTML=members.map(u=>{const hue=[...(u.email||'')].reduce((a,c)=>a+c.charCodeAt(0),0)%360;return `<div class="team-row"><div class="team-av" style="background:hsl(${hue},35%,16%);color:hsl(${hue},65%,70%)">${(u.first_name||u.email).slice(0,2).toUpperCase()}</div><div class="team-info"><div class="team-name">${u.first_name||u.email.split('@')[0]}</div><div class="team-sub">${u.email}</div></div><span class="badge" style="background:var(--s2);color:${rc[u.role]||'var(--tx-mid)'}">${u.role||'realtor'}</span></div>`;}).join('');
-    }catch(_){}
-  }
-
-  async function takeover(id){try{const r=await fetch(CFG.API.takeover(id),{method:'POST',headers:CFG.JH});r.ok?toast('Human takeover activated'):toast('Takeover failed','error');loadPipeline();}catch(_){toast('Error','error');}}
-  async function reactivate(id){try{const r=await fetch(CFG.API.reactivate(id),{method:'POST',headers:CFG.JH});r.ok?toast('Kora reactivated 🤖'):toast('Reactivation failed','error');loadPipeline();}catch(_){toast('Error','error');}}
-  async function sendAlert(id){try{const r=await fetch(CFG.API.alert(id),{method:'POST',headers:CFG.JH});r.ok?toast('Alert sent 🔔'):toast('Alert failed','error');}catch(_){toast('Error','error');}}
-
-  async function handleUpload(e){
-    e.preventDefault();const form=e.target,fd=new FormData(form);
-    const lat=g('lat').value,lng=g('lng').value;
-    if(!lat||!lng){toast('GPS required — capture location first','error');return;}
-    fd.append('latitude',lat);fd.append('longitude',lng);
-    try{
-      const r=await fetch(CFG.API.upload,{method:'POST',headers:{'X-Tenant-Id':String(CFG.TID),'Authorization':`Bearer ${CFG.TOKEN}`},body:fd});
-      if(r.ok){toast('Property submitted for verification ✅');closeModal('uploadModal');form.reset();loadListings();}
-      else{const err=await r.json();toast(err.detail||'Upload failed','error');}
-    }catch(_){toast('Upload error','error');}
-  }
-
-  async function captureGPS(){
-    const btn=g('gpsBtn');btn.textContent='⏳ Locating...';btn.disabled=true;
-    navigator.geolocation.getCurrentPosition(
-      pos=>{g('lat').value=pos.coords.latitude;g('lng').value=pos.coords.longitude;btn.textContent=`✅ ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;btn.style.background='rgba(16,185,129,.15)';},
-      ()=>{btn.textContent='📍 Capture Site GPS';btn.disabled=false;toast('Location access denied','error');}
-    );
-  }
-
-  async function sendInvite(){
-    const email=g('inviteEmail').value;if(!email){toast('Enter email address','error');return;}
-    toast('Invitation feature coming soon');closeModal('inviteModal');
-  }
-
-  function toggleKora(){
-    ST.koraOpen=!ST.koraOpen;const box=g('koraChatBox');box.classList.toggle('open',ST.koraOpen);
-    if(ST.koraOpen){
-      setTimeout(()=>g('koraInput')?.focus(),200);
-      if(!box.dataset.greeted){box.dataset.greeted='1';setTimeout(()=>appendKoraMsg(`I see you're running as a ${CFG._type==='agency'?'real estate agency':'freelance realtor'}. I can summarise your hot leads, check trust scores, flag risky patterns, or suggest follow-up actions. What's the priority?`,'k'),600);}
+      } catch (e) {
+        console.error('Auth resolution failed:', e);
+        localStorage.clear();
+        window.location.replace('/public/login');
+        return false;
+      }
     }
-  }
 
-  async function sendKora(){
-    const input=g('koraInput');const msg=input.value.trim();if(!msg)return;input.value='';appendKoraMsg(msg,'u');
-    try{
-      const r=await fetch('/api/kora/operational',{method:'POST',headers:CFG.JH,body:JSON.stringify({message:msg,context:`You are Kora, an operational assistant for Est8Go — a real estate trust platform in Africa. The user is a ${CFG._type==='agency'?'real estate agency':'freelance realtor'}. Be concise and business-focused.`})});
-      if(r.ok){const d=await r.json();appendKoraMsg(d.reply||"Analysing your pipeline.",'k');}
-      else appendKoraMsg("Couldn't process that right now.",'k');
-    }catch(_){appendKoraMsg("Connection issue. Your data is still secure.",'k');}
-  }
+    /* ── ROLE MODULES ────────────────────────── */
+    const ROLE_MODULES = {
+      superuser:    ['home','properties','pipeline','operations','trust','studio','network','analytics'],
+      super_staff:  ['home','properties','pipeline','operations','trust','studio','network','analytics'],
+      tenant_admin: ['home','properties','pipeline','operations','trust','studio','network','analytics'],
+      realtor:      ['home','properties','pipeline','operations','trust','studio'],
+      staff:        ['home','properties','pipeline','operations'],
+      marketing:    ['home','properties','studio'],
+    };
 
-  function appendKoraMsg(text,role){const msgs=g('koraMsgs');const div=document.createElement('div');div.className=`kora-msg ${role}`;div.textContent=text;msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
+    function applyRole(role) {
+      const isAgency = CFG._tenantType === 'agency';
+      document.querySelectorAll('.agency-only').forEach(el => {
+        el.style.display = isAgency ? '' : 'none';
+      });
+    }
 
-  function openModal(id){g(id)?.classList.add('open');document.body.style.overflow='hidden';}
-  function closeModal(id){g(id)?.classList.remove('open');document.body.style.overflow='';}
-  document.addEventListener('click',e=>{document.querySelectorAll('.modal-bd').forEach(m=>{if(e.target===m)closeModal(m.id);});});
+    /* ── TAB SWITCHER ────────────────────────── */
+    const MENU_ONLY_TABS = ['trust', 'studio', 'network', 'analytics'];
 
-  function toggleUserMenu(){const m=g('userMenu');m.style.display=m.style.display==='block'?'none':'block';}
-  function closeMenu(){if(g('userMenu'))g('userMenu').style.display='none';}
-  document.addEventListener('click',e=>{if(g('userAvatar')&&g('userMenu')&&!g('userAvatar').contains(e.target)&&!g('userMenu').contains(e.target))closeMenu();});
+    function switchTab(tab) {
+      ST.tab = tab;
+      const allTabs = ['home', 'properties', 'pipeline', 'operations', 'trust', 'studio', 'network', 'analytics'];
+      allTabs.forEach(t => {
+        g(t + 'Tab')?.classList.remove('active');
+        const btnId = 'btn' + t.charAt(0).toUpperCase() + t.slice(1);
+        g(btnId)?.classList.remove('active');
+      });
+      g(tab + 'Tab')?.classList.add('active');
+      if (MENU_ONLY_TABS.includes(tab)) {
+        g('btnMenu')?.classList.add('active');
+      } else {
+        const activeBtnId = 'btn' + tab.charAt(0).toUpperCase() + tab.slice(1);
+        g(activeBtnId)?.classList.add('active');
+      }
+      if (g('scrollArea')) g('scrollArea').scrollTop = 0;
+      updateFAB(tab);
+      if (tab === 'home') loadHome();
+      if (tab === 'properties') loadListings();
+      if (tab === 'pipeline') loadPipeline();
+      if (tab === 'operations') loadOperations();
+      if (tab === 'trust') loadTrust();
+      if (tab === 'studio') loadStudio();
+      if (tab === 'network') loadNetwork();
+      if (tab === 'analytics') loadAnalytics();
+    }
 
-  let _tt;
-  function toast(msg,type='success'){
-    const t=g('toast');t.textContent=msg;
-    t.style.background=type==='error'?'#F43F5E':type==='info'?'#4338CA':'#10B981';
-    t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3000);
-  }
+    /* ── HOME ────────────────────────────────── */
+    async function loadHome() {
+      // Tier 1 — instant
+      loadInstantMetrics();
+      loadAlerts();
+      loadFollowups();
+      // Tier 2 — lazy
+      setTimeout(() => {
+        if (!ST.pipelineLoaded) loadPipelineCard();
+        if (CFG._tenantType === 'agency') loadTeamSnapshot();
+      }, 400);
+    }
 
-  function animCount(id,from,to,dur){const el=g(id);if(!el)return;const start=performance.now();const step=ts=>{const p=Math.min((ts-start)/dur,1);el.textContent=Math.round(from+(to-from)*p);if(p<1)requestAnimationFrame(step);};requestAnimationFrame(step);}
-  function formatMoney(n){if(n>=1e9)return(n/1e9).toFixed(1)+'B';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return n.toString();}
-  function stageLabel(s){return{awareness:'Awareness',verification:'Verification',commitment:'Commitment',handshake:'Handshake',closed:'Closed'}[s]||s||'—';}
-  function scoreColor(s){s=s||0;return s>=70?'var(--em)':s>=40?'var(--amb)':'var(--cri)';}
-  function timeSince(d){const diff=Math.floor((new Date()-new Date(d))/86400000);return diff===0?'today':diff===1?'1 day':`${diff} days`;}
-</script>
+    async function loadInstantMetrics() {
+      try {
+        const [pr, sr] = await Promise.all([
+          fetch(CFG.API.pipeline, { headers: CFG.H }),
+          fetch(CFG.API.stats, { headers: CFG.H }),
+        ]);
+        if (!pr.ok || !sr.ok) return;
+        const pipe = await pr.json();
+        const stats = await sr.json();
+
+        animCount('imHot', 0, pipe.hot_leads || 0, 600);
+        animCount('imConvos', 0, pipe.total_leads || 0, 600);
+
+        // Trust score from stats if available
+        const ts = stats.avg_trust_score || stats.trust_score || 72;
+        g('imTrust').textContent = ts;
+        g('imTrustCard').className = 'im-card ' + (ts >= 75 ? 'em' : ts >= 50 ? 'warn' : 'hot');
+        g('imTrust').className = 'im-val ' + (ts >= 75 ? 'em' : ts >= 50 ? 'warn' : 'hot');
+
+        // Ecosystem health pill
+        const pill = g('healthPill');
+        if (pipe.hot_leads > 5 || ts < 50) {
+          pill.className = 'health-pill risk';
+          g('healthText').textContent = 'Risk Elevated';
+        } else {
+          pill.className = 'health-pill stable';
+          g('healthText').textContent = 'Trust Stable';
+        }
+
+        ST.leads = pipe.leads || [];
+        renderLeads(ST.leads); // also pre-populates hotline
+      } catch (e) { console.error('Metrics error:', e); }
+    }
+
+    async function loadAlerts() {
+      const zone = g('alertsZone');
+      // Pull verification alerts from listings
+      try {
+        const r = await fetch(CFG.API.listings, { headers: CFG.H });
+        if (!r.ok) return;
+        const listings = await r.json();
+        const now = new Date();
+        const unverified = listings.filter(l => !l.trust_grade || l.trust_grade === 'ungraded' || l.trust_grade === 'flagged');
+        const expired = listings.filter(l => l.gps_expires_at && new Date(l.gps_expires_at) < now);
+        const atRisk = listings.filter(l => l.trust_score && l.trust_score < 40);
+
+        if (!unverified.length && !expired.length && !atRisk.length) { zone.innerHTML = ''; return; }
+
+        const alertItems = [
+          ...unverified.slice(0, 2).map(l => `
+            <div class="warn-item amber">
+              <div style="font-size:20px">🏠</div>
+              <div style="flex:1">
+                <div class="text-sm font-bold">${l.title || 'Untitled Property'}</div>
+                <div class="text-xs text-muted mt-1">${l.trust_grade === 'flagged' ? '🚨 Flagged — review required' : '📋 Verification pending'}</div>
+              </div>
+              <button class="btn btn-sm btn-ghost" style="font-size:10px" onclick="switchTab('trust')">Review</button>
+            </div>`),
+          ...expired.slice(0, 1).map(l => `
+            <div class="warn-item risk">
+              <div style="font-size:20px">📍</div>
+              <div style="flex:1">
+                <div class="text-sm font-bold">${l.title || 'Untitled Property'}</div>
+                <div class="text-xs text-muted mt-1">🗓️ GPS verification expired — re-verify on-site</div>
+              </div>
+              <button class="btn btn-sm btn-ghost" style="font-size:10px" onclick="switchTab('trust')">Re-Verify</button>
+            </div>`),
+          ...atRisk.slice(0, 1).map(l => `
+            <div class="warn-item risk">
+              <div style="font-size:20px">⚠️</div>
+              <div style="flex:1">
+                <div class="text-sm font-bold">${l.title || 'Untitled Property'}</div>
+                <div class="text-xs text-muted mt-1">Trust score ${l.trust_score}/100 — below safe threshold</div>
+              </div>
+              <button class="btn btn-sm btn-ghost" style="font-size:10px" onclick="switchTab('trust')">Fix Now</button>
+            </div>`)
+        ];
+
+        zone.innerHTML = `
+          <div class="sep">Attention Required</div>
+          ${alertItems.join('')}
+        `;
+      } catch (_) { }
+    }
+
+    async function loadFollowups() {
+      const list = g('followupList');
+      try {
+        const r = await fetch(CFG.API.pipeline, { headers: CFG.H });
+        if (!r.ok) return;
+        const pipe = await r.json();
+        const stale = (pipe.leads || []).filter(l => l.reminder_count > 0 || l.funnel_stage === 'awareness');
+        if (!stale.length) return;
+        list.innerHTML = stale.slice(0, 4).map(l => {
+          const hue = [...(l.name || '')].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+          return `
+            <div class="lead ${l.temp_code || 'cold'}" onclick="switchTab('pipeline')">
+              <div class="lead-top">
+                <div class="lead-avatar" style="background:hsl(${hue},40%,18%);color:hsl(${hue},70%,70%)">
+                  ${(l.name || '?').slice(0, 2).toUpperCase()}
+                </div>
+                <div class="lead-info">
+                  <div class="lead-name">${l.name || 'Unknown'}</div>
+                  <div class="lead-sub">
+                    ${stageLabel(l.funnel_stage)}
+                    · ${l.reminder_count || 0} reminder${l.reminder_count !== 1 ? 's' : ''}
+                  </div>
+                </div>
+                <div class="lead-score" style="color:${scoreColor(l.lead_score)}">${l.lead_score || 0}</div>
+              </div>
+            </div>`;
+        }).join('');
+      } catch (_) { }
+    }
+
+    async function loadPipelineCard() {
+      ST.pipelineLoaded = true;
+      try {
+        const r = await fetch(CFG.API.stats, { headers: CFG.H });
+        if (!r.ok) return;
+        const s = await r.json();
+
+        const pv = s.pipeline_value || s.total_pipeline_value || 0;
+        g('pipelineValue').textContent = '₦' + formatMoney(pv);
+        g('commissionEst').textContent = '₦' + formatMoney(pv * 0.05);
+
+        // Funnel bars
+        const stages = [
+          { label: 'Awareness', key: 'awareness', color: 'rgba(255,255,255,0.3)', count: s.awareness_count || 0 },
+          { label: 'Verification', key: 'verification', color: '#F59E0B', count: s.verification_count || 0 },
+          { label: 'Commitment', key: 'commitment', color: '#6366F1', count: s.commitment_count || 0 },
+          { label: 'Handshake', key: 'handshake', color: 'var(--em)', count: s.handshake_count || 0 },
+        ];
+        const total = stages.reduce((a, s) => a + s.count, 0) || 1;
+        g('funnelBars').innerHTML = stages.map(s => `
+          <div class="pipeline-bar-wrap">
+            <div class="pipeline-bar-label">
+              <span>${s.label}</span>
+              <span style="color:white;font-weight:600">${s.count}</span>
+            </div>
+            <div class="pipeline-bar">
+              <div class="pipeline-fill" style="width:${(s.count / total * 100).toFixed(1)}%;background:${s.color}"></div>
+            </div>
+          </div>`).join('');
+      } catch (_) { }
+    }
+
+    async function loadTeamSnapshot() {
+      // Agency only: placeholder until team endpoint exists
+      const snap = g('teamSnapshot');
+      if (!snap) return;
+      snap.innerHTML = `
+        <div class="card" style="text-align:center;padding:20px">
+          <div style="font-size:28px;margin-bottom:8px">👥</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Team Activity</div>
+          <div class="text-xs text-muted mt-1">Invite realtors to see their performance here</div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:14px" onclick="openModal('inviteModal')">+ Invite Realtor</button>
+        </div>`;
+    }
+
+    /* ── HOTLINE ─────────────────────────────── */
+    async function loadPipeline() {
+      try {
+        const r = await fetch(CFG.API.pipeline, { headers: CFG.H });
+        if (!r.ok) return;
+        const pipe = await r.json();
+        ST.leads = pipe.leads || [];
+        renderLeads(ST.leads);
+      } catch (e) { toast('Failed to load hotline', 'error'); }
+    }
+
+    function renderLeads(leads) {
+      const list = g('leadList');
+      if (!leads.length) {
+        list.innerHTML = `<div class="empty"><div class="empty-icon">📡</div><h4>No active leads</h4><p>Share your WhatsApp number to start receiving verified buyers</p></div>`;
+        return;
+      }
+
+      const chanSvg = {
+        whatsapp: `<svg width="10" height="10" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`,
+        instagram: `<svg width="10" height="10" viewBox="0 0 24 24" fill="#E1306C"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>`,
+      };
+
+      const stageMap = {
+        awareness: { w: '12%', c: 'rgba(255,255,255,0.2)' },
+        verification: { w: '35%', c: 'var(--warn)' },
+        commitment: { w: '65%', c: '#6366F1' },
+        handshake: { w: '85%', c: 'var(--em)' },
+        closed: { w: '100%', c: 'var(--em)' },
+      };
+
+      list.innerHTML = leads.map(lead => {
+        const sm = stageMap[lead.funnel_stage] || stageMap.awareness;
+        const tc = lead.temp_code || 'cold';
+        const ci = chanSvg[lead.channel] || chanSvg.whatsapp;
+        const hue = [...(lead.name || '')].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+        const tempBadge = {
+          hot: `<span class="badge" style="background:rgba(244,63,94,.12);color:var(--risk)">🔥 Hot</span>`,
+          warm: `<span class="badge" style="background:rgba(245,158,11,.12);color:var(--warn)">🌡️ Warm</span>`,
+          cold: `<span class="badge" style="background:rgba(255,255,255,.06);color:var(--muted)">❄️ Cold</span>`,
+        }[tc] || '';
+
+        return `
+          <div class="lead ${tc}">
+            <div class="lead-top">
+              <div class="lead-avatar" style="background:hsl(${hue},40%,18%);color:hsl(${hue},70%,70%)">
+                ${(lead.name || '?').slice(0, 2).toUpperCase()}
+              </div>
+              <div class="lead-info">
+                <div class="lead-name">${lead.name || 'Unknown Buyer'}</div>
+                <div class="lead-sub">
+                  ${ci} ${lead.channel || 'whatsapp'}
+                  · ${stageLabel(lead.funnel_stage)}
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                ${tempBadge}
+                <div class="lead-score" style="color:${scoreColor(lead.lead_score)}">${lead.lead_score || 0}</div>
+              </div>
+            </div>
+            <div class="funnel-bar"><div class="funnel-fill" style="width:${sm.w};background:${sm.c}"></div></div>
+            <div class="lead-actions">
+              <button class="lead-btn" onclick="takeover(${lead.id})">👤 Take Over</button>
+              <button class="lead-btn ind" onclick="sendAlert(${lead.id})">🔔 Alert</button>
+              ${lead.is_bot_active === false
+            ? `<button class="lead-btn red" onclick="reactivate(${lead.id})">🤖 Reactivate</button>`
+            : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    /* ── TRUST CENTER ────────────────────────── */
+    async function loadTrust() {
+      if (ST.trustLoaded) return;
+      ST.trustLoaded = true;
+
+      try {
+        // Load listings for trust data
+        const r = await fetch(CFG.API.listings, { headers: CFG.H });
+        if (!r.ok) return;
+        const listings = await r.json();
+        if (!listings.length) return;
+
+        // Aggregate trust score
+        const avgTrust = Math.round(listings.reduce((a, l) => a + (l.trust_score || 0), 0) / listings.length);
+        const avgGrade = listings[0].trust_grade || 'ungraded';
+
+        // Animate ring
+        const circumference = 226;
+        const offset = circumference - (avgTrust / 100 * circumference);
+        g('trustRingFill').style.strokeDashoffset = offset;
+        g('trustRingFill').style.stroke = avgTrust >= 75 ? 'var(--em)' : avgTrust >= 50 ? 'var(--warn)' : 'var(--risk)';
+        g('trustScoreNum').textContent = avgTrust;
+
+        const gradeMap = {
+          emerald: { text: '🟢 Emerald Grade', desc: 'Highest trust — fully verified infrastructure' },
+          gold: { text: '🔵 Gold Grade', desc: 'Strong verification — minor gaps only' },
+          amber: { text: '🟡 Amber Grade', desc: 'Moderate trust — verification in progress' },
+          flagged: { text: '🔴 Flagged', desc: 'Risk detected — immediate action required' },
+          ungraded: { text: '⚪ Ungraded', desc: 'Verification not yet started' },
+        };
+        const grade = gradeMap[avgGrade] || gradeMap.ungraded;
+        g('trustGradeText').textContent = grade.text;
+        g('trustGradeDesc').textContent = grade.desc;
+        g('trustBadgeLabel').textContent = grade.text;
+
+        // Breakdown from first listing
+        const l = listings[0];
+        g('gpsStatus').textContent = l.gps_verified_at ? `Verified ${timeSince(l.gps_verified_at)} ago` : 'Not yet verified';
+        g('gpsScore').textContent = `+${l.latitude && l.longitude ? 30 : 0}`;
+        g('aiStatus').textContent = l.ai_verified_real ? 'Images passed AI audit' : 'Awaiting AI audit';
+        g('aiScore').textContent = `+${l.ai_verified_real ? 20 : 0}`;
+        g('docStatus').textContent = `C of O: ${l.cof_uploaded ? '✓' : '✗'} · Deed: ${l.deed_uploaded ? '✓' : '✗'} · Survey: ${l.survey_uploaded ? '✓' : '✗'}`;
+        g('docScore').textContent = `+${l.document_score || 0}`;
+        g('witnessStatus').textContent = `${l.witness_count || 0} witness${l.witness_count !== 1 ? 'es' : ''} recorded`;
+        g('witnessScore').textContent = `+${Math.min((l.witness_count || 0) * 5, 10)}`;
+
+        // Listing health list
+        g('listingHealthList').innerHTML = listings.map(l => {
+          const ts = l.trust_score || 0;
+          const color = ts >= 75 ? 'var(--em)' : ts >= 50 ? 'var(--warn)' : 'var(--risk)';
+          return `
+            <div class="card" style="margin-bottom:8px">
+              <div class="flex items-center justify-between">
+                <div style="flex:1;min-width:0">
+                  <div class="text-sm font-bold" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.title || 'Untitled'}</div>
+                  <div class="text-xs text-muted mt-1">${l.location || '—'} · ${l.trust_grade || 'ungraded'}</div>
+                </div>
+                <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${color};margin-left:12px">${ts}</div>
+              </div>
+              <div class="pipeline-bar" style="margin-top:8px">
+                <div class="pipeline-fill" style="width:${ts}%;background:${color}"></div>
+              </div>
+            </div>`;
+        }).join('');
+
+        // Fraud alerts
+        const flagged = listings.filter(l => l.trust_grade === 'flagged');
+        if (flagged.length) {
+          g('fraudAlerts').innerHTML = flagged.map(l => `
+            <div class="warn-item">
+              <div style="font-size:22px">🚨</div>
+              <div style="flex:1">
+                <div class="text-sm font-bold">${l.title || 'Untitled'}</div>
+                <div class="text-xs text-muted mt-1">Flagged — verification required immediately</div>
+              </div>
+            </div>`).join('');
+        }
+
+      } catch (e) { console.error('Trust load error:', e); }
+    }
+
+    /* ── VAULT ───────────────────────────────── */
+    async function loadListings() {
+      const list = g('vaultList');
+      try {
+        const r = await fetch(CFG.API.listings, { headers: CFG.H });
+        if (!r.ok) return;
+        const listings = await r.json();
+        ST.listings = listings;
+        if (!listings.length) {
+          list.innerHTML = `<div class="empty"><div class="empty-icon">🏠</div><div class="empty-title">Your Vault is Empty</div><div class="empty-body">Your listings become the operational foundation of your business. Add your first GPS-verified property to begin receiving buyer interest and trust scoring.</div><button class="btn btn-em btn-sm empty-cta" onclick="openModal('uploadModal')">Add First Listing →</button></div>`;
+          return;
+        }
+        list.innerHTML = listings.map(l => {
+          const ts = l.trust_score || 0;
+          const gradeColor = ts >= 75 ? 'rgba(16,185,129,0.9)' : ts >= 50 ? 'rgba(251,191,36,0.9)' : 'rgba(239,68,68,0.9)';
+          return `
+            <div class="prop-card">
+              <div class="prop-img">🏠
+                <div class="prop-trust-overlay" style="background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.1)">
+                  ${l.trust_grade || 'Ungraded'} · ${ts}pts
+                </div>
+              </div>
+              <div class="prop-body">
+                <div class="prop-title">${l.title || 'Untitled Property'}</div>
+                <div class="prop-meta">
+                  <span>📍 ${l.location || '—'}</span>
+                  <span>🏷️ ${l.property_type || '—'}</span>
+                  <span style="color:${l.status === 'verified' ? 'var(--em)' : 'var(--warn)'}">● ${l.status || 'pending'}</span>
+                </div>
+                <div class="prop-price">₦${formatMoney(l.price || 0)}</div>
+                <div class="prop-actions">
+                  <button class="btn btn-ghost btn-sm" onclick="loadReelOptions(${l.id})">🎬 Reel</button>
+                  <button class="btn btn-em btn-sm" onclick="viewTrustDash(${l.id})">🛡️ Trust</button>
+                </div>
+              </div>
+            </div>`;
+        }).join('');
+      } catch (e) { toast('Failed to load vault', 'error'); }
+    }
+
+    /* ── STUDIO ──────────────────────────────── */
+    async function loadStudio() {
+      if (!ST.listings.length) {
+        try {
+          const r = await fetch(CFG.API.listings, { headers: CFG.H });
+          if (r.ok) ST.listings = await r.json();
+        } catch (_) { }
+      }
+      const reelList = g('reelList');
+      if (!ST.listings.length) return;
+      // Show property selector for reel generation
+      reelList.innerHTML = `
+        <div class="sep">Select Property for Reel</div>
+        ${ST.listings.slice(0, 5).map(l => `
+          <div class="reel-card" onclick="loadReelOptions(${l.id})" style="cursor:pointer">
+            <div class="reel-thumb">🏠</div>
+            <div style="flex:1;min-width:0">
+              <div class="text-sm font-bold" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.title || 'Untitled'}</div>
+              <div class="text-xs text-muted mt-1">📍 ${l.location || '—'} · Trust: ${l.trust_score || 0}pts</div>
+            </div>
+            <div style="color:var(--em);font-size:12px;font-weight:600">Select →</div>
+          </div>`).join('')}`;
+    }
+
+    /* ── NETWORK ─────────────────────────────── */
+    async function loadNetwork() {
+      // Referral stats — projected from pipeline
+      try {
+        const r = await fetch(CFG.API.stats, { headers: CFG.H });
+        if (r.ok) {
+          const s = await r.json();
+          const pv = s.pipeline_value || 0;
+          if (g('netReferralsSent')) g('netReferralsSent').textContent = s.closed_count || 0;
+          if (g('netCommission')) g('netCommission').textContent = '₦' + formatMoney(pv * 0.025);
+        }
+      } catch (_) { }
+
+      // Agency: load team members
+      if (CFG._tenantType === 'agency') {
+        loadTeamList();
+      }
+    }
+
+    async function loadTeamList() {
+      const list = g('teamList');
+      if (!list) return;
+      try {
+        const r = await fetch('/users/', { headers: CFG.H });
+        if (!r.ok) return;
+        const users = await r.json();
+        const members = users.filter(u => !u.is_superuser && !u.is_platform_user);
+        if (!members.length) return;
+        const roleColor = { realtor: 'var(--em)', staff: 'var(--warn)', marketing: '#818CF8', manager: '#F472B6' };
+        list.innerHTML = members.map(u => {
+          const hue = [...(u.email || '')].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+          const initials = (u.first_name || u.email).slice(0, 2).toUpperCase();
+          return `
+            <div class="team-row">
+              <div class="team-avatar" style="background:hsl(${hue},40%,16%);color:hsl(${hue},70%,70%)">${initials}</div>
+              <div class="team-info">
+                <div class="team-name">${u.first_name || u.email.split('@')[0]}</div>
+                <div class="team-sub">${u.email}</div>
+              </div>
+              <div>
+                <span class="badge" style="background:rgba(255,255,255,0.06);color:${roleColor[u.role] || 'var(--muted)'}">${u.role || 'realtor'}</span>
+                <div class="text-xs text-muted mt-1" style="text-align:right">${u.is_active ? '● Active' : '○ Inactive'}</div>
+              </div>
+            </div>`;
+        }).join('');
+      } catch (_) { }
+    }
+
+    /* ── OPERATIONS ──────────────────────────── */
+    async function loadOperations() {
+      const list = g('operationsList');
+      if (!list) return;
+      // Placeholder — scheduling endpoint not yet implemented
+    }
+
+    /* ── ANALYTICS ───────────────────────────── */
+    async function loadAnalytics() {
+      // Placeholder — analytics endpoint not yet implemented
+    }
+
+    /* ── MENU DRAWER ─────────────────────────── */
+    function openMenuDrawer() { openModal('menuDrawer'); }
+
+    async function loadReelOptions(listingId) {
+      switchTab('studio');
+      try {
+        const r = await fetch(CFG.API.reelOpts(listingId), { headers: CFG.H });
+        if (!r.ok) return;
+        const opts = await r.json();
+        g('reelList').innerHTML = (opts.options || []).map((o, i) => `
+          <div class="reel-card">
+            <div class="reel-thumb">🎬</div>
+            <div style="flex:1">
+              <div class="text-sm font-bold">${o.title || 'Reel Option ' + (i + 1)}</div>
+              <div class="text-xs text-muted mt-1">${o.music || 'Trending audio'}</div>
+            </div>
+            <button class="btn btn-em btn-sm" onclick="generateReel(${listingId},'${o.id || i}')">Generate</button>
+          </div>`).join('');
+      } catch (_) { }
+    }
+
+    async function generateReel(listingId, optId) {
+      toast('Generating reel...', 'info');
+      try {
+        const r = await fetch(CFG.API.reelGen(listingId), {
+          method: 'POST', headers: CFG.JH,
+          body: JSON.stringify({ option_id: optId })
+        });
+        if (r.ok) toast('Reel generated!');
+        else toast('Reel generation failed', 'error');
+      } catch (_) { toast('Reel error', 'error'); }
+    }
+
+    /* ── LEAD ACTIONS ────────────────────────── */
+    async function takeover(id) {
+      try {
+        const r = await fetch(CFG.API.takeover(id), { method: 'POST', headers: CFG.JH });
+        r.ok ? toast('Human takeover activated') : toast('Takeover failed', 'error');
+        loadPipeline();
+      } catch (_) { toast('Error', 'error'); }
+    }
+
+    async function reactivate(id) {
+      try {
+        const r = await fetch(CFG.API.reactivate(id), { method: 'POST', headers: CFG.JH });
+        r.ok ? toast('Kora reactivated 🤖') : toast('Reactivation failed', 'error');
+        loadPipeline();
+      } catch (_) { toast('Error', 'error'); }
+    }
+
+    async function sendAlert(id) {
+      try {
+        const r = await fetch(CFG.API.alert(id), { method: 'POST', headers: CFG.JH });
+        r.ok ? toast('Alert sent to realtor 🔔') : toast('Alert failed', 'error');
+      } catch (_) { toast('Error', 'error'); }
+    }
+
+    async function viewTrustDash(id) {
+      switchTab('trust');
+    }
+
+    /* ── PROPERTY UPLOAD ─────────────────────── */
+    async function handleUpload(e) {
+      e.preventDefault();
+      const form = e.target;
+      const fd = new FormData(form);
+      const lat = g('lat').value, lng = g('lng').value;
+      if (!lat || !lng) { toast('GPS required — capture location first', 'error'); return; }
+      fd.append('latitude', lat); fd.append('longitude', lng);
+      try {
+        const r = await fetch(CFG.API.upload, { method: 'POST', headers: { 'X-Tenant-Id': String(CFG.TID), 'Authorization': `Bearer ${CFG.TOKEN}` }, body: fd });
+        if (r.ok) { toast('Property submitted for verification ✅'); closeModal('uploadModal'); form.reset(); loadListings(); }
+        else { const err = await r.json(); toast(err.detail || 'Upload failed', 'error'); }
+      } catch (_) { toast('Upload error', 'error'); }
+    }
+
+    async function captureGPS() {
+      const btn = g('gpsBtn');
+      btn.textContent = '⏳ Locating...'; btn.disabled = true;
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          g('lat').value = pos.coords.latitude;
+          g('lng').value = pos.coords.longitude;
+          btn.textContent = `✅ ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+          btn.style.background = 'rgba(16,185,129,0.2)';
+        },
+        () => { btn.textContent = '📍 Capture Site GPS'; btn.disabled = false; toast('Location access denied', 'error'); }
+      );
+    }
+
+    /* ── INVITE REALTOR (AGENCY) ─────────────── */
+    async function sendInvite() {
+      const email = g('inviteEmail').value;
+      const role = g('inviteRole').value;
+      if (!email) { toast('Enter email address', 'error'); return; }
+      toast('Invitation feature coming soon'); // TODO: wire to /users/ endpoint
+      closeModal('inviteModal');
+    }
+
+    /* ── KORA ────────────────────────────────── */
+    function toggleKora() {
+      ST.koraOpen = !ST.koraOpen;
+      const box = g('koraChatBox');
+      box.style.display = ST.koraOpen ? 'flex' : 'none';
+      if (ST.koraOpen) {
+        setTimeout(() => g('koraInput')?.focus(), 200);
+        // Greet with context on first open
+        if (box.dataset.greeted !== '1') {
+          box.dataset.greeted = '1';
+          const type = CFG._tenantType === 'agency' ? 'agency' : 'freelance realtor';
+          setTimeout(() => appendKoraMsg(
+            `I see you're running as a ${type}. I can summarise your hot leads, check your trust score, flag risky patterns, or suggest follow-up actions. What's the priority?`,
+            'kora'
+          ), 600);
+        }
+      }
+    }
+
+    async function sendKora() {
+      const input = g('koraInput');
+      const msg = input.value.trim();
+      if (!msg) return;
+      input.value = '';
+      appendKoraMsg(msg, 'user');
+      // Operational Kora context
+      const systemCtx = `You are Kora, an operational business intelligence assistant for Est8Go — a real estate trust platform in Africa. The user is a ${CFG._tenantType === 'agency' ? 'real estate agency' : 'freelance realtor'}. Be concise, analytical, and business-focused. Reference their pipeline, trust scores, and leads when relevant.`;
+      try {
+        const r = await fetch('/api/kora/operational', {
+          method: 'POST', headers: CFG.JH,
+          body: JSON.stringify({ message: msg, context: systemCtx })
+        });
+        if (r.ok) {
+          const d = await r.json();
+          appendKoraMsg(d.reply || "I'm analysing your pipeline. Give me a moment.", 'kora');
+        } else {
+          appendKoraMsg("I couldn't process that right now. Try again shortly.", 'kora');
+        }
+      } catch (_) {
+        appendKoraMsg("Connection issue. Your pipeline data is still secure.", 'kora');
+      }
+    }
+
+    function appendKoraMsg(text, role) {
+      const msgs = g('koraMsgs');
+      const div = document.createElement('div');
+      div.className = `kora-msg ${role}`;
+      div.textContent = text;
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    /* ── MODALS ──────────────────────────────── */
+    function openModal(id) { g(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
+    function closeModal(id) { g(id).classList.remove('open'); document.body.style.overflow = ''; }
+
+    document.addEventListener('click', e => {
+      document.querySelectorAll('.modal-backdrop').forEach(m => {
+        if (e.target === m) closeModal(m.id);
+      });
+    });
+
+    /* ── USER MENU ───────────────────────────── */
+    function toggleUserMenu() {
+      const m = g('userMenu');
+      m.style.display = m.style.display === 'block' ? 'none' : 'block';
+    }
+    function closeMenu() { g('userMenu').style.display = 'none'; }
+    document.addEventListener('click', e => {
+      if (!g('userAvatar').contains(e.target) && !g('userMenu').contains(e.target)) closeMenu();
+    });
+
+    /* ── AUTH ────────────────────────────────── */
+    const Auth = {
+      logout() {
+        localStorage.clear();
+        window.location.replace('/public/login');
+      }
+    };
+
+    /* ── TOAST ───────────────────────────────── */
+    let _toastTimer;
+    function toast(msg, type = 'success') {
+      const t = g('toast');
+      t.textContent = msg;
+      t.style.background = type === 'error' ? '#FF4060' : type === 'info' ? '#6366F1' : '#10B981';
+      t.classList.add('show');
+      clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    /* ── UTILITIES ───────────────────────────── */
+    function animCount(id, from, to, dur) {
+      const el = g(id); if (!el) return;
+      const start = performance.now();
+      const step = ts => {
+        const p = Math.min((ts - start) / dur, 1);
+        el.textContent = Math.round(from + (to - from) * p);
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+
+    function formatMoney(n) {
+      if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+      if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+      if (n >= 1e3) return (n / 1e3).toFixed(0) + 'K';
+      return n.toString();
+    }
+
+    function stageLabel(s) {
+      return { awareness: 'Awareness', verification: 'Verification', commitment: 'Commitment', handshake: 'Handshake', closed: 'Closed' }[s] || s || '—';
+    }
+
+    function scoreColor(s) {
+      s = s || 0;
+      return s >= 70 ? 'var(--em)' : s >= 40 ? 'var(--warn)' : 'var(--risk)';
+    }
+
+    function timeSince(dateStr) {
+      const d = new Date(dateStr), now = new Date();
+      const diff = Math.floor((now - d) / 86400000);
+      return diff === 0 ? 'today' : diff === 1 ? '1 day' : `${diff} days`;
+    }
+
+    /* ── COLLAPSIBLE HEADER ──────────────────── */
+    function initHeaderCollapse() {
+      const header = g('appHeader');
+      const scroll = g('scrollArea');
+      if (!header || !scroll) return;
+      const syncPad = () => { scroll.style.paddingTop = header.offsetHeight + 'px'; };
+      syncPad();
+      new ResizeObserver(syncPad).observe(header);
+      let lastY = 0;
+      scroll.addEventListener('scroll', () => {
+        const y = scroll.scrollTop;
+        if (y > lastY && y > 60) {
+          header.classList.add('header-hidden');
+        } else {
+          header.classList.remove('header-hidden');
+          syncPad();
+        }
+        lastY = y;
+      }, { passive: true });
+    }
+
+    /* ── FAB SYSTEM ──────────────────────────── */
+    const FAB_ACTIONS = {
+      home: [
+        { icon: '🏠', label: 'Add Property', action: () => openModal('uploadModal') },
+        { icon: '👤', label: 'Invite Realtor', action: () => openModal('inviteModal') },
+        { icon: '📋', label: 'Schedule Visit', action: () => toast('Scheduling coming soon', 'info') },
+      ],
+      properties: [
+        { icon: '➕', label: 'Add Property', action: () => openModal('uploadModal') },
+        { icon: '🎬', label: 'Create Reel', action: () => switchTab('studio') },
+        { icon: '🛡️', label: 'Trust Check', action: () => switchTab('trust') },
+      ],
+      pipeline: [
+        { icon: '🔔', label: 'Send Alert', action: () => toast('Select a lead to alert', 'info') },
+        { icon: '👤', label: 'Take Over', action: () => toast('Select a lead to take over', 'info') },
+        { icon: '📊', label: 'View Stats', action: () => loadInstantMetrics() },
+      ],
+      operations: [
+        { icon: '📅', label: 'Schedule Visit', action: () => toast('Scheduling coming soon', 'info') },
+        { icon: '⏰', label: 'Set Reminder', action: () => toast('Reminders coming soon', 'info') },
+        { icon: '📋', label: 'New Task', action: () => toast('Task board coming soon', 'info') },
+      ],
+    };
+
+    let _fabOpen = false;
+    let _fabActions = [];
+
+    function updateFAB(tab) {
+      _fabActions = FAB_ACTIONS[tab] || [];
+      closeFAB();
+      const fab = g('fabMain');
+      if (fab) fab.style.display = _fabActions.length ? 'flex' : 'none';
+    }
+
+    function toggleFAB() { _fabOpen ? closeFAB() : openFAB(); }
+
+    function openFAB() {
+      _fabOpen = true;
+      const fab = g('fabMain');
+      const opts = g('fabOptions');
+      if (fab) fab.classList.add('is-open');
+      if (!opts) return;
+      opts.innerHTML = _fabActions.map((a, i) => `
+        <div class="fab-item" style="animation-delay:${i * 60}ms" onclick="execFabAction(${i})">
+          <span class="fab-label">${a.label}</span>
+          <div class="fab-dot">${a.icon}</div>
+        </div>`).join('');
+    }
+
+    function closeFAB() {
+      _fabOpen = false;
+      const fab = g('fabMain');
+      const opts = g('fabOptions');
+      if (fab) fab.classList.remove('is-open');
+      if (opts) opts.innerHTML = '';
+    }
+
+    function execFabAction(i) {
+      closeFAB();
+      const action = _fabActions[i];
+      if (action) action.action();
+    }
+
+    document.addEventListener('click', e => {
+      const fc = g('fabContainer');
+      if (fc && !fc.contains(e.target)) closeFAB();
+    });
+  </script>
+
 </body>
+
 </html>
