@@ -40,6 +40,8 @@ class UserResponse(BaseModel):
     is_active: bool
     is_platform_user: bool
     tenant_type: str | None = None  # agency | freelance | developer | investor
+    business_name: str | None = None  # from tenants table
+    tenant_plan: str | None = None  # pilot | starter | growth | enterprise
 
     class Config:
         from_attributes = True
@@ -162,9 +164,35 @@ def list_users(
 
 
 @router.get("/me", response_model=UserResponse)
-def get_me(current_user: User = Depends(get_current_user)):
-    """Returns the currently authenticated user's profile."""
-    return current_user
+def get_me(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Returns the currently authenticated user's profile with tenant context."""
+    from app.tenants.models import Tenant
+
+    # Build response with tenant fields resolved
+    tenant_type = None
+    business_name = None
+    tenant_plan = None
+    if current_user.tenant_id:
+        tenant = db.query(Tenant).filter(Tenant.id == current_user.tenant_id).first()
+        if tenant:
+            tenant_type = tenant.tenant_type
+            business_name = tenant.business_name or tenant.name
+            tenant_plan = tenant.plan
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "role": current_user.effective_role,
+        "first_name": current_user.first_name,
+        "tenant_id": current_user.tenant_id,
+        "is_active": current_user.is_active,
+        "is_platform_user": current_user.is_platform_user,
+        "tenant_type": tenant_type,
+        "business_name": business_name,
+        "tenant_plan": tenant_plan,
+    }
 
 
 # ================================================================

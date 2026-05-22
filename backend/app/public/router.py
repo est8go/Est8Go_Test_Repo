@@ -65,7 +65,7 @@ async def get_property_page(
 async def get_realtor_portal(request: Request):
     try:
         return templates.TemplateResponse(
-            request=request, name="realtor_dashboard.html"
+            request=request, name="business_dashboard.html"
         )
     except Exception as e:
         logger.error(f"❌ Realtor Portal Error: {e}")
