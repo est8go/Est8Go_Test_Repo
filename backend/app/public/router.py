@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import FileResponse
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -62,11 +62,15 @@ async def get_property_page(
 
 
 @router.get("/realtor-portal", response_class=HTMLResponse)
-async def get_realtor_portal(request: Request):
+async def get_realtor_portal(request: Request, response: Response):
     try:
-        return templates.TemplateResponse(
+        resp = templates.TemplateResponse(
             request=request, name="business_dashboard.html"
         )
+        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Expires"] = "0"
+        return resp
     except Exception as e:
         logger.error(f"❌ Realtor Portal Error: {e}")
         return HTMLResponse(content=f"Template Error: {e}", status_code=500)
@@ -107,16 +111,20 @@ async def get_login_page(request: Request):
 
 
 @router.get("/business", response_class=HTMLResponse)
-async def get_business_dashboard(request: Request):
+async def get_business_dashboard(request: Request, response: Response):
     """
     Est8Go Business Command Center.
     Unified dashboard for Agency and Freelance Realtor tenants.
     Runs in parallel with /realtor-portal during migration.
     """
     try:
-        return templates.TemplateResponse(
+        resp = templates.TemplateResponse(
             request=request, name="business_dashboard.html"
         )
+        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Expires"] = "0"
+        return resp
     except Exception as e:
         logger.error(f"❌ Business Dashboard Error: {e}")
         return HTMLResponse(content=f"Template Error: {e}", status_code=500)

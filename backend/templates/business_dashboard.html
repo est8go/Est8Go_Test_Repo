@@ -6,6 +6,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#0F172A" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Est8Go | Business Command Center</title>
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
@@ -2328,7 +2331,7 @@
       <span>Properties</span>
     </button>
     <!-- CENTER FAB -->
-    <div id="fabContainer">
+    <div id="fabContainer" onclick="event.stopPropagation()">
       <div id="fabOptions"></div>
       <button id="fabMain" aria-label="Quick actions" onclick="toggleFAB()">
         <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24">
@@ -2869,8 +2872,8 @@
         const s = await r.json();
 
         const pv = s.pipeline_value || s.total_pipeline_value || 0;
-        g('pipelineValue').textContent = '₦' + formatMoney(pv);
-        g('commissionEst').textContent = '₦' + formatMoney(pv * 0.05);
+        g('pipelineValue').textContent = formatMoney(pv);
+        g('commissionEst').textContent = formatMoney(pv * 0.05);
 
         // Funnel bars
         const stages = [
@@ -3128,7 +3131,7 @@
                   <span>🏷️ ${l.property_type || '—'}</span>
                   <span style="color:${l.status === 'verified' ? 'var(--em)' : 'var(--warn)'}">● ${l.status || 'pending'}</span>
                 </div>
-                <div class="prop-price">₦${formatMoney(l.price || 0)}</div>
+                <div class="prop-price">${formatMoney(l.price || 0)}</div>
                 <div class="prop-actions">
                   <button class="btn btn-ghost btn-sm" onclick="loadReelOptions(${l.id})">🎬 Reel</button>
                   <button class="btn btn-em btn-sm" onclick="viewTrustDash(${l.id})">🛡️ Trust</button>
@@ -3172,7 +3175,7 @@
           const s = await r.json();
           const pv = s.pipeline_value || 0;
           if (g('netReferralsSent')) g('netReferralsSent').textContent = s.closed_count || 0;
-          if (g('netCommission')) g('netCommission').textContent = '₦' + formatMoney(pv * 0.025);
+          if (g('netCommission')) g('netCommission').textContent = formatMoney(pv * 0.025);
         }
       } catch (_) { }
 
@@ -3438,10 +3441,11 @@
     }
 
     function formatMoney(n) {
-      if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
-      if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-      if (n >= 1e3) return (n / 1e3).toFixed(0) + 'K';
-      return n.toString();
+      n = Number(n) || 0;
+      if (n >= 1e9) return '₦' + (n / 1e9).toFixed(1) + 'B';
+      if (n >= 1e6) return '₦' + (n / 1e6).toFixed(1) + 'M';
+      if (n >= 1e3) return '₦' + (n / 1e3).toFixed(0) + 'K';
+      return '₦' + n.toLocaleString();
     }
 
     function stageLabel(s) {
@@ -3530,7 +3534,8 @@
           <span class="fab-label">${a.label}</span>
         </div>`).join('');
       opts.querySelectorAll('.fab-item').forEach(el => {
-        el.addEventListener('click', () => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
           const idx = parseInt(el.dataset.fabIndex);
           closeFAB();
           const act = _fabActions[idx];
