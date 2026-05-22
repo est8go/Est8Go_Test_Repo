@@ -1617,10 +1617,15 @@
        FLOATING ACTION BUTTON
     ═══════════════════════════════════════════ */
     #fabOptions {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 8px;
+      pointer-events: all;
       z-index: 502;
     }
 
@@ -2303,7 +2308,14 @@
       <span>Properties</span>
     </button>
     <!-- FAB spacer -->
-    <div style="width:56px;flex-shrink:0"></div>
+    <div style="width:56px;flex-shrink:0;display:flex;
+      flex-direction:column;align-items:center;gap:3px;
+      padding:6px 0">
+      <div style="width:56px;height:20px"></div>
+      <span style="font-size:9px;font-weight:700;
+        text-transform:uppercase;letter-spacing:0.08em;
+        color:transparent">Add</span>
+    </div>
     <button class="nav-btn" id="btnPipeline" onclick="switchTab('pipeline')">
       <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -2324,22 +2336,31 @@
   <!-- FLOATING ACTION BUTTON — fixed, independent of nav -->
   <div id="fabContainer" style="
     position: fixed;
-    bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) - 8px);
+    bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     z-index: 500;
+    width: 56px;
+    height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 8px;
+    pointer-events: none;
   ">
     <div id="fabOptions" style="
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 8px;
-      margin-bottom: 8px;
+      pointer-events: all;
     "></div>
     <button id="fabMain" aria-label="Quick actions" onclick="toggleFAB()" style="
+      pointer-events: all;
       width: 56px;
       height: 56px;
       border-radius: 18px;
@@ -2351,8 +2372,7 @@
       justify-content: center;
       box-shadow: 0 4px 24px rgba(67,56,202,0.55);
       transition: transform 0.15s, box-shadow 0.15s;
-      position: relative;
-      z-index: 501;
+      margin-top: -10px;
     ">
       <svg width="24" height="24" fill="none" stroke="#fff"
            stroke-width="2.5" viewBox="0 0 24 24">
