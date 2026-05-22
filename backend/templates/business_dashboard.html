@@ -1113,7 +1113,6 @@
       padding-bottom: env(safe-area-inset-bottom);
       background: rgba(15,23,42,0.97);
       border-top: 1px solid var(--border);
-      overflow: visible;
     }
 
     .nav-btn {
@@ -1615,26 +1614,14 @@
     }
 
     /* ═══════════════════════════════════════════
-       CENTER NAV FAB
+       FLOATING ACTION BUTTON
     ═══════════════════════════════════════════ */
-    #fabContainer {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      overflow: visible;
-    }
-
     #fabOptions {
-      position: absolute;
-      bottom: calc(100% + 12px);
-      right: -8px;
       display: flex;
       flex-direction: column;
-      align-items: flex-end;
+      align-items: center;
       gap: 8px;
-      z-index: 600;
+      z-index: 502;
     }
 
     .fab-item {
@@ -1649,8 +1636,10 @@
       cursor: pointer;
       animation: fabItem 0.22s cubic-bezier(0.2,0.8,0.2,1) both;
       white-space: nowrap;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.06) inset;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.55);
       min-width: 160px;
+      position: relative;
+      z-index: 503;
     }
 
     .fab-item:active {
@@ -1662,26 +1651,6 @@
       font-weight: 600;
       color: #F8FAFC;
       letter-spacing: 0.01em;
-    }
-
-    #fabMain {
-      width: 56px;
-      height: 56px;
-      border-radius: 18px;
-      background: var(--indigo-lg);
-      border: 3px solid var(--bg);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 24px rgba(67,56,202,0.5);
-      transition: transform 0.15s, box-shadow 0.15s;
-      flex-shrink: 0;
-      margin-top: -20px;
-    }
-
-    #fabMain:active {
-      transform: scale(0.92);
     }
 
     #fabMain.is-open {
@@ -1841,7 +1810,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      z-index: 499;
+      z-index: 490;
       background: rgba(0,0,0,0.4);
     }
 
@@ -2333,15 +2302,8 @@
       </svg>
       <span>Properties</span>
     </button>
-    <!-- CENTER FAB -->
-    <div id="fabContainer">
-      <div id="fabOptions"></div>
-      <button id="fabMain" aria-label="Quick actions" onclick="event.stopPropagation(); toggleFAB()">
-        <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-        </svg>
-      </button>
-    </div>
+    <!-- FAB spacer -->
+    <div style="width:56px;flex-shrink:0"></div>
     <button class="nav-btn" id="btnPipeline" onclick="switchTab('pipeline')">
       <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -2358,6 +2320,47 @@
       <span>Menu</span>
     </button>
   </nav>
+
+  <!-- FLOATING ACTION BUTTON — fixed, independent of nav -->
+  <div id="fabContainer" style="
+    position: fixed;
+    bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) - 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  ">
+    <div id="fabOptions" style="
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    "></div>
+    <button id="fabMain" aria-label="Quick actions" onclick="toggleFAB()" style="
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      background: var(--indigo-lg);
+      border: 3px solid var(--bg);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 24px rgba(67,56,202,0.55);
+      transition: transform 0.15s, box-shadow 0.15s;
+      position: relative;
+      z-index: 501;
+    ">
+      <svg width="24" height="24" fill="none" stroke="#fff"
+           stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 4v16m8-8H4"/>
+      </svg>
+    </button>
+  </div>
 
   <!-- ══════════════════════════════════════
        MODAL: UPLOAD PROPERTY
@@ -3528,42 +3531,23 @@
       const fab = g('fabMain');
       const opts = g('fabOptions');
       const backdrop = g('fabBackdrop');
-      if (fab) fab.classList.add('is-open');
-      if (backdrop) backdrop.style.display = 'block';
-      if (!opts) return;
-      if (!_fabActions.length) {
-        console.warn('No FAB actions for tab:', ST.tab);
-        return;
+      if (fab) {
+        fab.classList.add('is-open');
+        fab.style.transform = 'rotate(45deg)';
       }
-
-      // Build HTML
-      opts.innerHTML = _fabActions.map((a, i) => `
-        <div class="fab-item" data-fab-index="${i}" style="animation-delay:${i * 70}ms">
-          <span style="font-size:20px">${a.icon}</span>
-          <span class="fab-label">${a.label}</span>
-        </div>`).join('');
-
-      console.log('FAB opened. Active tab:', ST.tab, 'Actions:', _fabActions.length);
-
-      // Use requestAnimationFrame to wait for paint then attach listeners
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          const items = opts.querySelectorAll('.fab-item');
-          console.log('FAB items found in DOM:', items.length);
-          items.forEach(el => {
-            el.addEventListener('pointerdown', function(e) {
-              e.stopPropagation();
-              e.preventDefault();
-              const idx = parseInt(this.dataset.fabIndex);
-              const act = _fabActions[idx];
-              console.log('FAB item tapped:', idx, act?.label);
-              closeFAB();
-              if (act && typeof act.action === 'function') {
-                act.action();
-              }
-            });
-          });
+      if (backdrop) backdrop.style.display = 'block';
+      if (!opts || !_fabActions.length) return;
+      opts.innerHTML = '';
+      _fabActions.forEach((a, i) => {
+        const div = document.createElement('div');
+        div.className = 'fab-item';
+        div.style.animationDelay = (i * 70) + 'ms';
+        div.innerHTML = `<span style="font-size:20px">${a.icon}</span><span class="fab-label">${a.label}</span>`;
+        div.addEventListener('click', () => {
+          closeFAB();
+          a.action();
         });
+        opts.appendChild(div);
       });
     }
 
@@ -3572,7 +3556,10 @@
       const fab = g('fabMain');
       const opts = g('fabOptions');
       const backdrop = g('fabBackdrop');
-      if (fab) fab.classList.remove('is-open');
+      if (fab) {
+        fab.classList.remove('is-open');
+        fab.style.transform = '';
+      }
       if (backdrop) backdrop.style.display = 'none';
       if (opts) opts.innerHTML = '';
     }
