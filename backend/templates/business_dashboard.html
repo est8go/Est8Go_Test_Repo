@@ -2608,6 +2608,16 @@
 
     const g = id => document.getElementById(id);
 
+    function sanitise(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+    }
+
     /* ── INIT ────────────────────────────────── */
     window.addEventListener('DOMContentLoaded', async () => {
       const ok = await resolveCurrentUser();
@@ -2619,6 +2629,21 @@
       ST.timer = setInterval(() => {
         if (ST.tab === 'pipeline' || ST.tab === 'home') loadPipeline();
       }, CFG.REFRESH);
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          clearInterval(ST.timer);
+          ST.timer = null;
+        } else {
+          if (!ST.timer) {
+            ST.timer = setInterval(() => {
+              if (ST.tab === 'pipeline' || ST.tab === 'home') loadPipeline();
+            }, CFG.REFRESH);
+            if (ST.tab === 'home') loadHome();
+            if (ST.tab === 'pipeline') loadPipeline();
+          }
+        }
+      });
     });
 
     /* ── RESOLVE USER ────────────────────────── */
@@ -2632,9 +2657,13 @@
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if (!res.ok) {
+        if (res.status === 401) {
           localStorage.clear();
           window.location.replace('/public/login');
+          return false;
+        }
+        if (!res.ok) {
+          toast('Server error — please refresh', 'error');
           return false;
         }
 
@@ -2683,8 +2712,11 @@
 
       } catch (e) {
         console.error('Auth resolution failed:', e);
-        localStorage.clear();
-        window.location.replace('/public/login');
+        if (e?.status === 401 || e?.message?.includes('401')) {
+          localStorage.clear();
+          window.location.replace('/public/login');
+        }
+        toast('Connection issue — retrying...', 'error');
         return false;
       }
     }
@@ -2703,6 +2735,15 @@
       const isAgency = CFG._tenantType === 'agency';
       document.querySelectorAll('.agency-only').forEach(el => {
         el.style.display = isAgency ? '' : 'none';
+      });
+      const modules = ROLE_MODULES[role] || ROLE_MODULES['realtor'];
+      const allModules = ['home','properties','pipeline','operations',
+                          'trust','studio','network','analytics'];
+      allModules.forEach(mod => {
+        const btn = g('btn' + mod.charAt(0).toUpperCase() + mod.slice(1));
+        if (btn && !modules.includes('all') && !modules.includes(mod)) {
+          btn.style.display = 'none';
+        }
       });
     }
 
@@ -2997,7 +3038,7 @@
           cold: `<span class="badge" style="background:rgba(255,255,255,.06);color:var(--muted)">❄️ Cold</span>`,
         }[tc] || '';
         const safePhone = (lead.phone || '').replace(/[^0-9]/g, '');
-        const safeName = (lead.name || 'Buyer').replace(/'/g, "\\'");
+        const safeName = sanitise(lead.name || 'Buyer');
 
         return `
           <div class="lead ${tc}">
@@ -3006,7 +3047,7 @@
                 ${(lead.name || '?').slice(0, 2).toUpperCase()}
               </div>
               <div class="lead-info">
-                <div class="lead-name">${lead.name || 'Unknown Buyer'}</div>
+                <div class="lead-name">${sanitise(lead.name) || 'Unknown Buyer'}</div>
                 ${channelBadge(lead.channel)}
                 <div class="lead-sub" style="margin-top:2px">${stageLabel(lead.funnel_stage)}</div>
               </div>
@@ -3028,16 +3069,37 @@
     }
 
     /* ── TRUST CENTER ────────────────────────── */
-    async function loadTrust() {
-      if (ST.trustLoaded) return;
-      ST.trustLoaded = true;
+    window._trustListings = [];
 
+    function renderTrustListing(l) {
+      if (!l) return;
+      if (g('gpsStatus')) g('gpsStatus').textContent = l.gps_verified_at
+        ? `Verified ${timeSince(l.gps_verified_at)} ago` : 'Not yet verified';
+      if (g('gpsScore')) g('gpsScore').textContent = `+${l.latitude && l.longitude ? 30 : 0}`;
+      if (g('aiStatus')) g('aiStatus').textContent = l.ai_verified_real
+        ? 'Images passed AI audit' : 'Awaiting AI audit';
+      if (g('aiScore')) g('aiScore').textContent = `+${l.ai_verified_real ? 20 : 0}`;
+      if (g('docStatus')) g('docStatus').textContent =
+        `C of O: ${l.cof_uploaded ? '✓' : '✗'} · Deed: ${l.deed_uploaded ? '✓' : '✗'} · Survey: ${l.survey_uploaded ? '✓' : '✗'}`;
+      if (g('docScore')) g('docScore').textContent = `+${l.document_score || 0}`;
+      if (g('witnessStatus')) g('witnessStatus').textContent =
+        `${l.witness_count || 0} witness${l.witness_count !== 1 ? 'es' : ''} recorded`;
+      if (g('witnessScore')) g('witnessScore').textContent =
+        `+${Math.min((l.witness_count || 0) * 5, 10)}`;
+    }
+
+    window.loadTrustForListing = function(idx) {
+      renderTrustListing(window._trustListings[parseInt(idx)]);
+    };
+
+    async function loadTrust() {
       try {
-        // Load listings for trust data
         const r = await fetch(CFG.API.listings, { headers: CFG.H });
         if (!r.ok) return;
         const listings = await r.json();
         if (!listings.length) return;
+
+        window._trustListings = listings;
 
         // Aggregate trust score
         const avgTrust = Math.round(listings.reduce((a, l) => a + (l.trust_score || 0), 0) / listings.length);
@@ -3062,16 +3124,27 @@
         g('trustGradeDesc').textContent = grade.desc;
         g('trustBadgeLabel').textContent = grade.text;
 
+        // Listing selector
+        if (listings.length > 1) {
+          const selectorHtml = `
+            <div style="margin-bottom:16px">
+              <select id="trustListingSelect"
+                style="width:100%;background:var(--surface2);
+                       border:1px solid var(--border2);border-radius:12px;
+                       padding:10px 14px;color:var(--text);font-size:13px;
+                       font-family:'Inter',sans-serif;outline:none"
+                onchange="loadTrustForListing(this.value)">
+                ${listings.map((l, i) =>
+                  `<option value="${i}">${sanitise(l.title || 'Untitled')} — ${l.trust_grade || 'ungraded'}</option>`
+                ).join('')}
+              </select>
+            </div>`;
+          const breakdownSection = g('verificationBreakdown') || g('gpsStatus')?.closest('.card');
+          if (breakdownSection) breakdownSection.insertAdjacentHTML('beforebegin', selectorHtml);
+        }
+
         // Breakdown from first listing
-        const l = listings[0];
-        g('gpsStatus').textContent = l.gps_verified_at ? `Verified ${timeSince(l.gps_verified_at)} ago` : 'Not yet verified';
-        g('gpsScore').textContent = `+${l.latitude && l.longitude ? 30 : 0}`;
-        g('aiStatus').textContent = l.ai_verified_real ? 'Images passed AI audit' : 'Awaiting AI audit';
-        g('aiScore').textContent = `+${l.ai_verified_real ? 20 : 0}`;
-        g('docStatus').textContent = `C of O: ${l.cof_uploaded ? '✓' : '✗'} · Deed: ${l.deed_uploaded ? '✓' : '✗'} · Survey: ${l.survey_uploaded ? '✓' : '✗'}`;
-        g('docScore').textContent = `+${l.document_score || 0}`;
-        g('witnessStatus').textContent = `${l.witness_count || 0} witness${l.witness_count !== 1 ? 'es' : ''} recorded`;
-        g('witnessScore').textContent = `+${Math.min((l.witness_count || 0) * 5, 10)}`;
+        renderTrustListing(listings[0]);
 
         // Listing health list
         g('listingHealthList').innerHTML = listings.map(l => {
@@ -3081,8 +3154,8 @@
             <div class="card" style="margin-bottom:8px">
               <div class="flex items-center justify-between">
                 <div style="flex:1;min-width:0">
-                  <div class="text-sm font-bold" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.title || 'Untitled'}</div>
-                  <div class="text-xs text-muted mt-1">${l.location || '—'} · ${l.trust_grade || 'ungraded'}</div>
+                  <div class="text-sm font-bold" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sanitise(l.title) || 'Untitled'}</div>
+                  <div class="text-xs text-muted mt-1">${sanitise(l.location) || '—'} · ${l.trust_grade || 'ungraded'}</div>
                 </div>
                 <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${color};margin-left:12px">${ts}</div>
               </div>
@@ -3099,7 +3172,7 @@
             <div class="warn-item">
               <div style="font-size:22px">🚨</div>
               <div style="flex:1">
-                <div class="text-sm font-bold">${l.title || 'Untitled'}</div>
+                <div class="text-sm font-bold">${sanitise(l.title) || 'Untitled'}</div>
                 <div class="text-xs text-muted mt-1">Flagged — verification required immediately</div>
               </div>
             </div>`).join('');
@@ -3123,18 +3196,26 @@
         list.innerHTML = listings.map(l => {
           const ts = l.trust_score || 0;
           const gradeColor = ts >= 75 ? 'rgba(16,185,129,0.9)' : ts >= 50 ? 'rgba(251,191,36,0.9)' : 'rgba(239,68,68,0.9)';
+          const imgUrl = l.images?.[0]?.url || l.image_url || '';
           return `
             <div class="prop-card">
-              <div class="prop-img">🏠
+              <div class="prop-img" style="overflow:hidden;border-radius:inherit">
+                ${imgUrl
+                  ? `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"
+                       onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />`
+                  : ''}
+                <div style="display:${imgUrl ? 'none' : 'flex'};width:100%;height:100%;
+                  align-items:center;justify-content:center;font-size:32px;
+                  background:var(--surface2)">🏠</div>
                 <div class="prop-trust-overlay" style="background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.1)">
                   ${l.trust_grade || 'Ungraded'} · ${ts}pts
                 </div>
               </div>
               <div class="prop-body">
-                <div class="prop-title">${l.title || 'Untitled Property'}</div>
+                <div class="prop-title">${sanitise(l.title) || 'Untitled Property'}</div>
                 <div class="prop-meta">
-                  <span>📍 ${l.location || '—'}</span>
-                  <span>🏷️ ${l.property_type || '—'}</span>
+                  <span>📍 ${sanitise(l.location) || '—'}</span>
+                  <span>🏷️ ${sanitise(l.property_type) || '—'}</span>
                   <span style="color:${l.status === 'verified' ? 'var(--em)' : 'var(--warn)'}">● ${l.status || 'pending'}</span>
                 </div>
                 <div class="prop-price">${formatMoney(l.price || 0)}</div>
@@ -3165,8 +3246,8 @@
           <div class="reel-card" onclick="loadReelOptions(${l.id})" style="cursor:pointer">
             <div class="reel-thumb">🏠</div>
             <div style="flex:1;min-width:0">
-              <div class="text-sm font-bold" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.title || 'Untitled'}</div>
-              <div class="text-xs text-muted mt-1">📍 ${l.location || '—'} · Trust: ${l.trust_score || 0}pts</div>
+              <div class="text-sm font-bold" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sanitise(l.title) || 'Untitled'}</div>
+              <div class="text-xs text-muted mt-1">📍 ${sanitise(l.location) || '—'} · Trust: ${l.trust_score || 0}pts</div>
             </div>
             <div style="color:var(--em);font-size:12px;font-weight:600">Select →</div>
           </div>`).join('')}`;
@@ -3315,7 +3396,7 @@
       fd.append('latitude', lat); fd.append('longitude', lng);
       try {
         const r = await fetch(CFG.API.upload, { method: 'POST', headers: { 'X-Tenant-Id': String(CFG.TID), 'Authorization': `Bearer ${CFG.TOKEN}` }, body: fd });
-        if (r.ok) { toast('Property submitted for verification ✅'); closeModal('uploadModal'); form.reset(); loadListings(); }
+        if (r.ok) { toast('Property submitted for verification ✅'); closeModal('uploadModal'); form.reset(); ST.trustLoaded = false; loadListings(); }
         else { const err = await r.json(); toast(err.detail || 'Upload failed', 'error'); }
       } catch (_) { toast('Upload error', 'error'); }
     }
@@ -3400,9 +3481,18 @@
     function closeModal(id) { g(id).classList.remove('open'); document.body.style.overflow = ''; }
 
     document.addEventListener('click', e => {
-      document.querySelectorAll('.modal-backdrop').forEach(m => {
+      // Close open modal backdrops
+      document.querySelectorAll('.modal-backdrop.open').forEach(m => {
         if (e.target === m) closeModal(m.id);
       });
+      // Close user menu
+      const avatar = g('userAvatar');
+      const menu = g('userMenu');
+      if (avatar && menu &&
+          !avatar.contains(e.target) &&
+          !menu.contains(e.target)) {
+        closeMenu();
+      }
     });
 
     /* ── USER MENU ───────────────────────────── */
@@ -3410,10 +3500,7 @@
       const m = g('userMenu');
       m.style.display = m.style.display === 'block' ? 'none' : 'block';
     }
-    function closeMenu() { g('userMenu').style.display = 'none'; }
-    document.addEventListener('click', e => {
-      if (!g('userAvatar').contains(e.target) && !g('userMenu').contains(e.target)) closeMenu();
-    });
+    function closeMenu() { const m = g('userMenu'); if (m) m.style.display = 'none'; }
 
     /* ── AUTH ────────────────────────────────── */
     const Auth = {
@@ -3447,7 +3534,10 @@
     }
 
     function formatMoney(n) {
-      n = Number(n) || 0;
+      if (n === null || n === undefined || n === '') return '—';
+      n = Number(n);
+      if (isNaN(n)) return '—';
+      if (n === 0) return '₦0';
       if (n >= 1e9) return '₦' + (n / 1e9).toFixed(1) + 'B';
       if (n >= 1e6) return '₦' + (n / 1e6).toFixed(1) + 'M';
       if (n >= 1e3) return '₦' + (n / 1e3).toFixed(0) + 'K';
