@@ -3521,7 +3521,6 @@
     function toggleFAB() { _fabOpen ? closeFAB() : openFAB(); }
 
     function openFAB() {
-      console.log('FAB opened. Active tab:', ST.tab, 'Actions:', _fabActions.length);
       _fabOpen = true;
       const fab = g('fabMain');
       const opts = g('fabOptions');
@@ -3530,30 +3529,39 @@
       if (backdrop) backdrop.style.display = 'block';
       if (!opts) return;
       if (!_fabActions.length) {
-        console.warn('No FAB actions for current tab');
+        console.warn('No FAB actions for tab:', ST.tab);
         return;
       }
+
+      // Build HTML
       opts.innerHTML = _fabActions.map((a, i) => `
         <div class="fab-item" data-fab-index="${i}" style="animation-delay:${i * 70}ms">
           <span style="font-size:20px">${a.icon}</span>
           <span class="fab-label">${a.label}</span>
         </div>`).join('');
-      // Attach listeners after DOM is updated
-      setTimeout(() => {
-        opts.querySelectorAll('.fab-item').forEach(el => {
-          el.addEventListener('click', function(e) {
-            e.stopPropagation();
-            e.preventDefault();
-            const idx = parseInt(this.dataset.fabIndex);
-            const act = _fabActions[idx];
-            console.log('FAB item clicked:', idx, act?.label);
-            closeFAB();
-            if (act && typeof act.action === 'function') {
-              act.action();
-            }
-          }, { once: true });
+
+      console.log('FAB opened. Active tab:', ST.tab, 'Actions:', _fabActions.length);
+
+      // Use requestAnimationFrame to wait for paint then attach listeners
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const items = opts.querySelectorAll('.fab-item');
+          console.log('FAB items found in DOM:', items.length);
+          items.forEach(el => {
+            el.addEventListener('pointerdown', function(e) {
+              e.stopPropagation();
+              e.preventDefault();
+              const idx = parseInt(this.dataset.fabIndex);
+              const act = _fabActions[idx];
+              console.log('FAB item tapped:', idx, act?.label);
+              closeFAB();
+              if (act && typeof act.action === 'function') {
+                act.action();
+              }
+            });
+          });
         });
-      }, 50);
+      });
     }
 
     function closeFAB() {
