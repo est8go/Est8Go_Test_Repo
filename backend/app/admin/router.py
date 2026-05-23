@@ -47,6 +47,7 @@ class PulseResponse(BaseModel):
 
 class CreateTenantRequest(BaseModel):
     name: str
+    business_name: Optional[str] = None
     tenant_type: str = "agency"
     plan: str = "pilot"
     whatsapp_phone_number_id: Optional[str] = None
@@ -194,13 +195,19 @@ def create_tenant(
     # Create tenant
     tenant = Tenant(
         name=payload.name,
+        business_name=payload.business_name or payload.name,
         tenant_type=payload.tenant_type,
         plan=payload.plan,
         whatsapp_phone_number_id=payload.whatsapp_phone_number_id or None,
         is_active=True,
     )
     db.add(tenant)
-    db.flush()  # get tenant.id before creating user
+
+    try:
+        db.flush()  # get tenant.id before creating user
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Tenant already exists or constraint violated.")
 
     # Create admin user for this tenant
     admin = User(
