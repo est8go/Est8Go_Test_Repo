@@ -466,3 +466,105 @@ def change_staff_role(
         "success": True,
         "message": f"{user.email} role changed from {old_role} to {payload.role}.",
     }
+
+
+# ================================================================
+# VERIFY QUEUE — pending listings with images + GPS + docs
+# ================================================================
+
+@router.get("/verify-queue")
+def get_verify_queue(
+    current_user: User = Depends(require_superuser),
+    db: Session = Depends(get_db),
+):
+    """Return listings that are not yet verified. Superuser only."""
+    from app.listings.models import ListingImage
+
+    listings = (
+        db.query(Listing)
+        .filter(Listing.status.notin_(["verified", "rejected", "flagged"]))
+        .order_by(desc(Listing.created_at))
+        .limit(50)
+        .all()
+    )
+
+    result = []
+    for l in listings:
+        images = db.query(ListingImage).filter(ListingImage.listing_id == l.id).all()
+        tenant = db.query(Tenant).filter(Tenant.id == l.tenant_id).first()
+        result.append({
+            "id":             l.id,
+            "title":          l.title,
+            "location":       l.location,
+            "price":          l.price,
+            "property_type":  l.property_type,
+            "trust_score":    l.trust_score,
+            "trust_grade":    l.trust_grade,
+            "status":         l.status,
+            "latitude":       l.latitude,
+            "longitude":      l.longitude,
+            "cof_uploaded":   l.cof_uploaded,
+            "survey_uploaded": l.survey_uploaded,
+            "deed_uploaded":  l.deed_uploaded,
+            "gps_verified_at": l.gps_verified_at.isoformat() if l.gps_verified_at else None,
+            "created_at":     l.created_at.isoformat() if l.created_at else None,
+            "tenant_name":    tenant.business_name if tenant else "—",
+            "images":         [{"url": img.url} for img in images],
+        })
+    return result
+
+
+# ================================================================
+# LISTINGS — verify / flag / reject (superuser only)
+# ================================================================
+
+@router.patch("/listings/{listing_id}/verify")
+def verify_listing(
+    listing_id: int,
+    current_user: User = Depends(require_superuser),
+    db: Session = Depends(get_db),
+):
+    listing = db.query(Listing).filter(Listing.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found.")
+    listing.status = "verified"
+    db.commit()
+    log_action(db, actor=current_user, action="listing_verified",
+               target_table="listings", target_id=listing.id,
+               new_value={"status": "verified"})
+    return {"success": True}
+
+
+@router.patch("/listings/{listing_id}/flag")
+def flag_listing(
+    listing_id: int,
+    current_user: User = Depends(require_superuser),
+    db: Session = Depends(get_db),
+):
+    listing = db.query(Listing).filter(Listing.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found.")
+    listing.status     = "flagged"
+    listing.trust_grade = "flagged"
+    db.commit()
+    log_action(db, actor=current_user, action="listing_flagged",
+               target_table="listings", target_id=listing.id,
+               new_value={"status": "flagged"})
+    return {"success": True}
+
+
+@router.patch("/listings/{listing_id}/reject")
+def reject_listing(
+    listing_id: int,
+    current_user: User = Depends(require_superuser),
+    db: Session = Depends(get_db),
+):
+    listing = db.query(Listing).filter(Listing.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found.")
+    listing.status = "rejected"
+    db.commit()
+    log_action(db, actor=current_user, action="listing_rejected",
+               target_table="listings", target_id=listing.id,
+               new_value={"status": "rejected"})
+    return {"success": True}
