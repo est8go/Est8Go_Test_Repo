@@ -86,6 +86,7 @@ class PurchaseRequest(BaseModel):
 @router.post("/purchase/initiate")
 async def initiate_purchase(
     body: PurchaseRequest,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -99,8 +100,14 @@ async def initiate_purchase(
     if not bundle:
         raise HTTPException(404, "Bundle not found")
 
-    reference = f"est8go_{uuid.uuid4().hex[:16]}"
-    email = body.email or current_user.email
+    # Verify env key is loaded
+    key = os.getenv("PAYSTACK_SECRET_KEY", "")
+    logger.info(f"Paystack key present: {bool(key)} length: {len(key)}")
+
+    reference    = f"est8go_{uuid.uuid4().hex[:16]}"
+    email        = body.email or current_user.email
+    amount_kobo  = bundle.price_ngn * 100
+    logger.info(f"Initiating purchase: bundle={bundle.name} email={email} amount_kobo={amount_kobo} ref={reference}")
 
     txn = CreditTransaction(
         tenant_id     = current_user.tenant_id,
@@ -116,12 +123,12 @@ async def initiate_purchase(
     db.commit()
 
     headers = {
-        "Authorization": f"Bearer {os.getenv('PAYSTACK_SECRET_KEY')}",
+        "Authorization": f"Bearer {key}",
         "Content-Type":  "application/json",
     }
     payload = {
         "email":        email,
-        "amount":       bundle.price_ngn * 100,
+        "amount":       amount_kobo,
         "reference":    reference,
         "callback_url": f"{os.getenv('BASE_URL', '')}/public/credits/payment-success",
         "metadata": {
@@ -137,10 +144,11 @@ async def initiate_purchase(
             "https://api.paystack.co/transaction/initialize",
             json=payload, headers=headers, timeout=30,
         )
+
+    logger.error(f"Paystack full response: {resp.status_code} {resp.text}")
     data = resp.json()
 
     if not data.get("status"):
-        logger.error(f"Paystack error: {data}")
         raise HTTPException(
             502,
             f"Payment failed: {data.get('message', 'Unknown error')}",
