@@ -5,7 +5,7 @@ from typing import Optional
 from datetime import datetime, timedelta
 import os, hmac, hashlib, logging, json, uuid
 
-import requests as req_lib
+import httpx
 
 from app.database.db import get_db
 from app.auth.deps import get_current_user, require_superuser
@@ -84,7 +84,7 @@ class PurchaseRequest(BaseModel):
 
 
 @router.post("/purchase/initiate")
-def initiate_purchase(
+async def initiate_purchase(
     body: PurchaseRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -132,15 +132,19 @@ def initiate_purchase(
         },
     }
 
-    resp = req_lib.post(
-        "https://api.paystack.co/transaction/initialize",
-        json=payload, headers=headers, timeout=30,
-    )
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            "https://api.paystack.co/transaction/initialize",
+            json=payload, headers=headers, timeout=30,
+        )
     data = resp.json()
 
     if not data.get("status"):
-        logger.error(f"Paystack init failed: {data}")
-        raise HTTPException(502, "Payment initialization failed")
+        logger.error(f"Paystack error: {data}")
+        raise HTTPException(
+            502,
+            f"Payment failed: {data.get('message', 'Unknown error')}",
+        )
 
     return {
         "authorization_url": data["data"]["authorization_url"],

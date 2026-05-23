@@ -383,6 +383,42 @@
       color: var(--warn);
     }
 
+    /* ── Wallet pill colour states ── */
+    #walletPill.state-healthy {
+      background: rgba(16,185,129,0.08);
+      border-color: rgba(16,185,129,0.2);
+    }
+    #walletPill.state-healthy #walletIcon { color: #10B981; }
+    #walletPill.state-healthy #creditBalance { color: #10B981; }
+
+    #walletPill.state-medium {
+      background: rgba(67,56,202,0.10);
+      border-color: rgba(67,56,202,0.22);
+    }
+    #walletPill.state-medium #walletIcon { color: #4F46E5; }
+    #walletPill.state-medium #creditBalance { color: #4F46E5; }
+
+    #walletPill.state-low {
+      background: rgba(245,158,11,0.10);
+      border-color: rgba(245,158,11,0.25);
+      animation: walletPulse 2s ease-in-out infinite;
+    }
+    #walletPill.state-low #walletIcon { color: #F59E0B; }
+    #walletPill.state-low #creditBalance { color: #F59E0B; }
+
+    #walletPill.state-empty {
+      background: rgba(244,63,94,0.10);
+      border-color: rgba(244,63,94,0.25);
+      animation: walletPulse 1.5s ease-in-out infinite;
+    }
+    #walletPill.state-empty #walletIcon { color: #F43F5E; }
+    #walletPill.state-empty #creditBalance { color: #F43F5E; }
+
+    @keyframes walletPulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.65; }
+    }
+
     /* ═══════════════════════════════════════════
        SCROLL AREA
     ═══════════════════════════════════════════ */
@@ -1890,15 +1926,65 @@
       </div>
     </div>
 
-    <!-- ── Row 2: Business Identity Bar ── -->
-    <div class="biz-bar">
-      <div style="flex:1;min-width:0">
-        <div class="biz-name" id="bizName" style="font-weight:700">Loading...</div>
-        <div class="biz-meta">
+    <!-- ── Row 2: Business Identity Bar + Wallet Pill ── -->
+    <div class="biz-bar" style="display:flex;align-items:center;
+         justify-content:space-between;gap:12px;padding:12px 16px">
+
+      <!-- Left: business name + badges -->
+      <div style="min-width:0;flex:1">
+        <div class="biz-name" id="bizName"
+          style="font-weight:700;font-size:15px;
+                 white-space:nowrap;overflow:hidden;
+                 text-overflow:ellipsis">Loading...</div>
+        <div style="display:flex;gap:6px;margin-top:4px;
+                    flex-wrap:nowrap;align-items:center">
           <span class="trust-badge" id="trustBadge"><span>●</span> Verified</span>
           <span class="plan-badge" id="planBadge">—</span>
         </div>
       </div>
+
+      <!-- Right: wallet pill -->
+      <div id="walletPill"
+        onclick="openModal('buyCreditsModal');loadBundles()"
+        style="display:flex;align-items:center;gap:8px;
+               flex-shrink:0;cursor:pointer;
+               border-radius:12px;padding:8px 12px;
+               border:1px solid;transition:all 0.2s;
+               background:rgba(67,56,202,0.1);
+               border-color:rgba(67,56,202,0.2)">
+
+        <svg width="18" height="18" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2"
+             id="walletIcon" style="color:#4F46E5;flex-shrink:0">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M21 12V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-5m0 0h-4a2 2 0 000 4h4m0-4v4"/>
+        </svg>
+
+        <div>
+          <div style="font-size:8px;font-weight:700;
+                      letter-spacing:0.12em;text-transform:uppercase;
+                      color:var(--muted);line-height:1">Credits</div>
+          <div style="display:flex;align-items:baseline;
+                      gap:4px;margin-top:1px">
+            <span id="creditBalance"
+              style="font-family:'Syne',sans-serif;font-size:16px;
+                     font-weight:800;line-height:1;color:#4F46E5">—</span>
+            <span id="bonusTag"
+              style="font-size:9px;font-weight:700;
+                     color:#10B981;display:none">
+              +<span id="bonusAmt">0</span>
+            </span>
+          </div>
+        </div>
+
+        <div id="walletTopupDot"
+          style="display:none;width:6px;height:6px;
+                 border-radius:50%;background:var(--warn);
+                 flex-shrink:0;
+                 box-shadow:0 0 6px rgba(245,158,11,0.5)">
+        </div>
+      </div>
+
     </div>
 
     <!-- ── Row 3: Instant Metrics ── -->
@@ -1921,63 +2007,6 @@
           <div class="im-val ind" id="imTrust">—</div>
         </div>
       </div>
-    </div>
-
-    <!-- ── Credit Widget ── -->
-    <div id="creditWidget"
-      onclick="switchTab('credits')"
-      style="display:flex;align-items:center;gap:10px;
-             background:rgba(67,56,202,0.12);
-             border:1px solid rgba(67,56,202,0.25);
-             border-radius:14px;padding:10px 16px;
-             cursor:pointer;transition:all 0.15s;
-             margin-top:12px">
-      <div>
-        <div style="font-size:9px;font-weight:700;
-                    letter-spacing:0.12em;text-transform:uppercase;
-                    color:var(--muted)">Est8 Credits</div>
-        <div style="display:flex;align-items:baseline;gap:6px;margin-top:2px">
-          <span id="creditBalance"
-            style="font-family:'Syne',sans-serif;font-size:22px;
-                   font-weight:800;color:#4F46E5">—</span>
-          <span id="bonusBalance"
-            style="font-size:11px;font-weight:600;
-                   color:#10B981;display:none">
-            +<span id="bonusAmt">0</span> bonus
-          </span>
-        </div>
-      </div>
-      <button onclick="event.stopPropagation();openModal('buyCreditsModal');loadBundles()"
-        style="margin-left:auto;background:var(--indigo-lg);
-               color:white;border:none;border-radius:10px;
-               padding:7px 14px;font-size:11px;font-weight:700;
-               cursor:pointer;white-space:nowrap;
-               transition:transform 0.15s"
-        onmousedown="this.style.transform='scale(0.93)'"
-        onmouseup="this.style.transform=''">
-        + Buy
-      </button>
-    </div>
-
-    <!-- ── Low Balance Banner ── -->
-    <div id="lowBalanceBanner"
-      style="display:none;background:rgba(245,158,11,0.1);
-             border:1px solid rgba(245,158,11,0.25);
-             border-radius:12px;padding:10px 14px;
-             margin-top:8px;align-items:center;gap:10px">
-      <span style="font-size:16px">⚠️</span>
-      <div style="flex:1">
-        <div style="font-size:12px;font-weight:700;color:var(--warn)">Credits running low</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:1px">
-          Top up to keep your bot and services active
-        </div>
-      </div>
-      <button onclick="openModal('buyCreditsModal');loadBundles()"
-        style="background:var(--warn);color:#0F172A;
-               border:none;border-radius:9px;padding:6px 12px;
-               font-size:11px;font-weight:700;cursor:pointer">
-        Top Up
-      </button>
     </div>
 
   </div>
@@ -3483,25 +3512,44 @@
         if (!res?.ok) return;
         const data = await res.json();
 
+        const pill   = g('walletPill');
         const bal    = g('creditBalance');
-        const bon    = g('bonusBalance');
+        const bonTag = g('bonusTag');
         const bonAmt = g('bonusAmt');
-        const banner = g('lowBalanceBanner');
+        const topDot = g('walletTopupDot');
 
-        if (bal) bal.textContent = data.available ?? '—';
+        const available = data.available ?? 0;
 
-        if (data.bonus > 0 && bon && bonAmt) {
-          bonAmt.textContent = data.bonus;
-          bon.style.display = 'inline';
+        if (bal) bal.textContent = available;
+
+        if (data.bonus > 0 && bonTag && bonAmt) {
+          bonAmt.textContent   = data.bonus;
+          bonTag.style.display = 'inline';
         }
 
-        if (banner) {
-          banner.style.display = (data.available ?? 0) < 10 ? 'flex' : 'none';
+        if (pill) {
+          pill.classList.remove('state-healthy', 'state-medium', 'state-low', 'state-empty');
+          if (available === 0) {
+            pill.classList.add('state-empty');
+            if (topDot) topDot.style.display = 'block';
+            toast('🔴 No credits remaining — services paused', 'error');
+          } else if (available <= 10) {
+            pill.classList.add('state-low');
+            if (topDot) topDot.style.display = 'block';
+          } else if (available <= 50) {
+            pill.classList.add('state-medium');
+            if (topDot) topDot.style.display = 'none';
+          } else {
+            pill.classList.add('state-healthy');
+            if (topDot) topDot.style.display = 'none';
+          }
         }
 
         if (data.expiring_soon?.length > 0) {
           const exp = data.expiring_soon[0];
-          toast(`⚠️ ${exp.credits} bonus credits expire in ${exp.days_left} days`, 'warn');
+          if (exp.days_left <= 7) {
+            toast(`⚠️ ${exp.credits} bonus credits expire in ${exp.days_left} days`, 'warn');
+          }
         }
       } catch (e) {
         console.error('Credit balance failed:', e);
