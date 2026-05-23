@@ -10,6 +10,10 @@ Fort-Knox login with:
   - Full audit trail on every login event
 """
 
+import os
+import secrets
+from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, HTTPException, Form, Request
 from sqlalchemy.orm import Session
 
@@ -17,6 +21,7 @@ from app.database.db import get_db
 from app.users.models import User
 from app.core.security import (
     verify_password,
+    get_password_hash,
     create_access_token,
     create_reauth_token,
     verify_reauth_token,
@@ -234,3 +239,100 @@ def get_me(current_user: User = Depends(get_current_user)):
         "first_name": current_user.first_name,
         "is_active": current_user.is_active,
     }
+
+
+# ================================================================
+# PASSWORD RESET
+# ================================================================
+
+
+@router.post("/forgot-password")
+def forgot_password(
+    email: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    """Send password reset link. Always returns success to prevent email enumeration."""
+    from app.auth.models import PasswordResetToken
+    from app.services.email_service import send_password_reset
+
+    user = db.query(User).filter(
+        User.email == email,
+        User.is_active == True,
+    ).first()
+
+    if not user:
+        return {"message": "If that email exists, a reset link has been sent."}
+
+    # Invalidate all existing tokens for this user
+    db.query(PasswordResetToken).filter(
+        PasswordResetToken.user_id == user.id,
+        PasswordResetToken.used_at == None,
+    ).update({"used_at": datetime.utcnow()})
+
+    token = secrets.token_urlsafe(48)
+    reset_token = PasswordResetToken(
+        user_id    = user.id,
+        token      = token,
+        expires_at = datetime.utcnow() + timedelta(hours=1),
+    )
+    db.add(reset_token)
+    db.commit()
+
+    base_url  = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+    reset_url = f"{base_url}/public/reset-password?token={token}"
+    name      = user.email.split("@")[0].title()
+    send_password_reset(user.email, reset_url, name)
+
+    return {"message": "If that email exists, a reset link has been sent."}
+
+
+@router.post("/reset-password")
+def reset_password(
+    token: str = Form(...),
+    new_password: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    """Apply a password reset using the token from the email link."""
+    from app.auth.models import PasswordResetToken
+
+    reset_token = db.query(PasswordResetToken).filter(
+        PasswordResetToken.token      == token,
+        PasswordResetToken.used_at    == None,
+        PasswordResetToken.expires_at  > datetime.utcnow(),
+    ).first()
+
+    if not reset_token:
+        raise HTTPException(400, "Invalid or expired reset link.")
+
+    user = db.query(User).filter(User.id == reset_token.user_id).first()
+    if not user:
+        raise HTTPException(404, "User not found.")
+
+    if len(new_password) < 8:
+        raise HTTPException(400, "Password must be at least 8 characters.")
+
+    user.hashed_password  = get_password_hash(new_password)
+    reset_token.used_at   = datetime.utcnow()
+    db.commit()
+
+    return {"message": "Password reset successfully. You can now log in."}
+
+
+@router.get("/reset-password/validate")
+def validate_reset_token(
+    token: str,
+    db: Session = Depends(get_db),
+):
+    """Check whether a reset token is still valid (used by the frontend on page load)."""
+    from app.auth.models import PasswordResetToken
+
+    reset_token = db.query(PasswordResetToken).filter(
+        PasswordResetToken.token      == token,
+        PasswordResetToken.used_at    == None,
+        PasswordResetToken.expires_at  > datetime.utcnow(),
+    ).first()
+
+    if not reset_token:
+        raise HTTPException(400, "Invalid or expired link.")
+
+    return {"valid": True}

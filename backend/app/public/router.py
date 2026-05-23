@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -128,6 +129,118 @@ async def get_business_dashboard(request: Request, response: Response):
     except Exception as e:
         logger.error(f"❌ Business Dashboard Error: {e}")
         return HTMLResponse(content=f"Template Error: {e}", status_code=500)
+
+
+@router.get("/forgot-password", response_class=HTMLResponse)
+async def forgot_password_page(request: Request):
+    return templates.TemplateResponse(request=request, name="forgot_password.html")
+
+
+@router.get("/reset-password", response_class=HTMLResponse)
+async def reset_password_page(request: Request, token: str = ""):
+    return templates.TemplateResponse(
+        request=request,
+        name="reset_password.html",
+        context={"token": token},
+    )
+
+
+@router.get("/onboarding/{code}", response_class=HTMLResponse)
+async def onboarding_page(request: Request, code: str):
+    return templates.TemplateResponse(
+        request=request,
+        name="onboarding.html",
+        context={"code": code},
+    )
+
+
+@router.get("/onboarding/{code}/validate")
+async def validate_signup_link(code: str, db: Session = Depends(get_db)):
+    from app.tenants.signup_models import TenantSignupLink
+
+    link = db.query(TenantSignupLink).filter(
+        TenantSignupLink.code      == code,
+        TenantSignupLink.is_active == True,
+    ).first()
+    if not link:
+        raise HTTPException(404, "Invalid or revoked link")
+    if link.expires_at and link.expires_at < datetime.utcnow():
+        raise HTTPException(410, "This invitation has expired")
+    if link.uses_count >= link.max_uses:
+        raise HTTPException(410, "This invitation has already been used")
+    return {"valid": True, "plan": link.plan, "invited_email": link.invited_email}
+
+
+@router.post("/onboarding/{code}/submit")
+async def submit_onboarding(
+    code: str,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    from app.tenants.signup_models import TenantSignupLink
+    from app.tenants.models import Tenant
+    from app.users.models import User
+    from app.core.security import get_password_hash
+    from app.services.email_service import send_onboarding_complete
+
+    link = db.query(TenantSignupLink).filter(
+        TenantSignupLink.code      == code,
+        TenantSignupLink.is_active == True,
+    ).first()
+    if not link or link.uses_count >= link.max_uses:
+        raise HTTPException(410, "Invalid or expired invitation")
+    if link.expires_at and link.expires_at < datetime.utcnow():
+        raise HTTPException(410, "Invitation expired")
+
+    body = await request.json()
+
+    tenant = Tenant(
+        name          = body.get("business_name", ""),
+        business_name = body.get("business_name", ""),
+        tenant_type   = body.get("business_type", "agency"),
+        areas_covered = body.get("areas_covered", ""),
+        tone          = body.get("tone", "friendly"),
+        plan          = link.plan,
+        is_active     = True,
+    )
+    db.add(tenant)
+    db.flush()
+
+    existing = db.query(User).filter(User.email == body.get("email")).first()
+    if existing:
+        raise HTTPException(400, "Email already registered")
+
+    user = User(
+        email            = body.get("email"),
+        hashed_password  = get_password_hash(body.get("password", "")),
+        first_name       = body.get("full_name", ""),
+        tenant_id        = tenant.id,
+        role             = "admin",
+        is_active        = True,
+        is_platform_user = False,
+    )
+    db.add(user)
+
+    link.uses_count += 1
+    link.used_at     = datetime.utcnow()
+    if link.uses_count >= link.max_uses:
+        link.is_active = False
+
+    db.commit()
+
+    superusers = db.query(User).filter(
+        User.role == "superuser",
+        User.is_active == True,
+    ).all()
+    for su in superusers:
+        send_onboarding_complete(
+            su.email,
+            tenant.business_name,
+            body.get("email", ""),
+            link.plan,
+        )
+
+    return {"success": True, "message": "Account created successfully"}
 
 
 @router.get("/matches", response_class=HTMLResponse)

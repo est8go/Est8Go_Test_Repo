@@ -57,6 +57,10 @@ class User(Base):
     is_admin = Column(Boolean, default=False)
     is_superuser = Column(Boolean, default=False)
 
+    # --- TEMPORARY ROLE ELEVATION ---
+    role_expires_at = Column(DateTime, nullable=True)
+    previous_role   = Column(String(50), nullable=True)
+
     # --- TIMESTAMPS ---
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())

@@ -222,10 +222,10 @@
     </div>
     <!-- Header metrics -->
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">
-      <div class="card" style="padding:10px;text-align:center"><div class="metric-val" id="hdrTenants">—</div><div class="metric-label">Tenants</div></div>
-      <div class="card" style="padding:10px;text-align:center"><div class="metric-val" style="color:var(--em)" id="hdrVerified">—</div><div class="metric-label">Verified</div></div>
-      <div class="card" style="padding:10px;text-align:center"><div class="metric-val" style="color:var(--warn)" id="hdrPending">—</div><div class="metric-label">Pending</div></div>
-      <div class="card" style="padding:10px;text-align:center"><div class="metric-val" style="color:var(--risk)" id="hdrRisks">—</div><div class="metric-label">Risks</div></div>
+      <div class="card" onclick="switchTab('tenants')" style="padding:10px;text-align:center;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><div class="metric-val" id="hdrTenants">—</div><div class="metric-label">Tenants</div></div>
+      <div class="card" onclick="switchTab('verify');filterQueue('verified')" style="padding:10px;text-align:center;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><div class="metric-val" style="color:var(--em)" id="hdrVerified">—</div><div class="metric-label">Verified</div></div>
+      <div class="card" onclick="switchTab('verify');filterQueue('pending')" style="padding:10px;text-align:center;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><div class="metric-val" style="color:var(--warn)" id="hdrPending">—</div><div class="metric-label">Pending</div></div>
+      <div class="card" onclick="switchTab('risk')" style="padding:10px;text-align:center;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><div class="metric-val" style="color:var(--risk)" id="hdrRisks">—</div><div class="metric-label">Risks</div></div>
     </div>
   </div>
 
@@ -303,6 +303,17 @@
       <div class="card" style="margin:0 16px" id="tenantList">
         <div class="empty"><div class="empty-icon">🏢</div><p>Loading tenants...</p></div>
       </div>
+
+      <!-- SIGNUP LINKS SECTION -->
+      <div style="margin:24px 16px 0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Signup Links</span>
+          <button onclick="openModal('newLinkModal')" style="background:var(--indigo-dim);border:1px solid var(--indigo-glow);color:var(--indigo);border-radius:10px;padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer">+ Generate Link</button>
+        </div>
+        <div id="signupLinksList">
+          <div class="empty" style="padding:20px"><div class="empty-icon">🔗</div><p style="font-size:12px">No signup links yet</p></div>
+        </div>
+      </div>
     </div>
 
     <!-- VERIFY TAB -->
@@ -345,7 +356,10 @@
     <!-- STAFF TAB (menu-only) -->
     <div id="staffTab" class="tab">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 8px">
-        <div style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted)">Platform Staff</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted)">Platform Staff</div>
+          <span id="pendingRolesBadge" style="display:none;background:var(--risk);color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px">0</span>
+        </div>
         <button class="btn-em" id="addStaffBtn" onclick="openModal('newStaffModal')" style="padding:7px 14px;font-size:10px">+ Add Staff</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px 12px">
@@ -355,6 +369,14 @@
       </div>
       <div class="card" style="margin:0 16px" id="staffList">
         <div class="empty"><div class="empty-icon">👥</div><p>Loading staff...</p></div>
+      </div>
+
+      <!-- ROLE REQUESTS -->
+      <div style="margin:16px 16px 0">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:8px">Role Elevation Requests<span id="roleReqBadge" style="display:none;background:var(--risk);color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px">0</span></div>
+        <div class="card" id="roleRequestsList">
+          <div class="empty"><div class="empty-icon">🔑</div><p style="font-size:12px">No pending role requests</p></div>
+        </div>
       </div>
     </div>
 
@@ -497,6 +519,32 @@
       <span style="flex:1;font-size:14px;font-weight:500">Risk Monitor</span>
       <svg width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
     </div>
+    <div class="menu-drawer-sec">Channels</div>
+    <div class="menu-drawer-row" style="cursor:default">
+      <span style="font-size:18px;width:28px;text-align:center">📱</span>
+      <span style="flex:1;font-size:14px;font-weight:500">WhatsApp</span>
+      <span style="font-size:10px;font-weight:700;color:var(--em);display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--em);display:inline-block"></span> Live</span>
+    </div>
+    <div class="menu-drawer-row" style="cursor:default">
+      <span style="font-size:18px;width:28px;text-align:center">📸</span>
+      <span style="flex:1;font-size:14px;font-weight:500;color:var(--muted)">Instagram DM</span>
+      <span style="font-size:10px;font-weight:600;color:var(--muted)">Coming Soon</span>
+    </div>
+    <div class="menu-drawer-row" style="cursor:default">
+      <span style="font-size:18px;width:28px;text-align:center">💬</span>
+      <span style="flex:1;font-size:14px;font-weight:500;color:var(--muted)">Facebook Messenger</span>
+      <span style="font-size:10px;font-weight:600;color:var(--muted)">Coming Soon</span>
+    </div>
+    <div class="menu-drawer-row" style="cursor:default">
+      <span style="font-size:18px;width:28px;text-align:center">🌐</span>
+      <span style="flex:1;font-size:13px;font-weight:500;color:rgba(148,163,184,0.5)">Website Chat</span>
+      <span style="font-size:10px;font-weight:600;color:rgba(148,163,184,0.4)">Planned</span>
+    </div>
+    <div class="menu-drawer-row" style="cursor:default">
+      <span style="font-size:18px;width:28px;text-align:center">📞</span>
+      <span style="flex:1;font-size:13px;font-weight:500;color:rgba(148,163,184,0.5)">Voice Hotline</span>
+      <span style="font-size:10px;font-weight:600;color:rgba(148,163,184,0.4)">Planned</span>
+    </div>
     <div class="menu-drawer-sec">System</div>
     <div class="menu-drawer-row" onclick="closeMenuDrawer();toast('Settings coming soon')">
       <span style="font-size:18px;width:28px;text-align:center">⚙️</span>
@@ -627,6 +675,43 @@
   </div>
 </div>
 
+<!-- ══ MODAL: Approve Role ══ -->
+<div class="modal-overlay" id="approveRoleModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Confirm Role Approval</div>
+      <button onclick="closeModal('approveRoleModal')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px">✕</button>
+    </div>
+    <div style="padding:16px 20px">
+      <p style="font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.5">Enter your password to confirm this role elevation. This action is logged and audited.</p>
+      <label class="field-label">Your Password</label>
+      <input type="password" id="approvePassword" class="field-input" placeholder="••••••••"/>
+      <button class="btn-em" onclick="confirmRoleApproval()" style="margin-top:4px">Confirm Approval</button>
+      <button class="btn-ghost" onclick="closeModal('approveRoleModal')" style="margin-top:8px">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Generate Signup Link ══ -->
+<div class="modal-overlay" id="newLinkModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Generate Signup Link</div>
+      <button onclick="closeModal('newLinkModal')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px">✕</button>
+    </div>
+    <div class="field-group"><label class="field-label">Plan</label><select id="nl_plan" class="field-select"><option value="pilot">Pilot (Free)</option><option value="starter">Starter</option><option value="growth">Growth</option><option value="enterprise">Enterprise</option></select></div>
+    <div class="field-group"><label class="field-label">Invited Email (optional)</label><input type="email" id="nl_email" class="field-input" placeholder="prospect@company.com"/></div>
+    <div class="field-group"><label class="field-label">Expiry (hours)</label><input type="number" id="nl_expiry" class="field-input" value="48" min="1" max="720"/></div>
+    <div class="field-group"><label class="field-label">Max Uses</label><input type="number" id="nl_uses" class="field-input" value="1" min="1"/></div>
+    <div style="padding:16px 20px 8px;display:flex;gap:10px">
+      <button class="btn-ghost" onclick="closeModal('newLinkModal')" style="flex:1">Cancel</button>
+      <button class="btn-em" onclick="createSignupLink()" style="flex:2">Generate &amp; Copy</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ TOAST ══ -->
 <div id="toast" style="position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:12px 20px;font-size:13px;font-weight:500;z-index:400;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap"></div>
 
@@ -682,6 +767,7 @@
     loadTenants();
     loadAuditLogs();
     loadStaff();
+    loadRoleRequests();
     startPulseRefresh();
     loadRiskData();
   });
@@ -738,10 +824,10 @@
     g('scrollArea').scrollTop = 0;
     const loaders = {
       pulse:         loadPulseData,
-      tenants:       loadTenants,
+      tenants:       () => { loadTenants(); loadSignupLinks(); },
       verify:        loadVerifyQueue,
       audit:         loadAuditLogs,
-      staff:         loadStaff,
+      staff:         () => { loadStaff(); loadRoleRequests(); },
       billing:       loadBillingData,
       conversations: loadConversations,
       risk:          loadRiskData,
@@ -1014,8 +1100,8 @@
     document.querySelectorAll('.vq-filter').forEach(b => {
       b.classList.remove('trust-emerald'); b.classList.add('trust-silver');
     });
-    btn.classList.remove('trust-silver'); btn.classList.add('trust-emerald');
-    if (type === 'all') { renderQueue(allQueueItems); return; }
+    if (btn) { btn.classList.remove('trust-silver'); btn.classList.add('trust-emerald'); }
+    if (type === 'all' || type === 'pending') { renderQueue(allQueueItems); return; }
     renderQueue(allQueueItems.filter(l => {
       if (type === 'suspicious') return (l.flags||[]).length > 0;
       if (type === 'high_value') return (l.price||0) > 50000000;
@@ -1142,7 +1228,9 @@
           <option value="superuser"   ${s.role==='superuser'  ?'selected':''}>Superuser</option>
         </select>` : `<span class="risk-tag ${s.role==='superuser'?'risk-high':'risk-low'}" style="text-transform:capitalize">${sanitise((s.role||'').replace('_',' '))}</span>`;
       const deactBtn = (role === 'superuser' && s.role !== 'superuser')
-        ? `<button onclick="deactivateStaff(${s.id},'${sanitise(s.email)}')" style="font-size:9px;background:var(--risk-dim);color:var(--risk);border:none;border-radius:6px;padding:3px 8px;cursor:pointer;margin-top:4px">Deactivate</button>`
+        ? `<button onclick="deactivateStaff(${s.id},'${sanitise(s.email)}')" style="font-size:9px;background:var(--risk-dim);color:var(--risk);border:none;border-radius:6px;padding:3px 8px;cursor:pointer;margin-top:4px">Deactivate</button>
+           <button onclick="suspendStaff(${s.id},'${sanitise(s.email)}')" style="font-size:9px;background:var(--warn-dim);color:var(--warn);border:1px solid rgba(245,158,11,0.2);border-radius:6px;padding:3px 8px;cursor:pointer;margin-top:4px">Suspend</button>
+           <button onclick="deleteStaff(${s.id},'${sanitise(s.email)}')" style="font-size:9px;background:var(--risk-dim);color:var(--risk);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:3px 8px;cursor:pointer;margin-top:4px">Delete</button>`
         : '';
       return `
         <div class="tenant-row">
@@ -1412,6 +1500,179 @@
       URL.revokeObjectURL(url);
       toast('Conversation exported');
     } catch (e) { toast('Export failed', 'var(--risk)'); }
+  }
+
+  // ── ROLE REQUESTS ──────────────────────────────────────────────
+  let _pendingRoleRequestId = null;
+
+  async function loadRoleRequests() {
+    try {
+      const res = await Auth.fetch('/admin/role-requests');
+      if (!res?.ok) return;
+      const data = await res.json();
+      const badge  = g('pendingRolesBadge');
+      const badge2 = g('roleReqBadge');
+      const count  = data.length;
+      [badge, badge2].forEach(b => {
+        if (b) { b.textContent = count; b.style.display = count > 0 ? 'inline' : 'none'; }
+      });
+      renderRoleRequests(data);
+    } catch(e) {}
+  }
+
+  function renderRoleRequests(data) {
+    const list = g('roleRequestsList');
+    if (!list) return;
+    if (!data.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">🔑</div><p style="font-size:12px">No pending role requests</p></div>';
+      return;
+    }
+    const role = localStorage.getItem('user_role');
+    list.innerHTML = data.map(r => `
+      <div class="tenant-row" style="flex-direction:column;align-items:flex-start;gap:10px">
+        <div style="display:flex;justify-content:space-between;width:100%;align-items:flex-start">
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">${sanitise(r.requester_name)}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:1px">${sanitise(r.requester_email)}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:10px;font-weight:700;color:var(--warn)">${sanitise(r.current_role)} → ${sanitise(r.requested_role)}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">${r.expiry_hours}h elevation</div>
+          </div>
+        </div>
+        ${r.reason ? `<div style="font-size:12px;color:var(--muted);font-style:italic">"${sanitise(r.reason)}"</div>` : ''}
+        ${role === 'superuser' ? `
+        <div style="display:flex;gap:8px;width:100%">
+          <button onclick="approveRoleRequest(${r.id})" class="btn-em" style="flex:2;font-size:11px;padding:7px 12px">✓ Approve</button>
+          <button onclick="rejectRoleRequest(${r.id})" class="btn-danger" style="flex:1;font-size:11px;padding:7px 12px">Reject</button>
+        </div>` : ''}
+      </div>`).join('');
+  }
+
+  function approveRoleRequest(id) {
+    _pendingRoleRequestId = id;
+    g('approvePassword').value = '';
+    openModal('approveRoleModal');
+  }
+
+  async function confirmRoleApproval() {
+    const password = g('approvePassword').value;
+    if (!password) { toast('Enter your password', 'var(--risk)'); return; }
+    try {
+      const res = await Auth.fetch(`/admin/role-requests/${_pendingRoleRequestId}/approve`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ password }),
+      });
+      if (res?.ok) {
+        closeModal('approveRoleModal');
+        toast('Role elevated successfully', 'var(--em)');
+        loadRoleRequests();
+        loadStaff();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast(err.detail || 'Approval failed', 'var(--risk)');
+      }
+    } catch(e) { toast('Error', 'var(--risk)'); }
+  }
+
+  async function rejectRoleRequest(id) {
+    if (!confirm('Reject this role request?')) return;
+    try {
+      const res = await Auth.fetch(`/admin/role-requests/${id}/reject`, { method: 'POST' });
+      if (res?.ok) { toast('Request rejected'); loadRoleRequests(); }
+    } catch(e) { toast('Error', 'var(--risk)'); }
+  }
+
+  // ── SIGNUP LINKS ───────────────────────────────────────────────
+  async function loadSignupLinks() {
+    try {
+      const res = await Auth.fetch('/admin/signup-links');
+      if (!res?.ok) return;
+      renderSignupLinks(await res.json());
+    } catch(e) {}
+  }
+
+  function renderSignupLinks(links) {
+    const el = g('signupLinksList');
+    if (!el) return;
+    if (!links.length) {
+      el.innerHTML = '<div class="empty" style="padding:20px"><div class="empty-icon">🔗</div><p style="font-size:12px">No signup links yet</p></div>';
+      return;
+    }
+    el.innerHTML = links.map(l => `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div>
+            <div style="font-weight:700;font-size:13px">${sanitise(l.plan)} Plan</div>
+            ${l.invited_email ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">${sanitise(l.invited_email)}</div>` : ''}
+          </div>
+          <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;background:${l.is_active?'var(--em-dim)':'var(--risk-dim)'};color:${l.is_active?'var(--em)':'var(--risk)'};border:1px solid ${l.is_active?'var(--em-glow)':'rgba(244,63,94,0.2)'}">${l.is_active?'Active':'Used/Expired'}</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="copySignupLink('${sanitise(l.signup_url)}')" style="background:var(--indigo-dim);border:1px solid var(--indigo-glow);color:var(--indigo);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;flex:1">Copy Link</button>
+          ${l.is_active ? `<button onclick="revokeLink(${l.id})" style="background:var(--risk-dim);border:1px solid rgba(244,63,94,0.2);color:var(--risk);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer">Revoke</button>` : ''}
+        </div>
+      </div>`).join('');
+  }
+
+  function copySignupLink(url) {
+    navigator.clipboard?.writeText(url).then(() => toast('Link copied!')).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+      toast('Link copied!');
+    });
+  }
+
+  async function revokeLink(id) {
+    if (!confirm('Revoke this signup link?')) return;
+    try {
+      const res = await Auth.fetch(`/admin/signup-links/${id}`, { method: 'DELETE' });
+      if (res?.ok) { toast('Link revoked'); loadSignupLinks(); }
+    } catch(e) { toast('Error', 'var(--risk)'); }
+  }
+
+  async function createSignupLink() {
+    const plan    = g('nl_plan')?.value    || 'Starter';
+    const email   = g('nl_email')?.value.trim() || '';
+    const expiry  = parseInt(g('nl_expiry')?.value || '48');
+    const maxUses = parseInt(g('nl_uses')?.value   || '1');
+    try {
+      const res = await Auth.fetch('/admin/signup-links', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ plan, invited_email: email || null, expiry_hours: expiry, max_uses: maxUses }),
+      });
+      if (res?.ok) {
+        const d = await res.json();
+        copySignupLink(d.signup_url);
+        toast('Link created and copied!', 'var(--em)');
+        closeModal('newLinkModal');
+        loadSignupLinks();
+      } else { toast('Failed to create link', 'var(--risk)'); }
+    } catch(e) { toast('Error', 'var(--risk)'); }
+  }
+
+  // ── STAFF SUSPEND + DELETE ─────────────────────────────────────
+  async function suspendStaff(id, email) {
+    const reason = prompt(`Reason for suspending ${sanitise(email)}:`);
+    if (!reason) return;
+    try {
+      const res = await Auth.fetch(`/users/${id}/deactivate`, { method: 'PATCH' });
+      if (res?.ok) { toast(`${sanitise(email)} suspended`, 'var(--warn)'); loadStaff(); }
+      else { toast('Suspend failed', 'var(--risk)'); }
+    } catch(e) { toast('Error', 'var(--risk)'); }
+  }
+
+  async function deleteStaff(id, email) {
+    if (!confirm(`Permanently delete ${sanitise(email)}?\nThis cannot be undone.`)) return;
+    const word = prompt('Type DELETE to confirm:');
+    if (word !== 'DELETE') { toast('Cancelled'); return; }
+    try {
+      const res = await Auth.fetch(`/users/${id}`, { method: 'DELETE' });
+      if (res?.ok) { toast(`${sanitise(email)} deleted`); loadStaff(); }
+      else toast('Delete failed', 'var(--risk)');
+    } catch(e) { toast('Error', 'var(--risk)'); }
   }
 
   // ── OVERRIDE MODAL ─────────────────────────────────────────────

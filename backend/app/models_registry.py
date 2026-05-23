@@ -10,6 +10,12 @@ from app.conversations.models import Conversation, ConversationMessage
 from app.messages.models import Message
 from app.database.audit import AuditLog  # EST8GO AUDIT TRAIL
 
+# 2. AUTH MODELS
+from app.auth.models import PasswordResetToken, RoleChangeRequest
+
+# 3. TENANT SIGNUP + REFERRAL MODELS
+from app.tenants.signup_models import TenantSignupLink, ReferralCode, ReferralConversion
+
 logger = logging.getLogger(__name__)
 
 
@@ -17,6 +23,7 @@ def register_all_models():
     """
     Architectural Handshake:
     Explicitly registers all models to resolve cross-folder relationships.
+    Also creates any new tables that don't exist yet (safe — does not drop existing).
     """
     try:
         # Touching each class satisfies Pylance/Ruff and ensures registration
@@ -29,10 +36,19 @@ def register_all_models():
             ConversationMessage,
             Message,
             AuditLog,
+            PasswordResetToken,
+            RoleChangeRequest,
+            TenantSignupLink,
+            ReferralCode,
+            ReferralConversion,
         ]
 
         # Force SQLAlchemy to link all string references to their classes
         configure_mappers()
+
+        # Create any new tables (idempotent — skips tables that already exist)
+        from app.database.db import Base, engine
+        Base.metadata.create_all(bind=engine)
 
         logger.info(
             f"✅ {len(_models)} Models successfully registered and relationships resolved."

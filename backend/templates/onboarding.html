@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <meta name="theme-color" content="#0F172A"/>
+  <title>Est8Go | Business Setup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:         #0F172A;
+      --surface:    #111827;
+      --surface2:   #1F2937;
+      --indigo:     #4F46E5;
+      --indigo-lg:  #4338CA;
+      --indigo-dim: rgba(67,56,202,0.12);
+      --indigo-glow:rgba(67,56,202,0.25);
+      --em:         #10B981;
+      --em-dim:     rgba(16,185,129,0.10);
+      --em-glow:    rgba(16,185,129,0.22);
+      --warn:       #F59E0B;
+      --risk:       #F43F5E;
+      --muted:      #94A3B8;
+      --border:     rgba(255,255,255,0.08);
+      --border2:    rgba(255,255,255,0.12);
+      --text:       #F8FAFC;
+    }
+    *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { min-height: 100%; margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+    body { display: flex; flex-direction: column; align-items: center; padding: 24px 16px 48px; }
+
+    /* LOGO */
+    .logo { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+    .logo span { color: var(--em); }
+    .tagline { font-size: 9px; font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); margin-bottom: 24px; }
+
+    /* STEP INDICATOR */
+    .steps { display: flex; align-items: center; gap: 0; margin-bottom: 28px; width: 100%; max-width: 480px; }
+    .step-node {
+      width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0;
+      transition: background 0.3s, border-color 0.3s; border: 2px solid var(--border2);
+      background: var(--surface2); color: var(--muted);
+    }
+    .step-node.active  { background: var(--indigo-lg); border-color: var(--indigo-glow); color: white; }
+    .step-node.done    { background: var(--em); border-color: var(--em-glow); color: #0F172A; }
+    .step-line { flex: 1; height: 2px; background: var(--border2); transition: background 0.3s; }
+    .step-line.done { background: var(--em); }
+
+    /* CARD */
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
+      padding: 28px 24px; width: 100%; max-width: 480px;
+      animation: rise 0.4s cubic-bezier(0.2,0.8,0.2,1) both;
+    }
+    @keyframes rise { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:none } }
+
+    .step-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; margin: 0 0 6px; }
+    .step-sub   { font-size: 13px; color: var(--muted); margin: 0 0 24px; line-height: 1.5; }
+
+    /* FIELDS */
+    .field-label { display: block; font-size: 9px; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 8px; }
+    .field-input, .field-select {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 12px; padding: 13px 14px; font-family: 'Inter', sans-serif;
+      font-size: 14px; color: var(--text); outline: none; transition: border-color 0.2s;
+      margin-bottom: 16px;
+    }
+    .field-select { -webkit-appearance: none; }
+    .field-select option { background: var(--surface2); }
+    .field-input:focus, .field-select:focus { border-color: var(--indigo-glow); }
+    .field-input::placeholder { color: rgba(255,255,255,0.2); }
+    textarea.field-input { resize: none; min-height: 80px; line-height: 1.5; }
+
+    /* PASSWORD WRAP */
+    .pw-wrap { position: relative; margin-bottom: 0; }
+    .pw-wrap .field-input { padding-right: 44px; margin-bottom: 0; }
+    .toggle-pw { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.3); padding: 4px; transition: color 0.2s; }
+    .toggle-pw:hover { color: rgba(255,255,255,0.7); }
+    .pw-spacer { margin-bottom: 16px; }
+
+    /* STRENGTH */
+    .strength-bar { height: 4px; border-radius: 100px; background: rgba(255,255,255,0.06); overflow: hidden; margin: 8px 0 4px; }
+    .strength-fill { height: 100%; border-radius: 100px; transition: width 0.3s, background 0.3s; width: 0%; }
+    .strength-label { font-size: 10px; color: var(--muted); font-weight: 600; }
+
+    /* BUTTONS */
+    .btn-primary {
+      width: 100%; background: var(--indigo-lg); color: white; border: none; border-radius: 12px;
+      padding: 15px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800;
+      letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; margin-top: 8px;
+      transition: filter 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover  { filter: brightness(1.1); }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-em {
+      width: 100%; background: var(--em); color: #0F172A; border: none; border-radius: 12px;
+      padding: 15px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800;
+      letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; margin-top: 8px;
+      transition: filter 0.15s, transform 0.1s;
+    }
+    .btn-em:hover  { filter: brightness(1.08); }
+    .btn-em:active { transform: scale(0.97); }
+    .btn-em:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-ghost {
+      width: 100%; background: none; color: var(--muted); border: 1px solid var(--border2);
+      border-radius: 12px; padding: 13px; font-family: 'Inter', sans-serif; font-size: 13px;
+      font-weight: 600; cursor: pointer; margin-top: 8px; transition: background 0.15s;
+    }
+    .btn-ghost:hover { background: var(--surface2); }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 4px; }
+    .btn-row .btn-ghost { width: auto; flex: 1; }
+    .btn-row .btn-primary { width: auto; flex: 2; }
+
+    /* HELP TEXT */
+    .help-text { font-size: 11px; color: var(--muted); margin-top: -10px; margin-bottom: 16px; line-height: 1.4; }
+
+    /* CONNECTION STATUS */
+    .conn-status { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; margin-bottom: 16px; }
+    .conn-ok   { background: var(--em-dim); border: 1px solid var(--em-glow); color: var(--em); }
+    .conn-fail { background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.2); color: var(--risk); }
+    .conn-idle { background: var(--surface2); border: 1px solid var(--border2); color: var(--muted); }
+
+    /* SKIP LINK */
+    .skip-link { display: block; text-align: center; font-size: 11px; color: var(--muted); cursor: pointer; margin-top: 10px; text-decoration: underline; text-decoration-color: transparent; transition: color 0.2s; }
+    .skip-link:hover { color: var(--warn); }
+
+    /* REVIEW SUMMARY */
+    .review-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .review-row:last-child { border-bottom: none; }
+    .review-key  { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+    .review-val  { font-weight: 600; text-align: right; max-width: 60%; word-break: break-word; }
+    .check-item  { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 6px 0; }
+    .check-ok    { color: var(--em); }
+    .check-skip  { color: var(--muted); }
+
+    /* ERROR */
+    .error-box { background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.2); border-radius: 10px; padding: 10px 14px; font-size: 12px; color: var(--risk); margin-bottom: 16px; display: none; }
+    .error-box.show { display: block; }
+
+    /* SUCCESS */
+    .success-state { display: none; text-align: center; padding: 20px 0; }
+    .success-state.show { display: block; }
+    .success-icon { font-size: 56px; margin-bottom: 16px; }
+    .success-title { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--em); margin-bottom: 8px; }
+    .success-sub { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* INVALID STATE */
+    .invalid-state { text-align: center; padding: 20px 0; }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg) } }
+  </style>
+</head>
+<body>
+
+  <div class="logo">Est<span>8</span>Go</div>
+  <div class="tagline">Business Setup</div>
+
+  <!-- STEP INDICATOR -->
+  <div class="steps" id="stepIndicator">
+    <div class="step-node active" id="sn1">1</div>
+    <div class="step-line" id="sl1"></div>
+    <div class="step-node" id="sn2">2</div>
+    <div class="step-line" id="sl2"></div>
+    <div class="step-node" id="sn3">3</div>
+    <div class="step-line" id="sl3"></div>
+    <div class="step-node" id="sn4">4</div>
+    <div class="step-line" id="sl4"></div>
+    <div class="step-node" id="sn5">5</div>
+  </div>
+
+  <div class="card" id="mainCard">
+
+    <!-- LOADING -->
+    <div id="loadingState" style="text-align:center;padding:32px 0">
+      <div style="width:32px;height:32px;border:3px solid var(--em);border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 16px"></div>
+      <p style="font-size:13px;color:var(--muted)">Validating your invitation...</p>
+    </div>
+
+    <!-- INVALID -->
+    <div id="invalidState" style="display:none;text-align:center;padding:20px 0">
+      <div style="font-size:48px;margin-bottom:16px">❌</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;color:var(--risk)">Invalid Invitation</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5" id="invalidMsg">This invitation link is invalid, expired, or has already been used.</p>
+      <a href="mailto:support@est8go.com" style="display:inline-block;margin-top:20px;font-size:13px;color:var(--em)">Contact support</a>
+    </div>
+
+    <!-- STEP 1: Business Profile -->
+    <div id="step1" style="display:none">
+      <div class="step-title">Business Profile</div>
+      <p class="step-sub">Tell us about your real estate business.</p>
+      <div class="error-box" id="err1"></div>
+      <label class="field-label">Business Name *</label>
+      <input type="text" id="s1_name" class="field-input" placeholder="e.g. TrustHomes Ltd"/>
+      <label class="field-label">Business Type</label>
+      <select id="s1_type" class="field-select">
+        <option value="agency">Real Estate Agency</option>
+        <option value="freelance">Independent Realtor</option>
+        <option value="developer">Property Developer</option>
+        <option value="investor">Investor Group</option>
+      </select>
+      <label class="field-label">City / State</label>
+      <input type="text" id="s1_city" class="field-input" placeholder="e.g. Abuja, FCT"/>
+      <label class="field-label">Phone Number</label>
+      <input type="tel" id="s1_phone" class="field-input" placeholder="+234 800 000 0000"/>
+      <button class="btn-primary" onclick="nextStep(1)">Next →</button>
+    </div>
+
+    <!-- STEP 2: Admin Account -->
+    <div id="step2" style="display:none">
+      <div class="step-title">Admin Account</div>
+      <p class="step-sub">Create your login credentials.</p>
+      <div class="error-box" id="err2"></div>
+      <label class="field-label">Full Name</label>
+      <input type="text" id="s2_name" class="field-input" placeholder="Your full name"/>
+      <label class="field-label">Email Address *</label>
+      <input type="email" id="s2_email" class="field-input" placeholder="you@company.com"/>
+      <label class="field-label">Password *</label>
+      <div class="pw-wrap">
+        <input type="password" id="s2_pw" class="field-input" placeholder="••••••••••" oninput="checkPwStrength()"/>
+        <button type="button" class="toggle-pw" onclick="togglePw('s2_pw','eye1')">
+          <svg id="eye1" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="pw-spacer">
+        <div class="strength-bar"><div class="strength-fill" id="pwFill"></div></div>
+        <span class="strength-label" id="pwLabel">Enter a password</span>
+      </div>
+      <label class="field-label">Confirm Password *</label>
+      <div class="pw-wrap">
+        <input type="password" id="s2_conf" class="field-input" placeholder="••••••••••"/>
+        <button type="button" class="toggle-pw" onclick="togglePw('s2_conf','eye2')">
+          <svg id="eye2" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="pw-spacer"></div>
+      <div class="btn-row">
+        <button class="btn-ghost" onclick="prevStep(2)">← Back</button>
+        <button class="btn-primary" onclick="nextStep(2)">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: WhatsApp Setup -->
+    <div id="step3" style="display:none">
+      <div class="step-title">WhatsApp Setup</div>
+      <p class="step-sub">Connect your WhatsApp Business number to activate Kora, your AI sales agent.</p>
+      <div class="error-box" id="err3"></div>
+      <label class="field-label">WhatsApp Phone Number ID</label>
+      <input type="text" id="s3_waid" class="field-input" placeholder="e.g. 123456789012345"/>
+      <p class="help-text">Find this in Meta Business Suite → WhatsApp → Settings</p>
+      <label class="field-label">WhatsApp Access Token</label>
+      <input type="text" id="s3_token" class="field-input" placeholder="EAAxxxx..."/>
+      <p class="help-text">Generate in Meta Developer Portal → App → WhatsApp → API Setup</p>
+      <div class="conn-status conn-idle" id="connStatus">
+        <span>⬤</span> <span id="connMsg">Not tested</span>
+      </div>
+      <div class="btn-row">
+        <button class="btn-ghost" onclick="prevStep(3)">← Back</button>
+        <button class="btn-primary" onclick="nextStep(3)" id="step3NextBtn">Next →</button>
+      </div>
+      <span class="skip-link" onclick="skipWhatsApp()">Skip for now (bot won't work until connected)</span>
+    </div>
+
+    <!-- STEP 4: Kora Configuration -->
+    <div id="step4" style="display:none">
+      <div class="step-title">Kora Configuration</div>
+      <p class="step-sub">Configure how your AI agent presents itself to buyers.</p>
+      <div class="error-box" id="err4"></div>
+      <label class="field-label">Bot Name (how Kora introduces itself)</label>
+      <input type="text" id="s4_botname" class="field-input" placeholder="e.g. TrustHomes AI"/>
+      <label class="field-label">Areas Covered</label>
+      <input type="text" id="s4_areas" class="field-input" placeholder="e.g. Maitama, Asokoro, Gwarinpa"/>
+      <p class="help-text">Comma-separated list of areas your agency operates in</p>
+      <label class="field-label">Bot Tone</label>
+      <select id="s4_tone" class="field-select">
+        <option value="friendly">Friendly</option>
+        <option value="professional">Professional</option>
+        <option value="formal">Formal</option>
+      </select>
+      <div class="btn-row">
+        <button class="btn-ghost" onclick="prevStep(4)">← Back</button>
+        <button class="btn-primary" onclick="nextStep(4)">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 5: Review & Go Live -->
+    <div id="step5" style="display:none">
+      <div class="step-title">Review &amp; Go Live</div>
+      <p class="step-sub">Everything looks good? Create your account.</p>
+      <div class="error-box" id="err5"></div>
+      <div id="reviewSummary" style="background:var(--surface2);border-radius:14px;padding:4px 16px;margin-bottom:20px"></div>
+      <div id="checklist" style="margin-bottom:20px;padding:12px 16px;background:var(--surface2);border-radius:14px"></div>
+      <button class="btn-em" id="createBtn" onclick="createAccount()">🚀 Create My Account</button>
+      <div class="btn-row" style="margin-top:4px">
+        <button class="btn-ghost" onclick="prevStep(5)">← Back</button>
+      </div>
+
+      <!-- SUCCESS -->
+      <div class="success-state" id="successState">
+        <div class="success-icon">🎉</div>
+        <div class="success-title">Welcome to Est8Go!</div>
+        <p class="success-sub">Your account is ready. You can now log into your business dashboard and start verifying properties.</p>
+        <a href="/public/login" style="display:block;background:var(--em);color:#0F172A;text-decoration:none;border-radius:12px;padding:14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;text-align:center;margin-top:20px">Login to Dashboard →</a>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const CODE = '{{ code }}';
+    let currentStep = 0;
+    let _plan = '';
+    let _invitedEmail = '';
+    let _waSkipped = false;
+
+    const EYE_OPEN = '<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>';
+    const EYE_SHUT = '<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/>';
+    const _vis = {};
+
+    function togglePw(fid, iid) {
+      _vis[fid] = !_vis[fid];
+      document.getElementById(fid).type = _vis[fid] ? 'text' : 'password';
+      document.getElementById(iid).innerHTML = _vis[fid] ? EYE_SHUT : EYE_OPEN;
+    }
+
+    function checkPwStrength() {
+      const pw = document.getElementById('s2_pw').value;
+      const fill = document.getElementById('pwFill');
+      const label = document.getElementById('pwLabel');
+      const s = [pw.length >= 8, /\d/.test(pw), /[^a-zA-Z0-9]/.test(pw)].filter(Boolean).length;
+      const L = [ {p:'0%',c:'transparent',t:'Enter a password'}, {p:'33%',c:'#F43F5E',t:'⚠ Weak'}, {p:'66%',c:'#F59E0B',t:'◑ Fair'}, {p:'100%',c:'#10B981',t:'✓ Strong'} ];
+      const lv = pw.length ? L[s] : L[0];
+      fill.style.width = lv.p; fill.style.background = lv.c;
+      label.textContent = lv.t; label.style.color = lv.c || 'var(--muted)';
+    }
+
+    function showStep(n) {
+      for (let i = 1; i <= 5; i++) {
+        const el = document.getElementById('step' + i);
+        if (el) el.style.display = i === n ? 'block' : 'none';
+      }
+      currentStep = n;
+      updateStepIndicator(n);
+    }
+
+    function updateStepIndicator(n) {
+      for (let i = 1; i <= 5; i++) {
+        const node = document.getElementById('sn' + i);
+        const line = document.getElementById('sl' + i);
+        if (!node) continue;
+        node.className = 'step-node' + (i < n ? ' done' : i === n ? ' active' : '');
+        node.innerHTML = i < n ? '✓' : String(i);
+        if (line) line.className = 'step-line' + (i < n ? ' done' : '');
+      }
+    }
+
+    function showErr(n, msg) {
+      const el = document.getElementById('err' + n);
+      el.textContent = msg;
+      el.classList.add('show');
+    }
+    function hideErr(n) { document.getElementById('err' + n)?.classList.remove('show'); }
+
+    function nextStep(from) {
+      hideErr(from);
+      if (from === 1) {
+        const name = document.getElementById('s1_name').value.trim();
+        if (!name) { showErr(1, 'Business name is required.'); return; }
+        // Pre-fill bot name
+        const botEl = document.getElementById('s4_botname');
+        if (botEl && !botEl.value) botEl.value = name + ' AI';
+        showStep(2);
+      } else if (from === 2) {
+        const email = document.getElementById('s2_email').value.trim();
+        const pw    = document.getElementById('s2_pw').value;
+        const conf  = document.getElementById('s2_conf').value;
+        if (!email) { showErr(2, 'Email is required.'); return; }
+        if (pw.length < 8) { showErr(2, 'Password must be at least 8 characters.'); return; }
+        if (pw !== conf) { showErr(2, 'Passwords do not match.'); return; }
+        showStep(3);
+      } else if (from === 3) {
+        showStep(4);
+      } else if (from === 4) {
+        buildReview();
+        showStep(5);
+      }
+    }
+
+    function prevStep(from) {
+      if (from > 1) showStep(from - 1);
+    }
+
+    function skipWhatsApp() {
+      _waSkipped = true;
+      showStep(4);
+    }
+
+    function buildReview() {
+      const name   = document.getElementById('s1_name').value.trim();
+      const type   = document.getElementById('s1_type').value;
+      const email  = document.getElementById('s2_email').value.trim();
+      const areas  = document.getElementById('s4_areas').value.trim();
+      const tone   = document.getElementById('s4_tone').value;
+      const waId   = document.getElementById('s3_waid').value.trim();
+      const plan   = _plan || 'Starter';
+
+      document.getElementById('reviewSummary').innerHTML = [
+        ['Business', name],
+        ['Type', { agency:'Agency', freelance:'Freelance Realtor', developer:'Developer', investor:'Investor' }[type] || type],
+        ['Email', email],
+        ['Plan', plan],
+        ['Areas', areas || '—'],
+        ['Bot Tone', tone],
+      ].map(([k,v]) => `<div class="review-row"><span class="review-key">${k}</span><span class="review-val">${v}</span></div>`).join('');
+
+      const checklist = [
+        { label: 'Business profile',  ok: !!name },
+        { label: 'Admin account',     ok: !!email },
+        { label: 'WhatsApp connected',ok: !!waId && !_waSkipped },
+        { label: 'Kora configured',   ok: !!areas },
+      ];
+      document.getElementById('checklist').innerHTML = checklist
+        .map(c => `<div class="check-item ${c.ok ? 'check-ok' : 'check-skip'}">${c.ok ? '✓' : '○'} ${c.label}</div>`)
+        .join('');
+    }
+
+    async function createAccount() {
+      hideErr(5);
+      const btn = document.getElementById('createBtn');
+      btn.innerHTML = '<span class="spinner"></span>Creating Account...';
+      btn.disabled  = true;
+
+      const payload = {
+        business_name: document.getElementById('s1_name').value.trim(),
+        business_type: document.getElementById('s1_type').value,
+        city:          document.getElementById('s1_city').value.trim(),
+        phone:         document.getElementById('s1_phone').value.trim(),
+        full_name:     document.getElementById('s2_name').value.trim(),
+        email:         document.getElementById('s2_email').value.trim(),
+        password:      document.getElementById('s2_pw').value,
+        whatsapp_phone_number_id: document.getElementById('s3_waid').value.trim(),
+        whatsapp_token:           document.getElementById('s3_token').value.trim(),
+        areas_covered: document.getElementById('s4_areas').value.trim(),
+        tone:          document.getElementById('s4_tone').value,
+      };
+
+      try {
+        const res = await fetch(`/public/onboarding/${CODE}/submit`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify(payload),
+        });
+        if (res.ok) {
+          btn.style.display = 'none';
+          document.getElementById('successState').classList.add('show');
+          document.getElementById('stepIndicator').style.display = 'none';
+        } else {
+          const d = await res.json().catch(() => ({}));
+          showErr(5, d.detail || 'Failed to create account. Please try again.');
+          btn.innerHTML = '🚀 Create My Account';
+          btn.disabled  = false;
+        }
+      } catch (e) {
+        showErr(5, 'Connection error. Please check your network.');
+        btn.innerHTML = '🚀 Create My Account';
+        btn.disabled  = false;
+      }
+    }
+
+    async function validateCode() {
+      if (!CODE) { showInvalid('No invitation code found in this URL.'); return; }
+      try {
+        const res = await fetch(`/public/onboarding/${CODE}/validate`);
+        document.getElementById('loadingState').style.display = 'none';
+        if (res.ok) {
+          const data = await res.json();
+          _plan = data.plan || 'Starter';
+          _invitedEmail = data.invited_email || '';
+          if (_invitedEmail) {
+            const emailEl = document.getElementById('s2_email');
+            if (emailEl) emailEl.value = _invitedEmail;
+          }
+          showStep(1);
+        } else {
+          const d = await res.json().catch(() => ({}));
+          if (res.status === 410) showInvalid(d.detail || 'This invitation has already been used or has expired.');
+          else showInvalid(d.detail || 'This invitation link is invalid.');
+        }
+      } catch (e) {
+        showInvalid('Unable to validate invitation. Please check your connection.');
+      }
+    }
+
+    function showInvalid(msg) {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('invalidState').style.display = 'block';
+      document.getElementById('stepIndicator').style.display = 'none';
+      document.getElementById('invalidMsg').textContent = msg;
+    }
+
+    validateCode();
+  </script>
+</body>
+</html>
