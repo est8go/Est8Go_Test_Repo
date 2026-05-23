@@ -1,2187 +1,1439 @@
 <!DOCTYPE html>
 <html lang="en" data-require-superuser="true">
-
 <head>
   <script src="/static/js/auth_guard.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <meta name="theme-color" content="#030617" />
+  <meta name="theme-color" content="#0F172A" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Est8Go | Command Center</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
-    rel="stylesheet" />
-
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --navy: #030617;
-      --navy2: #0E1B40;
-      --navy3: #091232;
-      --em: #10B981;
-      --em-dim: rgba(16, 185, 129, 0.10);
-      --em-glow: rgba(16, 185, 129, 0.22);
-      --em-hard: rgba(16, 185, 129, 0.4);
-      --glass: rgba(255, 255, 255, 0.04);
-      --glass2: rgba(255, 255, 255, 0.07);
-      --border: rgba(255, 255, 255, 0.07);
-      --border2: rgba(255, 255, 255, 0.12);
-      --hot: #FF4060;
-      --warm: #F59E0B;
-      --blue: #3B82F6;
-      --purple: #8B5CF6;
+      --bg:          #0F172A;
+      --surface:     #111827;
+      --surface2:    #1F2937;
+      --surface3:    #273549;
+      --indigo:      #4F46E5;
+      --indigo-lg:   #4338CA;
+      --indigo-dim:  rgba(67,56,202,0.12);
+      --indigo-glow: rgba(67,56,202,0.25);
+      --em:          #10B981;
+      --em-dim:      rgba(16,185,129,0.10);
+      --em-glow:     rgba(16,185,129,0.22);
+      --warn:        #F59E0B;
+      --warn-dim:    rgba(245,158,11,0.10);
+      --risk:        #F43F5E;
+      --risk-dim:    rgba(244,63,94,0.10);
+      --blue:        #3B82F6;
+      --purple:      #8B5CF6;
+      --text:        #F8FAFC;
+      --muted:       #94A3B8;
+      --border:      rgba(255,255,255,0.07);
+      --border2:     rgba(255,255,255,0.11);
+      --r:           16px;
+      --r-lg:        20px;
+      --nav-h:       64px;
     }
+    *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+    body { display: flex; flex-direction: column; }
+    #app { display: flex; flex-direction: column; height: 100%; position: relative; z-index: 1; }
 
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
+    /* HEADER */
+    .header { padding: 14px 18px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--bg); }
+    .logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: -1px; color: var(--text); line-height: 1; }
 
-    html,
-    body {
-      height: 100%;
-      overflow: hidden;
-      font-family: 'Inter', sans-serif;
-      background: var(--navy);
-      color: white;
-    }
+    /* SCROLL */
+    #scrollArea { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 90px; }
+    #scrollArea::-webkit-scrollbar { display: none; }
 
-    body {
-      background:
-        radial-gradient(ellipse 90% 50% at 50% -20%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
-        radial-gradient(circle at 85% 90%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
-        radial-gradient(circle at 20% -10%, #0E1B40 0%, #01020a 70%);
-      display: flex;
-      flex-direction: column;
-    }
+    /* TABS */
+    .tab { display: none; }
+    .tab.active { display: block; }
 
-    /* ── GRID BG ── */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      background-image:
-        linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-    }
-
-    /* ── LAYOUT ── */
-    #app {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-
-    /* ── HEADER ── */
-    .header {
-      padding: 14px 18px 12px;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-      background: rgba(3, 6, 23, 0.8);
-      backdrop-filter: blur(20px);
-    }
-
-    .logo {
-      font-family: 'Syne', sans-serif;
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: -1px;
-      color: white;
-      line-height: 1;
-    }
-
-    .logo span {
-      color: var(--em);
-    }
-
-    .platform-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: rgba(255, 64, 96, 0.1);
-      border: 1px solid rgba(255, 64, 96, 0.2);
-      border-radius: 100px;
-      padding: 3px 10px;
-      font-size: 9px;
-      font-weight: 700;
-      color: #FF6080;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-    }
-
-    .live-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--em);
-      box-shadow: 0 0 8px var(--em);
-      animation: pulse 2s infinite;
-      flex-shrink: 0;
-    }
-
-    @keyframes pulse {
-
-      0%,
-      100% {
-        opacity: 1
-      }
-
-      50% {
-        opacity: 0.3
-      }
-    }
-
-    /* ── SCROLL ── */
-    #scrollArea {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
-      padding-bottom: 90px;
-    }
-
-    #scrollArea::-webkit-scrollbar {
-      display: none;
-    }
-
-    /* ── TABS ── */
-    .tab {
-      display: none;
-    }
-
-    .tab.active {
-      display: block;
-    }
-
-    /* ── BOTTOM NAV ── */
+    /* BOTTOM NAV */
     .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(9, 18, 50, 0.95);
-      backdrop-filter: blur(30px);
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
-      padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
-      z-index: 100;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--surface); border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-around;
+      padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
+      z-index: 100; height: var(--nav-h);
     }
-
     .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      padding: 6px 12px;
-      border-radius: 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-      border: none;
-      background: none;
-      color: rgba(255, 255, 255, 0.35);
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      font-family: 'Inter', sans-serif;
-      min-width: 56px;
-    }
-
-    .nav-item svg {
-      width: 20px;
-      height: 20px;
-    }
-
-    .nav-item.active {
-      color: var(--em);
-    }
-
-    .nav-item.active .nav-icon-wrap {
-      background: var(--em-dim);
-      border-radius: 12px;
-      padding: 6px;
-    }
-
-    .nav-center {
-      width: 52px;
-      height: 52px;
-      border-radius: 16px;
-      background: var(--em);
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 24px var(--em-glow);
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
-
-    .nav-center:active {
-      transform: scale(0.92);
-    }
-
-    /* ── GLASS CARD ── */
-    .card {
-      background: var(--glass2);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      backdrop-filter: blur(12px);
-    }
-
-    .card-glow {
-      box-shadow: 0 0 30px rgba(16, 185, 129, 0.08);
-      border-color: rgba(16, 185, 129, 0.15);
-    }
-
-    /* ── SECTION LABEL ── */
-    .sep {
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.3em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.3);
-      padding: 16px 18px 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .sep::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-      margin-left: 10px;
-    }
-
-    /* ── METRICS ── */
-    .metric-val {
-      font-family: 'Syne', sans-serif;
-      font-size: 26px;
-      font-weight: 800;
-      line-height: 1;
-    }
-
-    .metric-label {
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.4);
-      margin-top: 4px;
-    }
-
-    .metric-delta {
-      font-size: 10px;
-      font-weight: 600;
-      font-family: 'JetBrains Mono', monospace;
-      margin-top: 2px;
-    }
-
-    /* ── TRUST BADGE PILL ── */
-    .trust-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      border-radius: 100px;
-      padding: 3px 10px;
-      font-size: 10px;
-      font-weight: 700;
-    }
-
-    .trust-emerald {
-      background: rgba(16, 185, 129, 0.12);
-      color: var(--em);
-      border: 1px solid rgba(16, 185, 129, 0.25);
-    }
-
-    .trust-gold {
-      background: rgba(245, 158, 11, 0.12);
-      color: #F59E0B;
-      border: 1px solid rgba(245, 158, 11, 0.25);
-    }
-
-    .trust-silver {
-      background: rgba(156, 163, 175, 0.12);
-      color: #9CA3AF;
-      border: 1px solid rgba(156, 163, 175, 0.2);
-    }
-
-    .trust-unver {
-      background: rgba(255, 64, 96, 0.10);
-      color: #FF6080;
-      border: 1px solid rgba(255, 64, 96, 0.2);
-    }
-
-    /* ── SEVERITY ── */
-    .sev-low {
-      color: var(--em);
-    }
-
-    .sev-med {
-      color: var(--warm);
-    }
-
-    .sev-high {
-      color: var(--hot);
-    }
-
-    /* ── TENANT ROW ── */
-    .tenant-row {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transition: background 0.15s;
-      cursor: pointer;
-    }
-
-    .tenant-row:last-child {
-      border-bottom: none;
-    }
-
-    .tenant-row:hover {
-      background: rgba(255, 255, 255, 0.03);
-    }
-
-    .tenant-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Syne', sans-serif;
-      font-weight: 800;
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-
-    /* ── HEALTH BAR ── */
-    .health-bar {
-      height: 3px;
-      border-radius: 100px;
-      background: rgba(255, 255, 255, 0.06);
-      overflow: hidden;
-      margin-top: 6px;
-    }
-
-    .health-fill {
-      height: 100%;
-      border-radius: 100px;
-      background: linear-gradient(90deg, var(--em), #34D399);
-      transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-
-    /* ── VERIFICATION CARD ── */
-    .verify-card {
-      margin: 0 14px 12px;
-      padding: 16px;
-      border-radius: 18px;
-      background: var(--glass2);
-      border: 1px solid var(--border);
-    }
-
-    /* ── SCORE RING ── */
-    .score-ring-wrap {
-      position: relative;
-      width: 52px;
-      height: 52px;
-      flex-shrink: 0;
-    }
-
-    .score-ring-val {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Syne', sans-serif;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    /* ── AUDIT ROW ── */
-    .audit-row {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-    }
-
-    .audit-row:last-child {
-      border-bottom: none;
-    }
-
-    .audit-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-
-    /* ── ACTION BTN ── */
-    .btn-em {
-      background: var(--em);
-      color: var(--navy);
-      border: none;
-      border-radius: 10px;
-      padding: 8px 16px;
-      font-family: 'Syne', sans-serif;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: filter 0.15s, transform 0.1s;
-    }
-
-    .btn-em:hover {
-      filter: brightness(1.1);
-    }
-
-    .btn-em:active {
-      transform: scale(0.95);
-    }
-
-    .btn-ghost {
-      background: var(--glass2);
-      color: rgba(255, 255, 255, 0.6);
-      border: 1px solid var(--border2);
-      border-radius: 10px;
-      padding: 8px 14px;
-      font-family: 'Inter', sans-serif;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .btn-ghost:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .btn-danger {
-      background: rgba(255, 64, 96, 0.1);
-      color: #FF6080;
-      border: 1px solid rgba(255, 64, 96, 0.2);
-      border-radius: 10px;
-      padding: 8px 14px;
-      font-family: 'Inter', sans-serif;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    /* ── MODAL ── */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 200;
-      background: rgba(3, 6, 23, 0.85);
-      backdrop-filter: blur(8px);
-      display: none;
-      align-items: flex-end;
-    }
-
-    .modal-overlay.open {
-      display: flex;
-    }
-
-    .modal-sheet {
-      width: 100%;
-      background: #0A1535;
-      border-radius: 28px 28px 0 0;
-      border-top: 1px solid var(--border2);
-      padding: 0 0 calc(24px + env(safe-area-inset-bottom));
-      max-height: 85vh;
-      overflow-y: auto;
-      animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-
-    @keyframes slideUp {
-      from {
-        transform: translateY(100%)
-      }
-
-      to {
-        transform: translateY(0)
-      }
-    }
-
-    .modal-handle {
-      width: 36px;
-      height: 4px;
-      border-radius: 2px;
-      background: rgba(255, 255, 255, 0.15);
-      margin: 12px auto 0;
-    }
-
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 20px 12px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .modal-title {
-      font-family: 'Syne', sans-serif;
-      font-size: 16px;
-      font-weight: 800;
-    }
-
-    /* ── INPUT ── */
-    .field-group {
-      padding: 14px 20px 0;
-    }
-
-    .field-label {
-      display: block;
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.35);
-      margin-bottom: 8px;
-    }
-
-    .field-input {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border2);
-      border-radius: 12px;
-      padding: 13px 14px;
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      color: white;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .field-input:focus {
-      border-color: rgba(16, 185, 129, 0.4);
-    }
-
-    .field-select {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border2);
-      border-radius: 12px;
-      padding: 13px 14px;
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      color: white;
-      outline: none;
-      -webkit-appearance: none;
-    }
-
-    .field-select option {
-      background: #0E1B40;
-    }
-
-    /* ── ANIMATIONS ── */
-    .fade-in {
-      animation: fadeIn 0.4s ease both;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(8px)
-      }
-
-      to {
-        opacity: 1;
-        transform: none
-      }
-    }
-
-    .stagger>* {
-      animation: fadeIn 0.4s ease both;
-    }
-
-    .stagger>*:nth-child(1) {
-      animation-delay: 0.05s
-    }
-
-    .stagger>*:nth-child(2) {
-      animation-delay: 0.10s
-    }
-
-    .stagger>*:nth-child(3) {
-      animation-delay: 0.15s
-    }
-
-    .stagger>*:nth-child(4) {
-      animation-delay: 0.20s
-    }
-
-    .stagger>*:nth-child(5) {
-      animation-delay: 0.25s
-    }
-
-    .stagger>*:nth-child(6) {
-      animation-delay: 0.30s
-    }
-
-    /* ── RISK TAG ── */
-    .risk-tag {
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 3px 8px;
-      border-radius: 6px;
-    }
-
-    .risk-low {
-      background: rgba(16, 185, 129, 0.1);
-      color: var(--em);
-    }
-
-    .risk-medium {
-      background: rgba(245, 158, 11, 0.1);
-      color: var(--warm);
-    }
-
-    .risk-high {
-      background: rgba(255, 64, 96, 0.12);
-      color: #FF6080;
-    }
-
-    /* ── USER MENU ── */
-    .user-menu {
-      display: none;
-      position: absolute;
-      right: 16px;
-      top: 62px;
-      background: #0E1B40;
-      border: 1px solid var(--border2);
-      border-radius: 16px;
-      padding: 8px;
-      min-width: 200px;
-      z-index: 999;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-    }
-
-    .user-menu.open {
-      display: block;
-    }
-
-    /* ── EMPTY STATE ── */
-    .empty {
-      text-align: center;
-      padding: 48px 24px;
-      color: rgba(255, 255, 255, 0.3);
-    }
-
-    .empty-icon {
-      font-size: 36px;
-      margin-bottom: 12px;
-    }
-
-    /* ── FUNNEL ── */
-    .funnel-stage {
-      margin-bottom: 10px;
-    }
-
-    .funnel-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: rgba(255, 255, 255, 0.5);
-      margin-bottom: 4px;
-    }
-
-    .funnel-bar-wrap {
-      height: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 100px;
-      overflow: hidden;
-    }
-
-    .funnel-bar {
-      height: 100%;
-      border-radius: 100px;
-      transition: width 1s cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-
-    /* ── VERIFY CARD ── */
-    .verify-signal {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 7px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 12px;
-    }
-
-    .verify-signal:last-child {
-      border-bottom: none;
-    }
-
-    .signal-bar-wrap {
-      width: 80px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.06);
-      border-radius: 100px;
-    }
-
-    .signal-bar {
-      height: 100%;
-      border-radius: 100px;
-    }
-
-    /* ── NAV ITEM ── */
-    .nav-item {
-      min-width: 40px;
-      padding: 5px 6px;
-      font-size: 8px;
-    }
-
-    .nav-center {
-      width: 44px;
-      height: 44px;
-      border-radius: 14px;
-    }
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 5px 8px; border-radius: 12px; cursor: pointer; border: none;
+      background: none; color: var(--muted); font-size: 9px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; font-family: 'Inter', sans-serif;
+      min-width: 52px; transition: color 0.2s;
+    }
+    .nav-item svg { width: 20px; height: 20px; }
+    .nav-item.active { color: var(--em); }
+    .nav-item.active .nav-icon-wrap { background: var(--em-dim); border-radius: 10px; padding: 5px; }
+
+    /* CARD */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); }
+
+    /* SEP */
+    .sep { font-size: 9px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); padding: 16px 18px 8px; display: flex; align-items: center; gap: 8px; }
+    .sep::after { content: ''; flex: 1; height: 1px; background: var(--border); margin-left: 10px; }
+
+    /* METRICS */
+    .metric-val { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; line-height: 1; }
+    .metric-label { font-size: 9px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+
+    /* HEALTH BAR */
+    .health-bar { height: 3px; border-radius: 100px; background: rgba(255,255,255,0.06); overflow: hidden; margin-top: 6px; }
+    .health-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--em), #34D399); transition: width 0.6s cubic-bezier(0.2,0.8,0.2,1); }
+
+    /* PILLS */
+    .trust-pill { display: inline-flex; align-items: center; gap: 4px; border-radius: 100px; padding: 3px 10px; font-size: 10px; font-weight: 700; cursor: pointer; }
+    .trust-emerald { background: var(--em-dim); color: var(--em); border: 1px solid var(--em-glow); }
+    .trust-gold    { background: var(--warn-dim); color: var(--warn); border: 1px solid rgba(245,158,11,0.25); }
+    .trust-silver  { background: rgba(148,163,184,0.1); color: var(--muted); border: 1px solid rgba(148,163,184,0.2); }
+    .trust-unver   { background: var(--risk-dim); color: var(--risk); border: 1px solid rgba(244,63,94,0.2); }
+
+    /* RISK TAGS */
+    .risk-tag { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; }
+    .risk-low  { background: var(--em-dim); color: var(--em); }
+    .risk-med  { background: var(--warn-dim); color: var(--warn); }
+    .risk-high { background: var(--risk-dim); color: var(--risk); }
+
+    /* TENANT ROW */
+    .tenant-row { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; transition: background 0.15s; }
+    .tenant-row:last-child { border-bottom: none; }
+    .tenant-row:hover { background: var(--surface2); }
+    .tenant-avatar { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; flex-shrink: 0; }
+
+    /* VERIFY */
+    .verify-card { margin-bottom: 12px; padding: 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); }
+    .verify-signal { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .verify-signal:last-child { border-bottom: none; }
+    .signal-bar-wrap { width: 80px; height: 4px; background: rgba(255,255,255,0.06); border-radius: 100px; }
+    .signal-bar { height: 100%; border-radius: 100px; }
+
+    /* AUDIT ROW */
+    .audit-row { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; }
+    .audit-row:last-child { border-bottom: none; }
+    .audit-icon { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+
+    /* BUTTONS */
+    .btn-em { background: var(--em); color: #0F172A; border: none; border-radius: 10px; padding: 8px 16px; font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: filter 0.15s, transform 0.1s; }
+    .btn-em:hover { filter: brightness(1.1); }
+    .btn-em:active { transform: scale(0.95); }
+    .btn-ghost { background: var(--surface2); color: var(--muted); border: 1px solid var(--border2); border-radius: 10px; padding: 8px 14px; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; }
+    .btn-ghost:hover { background: var(--surface3); }
+    .btn-danger { background: var(--risk-dim); color: var(--risk); border: 1px solid rgba(244,63,94,0.2); border-radius: 10px; padding: 8px 14px; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; }
+    .btn-warn { background: var(--warn-dim); color: var(--warn); border: 1px solid rgba(245,158,11,0.2); border-radius: 10px; padding: 8px 14px; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; }
+
+    /* MODALS */
+    .modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(15,23,42,0.85); display: none; align-items: flex-end; }
+    .modal-overlay.open { display: flex; }
+    .modal-sheet { width: 100%; background: var(--surface); border-radius: 28px 28px 0 0; border-top: 1px solid var(--border2); padding: 0 0 calc(24px + env(safe-area-inset-bottom)); max-height: 85vh; overflow-y: auto; animation: slideUp 0.3s cubic-bezier(0.2,0.8,0.2,1); }
+    @keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
+    .modal-handle { width: 36px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.15); margin: 12px auto 0; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 12px; border-bottom: 1px solid var(--border); }
+    .modal-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; }
+
+    /* FIELDS */
+    .field-group { padding: 14px 20px 0; }
+    .field-label { display: block; font-size: 9px; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .field-input { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: 12px; padding: 13px 14px; font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text); outline: none; transition: border-color 0.2s; }
+    .field-input:focus { border-color: var(--indigo-glow); }
+    .field-select { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: 12px; padding: 13px 14px; font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text); outline: none; -webkit-appearance: none; }
+    .field-select option { background: var(--surface2); }
+
+    /* EMPTY */
+    .empty { text-align: center; padding: 48px 24px; color: var(--muted); }
+    .empty-icon { font-size: 36px; margin-bottom: 12px; }
+
+    /* MENU DRAWER */
+    .menu-drawer { position: fixed; inset: 0; z-index: 150; display: none; align-items: flex-end; }
+    .menu-drawer.open { display: flex; }
+    .menu-drawer-backdrop { position: absolute; inset: 0; background: rgba(15,23,42,0.7); }
+    .menu-drawer-sheet { position: relative; width: 100%; background: var(--surface); border-radius: 24px 24px 0 0; border-top: 1px solid var(--border2); padding-bottom: calc(24px + env(safe-area-inset-bottom)); max-height: 80vh; overflow-y: auto; animation: slideUp 0.3s cubic-bezier(0.2,0.8,0.2,1); }
+    .menu-drawer-row { display: flex; align-items: center; gap: 14px; padding: 0 20px; height: 54px; cursor: pointer; transition: background 0.15s; border-bottom: 1px solid var(--border); }
+    .menu-drawer-row:last-child { border-bottom: none; }
+    .menu-drawer-row:hover { background: var(--surface2); }
+    .menu-drawer-sec { font-size: 9px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); padding: 14px 20px 6px; }
+
+    /* USER MENU */
+    .user-menu { display: none; position: absolute; right: 0; top: calc(100% + 8px); background: var(--surface2); border: 1px solid var(--border2); border-radius: 16px; padding: 8px; min-width: 200px; z-index: 999; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+    .user-menu.open { display: block; }
+
+    /* LIVE DOT */
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--em); flex-shrink: 0; animation: blink 2s infinite; }
+    @keyframes blink { 0%,100% { opacity:1 } 50% { opacity:0.3 } }
+
+    /* ANIMATIONS */
+    .fade-in { animation: fadeIn 0.4s ease both; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
+
+    /* FUNNEL */
+    .funnel-stage { margin-bottom: 10px; }
+    .funnel-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .funnel-bar-wrap { height: 8px; background: rgba(255,255,255,0.05); border-radius: 100px; overflow: hidden; }
+    .funnel-bar { height: 100%; border-radius: 100px; transition: width 1s cubic-bezier(0.2,0.8,0.2,1); }
+
+    /* CV SEARCH */
+    .cv-field { background: var(--surface2); border: 1px solid var(--border2); border-radius: 10px; padding: 10px 12px; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text); outline: none; width: 100%; transition: border-color 0.2s; }
+    .cv-field:focus { border-color: var(--indigo-glow); }
+    .cv-field option { background: var(--surface2); }
+
+    /* SCORE RING */
+    .score-ring-wrap { position: relative; width: 52px; height: 52px; flex-shrink: 0; }
+    .score-ring-val { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 800; }
   </style>
 </head>
-
 <body>
-  <div id="app">
-
-    <!-- ══════════════════════════════════
-   HEADER
-  ══════════════════════════════════ -->
-    <div class="header">
-      <div class="flex items-center justify-between">
-        <div>
-          <div class="flex items-center gap-2">
-            <div class="logo">Est<span>8</span>Go</div>
-            <span class="platform-badge">Command Center</span>
-          </div>
-          <div class="flex items-center gap-1.5 mt-1">
-            <span class="live-dot"></span>
-            <span style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:500">Platform Live</span>
-            <span style="font-size:10px;color:rgba(255,255,255,0.15);margin:0 4px">·</span>
-            <span id="staffName" style="font-size:10px;color:rgba(255,255,255,0.4)">Loading...</span>
-          </div>
-        </div>
-        <!-- Avatar -->
-        <div style="position:relative">
-          <div id="userAvatar" onclick="toggleUserMenu()" style="width:40px;height:40px;border-radius:12px;
-             border:1.5px solid var(--em-hard);display:flex;align-items:center;justify-content:center;
-             font-family:'Syne',sans-serif;font-weight:800;font-size:14px;
-             background:linear-gradient(135deg,#162860,#0E1B40);cursor:pointer;flex-shrink:0">
-            SA
-          </div>
-          <div class="user-menu" id="userMenu">
-            <div style="padding:10px 12px 8px;border-bottom:1px solid var(--border);margin-bottom:6px">
-              <div
-                style="font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3)">
-                Signed in as</div>
-              <div id="menuEmail" style="font-size:12px;color:white;margin-top:2px"></div>
-              <div id="menuRole" style="font-size:10px;color:var(--em);margin-top:1px;text-transform:capitalize"></div>
-            </div>
-            <button onclick="Auth.logout()" style="width:100%;text-align:left;background:none;border:none;
-                  padding:10px 12px;border-radius:10px;cursor:pointer;font-size:13px;color:#FF6080;
-                  font-family:'Inter',sans-serif;display:flex;align-items:center;gap:8px"
-              onmouseover="this.style.background='rgba(255,64,96,0.08)'" onmouseout="this.style.background='none'">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-              </svg>
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Platform pulse metrics -->
-      <div class="grid grid-cols-4 gap-2 mt-3 stagger">
-        <div class="card card-glow p-3 text-center">
-          <div class="metric-val" id="hdrTenants">—</div>
-          <div class="metric-label">Tenants</div>
-        </div>
-        <div class="card p-3 text-center">
-          <div class="metric-val" style="color:var(--em)" id="hdrVerified">—</div>
-          <div class="metric-label">Verified</div>
-        </div>
-        <div class="card p-3 text-center">
-          <div class="metric-val" style="color:var(--warm)" id="hdrPending">—</div>
-          <div class="metric-label">Pending</div>
-        </div>
-        <div class="card p-3 text-center">
-          <div class="metric-val" style="color:var(--hot)" id="hdrRisks">—</div>
-          <div class="metric-label">Risks</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══════════════════════════════════
-   SCROLL AREA
-  ══════════════════════════════════ -->
-    <div id="scrollArea">
-
-      <!-- ══ TAB: PULSE ══ -->
-      <div id="pulseTab" class="tab active" style="padding-top:4px">
-
-        <div class="sep">Platform Health</div>
-
-        <!-- Primary metrics grid -->
-        <div class="grid grid-cols-2 gap-3 px-4 stagger">
-          <div class="card card-glow p-4">
-            <div style="font-size:10px;color:var(--em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">
-              Trust Score</div>
-            <div class="metric-val mt-2" id="avgTrustScore">—</div>
-            <div class="metric-label">Platform Average</div>
-            <div class="health-bar mt-3">
-              <div class="health-fill" id="trustBar" style="width:0%"></div>
-            </div>
-          </div>
-          <div class="card p-4">
-            <div
-              style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">
-              Conversations</div>
-            <div class="metric-val mt-2" id="dailyConvos">—</div>
-            <div class="metric-label">Today</div>
-            <div class="metric-delta" style="color:var(--em)" id="convoDelta">+0 vs yesterday</div>
-          </div>
-          <div class="card p-4">
-            <div
-              style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">
-              Inspections</div>
-            <div class="metric-val mt-2" id="dailyInspections">—</div>
-            <div class="metric-label">Booked Today</div>
-          </div>
-          <div class="card p-4">
-            <div style="font-size:10px;color:var(--warm);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">
-              AI Usage</div>
-            <div class="metric-val mt-2" id="aiCalls">—</div>
-            <div class="metric-label">GPT Calls Today</div>
-          </div>
-        </div>
-
-        <!-- Trust badge distribution -->
-        <div class="sep" style="margin-top:8px">Trust Badge Distribution</div>
-        <div class="px-4">
-          <div class="card p-4">
-            <div class="grid grid-cols-4 gap-2 text-center stagger">
-              <div>
-                <div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:800;color:var(--em)"
-                  id="bdgEmerald">—</div>
-                <span class="trust-pill trust-emerald mt-1" style="font-size:8px">Emerald</span>
-              </div>
-              <div>
-                <div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:800;color:var(--warm)"
-                  id="bdgGold">—</div>
-                <span class="trust-pill trust-gold mt-1" style="font-size:8px">Gold</span>
-              </div>
-              <div>
-                <div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:800;color:#9CA3AF" id="bdgSilver">—
-                </div>
-                <span class="trust-pill trust-silver mt-1" style="font-size:8px">Silver</span>
-              </div>
-              <div>
-                <div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:800;color:#FF6080" id="bdgUnver">—
-                </div>
-                <span class="trust-pill trust-unver mt-1" style="font-size:8px">Unverified</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Realtor activity -->
-        <div class="sep" style="margin-top:8px">Realtor Activity</div>
-        <div class="grid grid-cols-3 gap-3 px-4">
-          <div class="card p-3 text-center">
-            <div class="metric-val" style="font-size:20px" id="activeRealtors">—</div>
-            <div class="metric-label">Active Today</div>
-          </div>
-          <div class="card p-3 text-center">
-            <div class="metric-val" style="font-size:20px;color:var(--hot)" id="ignoredLeads">—</div>
-            <div class="metric-label">Ignored Leads</div>
-          </div>
-          <div class="card p-3 text-center">
-            <div class="metric-val" style="font-size:20px;color:var(--warm)" id="humanTakeovers">—</div>
-            <div class="metric-label">Takeovers</div>
-          </div>
-        </div>
-
-        <!-- Risk alerts -->
-        <div class="sep" style="margin-top:8px">Risk Alerts</div>
-        <div class="px-4">
-          <div class="card" id="riskList">
-            <div class="empty">
-              <div class="empty-icon">🛡️</div>
-              <p style="font-size:13px">No active risks detected</p>
-            </div>
-          </div>
-        </div>
-
-        <div style="height:8px"></div>
-      </div>
-
-      <!-- ══ TAB: TENANTS ══ -->
-      <div id="tenantsTab" class="tab">
-        <div class="flex items-center justify-between px-4 pt-4 pb-2">
-          <div
-            style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.3)">
-            All Tenants</div>
-          <button class="btn-em" onclick="openModal('newTenantModal')" style="padding:7px 14px;font-size:10px">+ New
-            Tenant</button>
-        </div>
-        <!-- Filter pills -->
-        <div class="flex gap-2 px-4 pb-3 overflow-x-auto" style="-webkit-overflow-scrolling:touch;scrollbar-width:none">
-          <button class="trust-pill trust-emerald filter-pill active-filter" onclick="filterTenants('all')"
-            data-filter="all" style="white-space:nowrap;cursor:pointer">All</button>
-          <button class="trust-pill trust-silver filter-pill" onclick="filterTenants('agency')" data-filter="agency"
-            style="white-space:nowrap;cursor:pointer">Agency</button>
-          <button class="trust-pill trust-silver filter-pill" onclick="filterTenants('freelance')"
-            data-filter="freelance" style="white-space:nowrap;cursor:pointer">Freelance</button>
-          <button class="trust-pill trust-silver filter-pill" onclick="filterTenants('developer')"
-            data-filter="developer" style="white-space:nowrap;cursor:pointer">Developer</button>
-          <button class="trust-pill trust-silver filter-pill" onclick="filterTenants('investor')" data-filter="investor"
-            style="white-space:nowrap;cursor:pointer">Investor</button>
-        </div>
-        <div class="card mx-4" id="tenantList">
-          <div class="empty">
-            <div class="empty-icon">🏢</div>
-            <p>Loading tenants...</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══ TAB: VERIFY ══ -->
-      <div id="verifyTab" class="tab">
-        <div class="flex items-center justify-between px-4 pt-4 pb-1">
-          <div
-            style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.3)">
-            Verification Queue</div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--warm)" id="queueCount">— pending
-          </div>
-        </div>
-        <div class="flex gap-2 px-4 pb-3 mt-1 overflow-x-auto" style="scrollbar-width:none">
-          <button class="trust-pill trust-emerald vq-filter" data-filter="all" onclick="filterQueue('all')"
-            style="cursor:pointer;white-space:nowrap">All</button>
-          <button class="trust-pill trust-silver vq-filter" data-filter="suspicious" onclick="filterQueue('suspicious')"
-            style="cursor:pointer;white-space:nowrap">⚠ Suspicious</button>
-          <button class="trust-pill trust-silver vq-filter" data-filter="high_value" onclick="filterQueue('high_value')"
-            style="cursor:pointer;white-space:nowrap">💎 High Value</button>
-          <button class="trust-pill trust-silver vq-filter" data-filter="new_tenant" onclick="filterQueue('new_tenant')"
-            style="cursor:pointer;white-space:nowrap">🆕 New Tenant</button>
-        </div>
-        <div id="verifyQueue" style="padding:0 14px">
-          <div class="empty">
-            <div class="empty-icon">✅</div>
-            <p style="font-size:13px">Queue is clear — all listings verified</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══ TAB: AUDIT ══ -->
-      <div id="auditTab" class="tab">
-        <div class="sep pt-4">Audit & Forensics</div>
-        <div class="px-4 mb-2">
-          <input type="text" id="auditSearch" placeholder="Search by tenant, action, staff..." class="field-input"
-            style="font-size:13px" oninput="filterAudit(this.value)" />
-        </div>
-        <div class="flex gap-2 px-4 pb-3 overflow-x-auto" style="scrollbar-width:none">
-          <button class="risk-tag risk-low" onclick="filterAuditSev('all')" style="cursor:pointer">All</button>
-          <button class="risk-tag risk-low" onclick="filterAuditSev('low')" style="cursor:pointer">Low</button>
-          <button class="risk-tag risk-medium" onclick="filterAuditSev('medium')" style="cursor:pointer">Medium</button>
-          <button class="risk-tag risk-high" onclick="filterAuditSev('high')" style="cursor:pointer">High</button>
-        </div>
-        <div class="card mx-4" id="auditList">
-          <div class="empty">
-            <div class="empty-icon">🗂️</div>
-            <p>Loading audit logs...</p>
-          </div>
-        </div>
-        <!-- Immutability notice -->
-        <div style="margin:12px 14px 4px;padding:10px 14px;background:rgba(16,185,129,0.04);
-           border:1px solid rgba(16,185,129,0.1);border-radius:12px;
-           font-size:10px;color:rgba(255,255,255,0.3);display:flex;align-items:center;gap:6px">
-          <span>🔒</span>
-          <span>Audit logs are immutable. No record can be edited or deleted.</span>
-        </div>
-      </div>
-
-      <!-- ══ TAB: STAFF ══ -->
-      <div id="staffTab" class="tab">
-        <div class="flex items-center justify-between px-4 pt-4 pb-2">
-          <div
-            style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.3)">
-            Platform Staff</div>
-          <button class="btn-em" id="addStaffBtn" onclick="openModal('newStaffModal')"
-            style="padding:7px 14px;font-size:10px">+ Add Staff</button>
-        </div>
-        <!-- Department breakdown -->
-        <div class="grid grid-cols-3 gap-2 px-4 mb-3 stagger">
-          <div class="card p-3 text-center">
-            <div style="font-size:20px;font-family:'Syne',sans-serif;font-weight:800;color:var(--em)" id="staffTotal">—
-            </div>
-            <div class="metric-label">Total Staff</div>
-          </div>
-          <div class="card p-3 text-center">
-            <div style="font-size:20px;font-family:'Syne',sans-serif;font-weight:800;color:var(--blue)"
-              id="staffActive">—</div>
-            <div class="metric-label">Active</div>
-          </div>
-          <div class="card p-3 text-center">
-            <div style="font-size:20px;font-family:'Syne',sans-serif;font-weight:800;color:var(--warm)" id="staffRoles">
-              —</div>
-            <div class="metric-label">Roles Used</div>
-          </div>
-        </div>
-        <div class="card mx-4" id="staffList">
-          <div class="empty">
-            <div class="empty-icon">👥</div>
-            <p>Loading staff...</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══ TAB: BILLING (superuser only) ══ -->
-      <div id="billingTab" class="tab">
-        <div class="sep pt-4">Billing & Plans</div>
-        <!-- Superuser gate banner -->
-        <div id="billingGate" style="display:none;margin:0 14px 16px;padding:14px 16px;
-           background:rgba(255,64,96,0.06);border:1px solid rgba(255,64,96,0.15);
-           border-radius:16px;text-align:center">
-          <div style="font-size:20px;margin-bottom:6px">🔐</div>
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Superuser Only</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px">Billing controls require superuser
-            access</div>
-        </div>
-        <div id="billingContent">
-          <!-- Revenue summary -->
-          <div class="grid grid-cols-2 gap-3 px-4 stagger">
-            <div class="card card-glow p-4">
-              <div style="font-size:10px;color:var(--em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">
-                MRR</div>
-              <div class="metric-val mt-2" id="billingMRR">₦—</div>
-              <div class="metric-label">Monthly Recurring</div>
-            </div>
-            <div class="card p-4">
-              <div
-                style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">
-                Overdue</div>
-              <div class="metric-val mt-2" style="color:var(--hot)" id="billingOverdue">—</div>
-              <div class="metric-label">Accounts</div>
-            </div>
-            <div class="card p-4">
-              <div
-                style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">
-                AI Cost</div>
-              <div class="metric-val mt-2" style="color:var(--warm);font-size:20px" id="billingAICost">₦—</div>
-              <div class="metric-label">This Month</div>
-            </div>
-            <div class="card p-4">
-              <div
-                style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">
-                Margin</div>
-              <div class="metric-val mt-2" style="color:var(--em);font-size:20px" id="billingMargin">—%</div>
-              <div class="metric-label">Est. This Month</div>
-            </div>
-          </div>
-
-          <!-- Plan distribution -->
-          <div class="sep" style="margin-top:8px">Plan Distribution</div>
-          <div class="card mx-4 p-4">
-            <div id="planDist" class="stagger">
-              <div class="empty">
-                <div class="empty-icon">📊</div>
-                <p>Loading plan data...</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- AI Usage forecast -->
-          <div class="sep" style="margin-top:8px">AI Usage Forecast</div>
-          <div class="card mx-4 p-4" id="aiForecast">
-            <div class="empty">
-              <div class="empty-icon">🤖</div>
-              <p>Loading usage data...</p>
-            </div>
-          </div>
-          <div style="height:8px"></div>
-        </div>
-      </div>
-
-      <!-- ══ TAB: RISK ══ -->
-      <div id="riskTab" class="tab">
-        <div class="sep pt-4">Risk & Conversion Intelligence</div>
-
-        <!-- Conversion funnel -->
-        <div
-          style="margin:0 14px 12px;padding:16px;background:var(--glass2);border:1px solid var(--border);border-radius:18px">
-          <div
-            style="font-size:10px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:14px">
-            Conversion Funnel</div>
-          <div id="funnelStages">
-            <div class="funnel-stage" data-label="Search" data-val="100" data-color="var(--em)"></div>
-            <div class="funnel-stage" data-label="Engaged" data-val="68" data-color="var(--blue)"></div>
-            <div class="funnel-stage" data-label="Inspection" data-val="31" data-color="var(--warm)"></div>
-            <div class="funnel-stage" data-label="Payment" data-val="12" data-color="var(--hot)"></div>
-          </div>
-        </div>
-
-        <!-- Buyer confidence -->
-        <div class="sep">Buyer Confidence Signals</div>
-        <div class="grid grid-cols-2 gap-3 px-4">
-          <div class="card p-4">
-            <div style="font-size:22px;margin-bottom:4px">🔍</div>
-            <div class="metric-val" style="font-size:20px" id="trustQuestions">—</div>
-            <div class="metric-label">Trust Questions Asked</div>
-          </div>
-          <div class="card p-4">
-            <div style="font-size:22px;margin-bottom:4px">🏅</div>
-            <div class="metric-val" style="font-size:20px" id="badgeClicks">—</div>
-            <div class="metric-label">Badge Interactions</div>
-          </div>
-          <div class="card p-4">
-            <div style="font-size:22px;margin-bottom:4px">🔄</div>
-            <div class="metric-val" style="font-size:20px" id="returnBuyers">—</div>
-            <div class="metric-label">Return Buyers</div>
-          </div>
-          <div class="card p-4">
-            <div style="font-size:22px;margin-bottom:4px">📍</div>
-            <div class="metric-val" style="font-size:20px" id="verifyEngagement">—</div>
-            <div class="metric-label">Verification Checks</div>
-          </div>
-        </div>
-
-        <!-- Active risk flags -->
-        <div class="sep" style="margin-top:8px">Active Risk Flags</div>
-        <div class="card mx-4" id="riskFlagList">
-          <div class="empty">
-            <div class="empty-icon">🛡️</div>
-            <p style="font-size:13px">No active risk flags</p>
-          </div>
-        </div>
-
-        <!-- Suspicious tenants -->
-        <div class="sep" style="margin-top:8px">Suspicious Activity</div>
-        <div class="card mx-4" id="suspiciousList">
-          <div class="empty">
-            <div class="empty-icon">👁️</div>
-            <p style="font-size:13px">No suspicious patterns detected</p>
-          </div>
-        </div>
-        <div style="height:8px"></div>
-      </div>
-
-    </div><!-- /scrollArea -->
-
-    <!-- ══════════════════════════════════
-   BOTTOM NAV
-  ══════════════════════════════════ -->
-    <div class="bottom-nav"
-      style="justify-content:space-around;padding:8px 4px calc(8px + env(safe-area-inset-bottom))">
-      <button class="nav-item active" id="nav-pulse" onclick="switchTab('pulse')">
-        <div class="nav-icon-wrap">
-          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12h3l3-9 4 18 3-9h5" />
-          </svg>
-        </div>
-        <span>Pulse</span>
-      </button>
-      <button class="nav-item" id="nav-tenants" onclick="switchTab('tenants')">
-        <div class="nav-icon-wrap">
-          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
-          </svg>
-        </div>
-        <span>Tenants</span>
-      </button>
-      <button class="nav-item" id="nav-verify" onclick="switchTab('verify')">
-        <div class="nav-icon-wrap">
-          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-          </svg>
-        </div>
-        <span>Verify</span>
-      </button>
-      <button class="nav-center" onclick="openModal('quickActionModal')">
-        <svg width="22" height="22" fill="none" stroke="#030617" stroke-width="2.5" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
-      </button>
-      <button class="nav-item" id="nav-audit" onclick="switchTab('audit')">
-        <div class="nav-icon-wrap">
-          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
-          </svg>
-        </div>
-        <span>Audit</span>
-      </button>
-      <button class="nav-item" id="nav-staff" onclick="switchTab('staff')">
-        <div class="nav-icon-wrap">
-          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-          </svg>
-        </div>
-        <span>Staff</span>
-      </button>
-      <button class="nav-item" id="nav-billing" onclick="switchTab('billing')">
-        <div class="nav-icon-wrap">
-          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-          </svg>
-        </div>
-        <span>Billing</span>
-      </button>
-    </div>
-
-  </div><!-- /app -->
-
-  <!-- ══════════════════════════════════
- MODALS
-══════════════════════════════════ -->
-
-  <!-- Quick Action -->
-  <div class="modal-overlay" id="quickActionModal">
-    <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <div class="modal-title">Quick Actions</div>
-        <button onclick="closeModal('quickActionModal')"
-          style="background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:20px">✕</button>
-      </div>
-      <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <button class="card p-4 text-left" style="border:none;cursor:pointer;background:var(--glass2)"
-          onclick="closeModal('quickActionModal');openModal('newTenantModal')">
-          <div style="font-size:24px">🏢</div>
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-top:8px">New Tenant</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Onboard a company</div>
-        </button>
-        <button class="card p-4 text-left" style="border:none;cursor:pointer;background:var(--glass2)"
-          onclick="closeModal('quickActionModal');switchTab('staff');openModal('newStaffModal')">
-          <div style="font-size:24px">👤</div>
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-top:8px">Add Staff</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Est8Go team member</div>
-        </button>
-        <button class="card p-4 text-left" style="border:none;cursor:pointer;background:var(--glass2)"
-          onclick="closeModal('quickActionModal');switchTab('verify')">
-          <div style="font-size:24px">🔍</div>
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-top:8px">Verify Queue</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Review listings</div>
-        </button>
-        <button class="card p-4 text-left" style="border:none;cursor:pointer;background:var(--glass2)"
-          onclick="closeModal('quickActionModal');switchTab('audit')">
-          <div style="font-size:24px">🗂️</div>
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-top:8px">Audit Logs</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Platform black box</div>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- New Tenant Modal -->
-  <div class="modal-overlay" id="newTenantModal">
-    <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <div class="modal-title">Onboard New Tenant</div>
-        <button onclick="closeModal('newTenantModal')"
-          style="background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:20px">✕</button>
-      </div>
-      <div class="field-group">
-        <label class="field-label">Company Name</label>
-        <input type="text" id="nt_name" class="field-input" placeholder="e.g. TrustHomes Ltd" />
-      </div>
-      <div class="field-group">
-        <label class="field-label">Business Type</label>
-        <select id="nt_type" class="field-select">
-          <option value="agency">Real Estate Agency</option>
-          <option value="freelance">Independent Realtor</option>
-          <option value="developer">Property Developer</option>
-          <option value="investor">Investor Group</option>
-        </select>
-      </div>
-      <div class="field-group">
-        <label class="field-label">Subscription Plan</label>
-        <select id="nt_plan" class="field-select">
-          <option value="pilot">Pilot (Free)</option>
-          <option value="starter">Starter</option>
-          <option value="growth">Growth</option>
-          <option value="enterprise">Enterprise</option>
-        </select>
-      </div>
-      <div class="field-group">
-        <label class="field-label">WhatsApp Phone Number ID</label>
-        <input type="text" id="nt_wa" class="field-input" placeholder="Meta Phone Number ID" />
-      </div>
-      <div class="field-group">
-        <label class="field-label">Admin Email</label>
-        <input type="email" id="nt_email" class="field-input" placeholder="admin@company.com" />
-      </div>
-      <div class="field-group">
-        <label class="field-label">Admin Password</label>
-        <input type="password" id="nt_pass" class="field-input" placeholder="Temporary password" />
-      </div>
-      <div style="padding:20px 20px 8px;display:flex;gap:10px">
-        <button class="btn-ghost" onclick="closeModal('newTenantModal')" style="flex:1">Cancel</button>
-        <button class="btn-em" onclick="createTenant()" style="flex:2">Create Tenant</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- New Staff Modal -->
-  <div class="modal-overlay" id="newStaffModal">
-    <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <div class="modal-title">Add Platform Staff</div>
-        <button onclick="closeModal('newStaffModal')"
-          style="background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:20px">✕</button>
-      </div>
-      <div class="field-group">
-        <label class="field-label">Full Name</label>
-        <input type="text" id="ns_name" class="field-input" placeholder="Staff member name" />
-      </div>
-      <div class="field-group">
-        <label class="field-label">Email Address</label>
-        <input type="email" id="ns_email" class="field-input" placeholder="staff@est8go.com" />
-      </div>
-      <div class="field-group">
-        <label class="field-label">Password</label>
-        <input type="password" id="ns_pass" class="field-input" placeholder="Temporary password" />
-      </div>
-      <div class="field-group">
-        <label class="field-label">Role</label>
-        <select id="ns_role" class="field-select">
-          <option value="super_staff">Super Staff (General)</option>
-          <option value="super_staff">Trust Moderator</option>
-          <option value="super_staff">Operations Staff</option>
-          <option value="super_staff">Support Staff</option>
-        </select>
-      </div>
-      <div style="padding:20px 20px 8px;display:flex;gap:10px">
-        <button class="btn-ghost" onclick="closeModal('newStaffModal')" style="flex:1">Cancel</button>
-        <button class="btn-em" id="createStaffBtn" onclick="createStaff()" style="flex:2">Add Staff Member</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Override Modal -->
-  <div class="modal-overlay" id="overrideModal">
-    <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <div class="modal-title">Manual Trust Override</div>
-        <button onclick="closeModal('overrideModal')"
-          style="background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:20px">✕</button>
-      </div>
-      <div style="padding:12px 18px 6px;background:rgba(245,158,11,0.06);border-bottom:1px solid var(--border);
-         font-size:11px;color:var(--warm);display:flex;align-items:center;gap:6px">
-        <span>⚠</span>
-        <span>Manual overrides are logged in the audit trail and are legally significant.</span>
-      </div>
-      <div class="field-group">
-        <label class="field-label">Override Trust Grade</label>
-        <select id="overrideGrade" class="field-select">
-          <option value="Emerald">🟢 Emerald (90–100)</option>
-          <option value="Gold">🟡 Gold (70–89)</option>
-          <option value="Silver" selected>⚪ Silver (50–69)</option>
-          <option value="Bronze">🟤 Bronze (30–49)</option>
-        </select>
-      </div>
-      <div class="field-group">
-        <label class="field-label">Override Reason (Required)</label>
-        <textarea id="overrideNotes" class="field-input" rows="3"
-          placeholder="e.g. Physical inspection confirmed. Title verified by Lagos State registry."
-          style="resize:none;line-height:1.5"></textarea>
-      </div>
-      <div style="padding:16px 20px 8px;display:flex;gap:10px">
-        <button class="btn-ghost" onclick="closeModal('overrideModal')" style="flex:1">Cancel</button>
-        <button class="btn-em" onclick="submitOverride()" style="flex:2;background:var(--warm);color:#000">Apply
-          Override</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast notification -->
-  <div id="toast" style="position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);
-     background:#0E1B40;border:1px solid var(--border2);border-radius:12px;
-     padding:12px 20px;font-size:13px;font-weight:500;z-index:300;
-     opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap"></div>
-
-  <script>
-    // ── AUTH INIT ──────────────────────────────────────
-    window.addEventListener('DOMContentLoaded', () => {
-      const email = localStorage.getItem('user_email') || '';
-      const role = localStorage.getItem('user_role') || '';
-      document.getElementById('menuEmail').textContent = email;
-      document.getElementById('menuRole').textContent = role;
-      document.getElementById('staffName').textContent = email.split('@')[0] || 'Admin';
-
-      // Set avatar initials
-      const initials = email.split('@')[0].slice(0, 2).toUpperCase();
-      document.getElementById('userAvatar').textContent = initials;
-
-      // Hide billing-sensitive actions from super_staff
-      if (role !== 'superuser') {
-        const el = document.getElementById('addStaffBtn');
-        if (el) el.style.display = 'none';
-      }
-
-      loadPulseData();
-      loadTenants();
-      loadAuditLogs();
-      loadStaff();
-    });
-
-    // ── USER MENU ──────────────────────────────────────
-    function toggleUserMenu() {
-      document.getElementById('userMenu').classList.toggle('open');
-    }
-    document.addEventListener('click', e => {
-      const av = document.getElementById('userAvatar');
-      const mn = document.getElementById('userMenu');
-      if (!av.contains(e.target) && !mn.contains(e.target)) {
-        mn.classList.remove('open');
-      }
-    });
-
-    // ── TAB SWITCHING ──────────────────────────────────
-    function switchTab(name) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      document.getElementById(name + 'Tab').classList.add('active');
-      const nav = document.getElementById('nav-' + name);
-      if (nav) nav.classList.add('active');
-      document.getElementById('scrollArea').scrollTop = 0;
-    }
-
-    // ── MODALS ──────────────────────────────────────────
-    function openModal(id) { document.getElementById(id).classList.add('open'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-    // Close modal when tapping overlay
-    document.querySelectorAll('.modal-overlay').forEach(el => {
-      el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
-    });
-
-    // ── TOAST ───────────────────────────────────────────
-    function toast(msg, color = 'var(--em)') {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.style.borderColor = color;
-      t.style.opacity = '1';
-      t.style.transform = 'translateX(-50%) translateY(0)';
-      setTimeout(() => {
-        t.style.opacity = '0';
-        t.style.transform = 'translateX(-50%) translateY(20px)';
-      }, 2800);
-    }
-
-    // ── PULSE DATA ──────────────────────────────────────
-    async function loadPulseData() {
-      try {
-        const res = await Auth.fetch('/admin/pulse');
-        if (!res) return;
-        const d = await res.json();
-
-        setValue('hdrTenants', d.total_tenants ?? '—');
-        setValue('hdrVerified', d.verified_listings ?? '—');
-        setValue('hdrPending', d.pending_queue ?? '—');
-        setValue('hdrRisks', d.risk_count ?? '—');
-        setValue('avgTrustScore', d.avg_trust_score ?? '—');
-        setValue('dailyConvos', d.daily_conversations ?? '—');
-        setValue('dailyInspections', d.daily_inspections ?? '—');
-        setValue('aiCalls', d.ai_calls_today ?? '—');
-        setValue('activeRealtors', d.active_realtors ?? '—');
-        setValue('ignoredLeads', d.ignored_leads ?? '—');
-        setValue('humanTakeovers', d.human_takeovers ?? '—');
-        setValue('bdgEmerald', d.badges?.emerald ?? '—');
-        setValue('bdgGold', d.badges?.gold ?? '—');
-        setValue('bdgSilver', d.badges?.silver ?? '—');
-        setValue('bdgUnver', d.badges?.unverified ?? '—');
-
-        const score = d.avg_trust_score || 0;
-        document.getElementById('trustBar').style.width = score + '%';
-
-        if (d.risk_alerts && d.risk_alerts.length > 0) {
-          renderRisks(d.risk_alerts);
-        }
-      } catch (e) {
-        // Silently fail — API not ready yet
-      }
-    }
-
-    function renderRisks(risks) {
-      const list = document.getElementById('riskList');
-      list.innerHTML = risks.map(r => `
-    <div class="audit-row">
-      <div class="audit-icon" style="background:rgba(255,64,96,0.1)">⚠️</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600">${r.message}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">${r.tenant || ''} · ${r.time || ''}</div>
-      </div>
-      <span class="risk-tag risk-${r.severity || 'medium'}">${r.severity || 'medium'}</span>
-    </div>
-  `).join('');
-    }
-
-    // ── TENANTS ─────────────────────────────────────────
-    let allTenants = [];
-
-    async function loadTenants() {
-      try {
-        const res = await Auth.fetch('/admin/tenants');
-        if (!res) return;
-        allTenants = await res.json();
-        renderTenants(allTenants);
-      } catch (e) { }
-    }
-
-    const TENANT_COLORS = ['#162860', '#1a1040', '#0d3040', '#1a2e10', '#401020'];
-    const TYPE_LABELS = { agency: 'Agency', freelance: 'Freelance', developer: 'Developer', investor: 'Investor' };
-
-    function renderTenants(tenants) {
-      const list = document.getElementById('tenantList');
-      if (!tenants.length) {
-        list.innerHTML = '<div class="empty"><div class="empty-icon">🏢</div><p>No tenants found</p></div>';
-        return;
-      }
-      list.innerHTML = tenants.map((t, i) => {
-        const initials = t.name.slice(0, 2).toUpperCase();
-        const health = t.health_score || 0;
-        const color = TENANT_COLORS[i % TENANT_COLORS.length];
-        const badge = t.is_active
-          ? '<span class="risk-tag risk-low">Active</span>'
-          : '<span class="risk-tag risk-high">Suspended</span>';
-        return `
-      <div class="tenant-row fade-in" onclick="viewTenant(${t.id})">
-        <div class="tenant-avatar" style="background:${color}">${initials}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;
-               overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.name}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">
-            ${TYPE_LABELS[t.tenant_type] || t.tenant_type} · ${t.plan} · ${t.listings_count || 0} listings
-          </div>
-          <div class="health-bar"><div class="health-fill" style="width:${health}%"></div></div>
-        </div>
-        <div style="text-align:right;flex-shrink:0">
-          ${badge}
-          <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:4px">${t.users_count || 0} users</div>
-        </div>
-      </div>
-    `;
-      }).join('');
-    }
-
-    function filterTenants(type) {
-      document.querySelectorAll('.filter-pill').forEach(p => {
-        p.classList.remove('trust-emerald');
-        p.classList.add('trust-silver');
-      });
-      event.target.classList.remove('trust-silver');
-      event.target.classList.add('trust-emerald');
-      if (type === 'all') renderTenants(allTenants);
-      else renderTenants(allTenants.filter(t => t.tenant_type === type));
-    }
-
-    function viewTenant(id) {
-      toast('Tenant detail view — coming soon');
-    }
-
-    async function createTenant() {
-      const name = document.getElementById('nt_name').value.trim();
-      const type = document.getElementById('nt_type').value;
-      const plan = document.getElementById('nt_plan').value;
-      const wa = document.getElementById('nt_wa').value.trim();
-      const email = document.getElementById('nt_email').value.trim();
-      const pass = document.getElementById('nt_pass').value;
-
-      if (!name || !email || !pass) { toast('Please fill all required fields', 'var(--hot)'); return; }
-
-      try {
-        const res = await Auth.fetch('/admin/tenants', {
-          method: 'POST',
-          body: JSON.stringify({ name, tenant_type: type, plan, whatsapp_phone_number_id: wa, admin_email: email, admin_password: pass })
-        });
-        if (!res) return;
-        if (res.ok) {
-          toast('✓ Tenant created successfully');
-          closeModal('newTenantModal');
-          loadTenants();
-        } else {
-          const d = await res.json();
-          toast(d.detail || 'Failed to create tenant', 'var(--hot)');
-        }
-      } catch (e) { toast('Connection error', 'var(--hot)'); }
-    }
-
-    // ── AUDIT LOGS ──────────────────────────────────────
-    let allLogs = [];
-
-    async function loadAuditLogs() {
-      try {
-        const res = await Auth.fetch('/admin/audit-logs?limit=50');
-        if (!res) return;
-        allLogs = await res.json();
-        renderAudit(allLogs);
-      } catch (e) { }
-    }
-
-    const ACTION_ICONS = {
-      role_changed: { icon: '🔑', sev: 'high' },
-      tenant_created: { icon: '🏢', sev: 'low' },
-      tenant_deactivated: { icon: '🚫', sev: 'high' },
-      listing_verified: { icon: '✅', sev: 'low' },
-      listing_flagged: { icon: '⚠️', sev: 'medium' },
-      user_created: { icon: '👤', sev: 'low' },
-      user_deactivated: { icon: '🔒', sev: 'medium' },
-      trust_override: { icon: '🛡️', sev: 'high' },
-    };
-
-    function renderAudit(logs) {
-      const list = document.getElementById('auditList');
-      if (!logs.length) {
-        list.innerHTML = '<div class="empty"><div class="empty-icon">🗂️</div><p>No audit logs yet</p></div>';
-        return;
-      }
-      list.innerHTML = logs.map(l => {
-        const meta = ACTION_ICONS[l.action] || { icon: '📋', sev: 'low' };
-        const time = l.created_at ? new Date(l.created_at).toLocaleString('en-NG', {
-          day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
-        }) : '';
-        return `
-      <div class="audit-row">
-        <div class="audit-icon" style="background:var(--glass2)">${meta.icon}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600;text-transform:capitalize">
-            ${(l.action || '').replace(/_/g, ' ')}
-          </div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">
-            ${l.actor_email || 'System'} · ${time}
-          </div>
-          ${l.target_table ? `<div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:1px">
-            ${l.target_table} #${l.target_id || '—'}
-          </div>` : ''}
-        </div>
-        <span class="risk-tag risk-${meta.sev}">${meta.sev}</span>
-      </div>
-    `;
-      }).join('');
-    }
-
-    function filterAudit(q) {
-      if (!q) { renderAudit(allLogs); return; }
-      const ql = q.toLowerCase();
-      renderAudit(allLogs.filter(l =>
-        (l.action || '').includes(ql) ||
-        (l.actor_email || '').toLowerCase().includes(ql) ||
-        (l.target_table || '').includes(ql)
-      ));
-    }
-
-    function filterAuditSev(sev) {
-      if (sev === 'all') { renderAudit(allLogs); return; }
-      renderAudit(allLogs.filter(l => (ACTION_ICONS[l.action] || { sev: 'low' }).sev === sev));
-    }
-
-    // ── STAFF ────────────────────────────────────────────
-    async function loadStaff() {
-      try {
-        const res = await Auth.fetch('/users/?platform=true');
-        if (!res) return;
-        const staff = await res.json();
-        renderStaff(staff.filter(u => u.is_platform_user));
-      } catch (e) { }
-    }
-
-    function renderStaff(staff) {
-      const list = document.getElementById('staffList');
-      if (!staff.length) {
-        list.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><p>No platform staff yet</p></div>';
-        return;
-      }
-      list.innerHTML = staff.map(s => {
-        const initials = (s.first_name || s.email).slice(0, 2).toUpperCase();
-        return `
-      <div class="tenant-row">
-        <div class="tenant-avatar" style="background:#162860">${initials}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">${s.first_name || s.email}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">${s.email}</div>
-        </div>
-        <div style="text-align:right">
-          <span class="risk-tag ${s.role === 'superuser' ? 'risk-high' : 'risk-low'}" style="text-transform:capitalize">${s.role}</span>
-          <div style="font-size:10px;color:${s.is_active ? 'var(--em)' : '#FF6080'};margin-top:4px">
-            ${s.is_active ? 'Active' : 'Inactive'}
-          </div>
-        </div>
-      </div>
-    `;
-      }).join('');
-    }
-
-    async function createStaff() {
-      const name = document.getElementById('ns_name').value.trim();
-      const email = document.getElementById('ns_email').value.trim();
-      const pass = document.getElementById('ns_pass').value;
-
-      if (!email || !pass) { toast('Email and password required', 'var(--hot)'); return; }
-
-      const btn = document.getElementById('createStaffBtn');
-      btn.textContent = 'Creating...'; btn.disabled = true;
-
-      try {
-        const res = await Auth.fetch('/users/platform', {
-          method: 'POST',
-          body: JSON.stringify({ email, password: pass, role: 'super_staff', first_name: name })
-        });
-        if (!res) return;
-        if (res.ok) {
-          toast('✓ Staff member added');
-          closeModal('newStaffModal');
-          loadStaff();
-        } else {
-          const d = await res.json();
-          toast(d.detail || 'Failed to add staff', 'var(--hot)');
-        }
-      } catch (e) { toast('Connection error', 'var(--hot)'); }
-      finally { btn.textContent = 'Add Staff Member'; btn.disabled = false; }
-    }
-
-    // ── VERIFICATION QUEUE ──────────────────────────────
-    let allQueueItems = [];
-
-    async function loadVerifyQueue() {
-      try {
-        const res = await Auth.fetch('/admin/verify-queue');
-        if (!res) return;
-        allQueueItems = await res.json();
-        document.getElementById('queueCount').textContent = allQueueItems.length + ' pending';
-        renderQueue(allQueueItems);
-      } catch (e) {
-        // API not wired yet — show empty state
-      }
-    }
-
-    function renderQueue(items) {
-      const wrap = document.getElementById('verifyQueue');
-      if (!items.length) {
-        wrap.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><p style="font-size:13px">Queue is clear</p></div>';
-        return;
-      }
-      wrap.innerHTML = items.map(l => {
-        const gps = l.gps_score || 0;
-        const ai = l.ai_score || 0;
-        const docs = l.doc_score || 0;
-        const wit = l.witness_score || 0;
-        const dup = l.duplicate_risk_pct || 0;
-        const dupSafe = Math.max(0, 100 - dup);
-        const total = Math.round((gps * 0.3) + (ai * 0.2) + (docs * 0.4) + (wit * 0.1));
-        const scoreColor = total >= 80 ? 'var(--em)' : total >= 60 ? 'var(--warm)' : 'var(--hot)';
-        const gpsColor = gps >= 70 ? 'var(--em)' : gps >= 40 ? 'var(--warm)' : 'var(--hot)';
-        const aiColor = ai >= 70 ? 'var(--em)' : ai >= 40 ? 'var(--warm)' : 'var(--hot)';
-        const docsColor = docs >= 70 ? 'var(--em)' : docs >= 40 ? 'var(--warm)' : 'var(--hot)';
-        const witColor = wit >= 70 ? 'var(--em)' : wit >= 40 ? 'var(--warm)' : 'var(--hot)';
-        const dupColor = dup <= 20 ? 'var(--em)' : dup <= 50 ? 'var(--warm)' : 'var(--hot)';
-        const flags = (l.flags || []);
-
-        return `<div class="verify-card fade-in">
-      <div class="flex items-start justify-between gap-3">
-        <div style="flex:1;min-width:0">
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.title || 'Unnamed Listing'}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">${l.tenant_name || '—'} · ${l.location || '—'}</div>
-          ${flags}
-        </div>
-        <div style="text-align:right;flex-shrink:0">
-          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:${scoreColor}">${total}</div>
-          <div style="font-size:9px;color:rgba(255,255,255,0.3)">Trust Score</div>
-        </div>
-      </div>
-      <!-- Signal bars -->
-      <div style="margin-top:12px">
-        <div class="verify-signal">
-          <span>📍 GPS Confidence</span>
-          <div class="signal-bar-wrap"><div class="signal-bar" style="width:${gps}%;background:${gpsColor}"></div></div>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${gpsColor};min-width:30px;text-align:right">${gps}</span>
-        </div>
-        <div class="verify-signal">
-          <span>🤖 AI Vision</span>
-          <div class="signal-bar-wrap"><div class="signal-bar" style="width:${ai}%;background:${aiColor}"></div></div>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${aiColor};min-width:30px;text-align:right">${ai}</span>
-        </div>
-        <div class="verify-signal">
-          <span>📄 Documents</span>
-          <div class="signal-bar-wrap"><div class="signal-bar" style="width:${docs}%;background:${docsColor}"></div></div>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${docsColor};min-width:30px;text-align:right">${docs}</span>
-        </div>
-        <div class="verify-signal">
-          <span>👥 Witnesses</span>
-          <div class="signal-bar-wrap"><div class="signal-bar" style="width:${wit}%;background:${witColor}"></div></div>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${witColor};min-width:30px;text-align:right">${wit}</span>
-        </div>
-        <div class="verify-signal">
-          <span>🔁 Duplication</span>
-          <div class="signal-bar-wrap"><div class="signal-bar" style="width:${dupSafe}%;background:${dupColor}"></div></div>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${dupColor};min-width:30px;text-align:right">${l.duplicate_risk || 'OK'}</span>
-        </div>
-      </div>
-      <!-- Why flagged explainability -->
-      ${(l.flags || []).length ? `<div style="margin-top:10px;padding:10px 12px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);border-radius:10px">
-        <div style="font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--warm);margin-bottom:6px">Why Flagged</div>
-        ${(l.flags || []).map(f => `<div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:3px;display:flex;gap:6px"><span style="color:var(--warm)">⚠</span>${f}</div>`).join('')}
-      </div>` : ''}
-      <!-- Actions -->
-      <div style="display:flex;gap:8px;margin-top:12px">
-        <button class="btn-em" onclick="verifyListing(${l.id})" style="flex:2;font-size:11px">✓ Verify</button>
-        <button class="btn-ghost" onclick="openOverrideModal(${l.id})" style="flex:1;font-size:11px">Override</button>
-        <button class="btn-danger" onclick="rejectListing(${l.id})" style="flex:1;font-size:11px">Reject</button>
-      </div>
-    </div>`;
-      }).join('');
-    }
-
-    function filterQueue(type) {
-      document.querySelectorAll('.vq-filter').forEach(b => {
-        b.classList.remove('trust-emerald'); b.classList.add('trust-silver');
-      });
-      event.target.classList.remove('trust-silver'); event.target.classList.add('trust-emerald');
-      if (type === 'all') { renderQueue(allQueueItems); return; }
-      renderQueue(allQueueItems.filter(l => {
-        if (type === 'suspicious') return (l.flags || []).length > 0;
-        if (type === 'high_value') return (l.price || 0) > 50000000;
-        if (type === 'new_tenant') return l.is_new_tenant;
-        return true;
-      }));
-    }
-
-    async function verifyListing(id) {
-      try {
-        const res = await Auth.fetch('/admin/listings/' + id + '/verify', { method: 'PATCH' });
-        if (res && res.ok) {
-          toast('✓ Listing verified');
-          loadVerifyQueue();
-        }
-      } catch (e) { toast('Failed to verify', 'var(--hot)'); }
-    }
-
-    async function flagListing(id) {
-      try {
-        const res = await Auth.fetch('/admin/listings/' + id + '/flag', { method: 'PATCH' });
-        if (res && res.ok) { toast('⚠ Listing flagged', 'var(--warm)'); loadVerifyQueue(); }
-      } catch (e) { }
-    }
-
-    async function rejectListing(id) {
-      if (!confirm('Reject this listing?')) return;
-      try {
-        const res = await Auth.fetch('/admin/listings/' + id + '/reject', { method: 'PATCH' });
-        if (res && res.ok) { toast('Listing rejected', 'var(--hot)'); loadVerifyQueue(); }
-      } catch (e) { }
-    }
-
-    // ── BILLING ─────────────────────────────────────────
-    async function loadBillingData() {
-      const role = localStorage.getItem('user_role');
-      if (role !== 'superuser') {
-        document.getElementById('billingGate').style.display = 'block';
-        document.getElementById('billingContent').style.display = 'none';
-        return;
-      }
-      try {
-        const res = await Auth.fetch('/admin/billing/summary');
-        if (!res) return;
-        const d = await res.json();
-        setValue('billingMRR', '₦' + formatNum(d.mrr || 0));
-        setValue('billingOverdue', d.overdue_count || 0);
-        setValue('billingAICost', '₦' + formatNum(d.ai_cost || 0));
-        setValue('billingMargin', (d.margin_pct || 0) + '%');
-        renderPlanDist(d.plan_distribution || []);
-        renderAIForecast(d.ai_forecast || []);
-      } catch (e) { }
-    }
-
-    function renderPlanDist(plans) {
-      const el = document.getElementById('planDist');
-      if (!plans.length) { el.innerHTML = '<div class="empty"><p>No plan data</p></div>'; return; }
-      const total = plans.reduce((s, p) => s + p.count, 0);
-      const colors = { pilot: 'var(--border2)', starter: 'var(--blue)', growth: 'var(--warm)', enterprise: 'var(--em)' };
-      el.innerHTML = plans.map(p => {
-        const pct = total ? Math.round((p.count / total) * 100) : 0;
-        return `<div style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-        <span style="text-transform:capitalize;font-weight:600">${p.plan}</span>
-        <span style="color:rgba(255,255,255,0.4)">${p.count} tenants · ${pct}%</span>
-      </div>
-      <div class="health-bar"><div class="health-fill" style="width:${pct}%;background:${colors[p.plan] || 'var(--em)'}"></div></div>
-    </div>`;
-      }).join('');
-    }
-
-    function renderAIForecast(forecasts) {
-      const el = document.getElementById('aiForecast');
-      if (!forecasts.length) {
-        el.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,0.4)">Wire to AI usage tracker to see forecasts</div>';
-        return;
-      }
-      el.innerHTML = forecasts.map(f => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;
-         border-bottom:1px solid var(--border)">
+<div id="app">
+
+  <!-- ══ HEADER ══ -->
+  <div class="header">
+    <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-size:13px;font-weight:600">${f.tenant_name}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4)">${f.calls_today} calls today</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="logo">Est<span style="color:var(--em)">8</span>Go</div>
+          <span style="display:inline-flex;align-items:center;background:var(--indigo-dim);border:1px solid var(--indigo-glow);border-radius:100px;padding:3px 10px;font-size:9px;font-weight:700;color:var(--indigo);letter-spacing:0.15em;text-transform:uppercase">SUPER ADMIN</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+          <div class="live-dot"></div>
+          <span style="font-size:10px;color:var(--muted);font-weight:500">Platform Live</span>
+          <span style="font-size:10px;color:var(--border2);margin:0 4px">·</span>
+          <span id="staffName" style="font-size:10px;color:var(--muted)">Loading...</span>
+        </div>
       </div>
-      <div class="risk-tag ${f.risk === 'high' ? 'risk-high' : f.risk === 'medium' ? 'risk-medium' : 'risk-low'}">
-        ${f.days_to_quota ? 'Quota in ' + f.days_to_quota + 'd' : 'OK'}
+      <div style="position:relative">
+        <div id="userAvatar" onclick="toggleUserMenu()" style="width:40px;height:40px;border-radius:12px;border:1.5px solid var(--em-glow);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;background:var(--surface2);cursor:pointer;flex-shrink:0">SA</div>
+        <div class="user-menu" id="userMenu">
+          <div style="padding:10px 12px 8px;border-bottom:1px solid var(--border);margin-bottom:6px">
+            <div style="font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)">Signed in as</div>
+            <div id="menuEmail" style="font-size:12px;color:var(--text);margin-top:2px"></div>
+            <div id="menuRole" style="font-size:10px;color:var(--em);margin-top:1px;text-transform:capitalize"></div>
+          </div>
+          <button onclick="Auth.logout()" style="width:100%;text-align:left;background:none;border:none;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:13px;color:var(--risk);font-family:'Inter',sans-serif;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='var(--risk-dim)'" onmouseout="this.style.background='none'">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/></svg>
+            Sign Out
+          </button>
+        </div>
       </div>
     </div>
-  `).join('');
-    }
+    <!-- Header metrics -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">
+      <div class="card" style="padding:10px;text-align:center"><div class="metric-val" id="hdrTenants">—</div><div class="metric-label">Tenants</div></div>
+      <div class="card" style="padding:10px;text-align:center"><div class="metric-val" style="color:var(--em)" id="hdrVerified">—</div><div class="metric-label">Verified</div></div>
+      <div class="card" style="padding:10px;text-align:center"><div class="metric-val" style="color:var(--warn)" id="hdrPending">—</div><div class="metric-label">Pending</div></div>
+      <div class="card" style="padding:10px;text-align:center"><div class="metric-val" style="color:var(--risk)" id="hdrRisks">—</div><div class="metric-label">Risks</div></div>
+    </div>
+  </div>
 
-    // ── RISK & CONVERSION ────────────────────────────────
-    async function loadRiskData() {
-      // Render funnel stages from DOM data attributes
-      document.querySelectorAll('.funnel-stage').forEach(el => {
-        const label = el.dataset.label;
-        const val = parseInt(el.dataset.val);
-        const color = el.dataset.color;
-        el.innerHTML = `
-      <div class="funnel-label">
-        <span>${label}</span>
-        <span style="font-family:'JetBrains Mono',monospace;color:white">${val}%</span>
-      </div>
-      <div class="funnel-bar-wrap">
-        <div class="funnel-bar" style="width:${val}%;background:${color}"></div>
-      </div>`;
-      });
+  <!-- ══ SCROLL AREA ══ -->
+  <div id="scrollArea">
 
-      // Try to fetch real risk data from API
-      try {
-        const res = await Auth.fetch('/admin/risk-summary');
-        if (res && res.ok) {
-          const d = await res.json();
-          setValue('trustQuestions', d.trust_questions ?? '—');
-          setValue('badgeClicks', d.badge_interactions ?? '—');
-          setValue('returnBuyers', d.return_buyers ?? '—');
-          setValue('verifyEngagement', d.verify_engagements ?? '—');
-
-          // Update funnel with real data if available
-          if (d.funnel) {
-            const stages = document.querySelectorAll('.funnel-stage');
-            const keys = ['search', 'engaged', 'inspection', 'payment'];
-            stages.forEach((el, i) => {
-              const val = d.funnel[keys[i]] ?? parseInt(el.dataset.val);
-              el.querySelector('.funnel-bar').style.width = val + '%';
-              el.querySelector('.funnel-label span:last-child').textContent = val + '%';
-            });
-          }
-
-          // Populate risk flag list
-          renderRiskFlags(d.risk_flags || []);
-
-          // Populate suspicious tenants
-          renderSuspicious(d.suspicious_tenants || []);
-        }
-      } catch (e) {
-        // API not wired yet — show placeholders
-        setValue('trustQuestions', '—');
-        setValue('badgeClicks', '—');
-        setValue('returnBuyers', '—');
-        setValue('verifyEngagement', '—');
-      }
-    }
-
-    function renderRiskFlags(flags) {
-      const el = document.getElementById('riskFlagList');
-      if (!flags.length) {
-        el.innerHTML = '<div class="empty"><div class="empty-icon">🛡️</div><p style="font-size:13px">No active risk flags</p></div>';
-        return;
-      }
-      el.innerHTML = flags.map(f => `
-    <div class="audit-row">
-      <div class="audit-icon" style="background:rgba(255,64,96,0.1)">⚠️</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600">${f.message}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">
-          ${f.tenant || ''} · ${f.detected_at || ''}
+    <!-- PULSE TAB -->
+    <div id="pulseTab" class="tab active" style="padding-top:4px">
+      <div class="sep">Platform Health</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px">
+        <div class="card" style="padding:16px">
+          <div style="font-size:10px;color:var(--em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Trust Score</div>
+          <div class="metric-val" style="margin-top:8px" id="avgTrustScore">—</div>
+          <div class="metric-label">Platform Average</div>
+          <div class="health-bar" style="margin-top:12px"><div class="health-fill" id="trustBar" style="width:0%"></div></div>
         </div>
-        ${f.detail ? `<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px">${f.detail}</div>` : ''}
+        <div class="card" style="padding:16px">
+          <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Conversations</div>
+          <div class="metric-val" style="margin-top:8px" id="dailyConvos">—</div>
+          <div class="metric-label">Today</div>
+        </div>
+        <div class="card" style="padding:16px">
+          <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Inspections</div>
+          <div class="metric-val" style="margin-top:8px" id="dailyInspections">—</div>
+          <div class="metric-label">Booked Today</div>
+        </div>
+        <div class="card" style="padding:16px">
+          <div style="font-size:10px;color:var(--warn);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">AI Usage</div>
+          <div class="metric-val" style="margin-top:8px" id="aiCalls">—</div>
+          <div class="metric-label">GPT Calls Today</div>
+        </div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
-        <span class="risk-tag risk-${f.severity || 'medium'}">${f.severity || 'medium'}</span>
-        <button onclick="dismissRisk('${f.id}')" style="font-size:9px;background:var(--glass2);color:rgba(255,255,255,0.4);border:none;border-radius:6px;padding:3px 8px;cursor:pointer">Dismiss</button>
-      </div>
-    </div>`).join('');
-    }
 
-    function renderSuspicious(tenants) {
-      const el = document.getElementById('suspiciousList');
-      if (!tenants.length) {
-        el.innerHTML = '<div class="empty"><div class="empty-icon">👁️</div><p style="font-size:13px">No suspicious patterns detected</p></div>';
-        return;
-      }
-      el.innerHTML = tenants.map(t => `
-    <div class="tenant-row">
-      <div class="tenant-avatar" style="background:rgba(255,64,96,0.1);border:1px solid rgba(255,64,96,0.2)">
-        ${t.name.slice(0, 2).toUpperCase()}
-      </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">${t.name}</div>
-        <div style="font-size:11px;color:var(--hot);margin-top:2px">${t.reason}</div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:1px">${t.detected_at || ''}</div>
-      </div>
-      <div style="flex-shrink:0">
-        <span class="risk-tag risk-high">Watch</span>
-      </div>
-    </div>`).join('');
-    }
-
-    async function dismissRisk(id) {
-      try {
-        await Auth.fetch('/admin/risks/' + id + '/dismiss', { method: 'PATCH' });
-        toast('Risk flag dismissed', 'var(--warm)');
-        loadRiskData();
-      } catch (e) { }
-    }
-
-    // ── STAFF ENRICHMENT ─────────────────────────────────
-    const origRenderStaff = window.renderStaff;
-    function renderStaff(staff) {
-      setValue('staffTotal', staff.length);
-      setValue('staffActive', staff.filter(s => s.is_active).length);
-      setValue('staffRoles', [...new Set(staff.map(s => s.role))].length);
-      const list = document.getElementById('staffList');
-      if (!staff.length) {
-        list.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><p>No platform staff yet</p></div>';
-        return;
-      }
-      const DEPT_COLORS = { superuser: 'rgba(255,64,96,0.1)', super_staff: 'rgba(16,185,129,0.1)' };
-      list.innerHTML = staff.map(s => {
-        const initials = ((s.first_name || s.email) || '?').slice(0, 2).toUpperCase();
-        const deptColor = DEPT_COLORS[s.role] || 'rgba(59,130,246,0.1)';
-        return `
-      <div class="tenant-row">
-        <div class="tenant-avatar" style="background:${deptColor};border:1px solid var(--border2)">${initials}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">${s.first_name || s.email.split('@')[0]}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.email}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:2px">
-            Last active: ${s.last_active || 'Never'}
+      <div class="sep" style="margin-top:8px">Trust Badge Distribution</div>
+      <div style="padding:0 16px">
+        <div class="card" style="padding:16px">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">
+            <div><div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:800;color:var(--em)" id="bdgEmerald">—</div><span class="trust-pill trust-emerald" style="font-size:8px;margin-top:4px;display:inline-flex">Emerald</span></div>
+            <div><div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:800;color:var(--warn)" id="bdgGold">—</div><span class="trust-pill trust-gold" style="font-size:8px;margin-top:4px;display:inline-flex">Gold</span></div>
+            <div><div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:800;color:var(--muted)" id="bdgSilver">—</div><span class="trust-pill trust-silver" style="font-size:8px;margin-top:4px;display:inline-flex">Silver</span></div>
+            <div><div style="font-size:18px;font-family:'Syne',sans-serif;font-weight:800;color:var(--risk)" id="bdgUnver">—</div><span class="trust-pill trust-unver" style="font-size:8px;margin-top:4px;display:inline-flex">Unverified</span></div>
           </div>
         </div>
-        <div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-          <span class="risk-tag ${s.role === 'superuser' ? 'risk-high' : 'risk-low'}" style="text-transform:capitalize">${(s.role || '').replace('_', ' ')}</span>
-          <div style="font-size:10px;color:${s.is_active ? 'var(--em)' : '#FF6080'}">${s.is_active ? '● Active' : '○ Inactive'}</div>
-          ${s.role !== 'superuser' ? `<button onclick="deactivateStaff(${s.id},'${s.email}')" style="font-size:9px;background:rgba(255,64,96,0.1);color:#FF6080;border:none;border-radius:6px;padding:3px 8px;cursor:pointer">Deactivate</button>` : ''}
+      </div>
+
+      <div class="sep" style="margin-top:8px">Realtor Activity</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px">
+        <div class="card" style="padding:12px;text-align:center"><div class="metric-val" style="font-size:20px" id="activeRealtors">—</div><div class="metric-label">Active Today</div></div>
+        <div class="card" style="padding:12px;text-align:center"><div class="metric-val" style="font-size:20px;color:var(--risk)" id="ignoredLeads">—</div><div class="metric-label">Ignored Leads</div></div>
+        <div class="card" style="padding:12px;text-align:center"><div class="metric-val" style="font-size:20px;color:var(--warn)" id="humanTakeovers">—</div><div class="metric-label">Takeovers</div></div>
+      </div>
+
+      <div class="sep" style="margin-top:8px">Risk Alerts</div>
+      <div style="padding:0 16px">
+        <div class="card" id="riskList">
+          <div class="empty"><div class="empty-icon">🛡️</div><p style="font-size:13px">No active risks detected</p></div>
+        </div>
+      </div>
+      <div style="height:8px"></div>
+    </div>
+
+    <!-- TENANTS TAB -->
+    <div id="tenantsTab" class="tab">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 8px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted)">All Tenants</div>
+        <button class="btn-em" onclick="openModal('newTenantModal')" style="padding:7px 14px;font-size:10px">+ New Tenant</button>
+      </div>
+      <div style="display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+        <button class="trust-pill trust-emerald filter-pill" onclick="filterTenants('all',this)" data-filter="all" style="white-space:nowrap">All</button>
+        <button class="trust-pill trust-silver filter-pill" onclick="filterTenants('agency',this)" data-filter="agency" style="white-space:nowrap">Agency</button>
+        <button class="trust-pill trust-silver filter-pill" onclick="filterTenants('freelance',this)" data-filter="freelance" style="white-space:nowrap">Freelance</button>
+        <button class="trust-pill trust-silver filter-pill" onclick="filterTenants('developer',this)" data-filter="developer" style="white-space:nowrap">Developer</button>
+        <button class="trust-pill trust-silver filter-pill" onclick="filterTenants('investor',this)" data-filter="investor" style="white-space:nowrap">Investor</button>
+      </div>
+      <div class="card" style="margin:0 16px" id="tenantList">
+        <div class="empty"><div class="empty-icon">🏢</div><p>Loading tenants...</p></div>
+      </div>
+    </div>
+
+    <!-- VERIFY TAB -->
+    <div id="verifyTab" class="tab">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 4px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted)">Verification Queue</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--warn)" id="queueCount">— pending</div>
+      </div>
+      <div style="display:flex;gap:8px;padding:8px 16px 12px;overflow-x:auto;scrollbar-width:none">
+        <button class="trust-pill trust-emerald vq-filter" data-filter="all" onclick="filterQueue('all',this)" style="white-space:nowrap">All</button>
+        <button class="trust-pill trust-silver vq-filter" data-filter="suspicious" onclick="filterQueue('suspicious',this)" style="white-space:nowrap">⚠ Suspicious</button>
+        <button class="trust-pill trust-silver vq-filter" data-filter="high_value" onclick="filterQueue('high_value',this)" style="white-space:nowrap">💎 High Value</button>
+        <button class="trust-pill trust-silver vq-filter" data-filter="new_tenant" onclick="filterQueue('new_tenant',this)" style="white-space:nowrap">🆕 New Tenant</button>
+      </div>
+      <div id="verifyQueue" style="padding:0 16px">
+        <div class="empty"><div class="empty-icon">✅</div><p style="font-size:13px">Queue is clear — all listings verified</p></div>
+      </div>
+    </div>
+
+    <!-- AUDIT TAB -->
+    <div id="auditTab" class="tab">
+      <div class="sep" style="padding-top:16px">Audit &amp; Forensics</div>
+      <div style="padding:0 16px 8px">
+        <input type="text" id="auditSearch" placeholder="Search by tenant, action, staff..." class="field-input" style="font-size:13px" oninput="filterAudit(this.value)" />
+      </div>
+      <div style="display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto;scrollbar-width:none">
+        <button class="risk-tag risk-low" onclick="filterAuditSev('all')" style="cursor:pointer">All</button>
+        <button class="risk-tag risk-low" onclick="filterAuditSev('low')" style="cursor:pointer">Low</button>
+        <button class="risk-tag risk-med" onclick="filterAuditSev('medium')" style="cursor:pointer">Medium</button>
+        <button class="risk-tag risk-high" onclick="filterAuditSev('high')" style="cursor:pointer">High</button>
+      </div>
+      <div class="card" style="margin:0 16px" id="auditList">
+        <div class="empty"><div class="empty-icon">🗂️</div><p>Loading audit logs...</p></div>
+      </div>
+      <div style="margin:12px 16px 4px;padding:10px 14px;background:var(--em-dim);border:1px solid var(--em-glow);border-radius:12px;font-size:10px;color:var(--muted);display:flex;align-items:center;gap:6px">
+        <span>🔒</span><span>Audit logs are immutable. No record can be edited or deleted.</span>
+      </div>
+    </div>
+
+    <!-- STAFF TAB (menu-only) -->
+    <div id="staffTab" class="tab">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 8px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted)">Platform Staff</div>
+        <button class="btn-em" id="addStaffBtn" onclick="openModal('newStaffModal')" style="padding:7px 14px;font-size:10px">+ Add Staff</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px 12px">
+        <div class="card" style="padding:12px;text-align:center"><div style="font-size:20px;font-family:'Syne',sans-serif;font-weight:800;color:var(--em)" id="staffTotal">—</div><div class="metric-label">Total Staff</div></div>
+        <div class="card" style="padding:12px;text-align:center"><div style="font-size:20px;font-family:'Syne',sans-serif;font-weight:800;color:var(--blue)" id="staffActive">—</div><div class="metric-label">Active</div></div>
+        <div class="card" style="padding:12px;text-align:center"><div style="font-size:20px;font-family:'Syne',sans-serif;font-weight:800;color:var(--warn)" id="staffRoles">—</div><div class="metric-label">Roles</div></div>
+      </div>
+      <div class="card" style="margin:0 16px" id="staffList">
+        <div class="empty"><div class="empty-icon">👥</div><p>Loading staff...</p></div>
+      </div>
+    </div>
+
+    <!-- BILLING TAB (menu-only) -->
+    <div id="billingTab" class="tab">
+      <div class="sep" style="padding-top:16px">Billing &amp; Plans</div>
+      <div id="billingGate" style="display:none;margin:0 16px 16px;padding:14px 16px;background:var(--risk-dim);border:1px solid rgba(244,63,94,0.15);border-radius:var(--r-lg);text-align:center">
+        <div style="font-size:20px;margin-bottom:6px">🔐</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Superuser Only</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Billing controls require superuser access</div>
+      </div>
+      <div id="billingContent">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px">
+          <div class="card" style="padding:16px"><div style="font-size:10px;color:var(--em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">MRR</div><div class="metric-val" style="margin-top:8px" id="billingMRR">₦—</div><div class="metric-label">Monthly Recurring</div></div>
+          <div class="card" style="padding:16px"><div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Overdue</div><div class="metric-val" style="margin-top:8px;color:var(--risk)" id="billingOverdue">—</div><div class="metric-label">Accounts</div></div>
+          <div class="card" style="padding:16px"><div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">AI Cost</div><div class="metric-val" style="margin-top:8px;color:var(--warn);font-size:20px" id="billingAICost">₦—</div><div class="metric-label">This Month</div></div>
+          <div class="card" style="padding:16px"><div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Margin</div><div class="metric-val" style="margin-top:8px;color:var(--em);font-size:20px" id="billingMargin">—%</div><div class="metric-label">Est. This Month</div></div>
+        </div>
+        <div class="sep" style="margin-top:8px">Plan Distribution</div>
+        <div class="card" style="margin:0 16px;padding:16px"><div id="planDist"><div class="empty"><div class="empty-icon">📊</div><p>Loading plan data...</p></div></div></div>
+        <div style="height:8px"></div>
+      </div>
+    </div>
+
+    <!-- CONVERSATIONS TAB (menu-only) -->
+    <div id="conversationsTab" class="tab">
+      <div class="sep" style="padding-top:16px">Conversation Tracer</div>
+      <div style="padding:0 16px 12px">
+        <div class="card" style="padding:16px;margin-bottom:14px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Search Conversations</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <input id="cvSearchPhone" class="cv-field" placeholder="Buyer phone..." oninput="debounceSearch()" />
+            <input id="cvSearchTenant" class="cv-field" placeholder="Tenant name..." oninput="debounceSearch()" />
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <input id="cvDateFrom" type="date" class="cv-field" />
+            <input id="cvDateTo" type="date" class="cv-field" />
+          </div>
+          <div style="display:flex;gap:8px">
+            <select id="cvStage" class="cv-field" style="flex:1">
+              <option value="">All stages</option>
+              <option value="awareness">Awareness</option>
+              <option value="verification">Verification</option>
+              <option value="commitment">Commitment</option>
+              <option value="handshake">Handshake</option>
+              <option value="closed">Closed</option>
+            </select>
+            <button onclick="loadConversations()" style="background:var(--indigo-lg);color:white;border:none;border-radius:var(--r);padding:10px 18px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Search</button>
+          </div>
+        </div>
+        <div id="cvList"></div>
+      </div>
+    </div>
+
+    <!-- RISK TAB (menu-only) -->
+    <div id="riskTab" class="tab">
+      <div class="sep" style="padding-top:16px">Risk &amp; Conversion Intelligence</div>
+      <div style="margin:0 16px 12px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:18px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Conversion Funnel</div>
+        <div id="funnelStages">
+          <div class="funnel-stage" data-label="Search" data-val="100" data-color="var(--em)"></div>
+          <div class="funnel-stage" data-label="Engaged" data-val="68" data-color="var(--blue)"></div>
+          <div class="funnel-stage" data-label="Inspection" data-val="31" data-color="var(--warn)"></div>
+          <div class="funnel-stage" data-label="Payment" data-val="12" data-color="var(--risk)"></div>
+        </div>
+      </div>
+      <div class="sep">Buyer Confidence Signals</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px">
+        <div class="card" style="padding:16px"><div style="font-size:22px;margin-bottom:4px">🔍</div><div class="metric-val" style="font-size:20px" id="trustQuestions">—</div><div class="metric-label">Trust Questions</div></div>
+        <div class="card" style="padding:16px"><div style="font-size:22px;margin-bottom:4px">🏅</div><div class="metric-val" style="font-size:20px" id="badgeClicks">—</div><div class="metric-label">Badge Interactions</div></div>
+        <div class="card" style="padding:16px"><div style="font-size:22px;margin-bottom:4px">🔄</div><div class="metric-val" style="font-size:20px" id="returnBuyers">—</div><div class="metric-label">Return Buyers</div></div>
+        <div class="card" style="padding:16px"><div style="font-size:22px;margin-bottom:4px">📍</div><div class="metric-val" style="font-size:20px" id="verifyEngagement">—</div><div class="metric-label">Verify Checks</div></div>
+      </div>
+      <div class="sep" style="margin-top:8px">Active Risk Flags</div>
+      <div class="card" style="margin:0 16px" id="riskFlagList">
+        <div class="empty"><div class="empty-icon">🛡️</div><p style="font-size:13px">No active risk flags</p></div>
+      </div>
+      <div class="sep" style="margin-top:8px">Suspicious Activity</div>
+      <div class="card" style="margin:0 16px" id="suspiciousList">
+        <div class="empty"><div class="empty-icon">👁️</div><p style="font-size:13px">No suspicious patterns detected</p></div>
+      </div>
+      <div style="height:8px"></div>
+    </div>
+
+  </div><!-- /scrollArea -->
+
+  <!-- ══ BOTTOM NAV (5 tabs) ══ -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" id="nav-pulse" onclick="switchTab('pulse')">
+      <div class="nav-icon-wrap"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12h3l3-9 4 18 3-9h5"/></svg></div>
+      <span>Pulse</span>
+    </button>
+    <button class="nav-item" id="nav-tenants" onclick="switchTab('tenants')">
+      <div class="nav-icon-wrap"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"/></svg></div>
+      <span>Tenants</span>
+    </button>
+    <button class="nav-item" id="nav-verify" onclick="switchTab('verify')">
+      <div class="nav-icon-wrap"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg></div>
+      <span>Verify</span>
+    </button>
+    <button class="nav-item" id="nav-audit" onclick="switchTab('audit')">
+      <div class="nav-icon-wrap"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/></svg></div>
+      <span>Audit</span>
+    </button>
+    <button class="nav-item" id="nav-menu" onclick="openMenuDrawer()">
+      <div class="nav-icon-wrap"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A.75.75 0 014.5 5.25h15a.75.75 0 010 1.5h-15A.75.75 0 013.75 6zm0 6A.75.75 0 014.5 11.25h15a.75.75 0 010 1.5h-15A.75.75 0 013.75 12zm0 6A.75.75 0 014.5 17.25h15a.75.75 0 010 1.5h-15A.75.75 0 013.75 18z"/></svg></div>
+      <span>Menu</span>
+    </button>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- ══ MENU DRAWER ══ -->
+<div class="menu-drawer" id="menuDrawer">
+  <div class="menu-drawer-backdrop" onclick="closeMenuDrawer()"></div>
+  <div class="menu-drawer-sheet">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 8px">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px">Menu</div>
+      <button onclick="closeMenuDrawer()" style="background:var(--surface2);border:none;color:var(--text);border-radius:10px;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button>
+    </div>
+    <div class="menu-drawer-sec">Management</div>
+    <div class="menu-drawer-row" onclick="closeMenuDrawer();switchTab('staff')">
+      <span style="font-size:18px;width:28px;text-align:center">👥</span>
+      <span style="flex:1;font-size:14px;font-weight:500">Staff Management</span>
+      <svg width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+    </div>
+    <div class="menu-drawer-row" onclick="closeMenuDrawer();switchTab('billing')">
+      <span style="font-size:18px;width:28px;text-align:center">💳</span>
+      <span style="flex:1;font-size:14px;font-weight:500">Billing</span>
+      <svg width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+    </div>
+    <div class="menu-drawer-row" onclick="closeMenuDrawer();switchTab('conversations')">
+      <span style="font-size:18px;width:28px;text-align:center">💬</span>
+      <span style="flex:1;font-size:14px;font-weight:500">Conversation Tracer</span>
+      <svg width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+    </div>
+    <div class="menu-drawer-row" onclick="closeMenuDrawer();switchTab('risk')">
+      <span style="font-size:18px;width:28px;text-align:center">⚠️</span>
+      <span style="flex:1;font-size:14px;font-weight:500">Risk Monitor</span>
+      <svg width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+    </div>
+    <div class="menu-drawer-sec">System</div>
+    <div class="menu-drawer-row" onclick="closeMenuDrawer();toast('Settings coming soon')">
+      <span style="font-size:18px;width:28px;text-align:center">⚙️</span>
+      <span style="flex:1;font-size:14px;font-weight:500">Platform Settings</span>
+    </div>
+    <div class="menu-drawer-row" onclick="closeMenuDrawer();toast('Export coming soon')">
+      <span style="font-size:18px;width:28px;text-align:center">📊</span>
+      <span style="flex:1;font-size:14px;font-weight:500">Export Report</span>
+    </div>
+    <div class="menu-drawer-sec">Session</div>
+    <div class="menu-drawer-row" onclick="closeMenuDrawer();Auth.logout()">
+      <span style="font-size:18px;width:28px;text-align:center">🚪</span>
+      <span style="flex:1;font-size:14px;font-weight:500;color:var(--risk)">Logout</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Quick Action ══ -->
+<div class="modal-overlay" id="quickActionModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Quick Actions</div>
+      <button onclick="closeModal('quickActionModal')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px">✕</button>
+    </div>
+    <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <button class="card" style="padding:16px;text-align:left;border:none;cursor:pointer;background:var(--surface2)" onclick="closeModal('quickActionModal');openModal('newTenantModal')">
+        <div style="font-size:24px">🏢</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-top:8px">New Tenant</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Onboard a company</div>
+      </button>
+      <button class="card" style="padding:16px;text-align:left;border:none;cursor:pointer;background:var(--surface2)" onclick="closeModal('quickActionModal');switchTab('staff');openModal('newStaffModal')">
+        <div style="font-size:24px">👤</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-top:8px">Add Staff</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Est8Go team member</div>
+      </button>
+      <button class="card" style="padding:16px;text-align:left;border:none;cursor:pointer;background:var(--surface2)" onclick="closeModal('quickActionModal');switchTab('verify')">
+        <div style="font-size:24px">🔍</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-top:8px">Verify Queue</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Review listings</div>
+      </button>
+      <button class="card" style="padding:16px;text-align:left;border:none;cursor:pointer;background:var(--surface2)" onclick="closeModal('quickActionModal');switchTab('audit')">
+        <div style="font-size:24px">🗂️</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-top:8px">Audit Logs</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Platform black box</div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: New Tenant ══ -->
+<div class="modal-overlay" id="newTenantModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Onboard New Tenant</div>
+      <button onclick="closeModal('newTenantModal')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px">✕</button>
+    </div>
+    <div class="field-group"><label class="field-label">Company Name</label><input type="text" id="nt_name" class="field-input" placeholder="e.g. TrustHomes Ltd" /></div>
+    <div class="field-group"><label class="field-label">Business Type</label><select id="nt_type" class="field-select"><option value="agency">Real Estate Agency</option><option value="freelance">Independent Realtor</option><option value="developer">Property Developer</option><option value="investor">Investor Group</option></select></div>
+    <div class="field-group"><label class="field-label">Subscription Plan</label><select id="nt_plan" class="field-select"><option value="pilot">Pilot (Free)</option><option value="starter">Starter</option><option value="growth">Growth</option><option value="enterprise">Enterprise</option></select></div>
+    <div class="field-group"><label class="field-label">WhatsApp Phone Number ID</label><input type="text" id="nt_wa" class="field-input" placeholder="Meta Phone Number ID" /></div>
+    <div class="field-group"><label class="field-label">Admin Email</label><input type="email" id="nt_email" class="field-input" placeholder="admin@company.com" /></div>
+    <div class="field-group"><label class="field-label">Admin Password</label><input type="password" id="nt_pass" class="field-input" placeholder="Temporary password" /></div>
+    <div style="padding:20px 20px 8px;display:flex;gap:10px">
+      <button class="btn-ghost" onclick="closeModal('newTenantModal')" style="flex:1">Cancel</button>
+      <button class="btn-em" onclick="createTenant()" style="flex:2">Create Tenant</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: New Staff ══ -->
+<div class="modal-overlay" id="newStaffModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Add Platform Staff</div>
+      <button onclick="closeModal('newStaffModal')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px">✕</button>
+    </div>
+    <div class="field-group"><label class="field-label">Full Name</label><input type="text" id="ns_name" class="field-input" placeholder="Staff member name" /></div>
+    <div class="field-group"><label class="field-label">Email Address</label><input type="email" id="ns_email" class="field-input" placeholder="staff@est8go.com" /></div>
+    <div class="field-group"><label class="field-label">Password</label><input type="password" id="ns_pass" class="field-input" placeholder="Temporary password" /></div>
+    <div class="field-group"><label class="field-label">Role</label><select id="ns_role" class="field-select"><option value="super_staff">Super Staff</option><option value="superuser">Superuser</option></select></div>
+    <div style="padding:20px 20px 8px;display:flex;gap:10px">
+      <button class="btn-ghost" onclick="closeModal('newStaffModal')" style="flex:1">Cancel</button>
+      <button class="btn-em" id="createStaffBtn" onclick="createStaff()" style="flex:2">Add Staff Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Override ══ -->
+<div class="modal-overlay" id="overrideModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Manual Trust Override</div>
+      <button onclick="closeModal('overrideModal')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px">✕</button>
+    </div>
+    <div style="padding:12px 18px 6px;background:var(--warn-dim);border-bottom:1px solid var(--border);font-size:11px;color:var(--warn);display:flex;align-items:center;gap:6px">
+      <span>⚠</span><span>Manual overrides are logged in the audit trail and are legally significant.</span>
+    </div>
+    <div class="field-group"><label class="field-label">Override Trust Grade</label><select id="overrideGrade" class="field-select"><option value="Emerald">🟢 Emerald (85–100)</option><option value="Gold">🟡 Gold (75–84)</option><option value="Silver" selected>⚪ Silver (50–74)</option><option value="Bronze">🟤 Bronze (0–49)</option></select></div>
+    <div class="field-group"><label class="field-label">Override Reason (Required)</label><textarea id="overrideNotes" class="field-input" rows="3" placeholder="e.g. Physical inspection confirmed. Title verified by Lagos State registry." style="resize:none;line-height:1.5"></textarea></div>
+    <div style="padding:16px 20px 8px;display:flex;gap:10px">
+      <button class="btn-ghost" onclick="closeModal('overrideModal')" style="flex:1">Cancel</button>
+      <button class="btn-em" onclick="submitOverride()" style="flex:2;background:var(--warn);color:#000">Apply Override</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Conversation View ══ -->
+<div class="modal-overlay" id="cvModal">
+  <div style="width:100%;background:var(--surface);border-radius:24px 24px 0 0;border-top:1px solid var(--border2);max-height:90vh;display:flex;flex-direction:column;animation:slideUp 0.3s cubic-bezier(0.2,0.8,0.2,1)">
+    <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+      <div>
+        <div id="cvModalName" style="font-weight:700;font-size:15px;font-family:'Syne',sans-serif"></div>
+        <div id="cvModalMeta" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="exportConversation()" style="background:var(--indigo-dim);border:1px solid var(--indigo-glow);color:var(--indigo);border-radius:10px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer">Export</button>
+        <button onclick="closeModal('cvModal')" style="background:var(--surface2);border:none;color:var(--text);border-radius:10px;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button>
+      </div>
+    </div>
+    <div id="cvMessages" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px;min-height:0"></div>
+    <div style="padding:10px 20px;border-top:1px solid var(--border);flex-shrink:0">
+      <div id="cvModalFunnel" style="font-size:11px;color:var(--muted);text-align:center"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div id="toast" style="position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:12px 20px;font-size:13px;font-weight:500;z-index:400;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap"></div>
+
+<script>
+  // ── UTILS ──────────────────────────────────────────────────────
+  const g = id => document.getElementById(id);
+
+  function sanitise(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  }
+
+  function formatDateTime(str) {
+    if (!str) return '—';
+    const d = new Date(str);
+    if (isNaN(d)) return str;
+    return d.toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:false });
+  }
+
+  function formatNum(n) {
+    if (n >= 1e9) return (n/1e9).toFixed(1)+'B';
+    if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
+    if (n >= 1e3) return (n/1e3).toFixed(0)+'K';
+    return n;
+  }
+
+  function setValue(id, val) {
+    const el = g(id);
+    if (el) el.textContent = val;
+  }
+
+  // ── AUTH INIT ──────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    const email = localStorage.getItem('user_email') || '';
+    const role  = localStorage.getItem('user_role') || '';
+    g('menuEmail').textContent = email;
+    g('menuRole').textContent  = role;
+    g('staffName').textContent = email.split('@')[0] || 'Admin';
+    const initials = (email.split('@')[0] || 'SA').slice(0, 2).toUpperCase();
+    g('userAvatar').textContent = initials;
+
+    if (role !== 'superuser') {
+      const addStaffBtn = g('addStaffBtn');
+      if (addStaffBtn) addStaffBtn.style.display = 'none';
+    }
+
+    loadPulseData();
+    loadTenants();
+    loadAuditLogs();
+    loadStaff();
+    startPulseRefresh();
+    loadRiskData();
+  });
+
+  // ── TOAST ──────────────────────────────────────────────────────
+  function toast(msg, color) {
+    const t = g('toast');
+    t.textContent = msg;
+    t.style.borderColor = color || 'var(--em)';
+    t.style.opacity = '1';
+    t.style.transform = 'translateX(-50%) translateY(0)';
+    setTimeout(() => {
+      t.style.opacity = '0';
+      t.style.transform = 'translateX(-50%) translateY(20px)';
+    }, 2800);
+  }
+
+  // ── USER MENU ──────────────────────────────────────────────────
+  function toggleUserMenu() { g('userMenu').classList.toggle('open'); }
+  document.addEventListener('click', e => {
+    const av = g('userAvatar'), mn = g('userMenu');
+    if (av && mn && !av.contains(e.target) && !mn.contains(e.target)) mn.classList.remove('open');
+    const cvModal = g('cvModal');
+    if (cvModal && e.target === cvModal) cvModal.classList.remove('open');
+  });
+
+  // ── MODALS ─────────────────────────────────────────────────────
+  function openModal(id)  { g(id).classList.add('open'); }
+  function closeModal(id) { g(id).classList.remove('open'); }
+  document.querySelectorAll('.modal-overlay').forEach(el => {
+    el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+  });
+
+  // ── MENU DRAWER ────────────────────────────────────────────────
+  function openMenuDrawer()  { g('menuDrawer').classList.add('open'); }
+  function closeMenuDrawer() { g('menuDrawer').classList.remove('open'); }
+
+  // ── SINGLE SWITCHTAB ───────────────────────────────────────────
+  const MENU_ONLY_TABS = ['staff','billing','conversations','risk'];
+
+  function switchTab(name) {
+    if (name === 'menu') { openMenuDrawer(); return; }
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const tabEl = g(name + 'Tab');
+    const navEl = g('nav-' + name);
+    if (tabEl) tabEl.classList.add('active');
+    if (MENU_ONLY_TABS.includes(name)) {
+      const mn = g('nav-menu');
+      if (mn) mn.classList.add('active');
+    } else if (navEl) {
+      navEl.classList.add('active');
+    }
+    g('scrollArea').scrollTop = 0;
+    const loaders = {
+      pulse:         loadPulseData,
+      tenants:       loadTenants,
+      verify:        loadVerifyQueue,
+      audit:         loadAuditLogs,
+      staff:         loadStaff,
+      billing:       loadBillingData,
+      conversations: loadConversations,
+      risk:          loadRiskData,
+    };
+    if (loaders[name]) loaders[name]();
+  }
+
+  // ── PULSE ──────────────────────────────────────────────────────
+  async function loadPulseData() {
+    try {
+      const res = await Auth.fetch('/admin/pulse');
+      if (!res) return;
+      const d = await res.json();
+      setValue('hdrTenants',       d.total_tenants   ?? '—');
+      setValue('hdrVerified',      d.verified_listings ?? '—');
+      setValue('hdrPending',       d.pending_queue   ?? '—');
+      setValue('hdrRisks',         d.risk_count      ?? '—');
+      setValue('avgTrustScore',    d.avg_trust_score ?? '—');
+      setValue('dailyConvos',      d.daily_conversations ?? '—');
+      setValue('dailyInspections', d.daily_inspections ?? '—');
+      setValue('aiCalls',          d.ai_calls_today  ?? '—');
+      setValue('activeRealtors',   d.active_realtors ?? '—');
+      setValue('ignoredLeads',     d.ignored_leads   ?? '—');
+      setValue('humanTakeovers',   d.human_takeovers ?? '—');
+      setValue('bdgEmerald',       d.badges?.emerald    ?? '—');
+      setValue('bdgGold',          d.badges?.gold       ?? '—');
+      setValue('bdgSilver',        d.badges?.silver     ?? '—');
+      setValue('bdgUnver',         d.badges?.unverified ?? '—');
+      const score = d.avg_trust_score || 0;
+      g('trustBar').style.width = score + '%';
+      if (d.risk_alerts?.length) renderRisks(d.risk_alerts);
+    } catch (e) {}
+  }
+
+  function renderRisks(risks) {
+    const list = g('riskList');
+    list.innerHTML = risks.map(r => `
+      <div class="audit-row">
+        <div class="audit-icon" style="background:var(--risk-dim)">⚠️</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600">${sanitise(r.message)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${sanitise(r.tenant||'')} · ${sanitise(r.time||'')}</div>
+        </div>
+        <span class="risk-tag risk-${r.severity||'med'}">${sanitise(r.severity||'medium')}</span>
+      </div>`).join('');
+  }
+
+  // ── AUTO-REFRESH PULSE ─────────────────────────────────────────
+  let _pulseTimer = null;
+
+  function startPulseRefresh() {
+    if (_pulseTimer) clearInterval(_pulseTimer);
+    _pulseTimer = setInterval(() => {
+      if (g('pulseTab')?.classList.contains('active')) loadPulseData();
+    }, 30000);
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      clearInterval(_pulseTimer);
+      _pulseTimer = null;
+    } else {
+      startPulseRefresh();
+      if (g('pulseTab')?.classList.contains('active')) loadPulseData();
+    }
+  });
+
+  // ── TENANTS ────────────────────────────────────────────────────
+  let allTenants = [];
+  const TENANT_COLORS = ['#162860','#1a1040','#0d3040','#1a2e10','#401020'];
+  const TYPE_LABELS   = { agency:'Agency', freelance:'Freelance', developer:'Developer', investor:'Investor' };
+
+  async function loadTenants() {
+    try {
+      const res = await Auth.fetch('/admin/tenants');
+      if (!res) return;
+      allTenants = await res.json();
+      renderTenants(allTenants);
+    } catch (e) {}
+  }
+
+  function renderTenants(tenants) {
+    const list = g('tenantList');
+    if (!tenants.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">🏢</div><p>No tenants found</p></div>';
+      return;
+    }
+    const role = localStorage.getItem('user_role');
+    list.innerHTML = tenants.map((t, i) => {
+      const initials = sanitise((t.name||'?').slice(0,2).toUpperCase());
+      const health   = t.health_score || 0;
+      const color    = TENANT_COLORS[i % TENANT_COLORS.length];
+      const isActive = t.is_active;
+      const badgeHtml = isActive
+        ? '<span class="risk-tag risk-low">Active</span>'
+        : '<span class="risk-tag risk-high">Suspended</span>';
+      const waBadge = t.whatsapp_phone_number_id
+        ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--em);display:inline-block;margin-right:4px"></span>'
+        : '';
+      const suspendBtn = isActive && role === 'superuser'
+        ? `<button onclick="suspendTenant(${t.id},'${sanitise(t.name)}')" class="btn-warn" style="font-size:9px;padding:4px 8px">Suspend</button>`
+        : '';
+      const reactivateBtn = !isActive && role === 'superuser'
+        ? `<button onclick="reactivateTenant(${t.id},'${sanitise(t.name)}')" class="btn-em" style="font-size:9px;padding:4px 8px;background:var(--em)">Reactivate</button>`
+        : '';
+      const deleteBtn = role === 'superuser'
+        ? `<button onclick="deleteTenant(${t.id},'${sanitise(t.name)}')" class="btn-danger" style="font-size:9px;padding:4px 8px">Delete</button>`
+        : '';
+      return `
+        <div class="tenant-row fade-in">
+          <div class="tenant-avatar" style="background:${color}">${initials}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sanitise(t.name)}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">
+              ${waBadge}${sanitise(TYPE_LABELS[t.tenant_type]||t.tenant_type)} · ${sanitise(t.plan)} · ${t.listings_count||0} listings · ${t.users_count||0} users
+            </div>
+            <div class="health-bar"><div class="health-fill" style="width:${health}%"></div></div>
+            <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+              ${suspendBtn}${reactivateBtn}${deleteBtn}
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">${badgeHtml}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function filterTenants(type, btn) {
+    document.querySelectorAll('.filter-pill').forEach(p => {
+      p.classList.remove('trust-emerald'); p.classList.add('trust-silver');
+    });
+    btn.classList.remove('trust-silver'); btn.classList.add('trust-emerald');
+    renderTenants(type === 'all' ? allTenants : allTenants.filter(t => t.tenant_type === type));
+  }
+
+  async function createTenant() {
+    const name  = g('nt_name').value.trim();
+    const type  = g('nt_type').value;
+    const plan  = g('nt_plan').value;
+    const wa    = g('nt_wa').value.trim();
+    const email = g('nt_email').value.trim();
+    const pass  = g('nt_pass').value;
+    if (!name || !email || !pass) { toast('Please fill all required fields', 'var(--risk)'); return; }
+    try {
+      const res = await Auth.fetch('/admin/tenants', {
+        method: 'POST',
+        body: JSON.stringify({ name, tenant_type:type, plan, whatsapp_phone_number_id:wa, admin_email:email, admin_password:pass })
+      });
+      if (!res) return;
+      if (res.ok) { toast('✓ Tenant created successfully'); closeModal('newTenantModal'); loadTenants(); }
+      else { const d = await res.json(); toast(d.detail || 'Failed to create tenant', 'var(--risk)'); }
+    } catch (e) { toast('Connection error', 'var(--risk)'); }
+  }
+
+  async function suspendTenant(id, name) {
+    const reason = prompt(`Reason for suspending ${name}:`);
+    if (!reason) return;
+    try {
+      const res = await Auth.fetch(`/admin/tenants/${id}/suspend`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason })
+      });
+      if (res?.ok) { toast(`${name} suspended`); loadTenants(); }
+      else { toast('Suspend failed', 'var(--risk)'); }
+    } catch (e) { toast('Error', 'var(--risk)'); }
+  }
+
+  async function reactivateTenant(id, name) {
+    try {
+      const res = await Auth.fetch(`/admin/tenants/${id}/reactivate`, { method: 'PATCH' });
+      if (res?.ok) { toast(`${name} reactivated`); loadTenants(); }
+      else { toast('Reactivate failed', 'var(--risk)'); }
+    } catch (e) { toast('Error', 'var(--risk)'); }
+  }
+
+  async function deleteTenant(id, name) {
+    const ok1 = confirm(`⚠️ PERMANENT ACTION\n\nDelete ${name}?\n\nThis will:\n- Disable all their listings\n- Stop their bot\n- Preserve data for audit\n\nThis cannot be undone.`);
+    if (!ok1) return;
+    const reason = prompt('Enter deletion reason (required):');
+    if (!reason) return;
+    const confirmWord = prompt('Type DELETE to confirm:');
+    if (confirmWord !== 'DELETE') { toast('Deletion cancelled'); return; }
+    try {
+      const res = await Auth.fetch(`/admin/tenants/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason, confirm: 'DELETE' })
+      });
+      if (res?.ok) { toast(`${name} deleted`); loadTenants(); }
+      else { const d = await res.json(); toast(d.detail || 'Delete failed', 'var(--risk)'); }
+    } catch (e) { toast('Error', 'var(--risk)'); }
+  }
+
+  // ── VERIFY QUEUE ───────────────────────────────────────────────
+  let allQueueItems = [];
+
+  async function loadVerifyQueue() {
+    try {
+      const res = await Auth.fetch('/admin/verify-queue');
+      if (!res) return;
+      allQueueItems = await res.json();
+      g('queueCount').textContent = allQueueItems.length + ' pending';
+      renderQueue(allQueueItems);
+    } catch (e) {}
+  }
+
+  function renderQueue(items) {
+    const wrap = g('verifyQueue');
+    if (!items.length) {
+      wrap.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><p style="font-size:13px">Queue is clear</p></div>';
+      return;
+    }
+    wrap.innerHTML = items.map(l => {
+      const gps  = l.gps_score  || 0;
+      const ai   = l.ai_score   || 0;
+      const docs = l.doc_score  || 0;
+      const wit  = l.witness_score || 0;
+      const dup  = l.duplicate_risk_pct || 0;
+      const dupSafe   = Math.max(0, 100 - dup);
+      const total     = Math.round((gps*0.3)+(ai*0.2)+(docs*0.4)+(wit*0.1));
+      const scoreColor = total>=80?'var(--em)':total>=60?'var(--warn)':'var(--risk)';
+      const c = v => v>=70?'var(--em)':v>=40?'var(--warn)':'var(--risk)';
+      const flags = l.flags || [];
+      const imgHtml = l.images?.[0]?.url
+        ? `<img src="${sanitise(l.images[0].url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>`
+        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px">🏠</div>';
+      const gpsHtml = (l.latitude && l.longitude)
+        ? `<a href="https://maps.google.com/?q=${l.latitude},${l.longitude}" target="_blank" style="font-size:11px;color:var(--em)">📍 ${Number(l.latitude).toFixed(4)}, ${Number(l.longitude).toFixed(4)} →</a>`
+        : '<span style="font-size:11px;color:var(--risk)">📍 No GPS</span>';
+      const docChecks = [
+        ['C of O', l.cof_uploaded],
+        ['Survey', l.survey_uploaded],
+        ['Deed',   l.deed_uploaded],
+        ['GPS',    l.gps_verified_at],
+      ].map(([label, val]) => `
+        <span style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:99px;
+          background:${val?'var(--em-dim)':'var(--risk-dim)'};
+          color:${val?'var(--em)':'var(--risk)'};
+          border:1px solid ${val?'var(--em-glow)':'rgba(244,63,94,0.2)'}">
+          ${val?'✓':'✗'} ${label}
+        </span>`).join('');
+      return `<div class="verify-card fade-in">
+        <div style="height:120px;border-radius:12px;overflow:hidden;background:var(--surface2);margin-bottom:12px">${imgHtml}</div>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px">
+          <div style="flex:1;min-width:0">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sanitise(l.title||'Unnamed Listing')}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${sanitise(l.tenant_name||'—')} · ${sanitise(l.location||'—')}</div>
+            <div style="margin-top:6px">${gpsHtml}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${docChecks}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:${scoreColor}">${total}</div>
+            <div style="font-size:9px;color:var(--muted)">Trust Score</div>
+          </div>
+        </div>
+        <div style="margin-top:4px">
+          <div class="verify-signal"><span>📍 GPS Confidence</span><div class="signal-bar-wrap"><div class="signal-bar" style="width:${gps}%;background:${c(gps)}"></div></div><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${c(gps)};min-width:30px;text-align:right">${gps}</span></div>
+          <div class="verify-signal"><span>🤖 AI Vision</span><div class="signal-bar-wrap"><div class="signal-bar" style="width:${ai}%;background:${c(ai)}"></div></div><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${c(ai)};min-width:30px;text-align:right">${ai}</span></div>
+          <div class="verify-signal"><span>📄 Documents</span><div class="signal-bar-wrap"><div class="signal-bar" style="width:${docs}%;background:${c(docs)}"></div></div><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${c(docs)};min-width:30px;text-align:right">${docs}</span></div>
+          <div class="verify-signal"><span>👥 Witnesses</span><div class="signal-bar-wrap"><div class="signal-bar" style="width:${wit}%;background:${c(wit)}"></div></div><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${c(wit)};min-width:30px;text-align:right">${wit}</span></div>
+          <div class="verify-signal"><span>🔁 Duplication</span><div class="signal-bar-wrap"><div class="signal-bar" style="width:${dupSafe}%;background:${c(100-dup)}"></div></div><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${c(100-dup)};min-width:30px;text-align:right">${sanitise(l.duplicate_risk||'OK')}</span></div>
+        </div>
+        ${flags.length ? `<div style="margin-top:10px;padding:10px 12px;background:var(--warn-dim);border:1px solid rgba(245,158,11,0.2);border-radius:10px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--warn);margin-bottom:6px">Why Flagged</div>
+          ${flags.map(f=>`<div style="font-size:11px;color:var(--muted);margin-top:3px;display:flex;gap:6px"><span style="color:var(--warn)">⚠</span>${sanitise(f)}</div>`).join('')}
+        </div>` : ''}
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn-em" onclick="verifyListing(${l.id})" style="flex:2;font-size:11px">✓ Verify</button>
+          <button class="btn-ghost" onclick="openOverrideModal(${l.id})" style="flex:1;font-size:11px">Override</button>
+          <button class="btn-danger" onclick="rejectListing(${l.id})" style="flex:1;font-size:11px">Reject</button>
         </div>
       </div>`;
-      }).join('');
-    }
+    }).join('');
+  }
 
-    // ── EXTENDED TAB SWITCH — patches original switchTab ──
-    const _baseSwitchTab = switchTab;
-    function switchTab(name) {
-      // Call original tab switcher
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      const tabEl = document.getElementById(name + 'Tab');
-      if (tabEl) tabEl.classList.add('active');
-      const navEl = document.getElementById('nav-' + name);
-      if (navEl) navEl.classList.add('active');
-      document.getElementById('scrollArea').scrollTop = 0;
-      // Lazy-load tab data
-      if (name === 'verify') loadVerifyQueue();
-      if (name === 'billing') loadBillingData();
-      if (name === 'risk') loadRiskData();
-      if (name === 'staff') loadStaff();
-      if (name === 'audit') loadAuditLogs();
-    }
-
-    // ── UTILS ────────────────────────────────────────────
-    function formatNum(n) {
-      if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-      if (n >= 1000) return (n / 1000).toFixed(0) + 'K';
-      return n;
-    }
-
-    // Init risk funnel on page load
-    window.addEventListener('DOMContentLoaded', () => {
-      loadRiskData();
+  function filterQueue(type, btn) {
+    document.querySelectorAll('.vq-filter').forEach(b => {
+      b.classList.remove('trust-emerald'); b.classList.add('trust-silver');
     });
+    btn.classList.remove('trust-silver'); btn.classList.add('trust-emerald');
+    if (type === 'all') { renderQueue(allQueueItems); return; }
+    renderQueue(allQueueItems.filter(l => {
+      if (type === 'suspicious') return (l.flags||[]).length > 0;
+      if (type === 'high_value') return (l.price||0) > 50000000;
+      if (type === 'new_tenant') return l.is_new_tenant;
+      return true;
+    }));
+  }
 
-    // ── STAFF ACTIONS ────────────────────────────────────
-    async function deactivateStaff(id, email) {
-      if (!confirm('Deactivate ' + email + '? They will lose platform access immediately.')) return;
-      try {
-        const res = await Auth.fetch('/users/' + id + '/deactivate', { method: 'PATCH' });
-        if (res && res.ok) {
-          toast('Staff member deactivated', 'var(--warm)');
-          loadStaff();
-        } else {
-          toast('Failed to deactivate', 'var(--hot)');
-        }
-      } catch (e) { toast('Connection error', 'var(--hot)'); }
+  async function verifyListing(id) {
+    try {
+      const res = await Auth.fetch('/admin/listings/' + id + '/verify', { method: 'PATCH' });
+      if (res?.ok) { toast('✓ Listing verified'); loadVerifyQueue(); }
+    } catch (e) { toast('Failed to verify', 'var(--risk)'); }
+  }
+
+  async function rejectListing(id) {
+    if (!confirm('Reject this listing?')) return;
+    try {
+      const res = await Auth.fetch('/admin/listings/' + id + '/reject', { method: 'PATCH' });
+      if (res?.ok) { toast('Listing rejected', 'var(--risk)'); loadVerifyQueue(); }
+    } catch (e) {}
+  }
+
+  // ── AUDIT LOGS ─────────────────────────────────────────────────
+  let allLogs = [];
+  const ACTION_ICONS = {
+    role_changed:       { icon:'🔑', sev:'high' },
+    tenant_created:     { icon:'🏢', sev:'low' },
+    tenant_suspended:   { icon:'⏸️', sev:'high' },
+    tenant_deactivated: { icon:'🚫', sev:'high' },
+    tenant_reactivated: { icon:'✅', sev:'med' },
+    tenant_deleted:     { icon:'🗑️', sev:'high' },
+    listing_verified:   { icon:'✅', sev:'low' },
+    listing_flagged:    { icon:'⚠️', sev:'med' },
+    user_created:       { icon:'👤', sev:'low' },
+    user_deactivated:   { icon:'🔒', sev:'med' },
+    trust_override:     { icon:'🛡️', sev:'high' },
+  };
+
+  async function loadAuditLogs() {
+    try {
+      const res = await Auth.fetch('/admin/audit-logs?limit=50');
+      if (!res) return;
+      allLogs = await res.json();
+      renderAudit(allLogs);
+    } catch (e) {}
+  }
+
+  function renderAudit(logs) {
+    const list = g('auditList');
+    if (!logs.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">🗂️</div><p>No audit logs yet</p></div>';
+      return;
     }
+    list.innerHTML = logs.map(l => {
+      const meta = ACTION_ICONS[l.action] || { icon:'📋', sev:'low' };
+      const time = l.created_at ? formatDateTime(l.created_at) : '';
+      return `
+        <div class="audit-row">
+          <div class="audit-icon" style="background:var(--surface2)">${meta.icon}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;text-transform:capitalize">${sanitise((l.action||'').replace(/_/g,' '))}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${sanitise(l.actor_email||'System')} · ${sanitise(time)}</div>
+            ${l.target_table ? `<div style="font-size:10px;color:var(--border2);margin-top:1px">${sanitise(l.target_table)} #${l.target_id||'—'}</div>` : ''}
+          </div>
+          <span class="risk-tag risk-${meta.sev}">${meta.sev}</span>
+        </div>`;
+    }).join('');
+  }
 
-    // ── OVERRIDE MODAL ───────────────────────────────────
-    let _overrideListingId = null;
+  function filterAudit(q) {
+    if (!q) { renderAudit(allLogs); return; }
+    const ql = q.toLowerCase();
+    renderAudit(allLogs.filter(l =>
+      (l.action||'').includes(ql) ||
+      (l.actor_email||'').toLowerCase().includes(ql) ||
+      (l.target_table||'').includes(ql)
+    ));
+  }
 
-    function openOverrideModal(listingId) {
-      _overrideListingId = listingId;
-      document.getElementById('overrideNotes').value = '';
-      document.getElementById('overrideGrade').value = 'Silver';
-      openModal('overrideModal');
+  function filterAuditSev(sev) {
+    if (sev === 'all') { renderAudit(allLogs); return; }
+    renderAudit(allLogs.filter(l => (ACTION_ICONS[l.action]||{sev:'low'}).sev === sev));
+  }
+
+  // ── STAFF ──────────────────────────────────────────────────────
+  async function loadStaff() {
+    try {
+      const res = await Auth.fetch('/users/?platform=true');
+      if (!res) return;
+      const users = await res.json();
+      const staff = Array.isArray(users) ? users.filter(u => u.is_platform_user) : [];
+      renderStaff(staff);
+    } catch (e) {}
+  }
+
+  function renderStaff(staff) {
+    setValue('staffTotal',  staff.length);
+    setValue('staffActive', staff.filter(s => s.is_active).length);
+    setValue('staffRoles',  [...new Set(staff.map(s => s.role))].length);
+    const list = g('staffList');
+    if (!staff.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><p>No platform staff yet</p></div>';
+      return;
     }
+    const role = localStorage.getItem('user_role');
+    const DEPT_COLORS = { superuser: 'rgba(244,63,94,0.12)', super_staff: 'rgba(16,185,129,0.10)' };
+    list.innerHTML = staff.map(s => {
+      const initials   = ((s.first_name || s.email) || '?').slice(0,2).toUpperCase();
+      const deptColor  = DEPT_COLORS[s.role] || 'rgba(59,130,246,0.1)';
+      const roleSelect = role === 'superuser' ? `
+        <select onchange="changeStaffRole(${s.id},this.value,'${sanitise(s.email)}')"
+          style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:4px 8px;font-size:11px;color:var(--text);outline:none;margin-top:4px">
+          <option value="super_staff" ${s.role==='super_staff'?'selected':''}>Super Staff</option>
+          <option value="superuser"   ${s.role==='superuser'  ?'selected':''}>Superuser</option>
+        </select>` : `<span class="risk-tag ${s.role==='superuser'?'risk-high':'risk-low'}" style="text-transform:capitalize">${sanitise((s.role||'').replace('_',' '))}</span>`;
+      const deactBtn = (role === 'superuser' && s.role !== 'superuser')
+        ? `<button onclick="deactivateStaff(${s.id},'${sanitise(s.email)}')" style="font-size:9px;background:var(--risk-dim);color:var(--risk);border:none;border-radius:6px;padding:3px 8px;cursor:pointer;margin-top:4px">Deactivate</button>`
+        : '';
+      return `
+        <div class="tenant-row">
+          <div class="tenant-avatar" style="background:${deptColor};border:1px solid var(--border2)">${sanitise(initials)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">${sanitise(s.first_name || s.email.split('@')[0])}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sanitise(s.email)}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end">
+            ${roleSelect}
+            <div style="font-size:10px;color:${s.is_active?'var(--em)':'var(--risk)'};margin-top:4px">${s.is_active?'● Active':'○ Inactive'}</div>
+            ${deactBtn}
+          </div>
+        </div>`;
+    }).join('');
+  }
 
-    async function submitOverride() {
-      const notes = document.getElementById('overrideNotes').value.trim();
-      const grade = document.getElementById('overrideGrade').value;
-      if (!notes) { toast('Please provide override reason', 'var(--warm)'); return; }
+  async function changeStaffRole(id, newRole, email) {
+    if (!confirm(`Change ${email} role to ${newRole}?`)) { loadStaff(); return; }
+    try {
+      const res = await Auth.fetch(`/admin/staff/${id}/role`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole })
+      });
+      if (res?.ok) { toast(`Role updated to ${newRole}`); loadStaff(); }
+      else { const d = await res.json(); toast(d.detail || 'Role change failed', 'var(--risk)'); loadStaff(); }
+    } catch (e) { toast('Error', 'var(--risk)'); loadStaff(); }
+  }
 
-      try {
-        const res = await Auth.fetch('/admin/listings/' + _overrideListingId + '/override', {
-          method: 'PATCH',
-          body: JSON.stringify({
-            trust_grade: grade,
-            override_reason: notes,
-            approved_by: localStorage.getItem('user_email')
-          })
-        });
-        if (res && res.ok) {
-          toast('✓ Trust grade overridden');
-          closeModal('overrideModal');
-          loadVerifyQueue();
-        } else {
-          toast('Override failed', 'var(--hot)');
-        }
-      } catch (e) { toast('Connection error', 'var(--hot)'); }
+  async function createStaff() {
+    const name  = g('ns_name').value.trim();
+    const email = g('ns_email').value.trim();
+    const pass  = g('ns_pass').value;
+    const role  = g('ns_role').value;
+    if (!email || !pass) { toast('Email and password required', 'var(--risk)'); return; }
+    const btn = g('createStaffBtn');
+    btn.textContent = 'Creating...'; btn.disabled = true;
+    try {
+      const res = await Auth.fetch('/users/platform', {
+        method: 'POST',
+        body: JSON.stringify({ email, password: pass, role, first_name: name })
+      });
+      if (!res) return;
+      if (res.ok) { toast('✓ Staff member added'); closeModal('newStaffModal'); loadStaff(); }
+      else { const d = await res.json(); toast(d.detail || 'Failed to add staff', 'var(--risk)'); }
+    } catch (e) { toast('Connection error', 'var(--risk)'); }
+    finally { btn.textContent = 'Add Staff Member'; btn.disabled = false; }
+  }
+
+  async function deactivateStaff(id, email) {
+    if (!confirm(`Deactivate ${email}? They will lose platform access immediately.`)) return;
+    try {
+      const res = await Auth.fetch('/users/' + id + '/deactivate', { method: 'PATCH' });
+      if (res?.ok) { toast('Staff member deactivated', 'var(--warn)'); loadStaff(); }
+      else { toast('Failed to deactivate', 'var(--risk)'); }
+    } catch (e) { toast('Connection error', 'var(--risk)'); }
+  }
+
+  // ── BILLING ────────────────────────────────────────────────────
+  async function loadBillingData() {
+    const role = localStorage.getItem('user_role');
+    if (role !== 'superuser') {
+      g('billingGate').style.display = 'block';
+      g('billingContent').style.display = 'none';
+      return;
     }
+    try {
+      const res = await Auth.fetch('/admin/billing/summary');
+      if (!res) return;
+      const d = await res.json();
+      setValue('billingMRR',    '₦' + formatNum(d.mrr || 0));
+      setValue('billingOverdue', d.overdue_count || 0);
+      setValue('billingAICost', '₦' + formatNum(d.ai_cost || 0));
+      setValue('billingMargin', (d.margin_pct || 0) + '%');
+      renderPlanDist(d.plan_distribution || []);
+    } catch (e) {}
+  }
 
-    // ── ORIGINAL UTILS ───────────────────────────────────
-    function setValue(id, val) {
-      const el = document.getElementById(id);
-      if (el) el.textContent = val;
+  function renderPlanDist(plans) {
+    const el = g('planDist');
+    if (!plans.length) { el.innerHTML = '<div class="empty"><p>No plan data</p></div>'; return; }
+    const total = plans.reduce((s, p) => s + p.count, 0);
+    const colors = { pilot:'var(--border2)', starter:'var(--blue)', growth:'var(--warn)', enterprise:'var(--em)' };
+    el.innerHTML = plans.map(p => {
+      const pct = total ? Math.round((p.count/total)*100) : 0;
+      return `<div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span style="text-transform:capitalize;font-weight:600">${sanitise(p.plan)}</span>
+          <span style="color:var(--muted)">${p.count} tenants · ${pct}%</span>
+        </div>
+        <div class="health-bar"><div class="health-fill" style="width:${pct}%;background:${colors[p.plan]||'var(--em)'}"></div></div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── RISK & CONVERSION ──────────────────────────────────────────
+  async function loadRiskData() {
+    document.querySelectorAll('.funnel-stage').forEach(el => {
+      const label = el.dataset.label, val = parseInt(el.dataset.val), color = el.dataset.color;
+      el.innerHTML = `<div class="funnel-label"><span>${sanitise(label)}</span><span style="font-family:'JetBrains Mono',monospace;color:var(--text)">${val}%</span></div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${val}%;background:${color}"></div></div>`;
+    });
+    try {
+      const res = await Auth.fetch('/admin/risk-summary');
+      if (res?.ok) {
+        const d = await res.json();
+        setValue('trustQuestions',   d.trust_questions    ?? '—');
+        setValue('badgeClicks',      d.badge_interactions ?? '—');
+        setValue('returnBuyers',     d.return_buyers      ?? '—');
+        setValue('verifyEngagement', d.verify_engagements ?? '—');
+        renderRiskFlags(d.risk_flags || []);
+        renderSuspicious(d.suspicious_tenants || []);
+      }
+    } catch (e) {}
+  }
+
+  function renderRiskFlags(flags) {
+    const el = g('riskFlagList');
+    if (!flags.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🛡️</div><p style="font-size:13px">No active risk flags</p></div>'; return; }
+    el.innerHTML = flags.map(f => `
+      <div class="audit-row">
+        <div class="audit-icon" style="background:var(--risk-dim)">⚠️</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600">${sanitise(f.message)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${sanitise(f.tenant||'')} · ${sanitise(f.detected_at||'')}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+          <span class="risk-tag risk-${f.severity||'med'}">${sanitise(f.severity||'medium')}</span>
+          <button onclick="dismissRisk('${sanitise(String(f.id))}')" style="font-size:9px;background:var(--surface2);color:var(--muted);border:none;border-radius:6px;padding:3px 8px;cursor:pointer">Dismiss</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function renderSuspicious(tenants) {
+    const el = g('suspiciousList');
+    if (!tenants.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">👁️</div><p style="font-size:13px">No suspicious patterns detected</p></div>'; return; }
+    el.innerHTML = tenants.map(t => `
+      <div class="tenant-row">
+        <div class="tenant-avatar" style="background:var(--risk-dim);border:1px solid rgba(244,63,94,0.2)">${sanitise((t.name||'?').slice(0,2).toUpperCase())}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">${sanitise(t.name)}</div>
+          <div style="font-size:11px;color:var(--risk);margin-top:2px">${sanitise(t.reason)}</div>
+        </div>
+        <span class="risk-tag risk-high">Watch</span>
+      </div>`).join('');
+  }
+
+  async function dismissRisk(id) {
+    try {
+      await Auth.fetch('/admin/risks/' + id + '/dismiss', { method: 'PATCH' });
+      toast('Risk flag dismissed', 'var(--warn)');
+      loadRiskData();
+    } catch (e) {}
+  }
+
+  // ── CONVERSATION TRACER ────────────────────────────────────────
+  let _cvConversationId = null;
+  let _cvSearchTimer    = null;
+
+  function debounceSearch() {
+    clearTimeout(_cvSearchTimer);
+    _cvSearchTimer = setTimeout(loadConversations, 500);
+  }
+
+  async function loadConversations() {
+    const list = g('cvList');
+    list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted)">Searching...</div>';
+    const params = new URLSearchParams();
+    const phone    = g('cvSearchPhone')?.value.trim();
+    const tenant   = g('cvSearchTenant')?.value.trim();
+    const dateFrom = g('cvDateFrom')?.value;
+    const dateTo   = g('cvDateTo')?.value;
+    const stage    = g('cvStage')?.value;
+    if (phone)    params.set('phone',        phone);
+    if (tenant)   params.set('tenant_name',  tenant);
+    if (dateFrom) params.set('date_from',    dateFrom);
+    if (dateTo)   params.set('date_to',      dateTo);
+    if (stage)    params.set('funnel_stage', stage);
+    try {
+      const res = await Auth.fetch(`/admin/conversations?${params}`);
+      if (!res?.ok) { list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--risk)">Failed to load</div>'; return; }
+      renderConversations(await res.json());
+    } catch (e) {
+      list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--risk)">Error loading conversations</div>';
     }
-  </script>
+  }
+
+  function renderConversations(convos) {
+    const list = g('cvList');
+    if (!convos.length) {
+      list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:32px;margin-bottom:10px">💬</div><div style="font-weight:700;margin-bottom:4px">No conversations found</div><div style="font-size:12px">Try adjusting your search filters</div></div>';
+      return;
+    }
+    const stageColors = { awareness:'var(--muted)', verification:'var(--warn)', commitment:'#6366F1', handshake:'var(--em)', closed:'var(--em)' };
+    list.innerHTML = convos.map(c => `
+      <div onclick="viewConversation(${c.id})"
+        style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;margin-bottom:8px;cursor:pointer;transition:background 0.15s"
+        onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='var(--surface)'">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div>
+            <div style="font-weight:700;font-size:14px">${sanitise(c.buyer_name||'Unknown Buyer')}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">📱 ${sanitise(c.phone||'—')} · ${sanitise(c.tenant_name||'—')}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:10px;font-weight:700;color:${stageColors[c.funnel_stage]||'var(--muted)'};text-transform:uppercase;letter-spacing:0.08em">${sanitise(c.funnel_stage||'—')}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">${c.message_count||0} messages</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px">${sanitise(c.last_message||'No messages')}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="width:6px;height:6px;border-radius:50%;background:${c.is_bot_active?'var(--em)':'var(--warn)'}"></div>
+            <span style="font-size:10px;color:var(--muted)">${c.is_bot_active?'Bot active':'Human mode'}</span>
+          </div>
+          <div style="font-size:10px;color:var(--muted)">${formatDateTime(c.last_active_at)}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  async function viewConversation(id) {
+    _cvConversationId = id;
+    const msgs = g('cvMessages');
+    msgs.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted)">Loading...</div>';
+    openModal('cvModal');
+    try {
+      const res = await Auth.fetch(`/admin/conversations/${id}`);
+      if (!res?.ok) return;
+      const data = await res.json();
+      g('cvModalName').textContent = data.buyer_name || 'Unknown Buyer';
+      g('cvModalMeta').textContent = `📱 ${data.phone||'—'} · ${data.tenant_name||'—'} · ${data.channel||'WhatsApp'}`;
+      g('cvModalFunnel').textContent = `Funnel: ${data.funnel_stage||'—'} | Lead Score: ${data.lead_score||0}/100`;
+      if (!data.messages?.length) {
+        msgs.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted)">No messages found</div>';
+        return;
+      }
+      msgs.innerHTML = data.messages.map(m => {
+        const isInbound = m.direction === 'inbound';
+        const bg     = isInbound ? 'var(--surface2)' : 'var(--indigo-dim)';
+        const border = isInbound ? 'var(--border2)' : 'var(--indigo-glow)';
+        const label  = isInbound ? '👤 Buyer' : (m.is_bot ? '🤖 Kora' : '👔 Agent');
+        const align  = isInbound ? 'flex-start' : 'flex-end';
+        return `<div style="display:flex;flex-direction:column;align-items:${align};max-width:85%;${isInbound?'':'align-self:flex-end'}">
+          <div style="font-size:9px;color:var(--muted);margin-bottom:3px;${isInbound?'':'text-align:right'}">${label}</div>
+          <div style="background:${bg};border:1px solid ${border};border-radius:14px;padding:10px 14px;font-size:13px;line-height:1.5;word-break:break-word">${sanitise(m.body)}</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:3px;${isInbound?'':'text-align:right'}">${formatDateTime(m.created_at)}</div>
+        </div>`;
+      }).join('');
+      msgs.scrollTop = msgs.scrollHeight;
+    } catch (e) {
+      msgs.innerHTML = '<div style="text-align:center;padding:32px;color:var(--risk)">Failed to load messages</div>';
+    }
+  }
+
+  async function exportConversation() {
+    if (!_cvConversationId) return;
+    try {
+      const res = await Auth.fetch(`/admin/conversations/${_cvConversationId}/export`);
+      if (!res?.ok) { toast('Export failed', 'var(--risk)'); return; }
+      const text = await res.text();
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `conversation_${_cvConversationId}_${new Date().toISOString().slice(0,10)}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('Conversation exported');
+    } catch (e) { toast('Export failed', 'var(--risk)'); }
+  }
+
+  // ── OVERRIDE MODAL ─────────────────────────────────────────────
+  let _overrideListingId = null;
+
+  function openOverrideModal(listingId) {
+    _overrideListingId = listingId;
+    g('overrideNotes').value = '';
+    g('overrideGrade').value = 'Silver';
+    openModal('overrideModal');
+  }
+
+  async function submitOverride() {
+    const notes = g('overrideNotes').value.trim();
+    const grade = g('overrideGrade').value;
+    if (!notes) { toast('Please provide override reason', 'var(--warn)'); return; }
+    try {
+      const res = await Auth.fetch('/admin/listings/' + _overrideListingId + '/override', {
+        method: 'PATCH',
+        body: JSON.stringify({ trust_grade: grade, override_reason: notes, approved_by: localStorage.getItem('user_email') })
+      });
+      if (res?.ok) { toast('✓ Trust grade overridden'); closeModal('overrideModal'); loadVerifyQueue(); }
+      else { toast('Override failed', 'var(--risk)'); }
+    } catch (e) { toast('Connection error', 'var(--risk)'); }
+  }
+</script>
 </body>
-
 </html>

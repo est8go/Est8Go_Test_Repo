@@ -34,6 +34,7 @@ from app.channels.whatsapp.router import router as whatsapp_router  # noqa: E402
 from app.services.reel_router import router as reel_router  # noqa: E402
 from app.public.router import router as public_router  # noqa: E402
 from app.admin.router import router as admin_router  # noqa: E402
+from app.admin.conversations_router import router as admin_conversations_router  # noqa: E402
 
 # ── 5. SECURITY MIDDLEWARE ────────────────────────────────────
 from app.auth.deps import audit_platform_actions  # noqa: E402
@@ -89,6 +90,7 @@ app.include_router(whatsapp_router)
 app.include_router(reel_router)
 app.include_router(public_router)
 app.include_router(admin_router)
+app.include_router(admin_conversations_router)
 
 
 # ── 12. HEALTH CHECK ──────────────────────────────────────────

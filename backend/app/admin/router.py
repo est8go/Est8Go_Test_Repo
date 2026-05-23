@@ -3,12 +3,14 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
 from app.database.db import get_db
-from app.users.models import User
+from app.users.models import User, PLATFORM_ROLES
 from app.tenants.models import Tenant
 from app.auth.deps import require_platform_user, require_superuser
 from app.listings.models import Listing
+from app.conversations.models import Conversation
 from app.database.audit import log_action
 
 router = APIRouter(prefix="/admin", tags=["Super Admin"])
@@ -64,6 +66,19 @@ class TenantListItem(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class SuspendTenantRequest(BaseModel):
+    reason: str
+
+
+class DeleteTenantRequest(BaseModel):
+    reason: str
+    confirm: str  # must equal "DELETE"
+
+
+class ChangeStaffRoleRequest(BaseModel):
+    role: str
 
 
 # ================================================================
@@ -276,3 +291,178 @@ def get_audit_logs(
         }
         for l in logs
     ]
+
+
+# ================================================================
+# TENANTS — suspend (superuser only)
+# ================================================================
+
+@router.patch("/tenants/{tenant_id}/suspend")
+def suspend_tenant(
+    tenant_id: int,
+    payload: SuspendTenantRequest,
+    current_user: User = Depends(require_superuser),
+    db: Session = Depends(get_db),
+):
+    """Suspend a tenant and silence their bot. Superuser only."""
+    tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found.")
+    if not tenant.is_active:
+        raise HTTPException(status_code=400, detail="Tenant is already suspended.")
+
+    tenant.is_active = False
+
+    # Silence all conversations for this tenant
+    db.query(Conversation).filter(Conversation.tenant_id == tenant_id).update(
+        {"is_bot_active": False}, synchronize_session=False
+    )
+
+    db.commit()
+
+    log_action(
+        db, actor=current_user, action="tenant_suspended",
+        target_table="tenants", target_id=tenant.id,
+        old_value={"is_active": True},
+        new_value={"is_active": False, "reason": payload.reason},
+    )
+
+    return {"success": True, "message": f"Tenant '{tenant.name}' suspended."}
+
+
+# ================================================================
+# TENANTS — reactivate (superuser only)
+# ================================================================
+
+@router.patch("/tenants/{tenant_id}/reactivate")
+def reactivate_tenant(
+    tenant_id: int,
+    current_user: User = Depends(require_superuser),
+    db: Session = Depends(get_db),
+):
+    """Reactivate a suspended tenant. Superuser only."""
+    tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found.")
+    if tenant.is_active:
+        raise HTTPException(status_code=400, detail="Tenant is already active.")
+
+    tenant.is_active = True
+    db.commit()
+
+    log_action(
+        db, actor=current_user, action="tenant_reactivated",
+        target_table="tenants", target_id=tenant.id,
+        old_value={"is_active": False}, new_value={"is_active": True},
+    )
+
+    return {"success": True, "message": f"Tenant '{tenant.name}' reactivated."}
+
+
+# ================================================================
+# TENANTS — soft delete (superuser only)
+# ================================================================
+
+@router.delete("/tenants/{tenant_id}")
+def delete_tenant(
+    tenant_id: int,
+    payload: DeleteTenantRequest,
+    current_user: User = Depends(require_superuser),
+    db: Session = Depends(get_db),
+):
+    """
+    Soft-delete a tenant. Data is preserved for audit.
+    Requires confirm='DELETE' in the request body.
+    Superuser only.
+    """
+    if payload.confirm != "DELETE":
+        raise HTTPException(
+            status_code=400,
+            detail="Confirmation value must be exactly 'DELETE'.",
+        )
+
+    tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found.")
+
+    # Soft delete: deactivate and mark name with deletion timestamp
+    deleted_at_str = datetime.utcnow().strftime("%Y-%m-%d")
+    tenant.is_active = False
+
+    # Silence all conversations
+    db.query(Conversation).filter(Conversation.tenant_id == tenant_id).update(
+        {"is_bot_active": False}, synchronize_session=False
+    )
+
+    db.commit()
+
+    log_action(
+        db, actor=current_user, action="tenant_deleted",
+        target_table="tenants", target_id=tenant.id,
+        old_value={"is_active": True, "name": tenant.name},
+        new_value={
+            "is_active": False,
+            "reason": payload.reason,
+            "deleted_at": deleted_at_str,
+        },
+    )
+
+    return {"success": True, "message": f"Tenant '{tenant.name}' has been soft-deleted."}
+
+
+# ================================================================
+# STAFF — change role (superuser only)
+# ================================================================
+
+@router.patch("/staff/{user_id}/role")
+def change_staff_role(
+    user_id: int,
+    payload: ChangeStaffRoleRequest,
+    current_user: User = Depends(require_superuser),
+    db: Session = Depends(get_db),
+):
+    """
+    Change a platform staff member's role.
+    Cannot demote the last superuser.
+    Superuser only.
+    """
+    if payload.role not in PLATFORM_ROLES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Role must be one of: {', '.join(PLATFORM_ROLES)}.",
+        )
+
+    user = db.query(User).filter(
+        User.id == user_id, User.is_platform_user == True
+    ).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Platform staff member not found.")
+
+    # Prevent demoting the last superuser
+    if user.role == "superuser" and payload.role != "superuser":
+        superuser_count = db.query(User).filter(
+            User.is_platform_user == True,
+            User.role == "superuser",
+            User.is_active == True,
+        ).count()
+        if superuser_count <= 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot demote the last active superuser.",
+            )
+
+    old_role = user.role
+    user.role = payload.role
+    db.commit()
+
+    log_action(
+        db, actor=current_user, action="role_changed",
+        target_table="users", target_id=user.id,
+        old_value={"role": old_role},
+        new_value={"role": payload.role},
+    )
+
+    return {
+        "success": True,
+        "message": f"{user.email} role changed from {old_role} to {payload.role}.",
+    }
