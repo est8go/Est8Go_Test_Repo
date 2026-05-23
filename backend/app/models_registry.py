@@ -47,7 +47,8 @@ def register_all_models():
         configure_mappers()
 
         # Create any new tables (idempotent — skips tables that already exist)
-        from app.database.db import Base, engine
+        from app.database.base import Base
+        from app.database.db import engine
         Base.metadata.create_all(bind=engine)
 
         logger.info(
