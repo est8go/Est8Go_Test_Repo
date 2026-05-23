@@ -1,6 +1,8 @@
+import re
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
+from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
@@ -187,45 +189,121 @@ def create_tenant(
     """
     from app.core.security import hash_password
 
-    # Validate tenant type
+    # ── STEP 1: Required fields not empty ────────────────────────
+    required = {
+        "name":          payload.name,
+        "business_name": payload.business_name or payload.name,
+        "plan":          payload.plan,
+    }
+    for field, value in required.items():
+        if not value or not str(value).strip():
+            raise HTTPException(status_code=400, detail=f"{field} is required and cannot be empty.")
+
+    # ── STEP 2: Admin email format + uniqueness ───────────────────
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if payload.admin_email:
+        if not re.match(email_pattern, payload.admin_email):
+            raise HTTPException(status_code=400, detail="Invalid email address format.")
+        existing_user = db.query(User).filter(
+            User.email == payload.admin_email.lower().strip()
+        ).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail=f"Email {payload.admin_email} is already registered.")
+
+    # ── STEP 3: WhatsApp number uniqueness ───────────────────────
+    if payload.whatsapp_phone_number_id:
+        wa = str(payload.whatsapp_phone_number_id).strip()
+        existing_wa = db.query(Tenant).filter(
+            Tenant.whatsapp_phone_number_id == wa,
+            Tenant.is_active == True,
+        ).first()
+        if existing_wa:
+            raise HTTPException(
+                status_code=400,
+                detail=f"WhatsApp number {wa} is already registered to {existing_wa.business_name}.",
+            )
+        payload.whatsapp_phone_number_id = wa
+    else:
+        payload.whatsapp_phone_number_id = None
+
+    # ── STEP 4: Phone number format (if field present) ───────────
+    if hasattr(payload, "phone") and payload.phone:
+        phone_clean = re.sub(r"[\s\-\(\)]", "", str(payload.phone).strip())
+        phone_valid = (
+            re.match(r"^0[789][01]\d{8}$", phone_clean) or
+            re.match(r"^\+?234[789][01]\d{8}$", phone_clean)
+        )
+        if not phone_valid:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid Nigerian phone number format. Use 08012345678 or +2348012345678.",
+            )
+
+    # ── STEP 5: Plan is one of allowed values ─────────────────────
+    allowed_plans = ["pilot", "starter", "growth", "enterprise"]
+    if payload.plan and payload.plan.lower() not in allowed_plans:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Plan must be one of: {', '.join(allowed_plans)}",
+        )
+
+    # ── STEP 6: Business name uniqueness ─────────────────────────
+    biz_name = (payload.business_name or payload.name).strip()
+    existing_biz = db.query(Tenant).filter(
+        Tenant.business_name == biz_name,
+        Tenant.is_active == True,
+    ).first()
+    if existing_biz:
+        raise HTTPException(
+            status_code=400,
+            detail=f"A tenant named '{biz_name}' already exists.",
+        )
+
+    # ── STEP 7: Safe defaults ─────────────────────────────────────
+    business_name = biz_name
+    tenant_name   = (payload.name or business_name).strip()
+    admin_email   = payload.admin_email.lower().strip() if payload.admin_email else ""
+
+    # ── STEP 8: Validate tenant type ─────────────────────────────
     valid_types = ("agency", "freelance", "developer", "investor")
     if payload.tenant_type not in valid_types:
-        raise HTTPException(status_code=400, detail=f"Invalid tenant type.")
+        raise HTTPException(status_code=400, detail="Invalid tenant type.")
 
-    # Create tenant
-    tenant = Tenant(
-        name=payload.name,
-        business_name=payload.business_name or payload.name,
-        tenant_type=payload.tenant_type,
-        plan=payload.plan,
-        whatsapp_phone_number_id=payload.whatsapp_phone_number_id or None,
-        is_active=True,
-    )
-    db.add(tenant)
-
+    # ── CREATE TENANT + USER (wrapped in single IntegrityError catch) ──
     try:
+        tenant = Tenant(
+            name=tenant_name,
+            business_name=business_name,
+            tenant_type=payload.tenant_type,
+            plan=payload.plan.lower(),
+            whatsapp_phone_number_id=payload.whatsapp_phone_number_id,
+            is_active=True,
+        )
+        db.add(tenant)
         db.flush()  # get tenant.id before creating user
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=409, detail="Tenant already exists or constraint violated.")
 
-    # Create admin user for this tenant
-    admin = User(
-        tenant_id=tenant.id,
-        email=payload.admin_email,
-        hashed_password=hash_password(payload.admin_password),
-        role="admin",
-        is_active=True,
-        is_platform_user=False,
-        is_admin=True,  # legacy flag
-    )
-    db.add(admin)
-
-    try:
+        admin = User(
+            tenant_id=tenant.id,
+            email=admin_email,
+            hashed_password=hash_password(payload.admin_password),
+            role="admin",
+            is_active=True,
+            is_platform_user=False,
+            is_admin=True,  # legacy flag
+        )
+        db.add(admin)
         db.commit()
-    except Exception as e:
+
+    except IntegrityError as e:
         db.rollback()
-        raise HTTPException(status_code=409, detail="Tenant or email already exists.")
+        err = str(e.orig).lower()
+        if "whatsapp_phone_number_id" in err:
+            raise HTTPException(status_code=400, detail="WhatsApp number already registered to another tenant.")
+        if "email" in err:
+            raise HTTPException(status_code=400, detail="Email address already registered.")
+        if "business_name" in err:
+            raise HTTPException(status_code=400, detail="Business name already exists.")
+        raise HTTPException(status_code=400, detail="Creation failed: duplicate data detected.")
 
     # Log the action
     log_action(db, actor=current_user, action="tenant_created",
@@ -233,6 +311,7 @@ def create_tenant(
                new_value={"name": tenant.name, "type": tenant.tenant_type})
 
     return {
+        "success": True,
         "message": f"Tenant '{tenant.name}' created successfully.",
         "tenant_id": tenant.id,
         "admin_email": admin.email,
