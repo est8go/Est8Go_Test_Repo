@@ -1923,6 +1923,63 @@
       </div>
     </div>
 
+    <!-- ── Credit Widget ── -->
+    <div id="creditWidget"
+      onclick="switchTab('credits')"
+      style="display:flex;align-items:center;gap:10px;
+             background:rgba(67,56,202,0.12);
+             border:1px solid rgba(67,56,202,0.25);
+             border-radius:14px;padding:10px 16px;
+             cursor:pointer;transition:all 0.15s;
+             margin-top:12px">
+      <div>
+        <div style="font-size:9px;font-weight:700;
+                    letter-spacing:0.12em;text-transform:uppercase;
+                    color:var(--muted)">Est8 Credits</div>
+        <div style="display:flex;align-items:baseline;gap:6px;margin-top:2px">
+          <span id="creditBalance"
+            style="font-family:'Syne',sans-serif;font-size:22px;
+                   font-weight:800;color:#4F46E5">—</span>
+          <span id="bonusBalance"
+            style="font-size:11px;font-weight:600;
+                   color:#10B981;display:none">
+            +<span id="bonusAmt">0</span> bonus
+          </span>
+        </div>
+      </div>
+      <button onclick="event.stopPropagation();openModal('buyCreditsModal');loadBundles()"
+        style="margin-left:auto;background:var(--indigo-lg);
+               color:white;border:none;border-radius:10px;
+               padding:7px 14px;font-size:11px;font-weight:700;
+               cursor:pointer;white-space:nowrap;
+               transition:transform 0.15s"
+        onmousedown="this.style.transform='scale(0.93)'"
+        onmouseup="this.style.transform=''">
+        + Buy
+      </button>
+    </div>
+
+    <!-- ── Low Balance Banner ── -->
+    <div id="lowBalanceBanner"
+      style="display:none;background:rgba(245,158,11,0.1);
+             border:1px solid rgba(245,158,11,0.25);
+             border-radius:12px;padding:10px 14px;
+             margin-top:8px;align-items:center;gap:10px">
+      <span style="font-size:16px">⚠️</span>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700;color:var(--warn)">Credits running low</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:1px">
+          Top up to keep your bot and services active
+        </div>
+      </div>
+      <button onclick="openModal('buyCreditsModal');loadBundles()"
+        style="background:var(--warn);color:#0F172A;
+               border:none;border-radius:9px;padding:6px 12px;
+               font-size:11px;font-weight:700;cursor:pointer">
+        Top Up
+      </button>
+    </div>
+
   </div>
 
   <!-- ══════════════════════════════════════
@@ -2254,6 +2311,50 @@
       </div>
     </div>
 
+    <!-- ─────────────── CREDITS TAB ─────────────── -->
+    <div id="creditsTab" class="tab" style="padding-top:4px">
+      <div class="sep">Est8 Credit Wallet</div>
+
+      <!-- Balance summary -->
+      <div class="card ind-card" style="margin-bottom:10px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;
+                        letter-spacing:0.1em;color:var(--muted);margin-bottom:4px">
+              Available
+            </div>
+            <div style="font-family:'Syne',sans-serif;font-size:32px;
+                        font-weight:800;color:var(--indigo)" id="creditTabBalance">—</div>
+          </div>
+          <div>
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;
+                        letter-spacing:0.1em;color:var(--muted);margin-bottom:4px">
+              Bonus
+            </div>
+            <div style="font-family:'Syne',sans-serif;font-size:32px;
+                        font-weight:800;color:var(--em)" id="creditTabBonus">—</div>
+          </div>
+        </div>
+        <button onclick="openModal('buyCreditsModal');loadBundles()"
+          style="width:100%;margin-top:14px;padding:12px;
+                 background:var(--indigo-lg);color:white;border:none;
+                 border-radius:12px;font-family:'Syne',sans-serif;
+                 font-weight:700;font-size:13px;cursor:pointer">
+          + Buy Credits
+        </button>
+      </div>
+
+      <!-- Transaction history -->
+      <div class="sep">Recent Activity</div>
+      <div id="creditHistory">
+        <div class="empty" style="padding:28px 20px">
+          <div class="empty-icon">💳</div>
+          <div class="empty-title">No credit activity yet</div>
+          <div class="empty-body">Buy credits or use a service to see your history here.</div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /scrollArea -->
 
   <!-- ══════════════════════════════════════
@@ -2380,6 +2481,37 @@
               d="M12 4v16m8-8H4"/>
       </svg>
     </button>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       MODAL: BUY CREDITS
+  ══════════════════════════════════════ -->
+  <div class="modal-backdrop" id="buyCreditsModal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span class="modal-title">Buy Est8 Credits</span>
+        <button class="modal-close" onclick="closeModal('buyCreditsModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px;color:var(--muted);
+                  margin-bottom:20px;line-height:1.5">
+          Credits power everything on Est8Go —
+          AI analysis, reels, verification, and more.
+          Buy once, use anytime. No expiry on purchased credits.
+        </p>
+        <div id="bundleList" style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:13px;color:var(--muted);padding:20px;text-align:center">
+            Loading bundles...
+          </div>
+        </div>
+        <p style="font-size:10px;color:var(--muted);
+                  margin-top:16px;text-align:center">
+          Secure payment via Paystack ·
+          Credits added instantly after payment
+        </p>
+      </div>
+    </div>
   </div>
 
   <!-- ══════════════════════════════════════
@@ -2513,6 +2645,11 @@
       <div class="modal-handle"></div>
       <div style="padding:20px 20px 0">
         <p style="font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Modules</p>
+        <div class="drawer-item" onclick="switchTab('credits');closeMenuDrawer()">
+          <div class="drawer-icon" style="background:var(--indigo-dim)">💳</div>
+          <span>Est8 Credits</span>
+          <svg class="drawer-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </div>
         <div class="drawer-item" onclick="switchTab('trust');closeMenuDrawer()">
           <div class="drawer-icon" style="background:var(--indigo-dim)">🛡️</div>
           <span>Trust Center</span>
@@ -2646,6 +2783,7 @@
       applyRole(CFG._role);
       updateFAB('home');
       switchTab('home');
+      loadCreditBalance();
       ST.timer = setInterval(() => {
         if (ST.tab === 'pipeline' || ST.tab === 'home') loadPipeline();
       }, CFG.REFRESH);
@@ -2768,12 +2906,12 @@
     }
 
     /* ── TAB SWITCHER ────────────────────────── */
-    const MENU_ONLY_TABS = ['trust', 'studio', 'network', 'analytics'];
+    const MENU_ONLY_TABS = ['trust', 'studio', 'network', 'analytics', 'credits'];
 
     function switchTab(tab) {
       if (tab === 'menu') { openMenuDrawer(); return; }
       ST.tab = tab;
-      const allTabs = ['home', 'properties', 'pipeline', 'operations', 'trust', 'studio', 'network', 'analytics'];
+      const allTabs = ['home', 'properties', 'pipeline', 'operations', 'trust', 'studio', 'network', 'analytics', 'credits'];
       allTabs.forEach(t => {
         g(t + 'Tab')?.classList.remove('active');
         const btnId = 'btn' + t.charAt(0).toUpperCase() + t.slice(1);
@@ -2796,6 +2934,7 @@
       if (tab === 'studio') loadStudio();
       if (tab === 'network') loadNetwork();
       if (tab === 'analytics') loadAnalytics();
+      if (tab === 'credits') loadCreditTab();
     }
 
     /* ── HOME ────────────────────────────────── */
@@ -3337,6 +3476,152 @@
     function openMenuDrawer() { openModal('menuDrawer'); }
     function closeMenuDrawer() { closeModal('menuDrawer'); }
 
+    /* ── CREDIT BALANCE ──────────────────────── */
+    async function loadCreditBalance() {
+      try {
+        const res = await fetch('/credits/balance', { headers: CFG.H });
+        if (!res?.ok) return;
+        const data = await res.json();
+
+        const bal    = g('creditBalance');
+        const bon    = g('bonusBalance');
+        const bonAmt = g('bonusAmt');
+        const banner = g('lowBalanceBanner');
+
+        if (bal) bal.textContent = data.available ?? '—';
+
+        if (data.bonus > 0 && bon && bonAmt) {
+          bonAmt.textContent = data.bonus;
+          bon.style.display = 'inline';
+        }
+
+        if (banner) {
+          banner.style.display = (data.available ?? 0) < 10 ? 'flex' : 'none';
+        }
+
+        if (data.expiring_soon?.length > 0) {
+          const exp = data.expiring_soon[0];
+          toast(`⚠️ ${exp.credits} bonus credits expire in ${exp.days_left} days`, 'warn');
+        }
+      } catch (e) {
+        console.error('Credit balance failed:', e);
+      }
+    }
+
+    /* ── CREDIT TAB ──────────────────────────── */
+    async function loadCreditTab() {
+      try {
+        const res = await fetch('/credits/balance', { headers: CFG.H });
+        if (!res?.ok) return;
+        const data = await res.json();
+
+        const tabBal  = g('creditTabBalance');
+        const tabBonus = g('creditTabBonus');
+        if (tabBal)   tabBal.textContent   = data.available ?? 0;
+        if (tabBonus) tabBonus.textContent = data.bonus ?? 0;
+      } catch (_) {}
+
+      try {
+        const r = await fetch('/credits/history', { headers: CFG.H });
+        if (!r?.ok) return;
+        const entries = await r.json();
+        const hist = g('creditHistory');
+        if (!hist || !entries.length) return;
+
+        const eventColour = {
+          TOPUP: 'var(--em)', AWARD: 'var(--em)', WELCOME: 'var(--em)', BONUS: 'var(--em)',
+          COMMIT: 'var(--risk)', PENALTY: 'var(--risk)', EXPIRY: 'var(--warn)',
+        };
+
+        hist.innerHTML = entries.map(e => `
+          <div class="card" style="padding:12px 14px;margin-bottom:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:12px;font-weight:600;
+                            color:${eventColour[e.event_type] || 'var(--text)'}">
+                  ${sanitise(e.event_type)}${e.action_type ? ' · ' + sanitise(e.action_type) : ''}
+                </div>
+                <div style="font-size:10px;color:var(--muted);margin-top:2px">
+                  ${new Date(e.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
+                  ${e.reference ? ' · ' + sanitise(e.reference) : ''}
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;
+                            color:${e.credits_credited > 0 ? 'var(--em)' : 'var(--risk)'}">
+                  ${e.credits_credited > 0 ? '+' + e.credits_credited : '-' + e.credits_debited}
+                </div>
+                <div style="font-size:10px;color:var(--muted)">bal: ${e.balance_after}</div>
+              </div>
+            </div>
+          </div>`).join('');
+      } catch (_) {}
+    }
+
+    /* ── LOAD BUNDLES ────────────────────────── */
+    async function loadBundles() {
+      try {
+        const res = await fetch('/credits/bundles');
+        if (!res?.ok) return;
+        const bundles = await res.json();
+        const list = g('bundleList');
+        if (!list) return;
+
+        list.innerHTML = bundles.map(b => `
+          <div onclick="purchaseBundle(${b.id})"
+            style="background:var(--surface2);
+                   border:1px solid var(--border2);
+                   border-radius:16px;padding:16px;
+                   cursor:pointer;transition:all 0.15s;
+                   display:flex;align-items:center;gap:14px"
+            onmouseover="this.style.borderColor='var(--indigo-glow)'"
+            onmouseout="this.style.borderColor='var(--border2)'">
+            <div style="flex:1">
+              <div style="font-family:'Syne',sans-serif;
+                          font-weight:800;font-size:15px">
+                ${sanitise(b.name)}
+              </div>
+              <div style="font-size:12px;color:var(--muted);margin-top:3px">
+                ${b.credits} credits
+                ${b.bonus_credits > 0
+                  ? `<span style="color:var(--em)"> +${b.bonus_credits} bonus</span>`
+                  : ''}
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-family:'Syne',sans-serif;
+                          font-weight:800;font-size:16px;color:var(--indigo)">
+                ${sanitise(b.price_display)}
+              </div>
+              <div style="font-size:10px;color:var(--muted)">
+                ₦${b.per_credit}/credit
+              </div>
+            </div>
+          </div>`).join('');
+      } catch (e) {
+        console.error('Bundle load failed:', e);
+      }
+    }
+
+    /* ── PURCHASE BUNDLE ─────────────────────── */
+    async function purchaseBundle(bundleId) {
+      try {
+        const res = await fetch('/credits/purchase/initiate', {
+          method: 'POST',
+          headers: CFG.JH,
+          body: JSON.stringify({ bundle_id: bundleId }),
+        });
+        if (!res?.ok) {
+          toast('Purchase failed. Try again.', 'error');
+          return;
+        }
+        const data = await res.json();
+        window.location.href = data.authorization_url;
+      } catch (_) {
+        toast('Payment initialization failed', 'error');
+      }
+    }
+
     async function loadReelOptions(listingId) {
       switchTab('studio');
       try {
@@ -3535,7 +3820,10 @@
     function toast(msg, type = 'success') {
       const t = g('toast');
       t.textContent = msg;
-      t.style.background = type === 'error' ? '#FF4060' : type === 'info' ? '#6366F1' : '#10B981';
+      t.style.background = type === 'error' ? '#FF4060'
+        : type === 'info' ? '#6366F1'
+        : type === 'warn' ? '#F59E0B'
+        : '#10B981';
       t.classList.add('show');
       clearTimeout(_toastTimer);
       _toastTimer = setTimeout(() => t.classList.remove('show'), 3000);

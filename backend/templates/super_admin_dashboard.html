@@ -461,6 +461,34 @@
       <div style="height:8px"></div>
     </div>
 
+    <!-- CREDITS TAB (menu-only) -->
+    <div id="creditsTab" class="tab">
+      <div class="sep" style="padding-top:16px">Credit Wallets</div>
+
+      <!-- Platform stats -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 16px;margin-bottom:4px">
+        <div class="card" style="padding:14px;text-align:center">
+          <div style="font-size:9px;color:var(--em);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">In Circulation</div>
+          <div class="metric-val" style="margin-top:6px;font-size:20px" id="totalCirculation">—</div>
+        </div>
+        <div class="card" style="padding:14px;text-align:center">
+          <div style="font-size:9px;color:var(--warn);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Spent (mo)</div>
+          <div class="metric-val" style="margin-top:6px;font-size:20px;color:var(--warn)" id="totalSpentMonth">—</div>
+        </div>
+        <div class="card" style="padding:14px;text-align:center">
+          <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Tenants</div>
+          <div class="metric-val" style="margin-top:6px;font-size:20px" id="walletsCount">—</div>
+        </div>
+      </div>
+
+      <!-- Wallet list -->
+      <div class="sep">All Tenant Wallets</div>
+      <div id="walletList" style="padding:0 16px">
+        <div class="empty"><div class="empty-icon">💳</div><p>Loading wallets...</p></div>
+      </div>
+      <div style="height:8px"></div>
+    </div>
+
   </div><!-- /scrollArea -->
 
   <!-- ══ BOTTOM NAV (5 tabs) ══ -->
@@ -507,6 +535,11 @@
     <div class="menu-drawer-row" onclick="closeMenuDrawer();switchTab('billing')">
       <span style="font-size:18px;width:28px;text-align:center">💳</span>
       <span style="flex:1;font-size:14px;font-weight:500">Billing</span>
+      <svg width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+    </div>
+    <div class="menu-drawer-row" onclick="closeMenuDrawer();switchTab('credits')">
+      <span style="font-size:18px;width:28px;text-align:center">🪙</span>
+      <span style="flex:1;font-size:14px;font-weight:500">Credit Wallets</span>
       <svg width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
     </div>
     <div class="menu-drawer-row" onclick="closeMenuDrawer();switchTab('conversations')">
@@ -806,7 +839,7 @@
   function closeMenuDrawer() { g('menuDrawer').classList.remove('open'); }
 
   // ── SINGLE SWITCHTAB ───────────────────────────────────────────
-  const MENU_ONLY_TABS = ['staff','billing','conversations','risk'];
+  const MENU_ONLY_TABS = ['staff','billing','conversations','risk','credits'];
 
   function switchTab(name) {
     if (name === 'menu') { openMenuDrawer(); return; }
@@ -831,6 +864,7 @@
       billing:       loadBillingData,
       conversations: loadConversations,
       risk:          loadRiskData,
+      credits:       loadCreditWallets,
     };
     if (loaders[name]) loaders[name]();
   }
@@ -1697,6 +1731,94 @@
       if (res?.ok) { toast('✓ Trust grade overridden'); closeModal('overrideModal'); loadVerifyQueue(); }
       else { toast('Override failed', 'var(--risk)'); }
     } catch (e) { toast('Connection error', 'var(--risk)'); }
+  }
+
+  // ── CREDIT WALLETS ────────────────────────────────────────────
+  async function loadCreditWallets() {
+    try {
+      const res = await Auth.fetch('/credits/admin/wallets');
+      if (!res?.ok) return;
+      const wallets = await res.json();
+      renderCreditWallets(wallets);
+    } catch (e) {
+      console.error('Credit wallets failed:', e);
+    }
+  }
+
+  function renderCreditWallets(wallets) {
+    const list = g('walletList');
+    if (!list) return;
+
+    // Update platform stats
+    const total = wallets.reduce((s, w) => s + w.available, 0);
+    const spent = wallets.reduce((s, w) => s + w.total_spent, 0);
+    setValue('totalCirculation', total);
+    setValue('totalSpentMonth',  spent);
+    setValue('walletsCount',     wallets.length);
+
+    if (!wallets.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">💳</div><p>No wallets found</p></div>';
+      return;
+    }
+
+    list.innerHTML = wallets.map(w => `
+      <div class="card" style="padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px">
+        <div style="flex:1">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">
+            ${sanitise(w.tenant_name)}
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">
+            Tenant #${w.tenant_id}
+            ${w.is_dormant ? ' · <span style="color:var(--warn)">Dormant</span>' : ''}
+          </div>
+        </div>
+        <div style="text-align:center;min-width:48px">
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;
+                      color:${w.available < 10 ? 'var(--risk)' : 'var(--em)'}">
+            ${w.available}
+          </div>
+          <div style="font-size:9px;color:var(--muted);font-weight:600;
+                      text-transform:uppercase;letter-spacing:0.08em">credits</div>
+        </div>
+        <div style="text-align:center;min-width:48px">
+          <div style="font-size:13px;font-weight:700;color:var(--muted)">${w.total_spent}</div>
+          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em">spent</div>
+        </div>
+        <button onclick="awardCredits(${w.tenant_id}, '${sanitise(w.tenant_name)}')"
+          style="background:var(--indigo-lg);color:white;border:none;border-radius:10px;
+                 padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;
+                 white-space:nowrap;flex-shrink:0">
+          + Award
+        </button>
+      </div>`).join('');
+  }
+
+  async function awardCredits(tenantId, tenantName) {
+    const credits = prompt(`Award credits to ${sanitise(tenantName)}:\nEnter number of credits:`);
+    if (!credits || isNaN(credits) || parseInt(credits) <= 0) return;
+
+    const reason = prompt('Reason for award (e.g. promotion, support, goodwill):') || 'admin_award';
+
+    try {
+      const res = await Auth.fetch('/credits/admin/award', {
+        method: 'POST',
+        body: JSON.stringify({
+          tenant_id:   tenantId,
+          credits:     parseInt(credits),
+          credit_type: 'purchased',
+          reason:      reason,
+        }),
+      });
+      if (res?.ok) {
+        toast(`${credits} credits awarded to ${sanitise(tenantName)}`);
+        loadCreditWallets();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast(err.detail || 'Award failed', 'var(--risk)');
+      }
+    } catch (e) {
+      toast('Award failed', 'var(--risk)');
+    }
   }
 </script>
 </body>

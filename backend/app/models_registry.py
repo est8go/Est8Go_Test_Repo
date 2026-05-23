@@ -16,6 +16,12 @@ from app.auth.models import PasswordResetToken, RoleChangeRequest
 # 3. TENANT SIGNUP + REFERRAL MODELS
 from app.tenants.signup_models import TenantSignupLink, ReferralCode, ReferralConversion
 
+# 4. CREDIT ECONOMY MODELS
+from app.credits.models import (
+    CreditWallet, CreditLedger, CreditExpiry,
+    CreditBundle, CreditTransaction, MmefTracking,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -41,6 +47,12 @@ def register_all_models():
             TenantSignupLink,
             ReferralCode,
             ReferralConversion,
+            CreditWallet,
+            CreditLedger,
+            CreditExpiry,
+            CreditBundle,
+            CreditTransaction,
+            MmefTracking,
         ]
 
         # Force SQLAlchemy to link all string references to their classes

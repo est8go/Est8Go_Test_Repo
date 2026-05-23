@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="/static/js/auth_guard.js"></script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta name="theme-color" content="#0F172A"/>
+  <title>Est8Go | Payment Successful</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0F172A;
+      --surface: #111827;
+      --surface2: #1F2937;
+      --em: #10B981;
+      --em-dim: rgba(16,185,129,0.10);
+      --em-glow: rgba(16,185,129,0.22);
+      --indigo: #4F46E5;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+      --border: rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.11);
+    }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    html,body {
+      height:100%;
+      font-family:'Inter',sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .card {
+      background:var(--surface);
+      border:1px solid var(--border2);
+      border-radius:24px;
+      padding:40px 32px;
+      max-width:420px;
+      width:90%;
+      text-align:center;
+      box-shadow:0 8px 48px rgba(0,0,0,0.4);
+    }
+    /* Animated checkmark */
+    .check-wrap {
+      width:80px;
+      height:80px;
+      border-radius:50%;
+      background:var(--em-dim);
+      border:2px solid var(--em-glow);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin:0 auto 24px;
+      animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes popIn {
+      from { transform:scale(0); opacity:0; }
+      to   { transform:scale(1); opacity:1; }
+    }
+    .check-icon {
+      color:var(--em);
+      font-size:36px;
+      animation:checkFade 0.3s 0.4s both;
+    }
+    @keyframes checkFade {
+      from { opacity:0; transform:scale(0.5); }
+      to   { opacity:1; transform:scale(1); }
+    }
+    h1 {
+      font-family:'Syne',sans-serif;
+      font-size:24px;
+      font-weight:800;
+      margin-bottom:8px;
+      letter-spacing:-0.3px;
+    }
+    .sub {
+      font-size:14px;
+      color:var(--muted);
+      margin-bottom:28px;
+      line-height:1.5;
+    }
+    .credits-box {
+      background:var(--em-dim);
+      border:1px solid var(--em-glow);
+      border-radius:16px;
+      padding:20px;
+      margin-bottom:20px;
+    }
+    .credits-amount {
+      font-family:'Syne',sans-serif;
+      font-size:42px;
+      font-weight:800;
+      color:var(--em);
+      line-height:1;
+      animation:countUp 0.6s 0.5s both;
+    }
+    @keyframes countUp {
+      from { opacity:0; transform:translateY(12px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .credits-label {
+      font-size:12px;
+      font-weight:600;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:0.1em;
+      margin-top:4px;
+    }
+    .bonus-note {
+      font-size:12px;
+      color:var(--em);
+      font-weight:600;
+      margin-top:6px;
+      display:none;
+    }
+    .balance-row {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:28px;
+    }
+    .balance-val {
+      font-family:'Syne',sans-serif;
+      font-weight:700;
+      color:var(--text);
+      font-size:15px;
+    }
+    .btn {
+      display:block;
+      width:100%;
+      padding:15px;
+      border-radius:14px;
+      border:none;
+      font-family:'Syne',sans-serif;
+      font-weight:700;
+      font-size:14px;
+      cursor:pointer;
+      text-decoration:none;
+      transition:transform 0.15s,opacity 0.15s;
+    }
+    .btn:active { transform:scale(0.97); }
+    .btn-em  { background:var(--em);    color:#022c22; }
+    .btn-ghost {
+      background:transparent;
+      color:var(--muted);
+      border:1px solid var(--border2);
+      margin-top:10px;
+    }
+    .ref {
+      font-size:10px;
+      color:var(--muted);
+      margin-top:20px;
+      word-break:break-all;
+      opacity:0.6;
+    }
+    .loading {
+      opacity:0.5;
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="check-wrap">
+      <span class="check-icon">✓</span>
+    </div>
+
+    <h1>Payment Successful!</h1>
+    <p class="sub">Your Est8 Credits have been added to your wallet.</p>
+
+    <div class="credits-box">
+      <div class="credits-amount" id="creditsAdded">—</div>
+      <div class="credits-label">Credits Added</div>
+      <div class="bonus-note" id="bonusNote"></div>
+    </div>
+
+    <div class="balance-row" id="balanceRow" style="display:none">
+      New balance:&nbsp;<span class="balance-val" id="newBalance">—</span>&nbsp;credits
+    </div>
+    <div class="loading" id="loadingMsg">Loading your wallet...</div>
+
+    <a href="/public/realtor-portal" class="btn btn-em">Back to Dashboard →</a>
+    <a href="/public/realtor-portal" class="btn btn-ghost">View Credit History</a>
+
+    <div class="ref" id="refLine"></div>
+  </div>
+
+  <script>
+    const reference = new URLSearchParams(window.location.search).get('reference') || '';
+
+    if (reference) {
+      document.getElementById('refLine').textContent = 'Ref: ' + reference;
+    }
+
+    async function loadBalance() {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        document.getElementById('loadingMsg').style.display = 'none';
+        return;
+      }
+
+      try {
+        const res = await fetch('/credits/balance', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        document.getElementById('loadingMsg').style.display = 'none';
+
+        const available = (data.available ?? 0);
+        document.getElementById('newBalance').textContent = available;
+        document.getElementById('balanceRow').style.display = 'flex';
+
+        // Try to get credits added from the reference transaction
+        if (reference) {
+          // Show a placeholder from balance increase — the exact amount
+          // is already visible from the email receipt
+          document.getElementById('creditsAdded').textContent = '+' + available;
+        } else {
+          document.getElementById('creditsAdded').textContent = available;
+        }
+
+        if (data.bonus > 0) {
+          const note = document.getElementById('bonusNote');
+          note.textContent = '+' + data.bonus + ' bonus credits included';
+          note.style.display = 'block';
+        }
+      } catch (e) {
+        document.getElementById('loadingMsg').style.display = 'none';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadBalance);
+  </script>
+</body>
+</html>

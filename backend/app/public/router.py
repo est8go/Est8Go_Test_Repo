@@ -145,6 +145,15 @@ async def reset_password_page(request: Request, token: str = ""):
     )
 
 
+@router.get("/credits/payment-success", response_class=HTMLResponse)
+async def payment_success(request: Request, reference: str = ""):
+    return templates.TemplateResponse(
+        request=request,
+        name="payment_success.html",
+        context={"reference": reference},
+    )
+
+
 @router.get("/onboarding/{code}", response_class=HTMLResponse)
 async def onboarding_page(request: Request, code: str):
     return templates.TemplateResponse(
@@ -227,6 +236,20 @@ async def submit_onboarding(
         link.is_active = False
 
     db.commit()
+
+    # Award welcome credits (10 bonus, 90-day expiry)
+    try:
+        from app.credits.service import award_credits as _award
+        _award(
+            tenant_id   = tenant.id,
+            credits     = 10,
+            credit_type = "bonus",
+            reason      = "welcome",
+            expiry_days = 90,
+            db          = db,
+        )
+    except Exception as _we:
+        logger.warning(f"Welcome credits failed: {_we}")
 
     superusers = db.query(User).filter(
         User.role == "superuser",
