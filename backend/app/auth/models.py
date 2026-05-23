@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy.sql.elements import quoted_name
 from datetime import datetime
 from app.database.base import Base
 
@@ -21,7 +22,7 @@ class RoleChangeRequest(Base):
 
     id             = Column(Integer, primary_key=True)
     requester_id   = Column(Integer, ForeignKey("users.id"), nullable=False)
-    current_role   = Column(String(50), nullable=False)
+    current_role   = Column(quoted_name("current_role", True), String(50), nullable=False)
     requested_role = Column(String(50), nullable=False)
     reason         = Column(Text, nullable=True)
     status         = Column(String(20), default="pending")
