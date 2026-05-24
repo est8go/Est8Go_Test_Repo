@@ -58,3 +58,25 @@ services:
         sync: false
       - key: SUPABASE_KEY
         sync: false
+
+  # Hourly Reminder Cron Job
+  - type: cron
+    name: est8go-reminder-cron
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    schedule: "0 * * * *"
+    startCommand: python run_reminders_once.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_URL
+        sync: false
+      - key: WHATSAPP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_ID
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
