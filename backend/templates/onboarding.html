@@ -253,20 +253,107 @@
     <!-- STEP 3: WhatsApp Setup -->
     <div id="step3" style="display:none">
       <div class="step-title">WhatsApp Setup</div>
-      <p class="step-sub">Connect your WhatsApp Business number to activate Kora, your AI sales agent.</p>
+      <p class="step-sub">Choose how you want to connect your WhatsApp Business number to Kora.</p>
       <div class="error-box" id="err3"></div>
-      <label class="field-label">WhatsApp Phone Number ID</label>
-      <input type="text" id="s3_waid" class="field-input" placeholder="e.g. 123456789012345"/>
-      <p class="help-text">Find this in Meta Business Suite → WhatsApp → Settings</p>
-      <label class="field-label">WhatsApp Access Token</label>
-      <input type="text" id="s3_token" class="field-input" placeholder="EAAxxxx..."/>
-      <p class="help-text">Generate in Meta Developer Portal → App → WhatsApp → API Setup</p>
-      <div class="conn-status conn-idle" id="connStatus">
-        <span>⬤</span> <span id="connMsg">Not tested</span>
+
+      <!-- Option selector -->
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+
+        <!-- Option A: Est8Go does it -->
+        <div id="optionA"
+          onclick="selectWhatsAppOption('A')"
+          style="background:rgba(67,56,202,0.12);border:2px solid #4338CA;
+                 border-radius:16px;padding:16px;cursor:pointer;transition:all 0.2s">
+          <div style="display:flex;align-items:flex-start;gap:12px">
+            <div style="width:36px;height:36px;border-radius:10px;background:#4338CA;
+                        display:flex;align-items:center;justify-content:center;
+                        font-size:18px;flex-shrink:0">📱</div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:14px;margin-bottom:3px">
+                Est8Go sets it up for me
+                <span style="background:rgba(16,185,129,0.15);color:#10B981;font-size:9px;
+                             font-weight:700;padding:2px 8px;border-radius:99px;margin-left:6px">
+                  RECOMMENDED
+                </span>
+              </div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.5">
+                Just enter your WhatsApp number. Our team connects everything within 24 hours.
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+                <span style="font-size:11px;font-weight:700;color:#F59E0B">Costs 50 Est8 Credits</span>
+                <span style="font-size:10px;color:var(--muted)">· Deducted on activation</span>
+              </div>
+            </div>
+          </div>
+          <!-- Option A fields -->
+          <div id="optionAFields"
+            style="margin-top:14px;padding-top:14px;
+                   border-top:1px solid rgba(255,255,255,0.08)">
+            <label class="field-label">Your WhatsApp Business Number</label>
+            <div style="display:flex;gap:8px">
+              <div style="background:var(--surface2);border:1px solid var(--border2);
+                          border-radius:12px;padding:12px 14px;font-size:13px;
+                          color:var(--muted);font-weight:600;flex-shrink:0">+234</div>
+              <input type="tel" id="s3_phone" class="field-input"
+                placeholder="8012345678" style="flex:1;margin-bottom:0"
+                oninput="this.value=this.value.replace(/[^0-9]/g,'')"/>
+            </div>
+            <p class="help-text" style="margin-top:8px">
+              The number your buyers will WhatsApp. Must be a registered WhatsApp Business number.
+            </p>
+          </div>
+        </div>
+
+        <!-- Option B: Advanced -->
+        <div id="optionB"
+          onclick="selectWhatsAppOption('B')"
+          style="background:var(--surface2);border:2px solid var(--border);
+                 border-radius:16px;padding:16px;cursor:pointer;transition:all 0.2s">
+          <div style="display:flex;align-items:flex-start;gap:12px">
+            <div style="width:36px;height:36px;border-radius:10px;background:var(--surface);
+                        display:flex;align-items:center;justify-content:center;
+                        font-size:18px;flex-shrink:0">⚙️</div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:14px;margin-bottom:3px">
+                I have a Meta Business account
+                <span style="background:var(--surface);color:var(--muted);font-size:9px;
+                             font-weight:700;padding:2px 8px;border-radius:99px;margin-left:6px">
+                  ADVANCED
+                </span>
+              </div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.5">
+                Enter your Phone Number ID and Access Token from Meta Developer Portal. Free to set up.
+              </div>
+            </div>
+          </div>
+          <!-- Option B fields — hidden by default -->
+          <div id="optionBFields"
+            style="display:none;margin-top:14px;padding-top:14px;
+                   border-top:1px solid rgba(255,255,255,0.08)">
+            <label class="field-label">WhatsApp Phone Number ID</label>
+            <input type="text" id="s3_waid" class="field-input" placeholder="e.g. 123456789012345"/>
+            <p class="help-text">Meta Business Suite → WhatsApp → Settings</p>
+            <label class="field-label" style="margin-top:4px">WhatsApp Access Token</label>
+            <input type="text" id="s3_token" class="field-input" placeholder="EAAxxxx..."/>
+            <p class="help-text">Meta Developer Portal → App → WhatsApp → API Setup</p>
+            <div class="conn-status conn-idle" id="connStatus" style="margin-top:10px">
+              <span>⬤</span> <span id="connMsg">Not tested</span>
+            </div>
+            <button onclick="testWhatsAppConnection()"
+              style="margin-top:10px;width:100%;background:var(--surface);
+                     border:1px solid var(--border2);color:var(--text);
+                     border-radius:12px;padding:11px;font-size:12px;
+                     font-weight:600;cursor:pointer">
+              Test Connection
+            </button>
+          </div>
+        </div>
+
       </div>
+
       <div class="btn-row">
         <button class="btn-ghost" onclick="prevStep(3)">← Back</button>
-        <button class="btn-primary" onclick="nextStep(3)" id="step3NextBtn">Next →</button>
+        <button class="btn-primary" id="step3NextBtn" onclick="nextStep(3)">Next →</button>
       </div>
       <span class="skip-link" onclick="skipWhatsApp()">Skip for now (bot won't work until connected)</span>
     </div>
@@ -322,6 +409,7 @@
     let _plan = '';
     let _invitedEmail = '';
     let _waSkipped = false;
+    let _waOption  = 'A';
 
     const EYE_OPEN = '<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>';
     const EYE_SHUT = '<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/>';
@@ -389,6 +477,21 @@
         if (pw !== conf) { showErr(2, 'Passwords do not match.'); return; }
         showStep(3);
       } else if (from === 3) {
+        if (_waSkipped) { showStep(4); return; }
+        if (_waOption === 'A') {
+          const phone = document.getElementById('s3_phone')?.value.trim();
+          if (!phone || phone.length < 8) {
+            showErr(3, 'Please enter your WhatsApp Business number (at least 8 digits)');
+            return;
+          }
+        } else {
+          const waId  = document.getElementById('s3_waid')?.value.trim();
+          const token = document.getElementById('s3_token')?.value.trim();
+          if (!waId || !token) {
+            showErr(3, 'Please enter both Phone Number ID and Access Token');
+            return;
+          }
+        }
         showStep(4);
       } else if (from === 4) {
         buildReview();
@@ -405,20 +508,82 @@
       showStep(4);
     }
 
+    function selectWhatsAppOption(option) {
+      _waOption = option;
+      const a       = document.getElementById('optionA');
+      const b       = document.getElementById('optionB');
+      const bFields = document.getElementById('optionBFields');
+
+      if (option === 'A') {
+        a.style.border     = '2px solid #4338CA';
+        a.style.background = 'rgba(67,56,202,0.12)';
+        b.style.border     = '2px solid var(--border)';
+        b.style.background = 'var(--surface2)';
+        bFields.style.display = 'none';
+      } else {
+        b.style.border     = '2px solid #4338CA';
+        b.style.background = 'rgba(67,56,202,0.12)';
+        a.style.border     = '2px solid var(--border)';
+        a.style.background = 'var(--surface2)';
+        bFields.style.display = 'block';
+      }
+    }
+
+    function testWhatsAppConnection() {
+      const waId   = document.getElementById('s3_waid')?.value.trim();
+      const token  = document.getElementById('s3_token')?.value.trim();
+      const status = document.getElementById('connStatus');
+      const msg    = document.getElementById('connMsg');
+
+      if (!waId || !token) {
+        if (msg)    msg.textContent = 'Enter Phone ID and Token first';
+        if (status) status.className = 'conn-status conn-fail';
+        return;
+      }
+      if (msg)    msg.textContent = 'Testing connection...';
+      if (status) status.className = 'conn-status conn-idle';
+
+      fetch(`https://graph.facebook.com/v18.0/${waId}?access_token=${token}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.id || data.display_phone_number) {
+            if (msg)    msg.textContent = `✓ Connected: ${data.display_phone_number || data.id}`;
+            if (status) status.className = 'conn-status conn-ok';
+          } else {
+            if (msg)    msg.textContent = `✗ ${data.error?.message || 'Connection failed'}`;
+            if (status) status.className = 'conn-status conn-fail';
+          }
+        })
+        .catch(() => {
+          if (msg)    msg.textContent = 'Connection test failed';
+          if (status) status.className = 'conn-status conn-fail';
+        });
+    }
+
     function buildReview() {
       const name   = document.getElementById('s1_name').value.trim();
       const type   = document.getElementById('s1_type').value;
       const email  = document.getElementById('s2_email').value.trim();
       const areas  = document.getElementById('s4_areas').value.trim();
       const tone   = document.getElementById('s4_tone').value;
-      const waId   = document.getElementById('s3_waid').value.trim();
-      const plan   = _plan || 'Starter';
+      const plan     = _plan || 'Starter';
+      const waStatus = _waSkipped
+        ? '⏭ Skipped — connect later'
+        : _waOption === 'A'
+          ? `📱 +234${document.getElementById('s3_phone')?.value.trim() || ''} — Est8Go will set up (50 credits)`
+          : `⚙️ ${document.getElementById('s3_waid')?.value.trim() || ''} — Self-managed`;
+      const waOk = !_waSkipped && (
+        _waOption === 'A'
+          ? !!(document.getElementById('s3_phone')?.value.trim())
+          : !!(document.getElementById('s3_waid')?.value.trim())
+      );
 
       document.getElementById('reviewSummary').innerHTML = [
         ['Business', name],
         ['Type', { agency:'Agency', freelance:'Freelance Realtor', developer:'Developer', investor:'Investor' }[type] || type],
         ['Email', email],
         ['Plan', plan],
+        ['WhatsApp', waStatus],
         ['Areas', areas || '—'],
         ['Bot Tone', tone],
       ].map(([k,v]) => `<div class="review-row"><span class="review-key">${k}</span><span class="review-val">${v}</span></div>`).join('');
@@ -426,7 +591,7 @@
       const checklist = [
         { label: 'Business profile',  ok: !!name },
         { label: 'Admin account',     ok: !!email },
-        { label: 'WhatsApp connected',ok: !!waId && !_waSkipped },
+        { label: 'WhatsApp connected',ok: waOk },
         { label: 'Kora configured',   ok: !!areas },
       ];
       document.getElementById('checklist').innerHTML = checklist
@@ -440,18 +605,24 @@
       btn.innerHTML = '<span class="spinner"></span>Creating Account...';
       btn.disabled  = true;
 
+      const s3Phone = document.getElementById('s3_phone')?.value.trim();
+      const s3WaId  = document.getElementById('s3_waid')?.value.trim();
+      const s3Token = document.getElementById('s3_token')?.value.trim();
       const payload = {
-        business_name: document.getElementById('s1_name').value.trim(),
-        business_type: document.getElementById('s1_type').value,
-        city:          document.getElementById('s1_city').value.trim(),
-        phone:         document.getElementById('s1_phone').value.trim(),
-        full_name:     document.getElementById('s2_name').value.trim(),
-        email:         document.getElementById('s2_email').value.trim(),
-        password:      document.getElementById('s2_pw').value,
-        whatsapp_phone_number_id: document.getElementById('s3_waid').value.trim(),
-        whatsapp_token:           document.getElementById('s3_token').value.trim(),
-        areas_covered: document.getElementById('s4_areas').value.trim(),
-        tone:          document.getElementById('s4_tone').value,
+        business_name:            document.getElementById('s1_name').value.trim(),
+        business_type:            document.getElementById('s1_type').value,
+        city:                     document.getElementById('s1_city').value.trim(),
+        phone:                    document.getElementById('s1_phone').value.trim(),
+        full_name:                document.getElementById('s2_name').value.trim(),
+        email:                    document.getElementById('s2_email').value.trim(),
+        password:                 document.getElementById('s2_pw').value,
+        whatsapp_setup_option:    _waOption,
+        whatsapp_phone_number:    _waOption === 'A' ? '+234' + s3Phone : null,
+        whatsapp_phone_number_id: _waOption === 'B' ? s3WaId : null,
+        whatsapp_token:           _waOption === 'B' ? s3Token : null,
+        whatsapp_setup_pending:   _waOption === 'A',
+        areas_covered:            document.getElementById('s4_areas').value.trim(),
+        tone:                     document.getElementById('s4_tone').value,
       };
 
       try {

@@ -237,6 +237,50 @@ async def submit_onboarding(
 
     db.commit()
 
+    # Handle WhatsApp setup option
+    setup_option = body.get("whatsapp_setup_option", "A")
+    wa_phone     = body.get("whatsapp_phone_number")
+    wa_id        = body.get("whatsapp_phone_number_id")
+    wa_token     = body.get("whatsapp_token")
+
+    if setup_option == "B" and wa_id:
+        try:
+            tenant.whatsapp_phone_number_id = wa_id
+            db.commit()
+        except Exception as _wbe:
+            logger.warning(f"WhatsApp phone_number_id storage failed: {_wbe}")
+
+    if setup_option == "A" and wa_phone:
+        try:
+            import os as _os
+            from app.services.email_service import _send, _base_template
+            biz_name  = body.get("business_name", "New Tenant")
+            _body_html = f"""
+              <p style="font-size:14px;color:#475569;font-family:Arial,sans-serif">
+                A new tenant needs WhatsApp setup.
+              </p>
+              <p style="font-size:14px;color:#475569;font-family:Arial,sans-serif">
+                <strong>Business:</strong> {biz_name}<br/>
+                <strong>WhatsApp Number:</strong> {wa_phone}<br/>
+                <strong>Credits:</strong> 50 credits will be deducted on activation
+              </p>
+              <p style="font-size:14px;color:#475569;font-family:Arial,sans-serif">
+                Log in to Super Admin to manage this request.
+              </p>
+              <a href="{_os.getenv('BASE_URL', '')}/public/super-admin-portal"
+                 style="display:inline-block;background:#4338CA;color:white;
+                        text-decoration:none;padding:14px 28px;border-radius:12px;
+                        font-weight:700;font-size:14px">
+                View in Dashboard
+              </a>"""
+            _send(
+                "est8go@gmail.com",
+                f"WhatsApp setup needed: {biz_name}",
+                _base_template("New WhatsApp Setup Request", _body_html),
+            )
+        except Exception as _wae:
+            logger.warning(f"WhatsApp setup notification email failed: {_wae}")
+
     # Award welcome credits (10 bonus, 90-day expiry)
     try:
         from app.credits.service import award_credits as _award
