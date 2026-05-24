@@ -8,10 +8,10 @@ Intelligent re-engagement sequences based on:
     - Number of previous reminders
 
 Recovery Sequences:
-    AWARENESS  → 3 nudges (24h, 72h, 7d)
-    VERIFICATION → 2 nudges (24h, 72h) — more urgent
-    COMMITMENT → 2 nudges (4h, 24h)   — hottest, act fast
-    HANDSHAKE  → 1 nudge  (2h)        — inspection no-show recovery
+    AWARENESS    → 3 nudges (4h, 12h, 24h)
+    VERIFICATION → 2 nudges (2h, 8h)   — closer to buying
+    COMMITMENT   → 2 nudges (1h, 4h)   — hottest, act fast
+    HANDSHAKE    → 1 nudge  (1h)       — inspection no-show recovery
 
 Rules-First (80/20):
     - All timing logic = pure Python
@@ -40,15 +40,15 @@ logger = logging.getLogger(__name__)
 RECOVERY_MESSAGES = {
     # --- AWARENESS STAGE (Buyer just said hi, gave no data yet) ---
     "awareness": [
-        # Nudge 1 — 24 hours after drop-off
+        # Nudge 1 — 4h after drop-off
         (
             "Hi {name}! 👋\n\n"
-            "I noticed we got disconnected earlier. "
+            "Just checking in — we were having a great conversation about your property search a few hours ago. "
             "At *{biz_name}*, we have fresh verified listings arriving daily — "
             "GPS-checked, AI-audited, and document-verified.\n\n"
             "What location are you targeting? I'll pull the best options for you. 🏠"
         ),
-        # Nudge 2 — 72 hours after drop-off
+        # Nudge 2 — 12h after drop-off
         (
             "Hello {name}! 🏠\n\n"
             "The property market moves fast in Nigeria — "
@@ -56,7 +56,7 @@ RECOVERY_MESSAGES = {
             "Tell me your preferred area and budget and I'll show you "
             "what's currently in our vault. Takes less than 2 minutes. ⚡"
         ),
-        # Nudge 3 — 7 days after drop-off (final)
+        # Nudge 3 — 24h after drop-off (final)
         (
             "Hi {name}, one last check-in from *{biz_name}*. 🙏\n\n"
             "We respect your time — so this is our final message unless you reach out.\n\n"
@@ -66,51 +66,48 @@ RECOVERY_MESSAGES = {
     ],
     # --- VERIFICATION STAGE (Buyer gave location OR budget, not both) ---
     "verification": [
-        # Nudge 1 — 24 hours
+        # Nudge 1 — 2h after drop-off (closer to buying — act fast)
         (
-            "Hello {name}! 👋\n\n"
-            "We were just getting to the good part of your property search. 🔍\n\n"
-            "I have verified listings matching your criteria — "
-            "GPS-confirmed and AI-audited.\n\n"
-            "Can you share {missing_field} so I can pull your exact matches?"
+            "Hi {name}! 🔍\n\n"
+            "You were in the middle of qualifying a property just a couple of hours ago — "
+            "and I have verified listings that match what you're looking for.\n\n"
+            "Can you share your {missing_field} so I can send your exact matches right now?"
         ),
-        # Nudge 2 — 72 hours (final for this stage)
+        # Nudge 2 — 8h after drop-off (final — property may be gone)
         (
             "Hi {name}! ⏰\n\n"
-            "Quick update from *{biz_name}*: new verified properties "
-            "have just been added to our vault in your area of interest.\n\n"
-            "Share your {missing_field} and I'll send you the top 5 matches immediately. 🏠"
+            "Heads up from *{biz_name}*: verified properties at your price point "
+            "don't stay available long — some have already been taken today.\n\n"
+            "Share your {missing_field} now and I'll lock in your top matches before they're gone. 🏠"
         ),
     ],
     # --- COMMITMENT STAGE (Buyer gave both location AND budget) ---
     "commitment": [
-        # Nudge 1 — 4 hours (urgent — they were close to buying)
+        # Nudge 1 — 1h after drop-off (very urgent — they were ready to buy)
         (
             "Hi {name}! 🔥\n\n"
-            "You were this close to securing a verified property. 📍\n\n"
-            "The listing I showed you is still available — but at this trust grade, "
-            "it won't last long.\n\n"
-            "Would you like to schedule a site inspection today? "
-            "Just say *Yes* and I'll connect you with the agent. ⚡"
+            "You were this close — just an hour ago you were ready to secure a verified property.\n\n"
+            "That listing is still available *right now*, but at this trust grade it will go fast.\n\n"
+            "Say *Yes* to schedule your site inspection today. Our agent is standing by. ⚡"
         ),
-        # Nudge 2 — 24 hours (final for this stage)
+        # Nudge 2 — 4h after drop-off (final — last chance)
         (
             "Hello {name}. 🏠\n\n"
-            "I want to make sure you don't miss the verified property we found for you.\n\n"
-            "At *{biz_name}*, Emerald-rated listings move quickly — "
-            "they're the only ones with GPS verification, AI audit, and clean documents.\n\n"
-            "Say *Yes* to schedule your inspection or *New Search* to explore other options."
+            "*Last chance* — the verified property we found for you is still available, "
+            "but we can't hold it beyond today.\n\n"
+            "At *{biz_name}*, Emerald-rated listings move quickly — GPS-verified, AI-audited, "
+            "and clean documents.\n\n"
+            "Say *Yes* to claim your inspection slot, or *New Search* to explore alternatives."
         ),
     ],
     # --- HANDSHAKE STAGE (Inspection was scheduled, buyer no-showed) ---
     "handshake": [
-        # Nudge 1 — 2 hours after scheduled inspection
+        # Nudge 1 — 1h after missed inspection (reschedule same day)
         (
             "Hi {name}! 👋\n\n"
-            "We noticed you may have missed the site inspection today. "
-            "No problem at all — things come up!\n\n"
-            "Our agent is available to reschedule at your convenience. "
-            "What day works best for you? 📅"
+            "It looks like you missed the site inspection today — no worries at all!\n\n"
+            "Our agent has a slot available *later today* if you'd like to reschedule. "
+            "What time works for you? 📅"
         ),
     ],
     # --- HIGH LEAD SCORE (score >= 70, any stage) ---
@@ -134,11 +131,11 @@ RECOVERY_MESSAGES = {
 
 REMINDER_TIMING = {
     # funnel_stage: [(hours_after_dropoff, max_reminders)]
-    "awareness": [(24, 1), (72, 2), (168, 3)],  # 1d, 3d, 7d
-    "verification": [(24, 1), (72, 2)],  # 1d, 3d
-    "commitment": [(4, 1), (24, 2)],  # 4h, 1d
-    "handshake": [(2, 1)],  # 2h
-    "closed": [],  # no reminders for closed
+    "awareness":    [(4, 1), (12, 2), (24, 3)],   # 4h, 12h, 24h
+    "verification": [(2, 1), (8, 2)],              # 2h, 8h (closer to buying)
+    "commitment":   [(1, 1), (4, 2)],              # 1h, 4h (hottest — act fast)
+    "handshake":    [(1, 1)],                      # 1h (missed inspection)
+    "closed":       [],                            # no reminders
 }
 
 
