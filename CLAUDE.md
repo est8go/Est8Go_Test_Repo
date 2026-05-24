@@ -54,6 +54,14 @@ Super admin: est8go@gmail.com / Est8Go@2026
   Hourly cron job on Render (est8go-reminder-cron)
 - Recovery message labels in ACTION_LABELS
 - credits/history returns action_type or event_type
+- Onboarding Step 3 redesigned — two option cards:
+  Option A: Est8Go sets up WhatsApp (50 credits, phone number only)
+  Option B: Self-managed (Phone ID + Access Token + Test Connection)
+  Option A selected by default, admin notified by email on signup
+- Language cleanup — all user-facing "bot" and "AI" replaced:
+  bot → automation, AI assistant → sales assistant
+  Bot active → Automation active, AI Assist → Smart Assist
+  Variable names and function names unchanged
 
 ## DO NOT OVERWRITE ⚠️
 - backend/app/conversations/intent_filter.py
@@ -89,19 +97,7 @@ Wallet: Split purchased vs bonus, deduct bonus first
 
 ## NEXT TASKS (in order)
 
-### 1. Onboarding Step 3 — WhatsApp Setup Simplified
-Update backend/templates/onboarding.html Step 3:
-Option A: Est8Go sets it up (50 credits deducted)
-  - Tenant enters WhatsApp phone number only
-  - Creates support ticket
-  - Sends confirmation email to tenant
-  - Marks account pending_whatsapp_setup
-Option B: I have Meta Business account (advanced, free)
-  - Shows Phone Number ID + Access Token fields
-  - Test connection button
-Default: Option A selected
-
-### 2. Data Retention Policy
+### 1. Data Retention Policy
 Create backend/app/services/retention_service.py:
 - Suspended tenants: hidden immediately
 - After 30 days: anonymise PII (name → [Suspended], email → [redacted])
@@ -111,27 +107,27 @@ Create backend/app/services/retention_service.py:
 - Create backend/run_retention.py scheduled job
 - Add to render.yaml as daily cron
 
-### 3. Tenant Recovery Speed Settings
+### 2. Tenant Recovery Speed Settings
 Add to business dashboard Settings section:
 - Recovery speed: Gentle / Standard / Aggressive
 - Send window: configurable start/end time
 - Auto-stop keywords: add custom keywords
 - Store in tenant settings or company_profiles table
 
-### 4. Diaspora Trust Certificate PDF
+### 3. Diaspora Trust Certificate PDF
 - backend/app/services/trust_certificate_service.py
 - Uses WeasyPrint or ReportLab
 - Shows: trust score, GPS coords, docs verified, Est8Go seal
 - Deducts 20 credits on generation
 - Available from Trust tab in dashboard
 
-### 5. Super Admin MMEF Monitoring
+### 4. Super Admin MMEF Monitoring
 - Show MMEF compliance per tenant in Super Admin
 - Flag tenants approaching grace period
 - Manual override for special cases
 - Background job: run_mmef_check.py daily
 
-### 6. Market Intelligence (Phase 3)
+### 5. Market Intelligence (Phase 3)
 - Property price trends by location
 - Transaction volume by area
 - Trust score distribution
