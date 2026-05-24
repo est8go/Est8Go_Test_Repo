@@ -355,20 +355,20 @@
         <button class="btn-ghost" onclick="prevStep(3)">← Back</button>
         <button class="btn-primary" id="step3NextBtn" onclick="nextStep(3)">Next →</button>
       </div>
-      <span class="skip-link" onclick="skipWhatsApp()">Skip for now (bot won't work until connected)</span>
+      <span class="skip-link" onclick="skipWhatsApp()">Skip for now (Automated follow-up won't be active until connected)</span>
     </div>
 
     <!-- STEP 4: Kora Configuration -->
     <div id="step4" style="display:none">
       <div class="step-title">Kora Configuration</div>
-      <p class="step-sub">Configure how your AI agent presents itself to buyers.</p>
+      <p class="step-sub">Configure how your automated sales assistant presents itself to buyers.</p>
       <div class="error-box" id="err4"></div>
-      <label class="field-label">Bot Name (how Kora introduces itself)</label>
-      <input type="text" id="s4_botname" class="field-input" placeholder="e.g. TrustHomes AI"/>
+      <label class="field-label">Assistant Name (how Kora introduces itself)</label>
+      <input type="text" id="s4_botname" class="field-input" placeholder="e.g. TrustHomes Team"/>
       <label class="field-label">Areas Covered</label>
       <input type="text" id="s4_areas" class="field-input" placeholder="e.g. Maitama, Asokoro, Gwarinpa"/>
       <p class="help-text">Comma-separated list of areas your agency operates in</p>
-      <label class="field-label">Bot Tone</label>
+      <label class="field-label">Conversation Tone</label>
       <select id="s4_tone" class="field-select">
         <option value="friendly">Friendly</option>
         <option value="professional">Professional</option>
@@ -466,7 +466,7 @@
         if (!name) { showErr(1, 'Business name is required.'); return; }
         // Pre-fill bot name
         const botEl = document.getElementById('s4_botname');
-        if (botEl && !botEl.value) botEl.value = name + ' AI';
+        if (botEl && !botEl.value) botEl.value = name + ' Team';
         showStep(2);
       } else if (from === 2) {
         const email = document.getElementById('s2_email').value.trim();
@@ -585,7 +585,7 @@
         ['Plan', plan],
         ['WhatsApp', waStatus],
         ['Areas', areas || '—'],
-        ['Bot Tone', tone],
+        ['Kora Tone', tone],
       ].map(([k,v]) => `<div class="review-row"><span class="review-key">${k}</span><span class="review-val">${v}</span></div>`).join('');
 
       const checklist = [

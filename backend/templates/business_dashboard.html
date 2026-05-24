@@ -2146,7 +2146,7 @@
         <div class="trust-item">
           <div class="trust-icon" style="background:rgba(99,102,241,0.1)">🤖</div>
           <div class="trust-detail">
-            <div class="trust-title">AI Media Audit</div>
+            <div class="trust-title">Automated Media Audit</div>
             <div class="trust-sub" id="aiStatus">Analysing property images...</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
@@ -2553,7 +2553,7 @@
         <p style="font-size:13px;color:var(--muted);
                   margin-bottom:20px;line-height:1.5">
           Credits power everything on Est8Go —
-          AI analysis, reels, verification, and more.
+          Automated analysis, reels, verification, and more.
           Buy once, use anytime. No expiry on purchased credits.
         </p>
         <div id="bundleList" style="display:flex;flex-direction:column;gap:10px">
@@ -3276,7 +3276,7 @@
               <button class="lead-btn" onclick="takeover(${lead.id},'${safePhone}','${safeName}','${lead.channel || 'whatsapp'}')">👤 Take Over</button>
               <button class="lead-btn ind" onclick="sendAlert(${lead.id})">🔔 Alert</button>
               ${lead.is_bot_active === false
-            ? `<button class="lead-btn red" onclick="reactivate(${lead.id})">🤖 Reactivate</button>`
+            ? `<button class="lead-btn red" onclick="reactivate(${lead.id})">🔄 Resume automation</button>`
             : ''}
             </div>
           </div>`;
@@ -3292,7 +3292,7 @@
         ? `Verified ${timeSince(l.gps_verified_at)} ago` : 'Not yet verified';
       if (g('gpsScore')) g('gpsScore').textContent = `+${l.latitude && l.longitude ? 30 : 0}`;
       if (g('aiStatus')) g('aiStatus').textContent = l.ai_verified_real
-        ? 'Images passed AI audit' : 'Awaiting AI audit';
+        ? 'Images passed automated audit' : 'Awaiting automated audit';
       if (g('aiScore')) g('aiScore').textContent = `+${l.ai_verified_real ? 20 : 0}`;
       if (g('docStatus')) g('docStatus').textContent =
         `C of O: ${l.cof_uploaded ? '✓' : '✗'} · Deed: ${l.deed_uploaded ? '✓' : '✗'} · Survey: ${l.survey_uploaded ? '✓' : '✗'}`;
@@ -3587,7 +3587,7 @@
     const SERVICE_COSTS = [
       {label:'GPS Verification',      cost:0,  color:'em',    note:'Always free',        icon:'📍'},
       {label:'Document Upload',       cost:3,  color:'text',  note:'Per document',       icon:'📄'},
-      {label:'AI Vision Audit',       cost:5,  color:'text',  note:'Per listing',        icon:'🤖'},
+      {label:'Automated Vision Audit',  cost:5,  color:'text',  note:'Per listing',        icon:'🔍'},
       {label:'Document Analysis',     cost:10, color:'text',  note:'Per analysis',       icon:'🔍'},
       {label:'Reel Generation',       cost:10, color:'warn',  note:'Per video',          icon:'🎬'},
       {label:'Recovery Message',      cost:1,  color:'text',  note:'Per WhatsApp nudge', icon:'💬'},
@@ -3614,8 +3614,8 @@
     const ACTION_LABELS = {
       REEL_GENERATION:       'Reel generated',
       DOCUMENT_UPLOAD:       'Document uploaded',
-      DOCUMENT_ANALYSIS:     'AI document analysis',
-      AI_VISION_AUDIT:       'AI vision audit',
+      DOCUMENT_ANALYSIS:     'Document analysis',
+      AI_VISION_AUDIT:       'Automated vision audit',
       PRIORITY_VERIFICATION: 'Priority verification',
       WHATSAPP_SETUP:        'WhatsApp setup',
       BROADCAST_100:         'Recovery message sent',
@@ -3858,7 +3858,7 @@
       try {
         const r = await fetch(CFG.API.takeover(id), { method: 'POST', headers: CFG.JH });
         if (r.ok) {
-          toast('Bot paused — connecting you to buyer');
+          toast('Automation paused — connecting you to buyer');
           const bizName = localStorage.getItem('biz_name') || 'our team';
           const ch = CHANNELS[channel] || CHANNELS.whatsapp;
           const msg = `Hi ${buyerName}, this is ${bizName}. I am personally taking over to assist you directly.`;
@@ -4103,7 +4103,7 @@
       pipeline: [
         { icon: '🔔', label: 'Send Alert', action: () => toast('Select a lead first', 'info') },
         { icon: '👤', label: 'Take Over', action: () => toast('Select a lead first', 'info') },
-        { icon: '🤖', label: 'AI Assist', action: () => toggleKora() },
+        { icon: '🤖', label: 'Smart Assist', action: () => toggleKora() },
       ],
       operations: [
         { icon: '📅', label: 'Schedule Visit', action: () => toast('Scheduling coming soon', 'info') },
