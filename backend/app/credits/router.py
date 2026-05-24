@@ -278,7 +278,7 @@ def get_credit_history(
             "credits_debited":  e.credits_debited,
             "credits_credited": e.credits_credited,
             "balance_after":    e.balance_after,
-            "action_type":      e.action_type,
+            "action_type":      e.action_type or e.event_type,
             "reference":        e.reference,
             "created_at":       e.created_at.isoformat(),
         }

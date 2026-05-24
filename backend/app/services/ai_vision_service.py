@@ -583,6 +583,18 @@ async def audit_and_update_listing(listing, db) -> ListingAuditResult:
     listing.trust_grade = trust["grade"].lower()
     db.commit()
 
+    try:
+        from app.credits.service import deduct_credits
+        deduct_credits(
+            tenant_id = listing.tenant_id,
+            action    = "AI_VISION_AUDIT",
+            tier      = "ACCESS",
+            reference = f"ai_audit_{listing.id}",
+            db        = db,
+        )
+    except Exception as e:
+        logger.warning(f"Credit deduction failed for AI: {e}")
+
     logger.info(
         f"✅ Listing {listing.id} | "
         f"Trust: {listing.trust_score} | Grade: {listing.trust_grade}"

@@ -1946,7 +1946,7 @@
 
       <!-- Right: wallet pill -->
       <div id="walletPill"
-        onclick="openModal('buyCreditsModal');loadBundles()"
+        onclick="switchTab('credits')"
         style="display:flex;flex-direction:column;align-items:center;
                justify-content:center;gap:2px;
                flex-shrink:0;cursor:pointer;
@@ -2346,46 +2346,69 @@
 
     <!-- ─────────────── CREDITS TAB ─────────────── -->
     <div id="creditsTab" class="tab" style="padding-top:4px">
-      <div class="sep">Est8 Credit Wallet</div>
 
-      <!-- Balance summary -->
-      <div class="card ind-card" style="margin-bottom:10px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <!-- Balance overview -->
+      <div style="background:var(--surface);border:1px solid var(--border);
+                  border-radius:var(--r-lg);padding:20px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;
+                    align-items:flex-start;margin-bottom:16px">
           <div>
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;
-                        letter-spacing:0.1em;color:var(--muted);margin-bottom:4px">
-              Available
+            <div style="font-size:10px;font-weight:700;
+                        letter-spacing:0.12em;text-transform:uppercase;
+                        color:var(--muted)">Available Credits</div>
+            <div id="creditsTabBalance"
+              style="font-family:'Syne',sans-serif;font-size:36px;
+                     font-weight:800;color:var(--indigo);margin-top:4px">
+              —
             </div>
-            <div style="font-family:'Syne',sans-serif;font-size:32px;
-                        font-weight:800;color:var(--indigo)" id="creditTabBalance">—</div>
           </div>
-          <div>
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;
-                        letter-spacing:0.1em;color:var(--muted);margin-bottom:4px">
-              Bonus
-            </div>
-            <div style="font-family:'Syne',sans-serif;font-size:32px;
-                        font-weight:800;color:var(--em)" id="creditTabBonus">—</div>
+          <button onclick="openModal('buyCreditsModal');loadBundles()"
+            style="background:var(--indigo-lg);color:white;border:none;
+                   border-radius:12px;padding:10px 18px;font-weight:700;
+                   font-size:12px;cursor:pointer">
+            + Buy Credits
+          </button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;
+                    gap:10px;padding-top:14px;
+                    border-top:1px solid var(--border)">
+          <div style="text-align:center">
+            <div style="font-size:11px;color:var(--muted)">Purchased</div>
+            <div id="purchasedBalance"
+              style="font-family:'Syne',sans-serif;font-size:18px;
+                     font-weight:800;color:var(--text);margin-top:2px">—</div>
+          </div>
+          <div style="text-align:center;border-left:1px solid var(--border);
+                      border-right:1px solid var(--border)">
+            <div style="font-size:11px;color:var(--muted)">Bonus</div>
+            <div id="bonusBalanceTab"
+              style="font-family:'Syne',sans-serif;font-size:18px;
+                     font-weight:800;color:var(--em);margin-top:2px">—</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:11px;color:var(--muted)">Total Spent</div>
+            <div id="totalSpentBalance"
+              style="font-family:'Syne',sans-serif;font-size:18px;
+                     font-weight:800;color:var(--warn);margin-top:2px">—</div>
           </div>
         </div>
-        <button onclick="openModal('buyCreditsModal');loadBundles()"
-          style="width:100%;margin-top:14px;padding:12px;
-                 background:var(--indigo-lg);color:white;border:none;
-                 border-radius:12px;font-family:'Syne',sans-serif;
-                 font-weight:700;font-size:13px;cursor:pointer">
-          + Buy Credits
-        </button>
+      </div>
+
+      <!-- Service costs reference -->
+      <div style="background:var(--surface);border:1px solid var(--border);
+                  border-radius:var(--r-lg);padding:16px;margin-bottom:14px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;
+                    text-transform:uppercase;color:var(--muted);
+                    margin-bottom:12px">What Credits Power</div>
+        <div id="serviceCostsList"></div>
       </div>
 
       <!-- Transaction history -->
-      <div class="sep">Recent Activity</div>
-      <div id="creditHistory">
-        <div class="empty" style="padding:28px 20px">
-          <div class="empty-icon">💳</div>
-          <div class="empty-title">No credit activity yet</div>
-          <div class="empty-body">Buy credits or use a service to see your history here.</div>
-        </div>
-      </div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;
+                  text-transform:uppercase;color:var(--muted);
+                  margin-bottom:10px">Transaction History</div>
+      <div id="creditHistoryList"></div>
+
     </div>
 
   </div><!-- /scrollArea -->
@@ -2967,7 +2990,7 @@
       if (tab === 'studio') loadStudio();
       if (tab === 'network') loadNetwork();
       if (tab === 'analytics') loadAnalytics();
-      if (tab === 'credits') loadCreditTab();
+      if (tab === 'credits') loadCreditsTab();
     }
 
     /* ── HOME ────────────────────────────────── */
@@ -3560,54 +3583,179 @@
       }
     }
 
-    /* ── CREDIT TAB ──────────────────────────── */
-    async function loadCreditTab() {
+    /* ── CREDITS TAB CONSTANTS ──────────────── */
+    const SERVICE_COSTS = [
+      {label:'GPS Verification',      cost:0,  color:'em',    note:'Always free',        icon:'📍'},
+      {label:'Document Upload',       cost:3,  color:'text',  note:'Per document',       icon:'📄'},
+      {label:'AI Vision Audit',       cost:5,  color:'text',  note:'Per listing',        icon:'🤖'},
+      {label:'Document Analysis',     cost:10, color:'text',  note:'Per analysis',       icon:'🔍'},
+      {label:'Reel Generation',       cost:10, color:'warn',  note:'Per video',          icon:'🎬'},
+      {label:'Recovery Message',      cost:1,  color:'text',  note:'Per WhatsApp nudge', icon:'💬'},
+      {label:'Trust Certificate',     cost:20, color:'text',  note:'PDF download',       icon:'🏅'},
+      {label:'Priority Verification', cost:25, color:'indigo',note:'Within 24hrs',       icon:'⚡'},
+      {label:'WhatsApp Setup',        cost:50, color:'indigo',note:'One-time setup',     icon:'📱'},
+    ];
+
+    const EVENT_ICONS = {
+      TOPUP:'💰', COMMIT:'⚡', AWARD:'🎁', WELCOME:'👋',
+      BONUS:'✨', REFUND:'↩️', EXPIRY:'⏰', RESERVE:'🔒',
+      ADJUSTMENT:'🔧', PENALTY:'⚠️', MMEF_HOLD:'📅',
+    };
+
+    const EVENT_LABELS = {
+      TOPUP:'Credits purchased', COMMIT:'Service completed',
+      AWARD:'Credits awarded', WELCOME:'Welcome bonus',
+      BONUS:'Bonus credits', REFUND:'Credits refunded',
+      EXPIRY:'Credits expired', RESERVE:'Credits reserved',
+      ADJUSTMENT:'Manual adjustment', PENALTY:'Penalty deducted',
+      MMEF_HOLD:'Monthly minimum hold',
+    };
+
+    const ACTION_LABELS = {
+      REEL_GENERATION:       'Reel generated',
+      DOCUMENT_UPLOAD:       'Document uploaded',
+      DOCUMENT_ANALYSIS:     'AI document analysis',
+      AI_VISION_AUDIT:       'AI vision audit',
+      PRIORITY_VERIFICATION: 'Priority verification',
+      WHATSAPP_SETUP:        'WhatsApp setup',
+      BROADCAST_100:         'Recovery message sent',
+      RECOVERY_MESSAGE:      'Recovery message sent',
+      GPS_VERIFICATION:      'GPS verification',
+    };
+
+    /* ── CREDITS TAB ─────────────────────────── */
+    async function loadCreditsTab() {
       try {
-        const res = await fetch('/credits/balance', { headers: CFG.H });
-        if (!res?.ok) return;
-        const data = await res.json();
+        const balRes = await fetch('/credits/balance', { headers: CFG.H });
+        if (balRes?.ok) {
+          const bal = await balRes.json();
+          if (g('creditsTabBalance'))  g('creditsTabBalance').textContent  = bal.available ?? 0;
+          if (g('purchasedBalance'))   g('purchasedBalance').textContent   = bal.purchased ?? 0;
+          if (g('bonusBalanceTab'))    g('bonusBalanceTab').textContent    = bal.bonus ?? 0;
+          if (g('totalSpentBalance'))  g('totalSpentBalance').textContent  = bal.total_spent ?? 0;
+          loadCreditBalance();
+        }
 
-        const tabBal  = g('creditTabBalance');
-        const tabBonus = g('creditTabBonus');
-        if (tabBal)   tabBal.textContent   = data.available ?? 0;
-        if (tabBonus) tabBonus.textContent = data.bonus ?? 0;
-      } catch (_) {}
-
-      try {
-        const r = await fetch('/credits/history', { headers: CFG.H });
-        if (!r?.ok) return;
-        const entries = await r.json();
-        const hist = g('creditHistory');
-        if (!hist || !entries.length) return;
-
-        const eventColour = {
-          TOPUP: 'var(--em)', AWARD: 'var(--em)', WELCOME: 'var(--em)', BONUS: 'var(--em)',
-          COMMIT: 'var(--risk)', PENALTY: 'var(--risk)', EXPIRY: 'var(--warn)',
-        };
-
-        hist.innerHTML = entries.map(e => `
-          <div class="card" style="padding:12px 14px;margin-bottom:8px">
-            <div style="display:flex;align-items:center;justify-content:space-between">
-              <div>
-                <div style="font-size:12px;font-weight:600;
-                            color:${eventColour[e.event_type] || 'var(--text)'}">
-                  ${sanitise(e.event_type)}${e.action_type ? ' · ' + sanitise(e.action_type) : ''}
-                </div>
-                <div style="font-size:10px;color:var(--muted);margin-top:2px">
-                  ${new Date(e.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
-                  ${e.reference ? ' · ' + sanitise(e.reference) : ''}
-                </div>
+        const costsList = g('serviceCostsList');
+        if (costsList) {
+          costsList.innerHTML = SERVICE_COSTS.map(s => `
+            <div style="display:flex;align-items:center;
+                        padding:10px 0;
+                        border-bottom:1px solid var(--border)">
+              <div style="width:32px;text-align:center;
+                          font-size:16px;flex-shrink:0">
+                ${s.icon}
               </div>
-              <div style="text-align:right">
-                <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;
-                            color:${e.credits_credited > 0 ? 'var(--em)' : 'var(--risk)'}">
-                  ${e.credits_credited > 0 ? '+' + e.credits_credited : '-' + e.credits_debited}
+              <div style="flex:1;margin-left:10px">
+                <div style="font-size:13px;font-weight:500">
+                  ${s.label}
                 </div>
-                <div style="font-size:10px;color:var(--muted)">bal: ${e.balance_after}</div>
+                <div style="font-size:10px;color:var(--muted);
+                            margin-top:1px">${s.note}</div>
+              </div>
+              <div style="font-family:'Syne',sans-serif;
+                          font-size:14px;font-weight:800;
+                          color:var(--${s.color})">
+                ${s.cost === 0 ? 'Free' : s.cost + ' credits'}
+              </div>
+            </div>`).join('');
+        }
+
+        const histRes = await fetch('/credits/history?limit=50', { headers: CFG.H });
+        if (histRes?.ok) {
+          const history = await histRes.json();
+          renderCreditHistory(history);
+        }
+      } catch(e) {
+        console.error('Credits tab failed:', e);
+      }
+    }
+
+    function renderCreditHistory(entries) {
+      const list = g('creditHistoryList');
+      if (!list) return;
+
+      if (!entries.length) {
+        list.innerHTML = `
+          <div style="text-align:center;padding:40px;
+                      color:var(--muted)">
+            <div style="font-size:32px;margin-bottom:10px">💳</div>
+            <div style="font-weight:700;margin-bottom:4px">
+              No transactions yet
+            </div>
+            <div style="font-size:12px">
+              Your credit usage will appear here
+            </div>
+          </div>`;
+        return;
+      }
+
+      list.innerHTML = entries.map(e => {
+        const isCredit = e.credits_credited > 0;
+        const amount   = isCredit ? e.credits_credited : e.credits_debited;
+        const icon     = EVENT_ICONS[e.event_type] || '💳';
+        const label    = ACTION_LABELS[e.action_type] ||
+                         EVENT_LABELS[e.event_type] ||
+                         e.event_type;
+        const color    = isCredit ? 'var(--em)' : 'var(--risk)';
+        const sign     = isCredit ? '+' : '-';
+        const date     = e.created_at
+          ? new Date(e.created_at).toLocaleString('en-GB',{
+              day:'2-digit', month:'short',
+              hour:'2-digit', minute:'2-digit'
+            })
+          : '—';
+        return `
+          <div style="background:var(--surface);
+                      border:1px solid var(--border);
+                      border-radius:14px;padding:14px;
+                      margin-bottom:8px;
+                      display:flex;align-items:center;gap:12px">
+            <div style="width:38px;height:38px;border-radius:11px;
+                        background:var(--surface2);
+                        display:flex;align-items:center;
+                        justify-content:center;font-size:18px;
+                        flex-shrink:0">
+              ${icon}
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600;
+                          white-space:nowrap;overflow:hidden;
+                          text-overflow:ellipsis">
+                ${sanitise(label)}
+              </div>
+              <div style="font-size:10px;color:var(--muted);
+                          margin-top:2px">${date}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-family:'Syne',sans-serif;
+                          font-size:15px;font-weight:800;
+                          color:${color}">
+                ${sign}${amount}
+              </div>
+              <div style="font-size:10px;color:var(--muted);
+                          margin-top:1px">
+                Bal: ${e.balance_after}
               </div>
             </div>
-          </div>`).join('');
-      } catch (_) {}
+          </div>`;
+      }).join('');
+    }
+
+    function confirmCreditAction(action, cost, callback) {
+      const bal = parseInt(g('creditBalance')?.textContent || '0');
+      if (isNaN(bal) || bal < cost) {
+        toast(`Not enough credits. Need ${cost}, have ${bal}.`, 'error');
+        openModal('buyCreditsModal');
+        loadBundles();
+        return;
+      }
+      const confirmed = confirm(
+        `This action costs ${cost} Est8 Credits.\n` +
+        `Your balance: ${bal} credits\n` +
+        `After: ${bal - cost} credits\n\nProceed?`
+      );
+      if (confirmed) callback();
     }
 
     /* ── LOAD BUNDLES ────────────────────────── */

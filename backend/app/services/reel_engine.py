@@ -578,6 +578,18 @@ async def generate_property_reel(
                 f"{file_size:.1f}MB | {TOTAL_DURATION}s"
             )
 
+            try:
+                from app.credits.service import deduct_credits
+                deduct_credits(
+                    tenant_id = request.tenant_id,
+                    action    = "REEL_GENERATION",
+                    tier      = "ACCESS",
+                    reference = f"reel_{request.listing_id}",
+                    db        = db,
+                )
+            except Exception as e:
+                logger.warning(f"Credit deduction failed for reel: {e}")
+
             return ReelResult(
                 listing_id=request.listing_id,
                 success=True,

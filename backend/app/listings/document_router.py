@@ -15,8 +15,11 @@ Add this router to your main.py:
 
 import os
 import hashlib
+import logging
 from datetime import datetime, timedelta
 from typing import List, Optional
+
+logger = logging.getLogger(__name__)
 
 from fastapi import (
     APIRouter,
@@ -275,6 +278,18 @@ async def upload_listing_document(
     listing.trust_grade = label["grade"]
 
     db.commit()
+
+    try:
+        from app.credits.service import deduct_credits
+        deduct_credits(
+            tenant_id = listing.tenant_id,
+            action    = "DOCUMENT_UPLOAD",
+            tier      = "ACCESS",
+            reference = f"doc_{listing_id}",
+            db        = db,
+        )
+    except Exception as e:
+        logger.warning(f"Credit deduction failed for doc: {e}")
 
     return {
         "status": "uploaded",
