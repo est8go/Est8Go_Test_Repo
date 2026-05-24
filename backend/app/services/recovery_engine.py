@@ -56,12 +56,23 @@ RECOVERY_MESSAGES = {
             "Tell me your preferred area and budget and I'll show you "
             "what's currently in our vault. Takes less than 2 minutes. ⚡"
         ),
-        # Nudge 3 — 24h after drop-off (final)
+        # Nudge 3 — 24h after drop-off
         (
             "Hi {name}, one last check-in from *{biz_name}*. 🙏\n\n"
             "We respect your time — so this is our final message unless you reach out.\n\n"
             "Whenever your property search is ready, our verified vault will be here. "
             "Just say *Hi* to reconnect anytime. ✅"
+        ),
+        # Nudge 4 — 7 days (final)
+        (
+            "Hi {name}. 🙏\n\n"
+            "This is our final message from *{biz_name}*.\n\n"
+            "We completely understand — life gets busy and "
+            "property decisions take time.\n\n"
+            "Whenever you're ready to find a verified, "
+            "GPS-confirmed property in Nigeria, just send "
+            "us a message and we'll be ready for you. ✅\n\n"
+            "Wishing you all the best. 🏠"
         ),
     ],
     # --- VERIFICATION STAGE (Buyer gave location OR budget, not both) ---
@@ -130,13 +141,70 @@ RECOVERY_MESSAGES = {
 # ================================================================
 
 REMINDER_TIMING = {
-    # funnel_stage: [(hours_after_dropoff, max_reminders)]
-    "awareness":    [(4, 1), (12, 2), (24, 3)],   # 4h, 12h, 24h
-    "verification": [(2, 1), (8, 2)],              # 2h, 8h (closer to buying)
-    "commitment":   [(1, 1), (4, 2)],              # 1h, 4h (hottest — act fast)
-    "handshake":    [(1, 1)],                      # 1h (missed inspection)
-    "closed":       [],                            # no reminders
+    # funnel_stage: [(hours_after_dropoff, nudge_number)]
+    "awareness":    [(4, 1), (24, 2), (48, 3), (168, 4)],  # 4h, 24h, 48h, 7d
+    "verification": [(2, 1), (12, 2), (24, 3)],             # 2h, 12h, 24h
+    "commitment":   [(1, 1), (4, 2), (12, 3)],              # 1h, 4h, 12h
+    "handshake":    [(1, 1), (4, 2)],                       # 1h, 4h
+    "closed":       [],
 }
+
+
+def is_good_send_time() -> bool:
+    """
+    Only send recovery messages during business hours.
+    Nigerian timezone WAT = UTC+1.
+    Never send between 9pm and 7am.
+    """
+    from datetime import datetime, timezone, timedelta
+    wat = timezone(timedelta(hours=1))
+    now = datetime.now(wat)
+    hour = now.hour
+    # Allow sends between 7:00 AM and 9:00 PM WAT only
+    return 7 <= hour <= 21
+
+
+STOP_KEYWORDS = [
+    "stop", "no", "leave me", "not interested",
+    "don't contact", "do not contact", "unsubscribe",
+    "remove me", "cancel", "quit", "bye", "goodbye",
+    "go away", "enough", "too many messages",
+    "stop messaging", "don't message", "block",
+    # Pidgin Nigerian
+    "abeg no", "no vex", "i no want", "commot",
+    "no disturb", "i don see am",
+]
+
+
+async def check_buyer_opted_out(
+    convo_id: int,
+    db: Session,
+) -> bool:
+    """
+    Check if buyer has sent any stop/opt-out keywords
+    in their recent messages. If yes, halt all recovery.
+    """
+    try:
+        from app.conversations.models import ConversationMessage
+        recent = (
+            db.query(ConversationMessage)
+            .filter(
+                ConversationMessage.conversation_id == convo_id,
+                ConversationMessage.role.in_(["user", "inbound"]),
+            )
+            .order_by(ConversationMessage.created_at.desc())
+            .limit(10)
+            .all()
+        )
+        for msg in recent:
+            content = (msg.content or "").lower().strip()
+            for keyword in STOP_KEYWORDS:
+                if keyword in content:
+                    return True
+        return False
+    except Exception as e:
+        logger.error(f"Opt-out check failed: {e}")
+        return False
 
 
 def should_send_reminder(convo: Conversation) -> tuple:
@@ -153,6 +221,10 @@ def should_send_reminder(convo: Conversation) -> tuple:
     # Never remind if closed
     if convo.funnel_stage == "closed":
         return False, 0, "Conversation closed"
+
+    # Never send outside business hours (7am-9pm WAT)
+    if not is_good_send_time():
+        return False, 0, "Outside business hours (WAT)"
 
     stage = convo.funnel_stage or "awareness"
     timing = REMINDER_TIMING.get(stage, [])
@@ -272,6 +344,18 @@ async def run_dropoff_recovery(db: Session):
                     skipped += 1
                     continue
 
+                # Check if buyer opted out
+                opted_out = await check_buyer_opted_out(convo.id, db)
+                if opted_out:
+                    convo.is_bot_active = False
+                    db.commit()
+                    logger.info(
+                        f"🚫 OPT-OUT: {convo.external_user_id} "
+                        f"requested no more messages. Bot deactivated."
+                    )
+                    skipped += 1
+                    continue
+
                 # Get tenant profile for branded messaging
                 tenant_profile = get_tenant_profile(db, convo.tenant_id)
                 biz_name = tenant_profile.get("business_name", "our firm")
@@ -287,6 +371,22 @@ async def run_dropoff_recovery(db: Session):
                 convo.reminder_count = (convo.reminder_count or 0) + 1
                 convo.last_reminder_sent_at = datetime.now(timezone.utc)
                 db.commit()
+
+                # Deduct 1 credit per recovery message sent
+                try:
+                    from app.credits.service import deduct_credits
+                    deduct_credits(
+                        tenant_id = convo.tenant_id,
+                        action    = "BROADCAST_100",
+                        tier      = "ACCESS",
+                        reference = f"recovery_{convo.id}_{convo.reminder_count}",
+                        db        = db,
+                    )
+                except Exception as credit_err:
+                    logger.warning(
+                        f"Credit deduction failed for recovery "
+                        f"message: {credit_err}"
+                    )
 
                 sent += 1
                 logger.info(
