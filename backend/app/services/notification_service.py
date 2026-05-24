@@ -12,7 +12,7 @@ from app.messages.models import Message
 
 # Configuration
 logger = logging.getLogger(__name__)
-META_ACCESS_TOKEN = os.getenv("META_ACCESS_TOKEN")
+META_ACCESS_TOKEN = os.getenv("WHATSAPP_ACCESS_TOKEN") or os.getenv("META_ACCESS_TOKEN")
 BUSINESS_PHONE_ID = os.getenv("WHATSAPP_PHONE_ID")
 
 # ---------------------------------------------------------
