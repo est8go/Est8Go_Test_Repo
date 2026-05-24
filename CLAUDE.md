@@ -34,6 +34,26 @@ Super admin: est8go@gmail.com / Est8Go@2026
 - Super Admin credit management — award credits, view all wallets
 - Data migration — all new tables created on Supabase production
 - Credit bundles seeded — Starter/Growth/Pro/Scale
+- Credit deductions wired on all services:
+  Reel generation: 10 credits (reel_engine.py)
+  Document upload: 3 credits (document_router.py)
+  AI vision audit: 5 credits (ai_vision_service.py)
+  Recovery messages: 1 credit (recovery_engine.py)
+  All wrapped in try/except — never block service delivery
+- Credits tab in business dashboard:
+  Balance overview (purchased/bonus/total spent)
+  9-item service costs reference table
+  Transaction history with icons and labels
+  Wallet pill navigates to credits tab
+  confirmCreditAction() warns before expensive actions
+- Drop-off recovery engine:
+  Timing: 4h/24h/48h/7d for awareness
+  Smart send window: 7am-9pm WAT
+  Auto-stop on negative keywords + Nigerian Pidgin
+  Bot permanently deactivated on opt-out
+  Hourly cron job on Render (est8go-reminder-cron)
+- Recovery message labels in ACTION_LABELS
+- credits/history returns action_type or event_type
 
 ## DO NOT OVERWRITE ⚠️
 - backend/app/conversations/intent_filter.py
@@ -69,59 +89,49 @@ Wallet: Split purchased vs bonus, deduct bonus first
 
 ## NEXT TASKS (in order)
 
-### 1. Data Retention Policy
-Build background job that:
-- Suspended tenants: hidden from UI immediately
-- After 30 days: data anonymised (name/email → "[Suspended]")
-- After 90 days: hard delete option available to Super Admin
-- Deleted tenants: same lifecycle
-- Staff: same lifecycle
-- Dormant accounts: 12 months inactivity → marked dormant, bot offline
-- Create backend/app/services/retention_service.py
-- Create backend/run_retention.py (scheduled job)
-
-### 2. Onboarding Step 3 — WhatsApp Setup Simplified
+### 1. Onboarding Step 3 — WhatsApp Setup Simplified
 Update backend/templates/onboarding.html Step 3:
-- Option A: "Est8Go sets it up for me" (costs 50 credits)
-  → Just enter WhatsApp phone number
-  → Creates support ticket
-  → Sends confirmation email
-  → Marks account "Pending WhatsApp Setup"
-- Option B: "I have Meta Business account" (advanced, free)
-  → Shows Phone ID + Access Token fields
-  → Test connection button
-- Default to Option A
+Option A: Est8Go sets it up (50 credits deducted)
+  - Tenant enters WhatsApp phone number only
+  - Creates support ticket
+  - Sends confirmation email to tenant
+  - Marks account pending_whatsapp_setup
+Option B: I have Meta Business account (advanced, free)
+  - Shows Phone Number ID + Access Token fields
+  - Test connection button
+Default: Option A selected
 
-### 3. Drop-off Recovery Live Testing
-Run backend/run_reminders.py against real conversations
-Test 4 sequences: awareness, verification, commitment, handshake
-Verify WhatsApp messages delivered
+### 2. Data Retention Policy
+Create backend/app/services/retention_service.py:
+- Suspended tenants: hidden immediately
+- After 30 days: anonymise PII (name → [Suspended], email → [redacted])
+- After 90 days: hard delete available to Super Admin
+- Deleted staff: same 30/90 day lifecycle
+- Dormant accounts: 12 months → bot offline, credits preserved
+- Create backend/run_retention.py scheduled job
+- Add to render.yaml as daily cron
 
-### 4. Conversation Engine Testing
-Test full WhatsApp flow with real listings:
-- Single message extraction (property + location + budget)
-- Objection handling
-- Handshake + Google Maps delivery
-- Session memory (hot resume)
+### 3. Tenant Recovery Speed Settings
+Add to business dashboard Settings section:
+- Recovery speed: Gentle / Standard / Aggressive
+- Send window: configurable start/end time
+- Auto-stop keywords: add custom keywords
+- Store in tenant settings or company_profiles table
 
-### 5. Super Admin Dashboard
-- Clickable stat cards navigate to relevant tabs
-- Data retention controls (manual override)
-- MMEF compliance monitoring
-
-### 6. Business Dashboard
-- Credits tab showing full transaction history
-- Service cost display before action executes
-- Auto-deduct credits when reel generated
-- Auto-deduct credits when priority verification requested
-
-### 7. Diaspora Package
-- Trust Certificate PDF generator
+### 4. Diaspora Trust Certificate PDF
 - backend/app/services/trust_certificate_service.py
-- Uses ReportLab or WeasyPrint
-- Shows: trust score, GPS coords, documents verified, Est8Go seal
+- Uses WeasyPrint or ReportLab
+- Shows: trust score, GPS coords, docs verified, Est8Go seal
+- Deducts 20 credits on generation
+- Available from Trust tab in dashboard
 
-### 8. Market Intelligence (Phase 3)
+### 5. Super Admin MMEF Monitoring
+- Show MMEF compliance per tenant in Super Admin
+- Flag tenants approaching grace period
+- Manual override for special cases
+- Background job: run_mmef_check.py daily
+
+### 6. Market Intelligence (Phase 3)
 - Property price trends by location
 - Transaction volume by area
 - Trust score distribution
@@ -143,6 +153,8 @@ Test full WhatsApp flow with real listings:
 - Always sanitise() user data in innerHTML
 - No backdrop-filter anywhere
 - Mobile first — min touch targets 44px
-- Credit deduction uses bonus credits first then purchased
+- Credit deduction: bonus first then purchased
 - Paystack webhook uses HMAC with PAYSTACK_SECRET_KEY
 - Ledger is immutable — never UPDATE or DELETE
+- Recovery engine: 7am-9pm WAT send window
+- MMEF: Core ₦2,500/mo, Growth ₦6,000/mo
