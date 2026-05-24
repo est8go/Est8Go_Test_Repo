@@ -14,6 +14,7 @@ For production, use a process manager:
 import asyncio
 import logging
 from app.database.db import SessionLocal
+from app.models_registry import register_all_models
 from app.services.recovery_engine import (
     run_dropoff_recovery,
     escalate_high_value_leads,
@@ -58,4 +59,5 @@ async def main():
 
 
 if __name__ == "__main__":
+    register_all_models()
     asyncio.run(main())
