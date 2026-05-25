@@ -185,10 +185,31 @@
     /* SCORE RING */
     .score-ring-wrap { position: relative; width: 52px; height: 52px; flex-shrink: 0; }
     .score-ring-val { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 800; }
+
+    /* HEALTH STATUS */
+    .sys-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .sys-row:last-child { border-bottom: none; }
+    .sys-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .sys-dot-ok      { background: var(--em); }
+    .sys-dot-warning { background: var(--warn); animation: blink 2s infinite; }
+    .sys-dot-critical { background: var(--risk); animation: blink 1s infinite; }
+    .sys-dot-grey    { background: var(--muted); }
+    .issue-row { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .issue-row:last-child { border-bottom: none; }
+    .sev-badge { display: inline-block; border-radius: 6px; padding: 2px 8px; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+    .sev-critical { background: var(--risk-dim); color: var(--risk); }
+    .sev-high     { background: var(--warn-dim); color: var(--warn); }
+    .sev-medium   { background: rgba(59,130,246,0.12); color: var(--blue); }
+    .sev-low      { background: var(--em-dim); color: var(--em); }
+    /* CRITICAL BANNER */
+    #criticalBanner { display: none; background: var(--risk); color: #fff; text-align: center; padding: 10px 16px; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; flex-shrink: 0; }
   </style>
 </head>
 <body>
 <div id="app">
+
+  <!-- ══ CRITICAL ALERT BANNER ══ -->
+  <div id="criticalBanner">SYSTEM CRITICAL — Check Health Monitor immediately</div>
 
   <!-- ══ HEADER ══ -->
   <div class="header">
@@ -489,6 +510,45 @@
       <div style="height:8px"></div>
     </div>
 
+    <!-- HEALTH TAB -->
+    <div id="healthTab" class="tab">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 8px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted)">System Status</div>
+        <button class="btn-em" onclick="runHealthCheck()" style="padding:7px 14px;font-size:10px" id="healthRunBtn">Run Check</button>
+      </div>
+      <div style="padding:0 16px">
+        <div class="card" id="healthStatusList">
+          <div class="empty"><div class="empty-icon">🔍</div><p style="font-size:12px">Loading system status...</p></div>
+        </div>
+      </div>
+
+      <div class="sep" style="margin-top:12px">Alert History (7 days)</div>
+      <div style="padding:0 16px">
+        <div class="card" id="healthHistoryList">
+          <div class="empty"><p style="font-size:12px;color:var(--muted)">No alerts recorded</p></div>
+        </div>
+      </div>
+      <div style="height:8px"></div>
+    </div>
+
+    <!-- ISSUES TAB -->
+    <div id="issuesTab" class="tab">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 8px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted)">Platform Issues</div>
+        <button class="btn-em" onclick="openModal('newIssueModal')" style="padding:7px 14px;font-size:10px">+ Issue</button>
+      </div>
+      <div style="display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto;scrollbar-width:none">
+        <button class="trust-pill trust-unver filter-pill" onclick="filterIssues('all',this)" data-filter="all" style="white-space:nowrap">All</button>
+        <button class="trust-pill trust-unver filter-pill" onclick="filterIssues('open',this)" data-filter="open" style="white-space:nowrap">Open</button>
+        <button class="trust-pill trust-gold filter-pill" onclick="filterIssues('in_progress',this)" data-filter="in_progress" style="white-space:nowrap">In Progress</button>
+        <button class="trust-pill trust-emerald filter-pill" onclick="filterIssues('resolved',this)" data-filter="resolved" style="white-space:nowrap">Resolved</button>
+      </div>
+      <div id="issuesList" style="padding:0 16px">
+        <div class="empty"><div class="empty-icon">✅</div><p style="font-size:12px">Loading issues...</p></div>
+      </div>
+      <div style="height:8px"></div>
+    </div>
+
   </div><!-- /scrollArea -->
 
   <!-- ══ BOTTOM NAV (5 tabs) ══ -->
@@ -550,6 +610,17 @@
     <div class="menu-drawer-row" onclick="closeMenuDrawer();switchTab('risk')">
       <span style="font-size:18px;width:28px;text-align:center">⚠️</span>
       <span style="flex:1;font-size:14px;font-weight:500">Risk Monitor</span>
+      <svg width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+    </div>
+    <div class="menu-drawer-row" onclick="closeMenuDrawer();switchTab('health')">
+      <span style="font-size:18px;width:28px;text-align:center">🩺</span>
+      <span style="flex:1;font-size:14px;font-weight:500">Health Monitor</span>
+      <span id="healthMenuBadge" style="display:none;font-size:10px;font-weight:700;color:var(--warn);margin-right:6px">●</span>
+      <svg width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+    </div>
+    <div class="menu-drawer-row" onclick="closeMenuDrawer();switchTab('issues')">
+      <span style="font-size:18px;width:28px;text-align:center">🔧</span>
+      <span style="flex:1;font-size:14px;font-weight:500">Issues Tracker</span>
       <svg width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
     </div>
     <div class="menu-drawer-sec">Channels</div>
@@ -745,6 +816,61 @@
   </div>
 </div>
 
+<!-- ══ MODAL: New Issue ══ -->
+<div class="modal-overlay" id="newIssueModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Create Platform Issue</div>
+      <button onclick="closeModal('newIssueModal')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px">✕</button>
+    </div>
+    <div class="field-group"><label class="field-label">Title</label><input type="text" id="ni_title" class="field-input" placeholder="Brief description of the issue"/></div>
+    <div class="field-group"><label class="field-label">Description</label><textarea id="ni_description" class="field-input" rows="3" placeholder="Detailed notes..." style="resize:none"></textarea></div>
+    <div class="field-group"><label class="field-label">Severity</label>
+      <select id="ni_severity" class="field-select">
+        <option value="critical">Critical — immediate action</option>
+        <option value="high" selected>High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+    <div class="field-group"><label class="field-label">Affected Area</label><input type="text" id="ni_area" class="field-input" placeholder="e.g. database, whatsapp, payments"/></div>
+    <div class="field-group"><label class="field-label">Assigned To (optional)</label><input type="text" id="ni_assign" class="field-input" placeholder="staff@email.com"/></div>
+    <div style="padding:16px 20px 8px;display:flex;gap:10px">
+      <button class="btn-ghost" onclick="closeModal('newIssueModal')" style="flex:1">Cancel</button>
+      <button class="btn-em" onclick="submitNewIssue()" style="flex:2">Create Issue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: View / Edit Issue ══ -->
+<div class="modal-overlay" id="issueDetailModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="idm_title">Issue Detail</div>
+      <button onclick="closeModal('issueDetailModal')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px">✕</button>
+    </div>
+    <div style="padding:12px 20px">
+      <div id="idm_meta" style="font-size:11px;color:var(--muted);margin-bottom:12px"></div>
+      <label class="field-label">Diagnosis</label>
+      <textarea id="idm_diagnosis" class="field-input" rows="2" placeholder="Root cause analysis..." style="resize:none;margin-bottom:10px"></textarea>
+      <label class="field-label">Fix Applied</label>
+      <textarea id="idm_fix" class="field-input" rows="2" placeholder="What was done to fix it..." style="resize:none;margin-bottom:10px"></textarea>
+      <label class="field-label">Status</label>
+      <select id="idm_status" class="field-select" style="margin-bottom:14px">
+        <option value="open">Open</option>
+        <option value="in_progress">In Progress</option>
+        <option value="resolved">Resolved</option>
+      </select>
+      <div style="display:flex;gap:8px">
+        <button class="btn-ghost" onclick="saveIssueUpdate()" style="flex:1">Save Notes</button>
+        <button class="btn-em" onclick="resolveIssueFromModal()" style="flex:1">Mark Resolved</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ TOAST ══ -->
 <div id="toast" style="position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:12px 20px;font-size:13px;font-weight:500;z-index:400;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap"></div>
 
@@ -839,7 +965,7 @@
   function closeMenuDrawer() { g('menuDrawer').classList.remove('open'); }
 
   // ── SINGLE SWITCHTAB ───────────────────────────────────────────
-  const MENU_ONLY_TABS = ['staff','billing','conversations','risk','credits'];
+  const MENU_ONLY_TABS = ['staff','billing','conversations','risk','credits','health','issues'];
 
   function switchTab(name) {
     if (name === 'menu') { openMenuDrawer(); return; }
@@ -865,6 +991,8 @@
       conversations: loadConversations,
       risk:          loadRiskData,
       credits:       loadCreditWallets,
+      health:        loadHealthStatus,
+      issues:        loadIssues,
     };
     if (loaders[name]) loaders[name]();
   }
@@ -1820,6 +1948,231 @@
       toast('Award failed', 'var(--risk)');
     }
   }
+
+  // ── HEALTH MONITOR ────────────────────────────────────────────
+  const SYS_LABELS = {
+    database: 'Database',
+    whatsapp: 'WhatsApp API',
+    openai: 'OpenAI',
+    paystack: 'Paystack',
+    conversations: 'Conversations',
+    security: 'Security',
+  };
+
+  async function loadHealthStatus() {
+    try {
+      const res = await Auth.fetch('/admin/health/status');
+      if (!res?.ok) return;
+      const data = await res.json();
+      renderHealthStatus(data);
+      // Also load alert history
+      loadHealthHistory();
+      // Critical banner
+      const banner = g('criticalBanner');
+      if (banner) banner.style.display = data.overall === 'critical' ? 'block' : 'none';
+      // Menu badge for warnings
+      const badge = g('healthMenuBadge');
+      if (badge) badge.style.display = (data.overall === 'warning' || data.overall === 'critical') ? 'inline' : 'none';
+    } catch(e) { console.error('Health status error:', e); }
+  }
+
+  function renderHealthStatus(data) {
+    const list = g('healthStatusList');
+    if (!list) return;
+    list.innerHTML = (data.systems || []).map(s => {
+      const dotClass = `sys-dot sys-dot-${s.status}`;
+      const statusColor = s.status === 'ok' ? 'var(--em)' : s.status === 'warning' ? 'var(--warn)' : s.status === 'critical' ? 'var(--risk)' : 'var(--muted)';
+      const checkedStr = s.checked_at ? formatDateTime(s.checked_at) : 'Never';
+      return `
+        <div class="sys-row">
+          <div class="${dotClass}"></div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">${sanitise(SYS_LABELS[s.system] || s.system)}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${sanitise(s.detail || '')}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:11px;font-weight:700;color:${statusColor};text-transform:uppercase">${s.status}</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:2px">${checkedStr}</div>
+          </div>
+        </div>`;
+    }).join('') || '<div class="empty"><p style="font-size:12px">No data yet</p></div>';
+  }
+
+  async function loadHealthHistory() {
+    try {
+      const res = await Auth.fetch('/admin/health/history?days=7');
+      if (!res?.ok) return;
+      const logs = await res.json();
+      const filtered = logs.filter(l => l.status !== 'ok');
+      const list = g('healthHistoryList');
+      if (!list) return;
+      if (!filtered.length) {
+        list.innerHTML = '<div class="empty"><p style="font-size:12px;color:var(--muted)">No alerts in last 7 days</p></div>';
+        return;
+      }
+      list.innerHTML = filtered.slice(0, 30).map(l => {
+        const c = l.status === 'critical' ? 'var(--risk)' : 'var(--warn)';
+        return `
+          <div class="audit-row">
+            <div class="audit-icon" style="background:${l.status === 'critical' ? 'var(--risk-dim)' : 'var(--warn-dim)'}">
+              ${l.status === 'critical' ? '🔴' : '🟡'}
+            </div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600;color:${c}">${sanitise(SYS_LABELS[l.system] || l.system)} — ${l.status.toUpperCase()}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">${sanitise(l.detail || '')}</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px">${formatDateTime(l.checked_at)}</div>
+            </div>
+          </div>`;
+      }).join('');
+    } catch(e) {}
+  }
+
+  async function runHealthCheck() {
+    const btn = g('healthRunBtn');
+    if (btn) { btn.textContent = 'Running...'; btn.disabled = true; }
+    try {
+      const res = await Auth.fetch('/admin/health/run', { method: 'POST' });
+      if (res?.ok) {
+        toast('Health check complete');
+        loadHealthStatus();
+      } else {
+        toast('Check failed', 'var(--risk)');
+      }
+    } catch(e) { toast('Error', 'var(--risk)'); }
+    finally { if (btn) { btn.textContent = 'Run Check'; btn.disabled = false; } }
+  }
+
+  // ── ISSUES TRACKER ────────────────────────────────────────────
+  let _allIssues = [];
+  let _issueDetailId = null;
+
+  async function loadIssues() {
+    try {
+      const res = await Auth.fetch('/admin/issues/');
+      if (!res?.ok) return;
+      _allIssues = await res.json();
+      renderIssues(_allIssues);
+    } catch(e) { console.error('Issues load error:', e); }
+  }
+
+  function filterIssues(status, btn) {
+    document.querySelectorAll('#issuesTab .filter-pill').forEach(p => p.classList.remove('trust-emerald'));
+    if (btn) btn.classList.add('trust-emerald');
+    const filtered = status === 'all' ? _allIssues : _allIssues.filter(i => i.status === status);
+    renderIssues(filtered);
+  }
+
+  function renderIssues(issues) {
+    const list = g('issuesList');
+    if (!list) return;
+    if (!issues.length) {
+      list.innerHTML = '<div class="card"><div class="empty"><div class="empty-icon">✅</div><p style="font-size:13px">No issues found</p></div></div>';
+      return;
+    }
+    list.innerHTML = '<div class="card">' + issues.map(i => {
+      const sevClass = `sev-badge sev-${i.severity}`;
+      const statusColor = i.status === 'resolved' ? 'var(--em)' : i.status === 'in_progress' ? 'var(--warn)' : 'var(--risk)';
+      return `
+        <div class="issue-row" onclick="openIssueDetail(${i.id})" style="cursor:pointer">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span class="${sevClass}">${sanitise(i.severity)}</span>
+            <span style="font-size:10px;color:${statusColor};font-weight:700;text-transform:uppercase">${sanitise(i.status)}</span>
+            ${i.affected_area ? `<span style="font-size:10px;color:var(--muted)">${sanitise(i.affected_area)}</span>` : ''}
+          </div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:2px">${sanitise(i.title)}</div>
+          ${i.description ? `<div style="font-size:11px;color:var(--muted)">${sanitise(i.description.slice(0, 80))}${i.description.length > 80 ? '…' : ''}</div>` : ''}
+          <div style="font-size:10px;color:var(--muted);margin-top:4px">${formatDateTime(i.created_at)}</div>
+        </div>`;
+    }).join('') + '</div>';
+  }
+
+  function openIssueDetail(id) {
+    const issue = _allIssues.find(i => i.id === id);
+    if (!issue) return;
+    _issueDetailId = id;
+    setValue('idm_title', issue.title);
+    g('idm_meta').innerHTML =
+      `<span class="sev-badge sev-${issue.severity}">${sanitise(issue.severity)}</span> &nbsp;` +
+      `<strong style="color:${issue.status === 'resolved' ? 'var(--em)' : issue.status === 'in_progress' ? 'var(--warn)' : 'var(--risk)'}">` +
+      `${sanitise(issue.status)}</strong>` +
+      (issue.affected_area ? ` &nbsp;· ${sanitise(issue.affected_area)}` : '') +
+      `<br/><span style="font-size:10px">${formatDateTime(issue.created_at)}</span>`;
+    g('idm_diagnosis').value = issue.diagnosis || '';
+    g('idm_fix').value = issue.fix_applied || '';
+    g('idm_status').value = issue.status;
+    openModal('issueDetailModal');
+  }
+
+  async function saveIssueUpdate() {
+    if (!_issueDetailId) return;
+    try {
+      const res = await Auth.fetch(`/admin/issues/${_issueDetailId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          status: g('idm_status').value,
+          diagnosis: g('idm_diagnosis').value,
+          fix_applied: g('idm_fix').value,
+        }),
+      });
+      if (res?.ok) { toast('Issue updated'); closeModal('issueDetailModal'); loadIssues(); }
+      else toast('Update failed', 'var(--risk)');
+    } catch(e) { toast('Error', 'var(--risk)'); }
+  }
+
+  async function resolveIssueFromModal() {
+    if (!_issueDetailId) return;
+    if (!confirm('Mark this issue as resolved?')) return;
+    // Save notes first
+    try {
+      await Auth.fetch(`/admin/issues/${_issueDetailId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          diagnosis: g('idm_diagnosis').value,
+          fix_applied: g('idm_fix').value,
+        }),
+      });
+    } catch(e) {}
+    try {
+      const res = await Auth.fetch(`/admin/issues/${_issueDetailId}/resolve`, { method: 'POST' });
+      if (res?.ok) { toast('Issue resolved'); closeModal('issueDetailModal'); loadIssues(); }
+      else toast('Resolve failed', 'var(--risk)');
+    } catch(e) { toast('Error', 'var(--risk)'); }
+  }
+
+  async function submitNewIssue() {
+    const title = g('ni_title').value.trim();
+    if (!title) { toast('Title is required', 'var(--warn)'); return; }
+    try {
+      const res = await Auth.fetch('/admin/issues/', {
+        method: 'POST',
+        body: JSON.stringify({
+          title,
+          description: g('ni_description').value.trim() || null,
+          severity: g('ni_severity').value,
+          affected_area: g('ni_area').value.trim() || null,
+          assigned_to: g('ni_assign').value.trim() || null,
+        }),
+      });
+      if (res?.ok) {
+        toast('Issue created');
+        closeModal('newIssueModal');
+        g('ni_title').value = '';
+        g('ni_description').value = '';
+        g('ni_area').value = '';
+        g('ni_assign').value = '';
+        loadIssues();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast(err.detail || 'Create failed', 'var(--risk)');
+      }
+    } catch(e) { toast('Error', 'var(--risk)'); }
+  }
+
+  // Silently refresh health status every 60s while on health tab
+  setInterval(() => {
+    const healthTab = g('healthTab');
+    if (healthTab && healthTab.classList.contains('active')) loadHealthStatus();
+  }, 60000);
 </script>
 </body>
 </html>

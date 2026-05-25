@@ -22,6 +22,9 @@ from app.credits.models import (
     CreditBundle, CreditTransaction, MmefTracking,
 )
 
+# 5. HEALTH MONITOR + ISSUES TRACKER MODELS
+from app.services.health_service import HealthCheck, PlatformIssue
+
 logger = logging.getLogger(__name__)
 
 
@@ -53,6 +56,8 @@ def register_all_models():
             CreditBundle,
             CreditTransaction,
             MmefTracking,
+            HealthCheck,
+            PlatformIssue,
         ]
 
         # Force SQLAlchemy to link all string references to their classes

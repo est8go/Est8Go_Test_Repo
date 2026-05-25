@@ -65,6 +65,10 @@ class User(Base):
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
+    # --- RETENTION ---
+    deleted_at = Column(DateTime, nullable=True)    # soft-delete timestamp
+    anonymised_at = Column(DateTime, nullable=True) # set after 30-day PII wipe
+
     # --- RELATIONSHIPS ---
     tenant = relationship("Tenant", back_populates="users")
 

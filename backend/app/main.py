@@ -39,6 +39,8 @@ from app.admin.role_requests_router import router as role_requests_router  # noq
 from app.admin.signup_links_router import router as signup_links_router  # noqa: E402
 from app.referrals.router import router as referrals_router  # noqa: E402
 from app.credits.router import router as credits_router  # noqa: E402
+from app.admin.health_router import router as health_router  # noqa: E402
+from app.admin.issues_router import router as issues_router  # noqa: E402
 
 # ── 5. SECURITY MIDDLEWARE ────────────────────────────────────
 from app.auth.deps import audit_platform_actions  # noqa: E402
@@ -110,6 +112,8 @@ app.include_router(role_requests_router)
 app.include_router(signup_links_router)
 app.include_router(referrals_router)
 app.include_router(credits_router)
+app.include_router(health_router)
+app.include_router(issues_router)
 
 
 # ── 12. HEALTH CHECK ──────────────────────────────────────────

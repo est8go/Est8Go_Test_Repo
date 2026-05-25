@@ -5,7 +5,7 @@ from sqlalchemy import func, desc
 from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.database.db import get_db
 from app.users.models import User, PLATFORM_ROLES
@@ -398,6 +398,7 @@ def suspend_tenant(
         raise HTTPException(status_code=400, detail="Tenant is already suspended.")
 
     tenant.is_active = False
+    tenant.suspended_at = datetime.utcnow()
 
     # Silence all conversations for this tenant
     db.query(Conversation).filter(Conversation.tenant_id == tenant_id).update(
@@ -434,6 +435,7 @@ def reactivate_tenant(
         raise HTTPException(status_code=400, detail="Tenant is already active.")
 
     tenant.is_active = True
+    tenant.suspended_at = None   # clear suspension timestamp on reactivation
     db.commit()
 
     log_action(

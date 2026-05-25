@@ -59,6 +59,10 @@ class Tenant(Base):
     # --- TIMESTAMPS ---
     created_at = Column(DateTime, default=func.now())
 
+    # --- RETENTION ---
+    suspended_at = Column(DateTime, nullable=True)   # set when is_active → False
+    anonymised_at = Column(DateTime, nullable=True)  # set after 30-day PII wipe
+
     # --- RELATIONSHIPS ---
     channels = relationship(
         "TenantChannel", back_populates="tenant", cascade="all, delete-orphan"
