@@ -155,6 +155,65 @@ Add to business dashboard Settings section:
 - Recovery engine: 7am-9pm WAT send window
 - MMEF: Core ₦2,500/mo, Growth ₦6,000/mo
 
+## SUPPORT WORKFLOW
+
+### When Issues Arise
+1. Check Render logs first
+2. Note exact error message and endpoint
+3. Open new Claude.ai conversation
+4. Paste: "Read CLAUDE.md. I have this issue: [error]"
+5. Claude will diagnose and fix
+
+### Common Issues + Quick Fixes
+Database connection error:
+  Check DATABASE_URL in Render environment
+  Check Supabase dashboard for connection limit
+
+WhatsApp not responding:
+  Check WHATSAPP_ACCESS_TOKEN not expired
+  Meta tokens expire every 60 days — regenerate in Meta Developer Portal
+  Check WHATSAPP_PHONE_ID is correct
+
+Render deployment failed:
+  Check build logs for import errors
+  Usually missing package in requirements.txt
+  Or Base import path wrong (use app.database.base not app.database.db)
+
+Credits not deducting:
+  Check credit_wallets table exists
+  Run python migrate_credits.py
+  Check tenant has a wallet record
+
+Email not sending:
+  Check RESEND_API_KEY in Render environment
+  Check Resend dashboard for bounces
+  Verify FROM_EMAIL format: Name <email@domain>
+
+Paystack webhook not crediting:
+  Check PAYSTACK_SECRET_KEY in Render (no duplicates)
+  Verify webhook URL set in Paystack dashboard
+  Check x-paystack-signature header present
+
+Bot not responding to WhatsApp:
+  Check META_VERIFY_TOKEN matches
+  Check webhook URL registered in Meta
+  Check conversation state not stuck in HANDOFF
+
+### Meta WhatsApp Token Renewal
+Tokens expire every 60 days.
+When expired: all tenant bots go offline immediately.
+Fix:
+  1. Go to Meta Developer Portal
+  2. Generate new permanent token
+  3. Update WHATSAPP_ACCESS_TOKEN in Render
+  4. Redeploy
+
+### Emergency Contacts
+Platform down completely:
+  Check https://status.render.com
+  Check https://status.supabase.com
+  Check https://developers.facebook.com/status
+
 ## SECURITY RULES — NEVER VIOLATE
 
 ### Tenant Isolation (Critical)
