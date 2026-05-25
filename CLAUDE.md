@@ -154,3 +154,37 @@ Add to business dashboard Settings section:
 - Ledger is immutable — never UPDATE or DELETE
 - Recovery engine: 7am-9pm WAT send window
 - MMEF: Core ₦2,500/mo, Growth ₦6,000/mo
+
+## SECURITY RULES — NEVER VIOLATE
+
+### Tenant Isolation (Critical)
+- Every endpoint that returns tenant data MUST use
+  current_user = Depends(get_current_user)
+- Never use x_tenant_id header as the sole auth
+- Never default tenant_id to 1 or any hardcoded value
+- Regular users: always use current_user.tenant_id
+- Superusers only: may accept x_tenant_id header
+
+### Admin Endpoints (Critical)
+- All /admin/* and /listings/admin/* endpoints MUST use
+  current_user = Depends(require_superuser)
+- Never check if x_tenant_id == "1" as admin auth
+- Admin access = verified JWT with role="superuser"
+
+### Data Validation
+- Never trust client-supplied tenant_id
+- Always verify listing.tenant_id == current_user.tenant_id
+  before returning or modifying listing data
+- Cross-tenant access always raises 403 not 404
+  (404 leaks existence of the resource)
+
+### Security Headers (Always Present)
+- X-Frame-Options: DENY
+- X-Content-Type-Options: nosniff
+- X-XSS-Protection: 1; mode=block
+- Referrer-Policy: strict-origin-when-cross-origin
+
+### Frontend
+- Always pass CFG.JH (JWT headers) in every fetch()
+- Never hardcode fallback data values (no || 72)
+- Sanitise all user data before innerHTML
