@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, BackgroundTasks
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database.db import get_db
@@ -542,6 +543,21 @@ async def get_pipeline_summary(
     closed = len(closed_convos)
     conv_rate = round((closed / total * 100), 1) if total > 0 else 0
 
+    # Average trust score across this tenant's listings
+    avg_trust_raw = db.query(func.avg(Listing.trust_score)).filter(
+        Listing.tenant_id == tenant_id,
+        Listing.trust_score != None,
+        Listing.trust_score > 0,
+    ).scalar()
+    avg_trust_score = round(avg_trust_raw) if avg_trust_raw else 0
+    trust_grade = (
+        "Emerald" if avg_trust_score >= 85 else
+        "Gold"    if avg_trust_score >= 70 else
+        "Silver"  if avg_trust_score >= 55 else
+        "Bronze"  if avg_trust_score > 0  else
+        "Unrated"
+    )
+
     return {
         "total_leads": total,
         "active_leads": len(active_convos),
@@ -551,4 +567,6 @@ async def get_pipeline_summary(
         "pipeline_value": pipeline_value["formatted"]["weighted"],
         "raw_pipeline": pipeline_value["formatted"]["raw"],
         "stage_breakdown": pipeline_value["stage_breakdown"],
+        "avg_trust_score": avg_trust_score,
+        "trust_grade": trust_grade,
     }

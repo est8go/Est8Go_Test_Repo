@@ -3019,20 +3019,27 @@
         animCount('imHot', 0, pipe.hot_leads || 0, 600);
         animCount('imConvos', 0, pipe.total_leads || 0, 600);
 
-        // Trust score from stats if available
-        const ts = stats.avg_trust_score || stats.trust_score || 72;
-        g('imTrust').textContent = ts;
-        g('imTrustCard').className = 'im-card ' + (ts >= 75 ? 'em' : ts >= 50 ? 'warn' : 'hot');
-        g('imTrust').className = 'im-val ' + (ts >= 75 ? 'em' : ts >= 50 ? 'warn' : 'hot');
+        // Trust score from stats — 0 means no listings yet, show dash
+        const trust = stats.avg_trust_score || 0;
+        const grade = stats.trust_grade || '';
+        const trustEl = g('imTrust');
+        if (trustEl) {
+          trustEl.textContent = trust > 0 ? trust : '—';
+          if (grade === 'Emerald')     trustEl.style.color = '#10B981';
+          else if (grade === 'Gold')   trustEl.style.color = '#F59E0B';
+          else if (grade === 'Silver') trustEl.style.color = '#94A3B8';
+          else if (grade === 'Bronze') trustEl.style.color = '#CD7F32';
+          else                         trustEl.style.color = 'var(--muted)';
+        }
+        if (g('imTrustCard')) g('imTrustCard').className = 'im-card ' + (trust >= 75 ? 'em' : trust >= 50 ? 'warn' : trust > 0 ? 'hot' : '');
+        if (trustEl) trustEl.className = 'im-val ' + (trust >= 75 ? 'em' : trust >= 50 ? 'warn' : trust > 0 ? 'hot' : 'muted');
 
-        // Ecosystem health pill — only risk when score < 40 or flagged listings
+        // Ecosystem health pill
         const pill = g('healthPill');
-        if (ts < 40) {
-          pill.className = 'health-pill risk';
-          g('healthText').textContent = 'Risk Elevated';
-        } else {
-          pill.className = 'health-pill stable';
-          g('healthText').textContent = 'Trust Stable';
+        if (trust > 0 && trust < 40) {
+          if (pill) { pill.className = 'health-pill risk'; g('healthText').textContent = 'Risk Elevated'; }
+        } else if (trust > 0) {
+          if (pill) { pill.className = 'health-pill stable'; g('healthText').textContent = 'Trust Stable'; }
         }
 
         ST.leads = pipe.leads || [];
