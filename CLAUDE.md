@@ -214,6 +214,35 @@ ESTIMATED COST:
   Total:              ~1,716/month
   ROI vs 1hr outage:  29x return
 
+ISSUES TRACKER (part of Health Monitor):
+Database table: platform_issues
+  - id, title, description, severity, status
+  - affected_area, tenant_id, assigned_to
+  - diagnosis, fix_applied, resolved_at
+  - created_at, updated_at
+
+Super Admin Dashboard — Issues tab:
+  - View all open/resolved issues
+  - Create new issue manually
+  - Auto-created by health monitor on critical alerts
+  - Severity: critical/high/medium/low
+  - Status: open/in_progress/resolved
+  - Assign to staff member
+  - Add diagnosis and fix notes
+  - Resolve with one click
+  - Export as CSV
+
+API endpoints:
+  GET  /admin/issues — list all issues
+  POST /admin/issues — create new issue
+  PATCH /admin/issues/{id} — update status/notes
+  POST /admin/issues/{id}/resolve — mark resolved
+
+ISSUES.md sync:
+  When issue resolved in dashboard →
+  append to ISSUES.md via git commit
+  So Claude always has current issue history
+
 ### 3. Tenant Recovery Speed Settings
 Add to business dashboard Settings section:
 - Recovery speed: Gentle / Standard / Aggressive
