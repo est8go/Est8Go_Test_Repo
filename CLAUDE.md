@@ -107,27 +107,89 @@ Create backend/app/services/retention_service.py:
 - Create backend/run_retention.py scheduled job
 - Add to render.yaml as daily cron
 
-### 2. Tenant Recovery Speed Settings
+### 2. Platform Health Monitor (High Priority)
+Build a system that continuously monitors Est8Go infrastructure and escalates issues to Super Admin.
+
+Backend: Create backend/app/services/health_service.py
+Checks to run every 15 minutes:
+
+1. DATABASE HEALTH
+   - Connection test
+   - Query response time
+   - Table row counts (detect data anomalies)
+   - Replication lag (if applicable)
+
+2. WHATSAPP HEALTH
+   - Meta API connectivity test
+   - Webhook last received timestamp
+   - Message delivery success rate (last 100 msgs)
+   - Token expiry check (warn 7 days before)
+
+3. OPENAI HEALTH
+   - API connectivity test
+   - Response time
+   - Error rate (last 100 calls)
+   - Cost spike detection (>2x normal)
+
+4. PAYMENT HEALTH
+   - Paystack API connectivity
+   - Failed webhook count (last 24hrs)
+   - Pending transactions older than 30 mins
+
+5. TENANT HEALTH
+   - Tenants with zero activity 7+ days
+   - Tenants with low credit balance (<10)
+   - Tenants with failed WhatsApp setup
+   - Conversations stuck in HANDOFF >24hrs
+
+6. SECURITY HEALTH
+   - Failed login attempts (>10 in 1 hour = alert)
+   - Unusual API call patterns
+   - Endpoints returning 500 errors
+
+Escalation levels:
+  INFO:     Log only — no notification
+  WARNING:  Log + dashboard badge on Super Admin
+  CRITICAL: Log + email to est8go@gmail.com + dashboard alert
+
+Super Admin Dashboard:
+- Platform Health tab showing all checks
+- Green/amber/red status per system
+- Last check timestamp
+- "Run Check Now" button
+- Alert history (last 7 days)
+- Auto-refresh every 60 seconds
+
+Routes needed:
+  GET /admin/health/status — current health snapshot
+  GET /admin/health/history — last 7 days of checks
+  POST /admin/health/run — trigger manual check
+
+Scheduled job:
+  backend/run_health_check.py — runs every 15 minutes
+  Add to render.yaml as cron: "*/15 * * * *"
+
+### 3. Tenant Recovery Speed Settings
 Add to business dashboard Settings section:
 - Recovery speed: Gentle / Standard / Aggressive
 - Send window: configurable start/end time
 - Auto-stop keywords: add custom keywords
 - Store in tenant settings or company_profiles table
 
-### 3. Diaspora Trust Certificate PDF
+### 4. Diaspora Trust Certificate PDF
 - backend/app/services/trust_certificate_service.py
 - Uses WeasyPrint or ReportLab
 - Shows: trust score, GPS coords, docs verified, Est8Go seal
 - Deducts 20 credits on generation
 - Available from Trust tab in dashboard
 
-### 4. Super Admin MMEF Monitoring
+### 5. Super Admin MMEF Monitoring
 - Show MMEF compliance per tenant in Super Admin
 - Flag tenants approaching grace period
 - Manual override for special cases
 - Background job: run_mmef_check.py daily
 
-### 5. Market Intelligence (Phase 3)
+### 6. Market Intelligence (Phase 3)
 - Property price trends by location
 - Transaction volume by area
 - Trust score distribution
