@@ -108,66 +108,111 @@ Create backend/app/services/retention_service.py:
 - Add to render.yaml as daily cron
 
 ### 2. Platform Health Monitor (High Priority)
-Build a system that continuously monitors Est8Go infrastructure and escalates issues to Super Admin.
+Continuous infrastructure monitoring with immediate
+escalation to Super Admin on critical issues.
 
 Backend: Create backend/app/services/health_service.py
-Checks to run every 15 minutes:
 
-1. DATABASE HEALTH
-   - Connection test
-   - Query response time
-   - Table row counts (detect data anomalies)
-   - Replication lag (if applicable)
+CHECK INTERVALS:
+  Every 15 minutes (free checks):
+    - Database connectivity + response time
+    - WhatsApp API connectivity
+    - Paystack API connectivity
+    - Stuck conversations (HANDOFF > 24hrs)
+    - Failed payments (pending > 30 mins)
+    - Security: failed logins > 10 in 1 hour
 
-2. WHATSAPP HEALTH
-   - Meta API connectivity test
-   - Webhook last received timestamp
-   - Message delivery success rate (last 100 msgs)
-   - Token expiry check (warn 7 days before)
+  Every 120 minutes (OpenAI active check):
+    - Send minimal test prompt to GPT-4o-mini
+    - Verify response received within 10 seconds
+    - Check error rate from last 100 AI calls
+    - Cost: ~₦216/month
 
-3. OPENAI HEALTH
-   - API connectivity test
-   - Response time
-   - Error rate (last 100 calls)
-   - Cost spike detection (>2x normal)
+ESCALATION LEVELS:
+  INFO:     Log only
+  WARNING:  Log + amber badge on Super Admin dashboard
+  CRITICAL: Log + immediate email to est8go@gmail.com
+            + red alert banner on Super Admin dashboard
+            + retry check after 5 minutes to confirm
 
-4. PAYMENT HEALTH
-   - Paystack API connectivity
-   - Failed webhook count (last 24hrs)
-   - Pending transactions older than 30 mins
+CRITICAL TRIGGERS (immediate email escalation):
+  - Database unreachable
+  - WhatsApp API returning 401 (token expired)
+  - WhatsApp webhook silent > 2 hours during business hours
+  - OpenAI API unreachable or error rate > 10%
+  - Paystack API unreachable
+  - Failed login attempts > 10 in 1 hour (security breach)
+  - Any endpoint returning 500 errors > 5 times in 10 mins
 
-5. TENANT HEALTH
-   - Tenants with zero activity 7+ days
-   - Tenants with low credit balance (<10)
-   - Tenants with failed WhatsApp setup
-   - Conversations stuck in HANDOFF >24hrs
+WARNING TRIGGERS (dashboard badge only):
+  - Database response time > 2 seconds
+  - OpenAI response time > 8 seconds
+  - Conversations stuck in HANDOFF > 24hrs
+  - Tenants with credit balance < 10
+  - Pending payments > 30 minutes
+  - WhatsApp token expiry < 7 days away
 
-6. SECURITY HEALTH
-   - Failed login attempts (>10 in 1 hour = alert)
-   - Unusual API call patterns
-   - Endpoints returning 500 errors
+HEALTH STATUS COLORS:
+  Green  = all systems operational
+  Amber  = warning — monitor closely
+  Red    = critical — immediate action needed
+  Grey   = check not yet run
 
-Escalation levels:
-  INFO:     Log only — no notification
-  WARNING:  Log + dashboard badge on Super Admin
-  CRITICAL: Log + email to est8go@gmail.com + dashboard alert
+Backend files to create:
+  backend/app/services/health_service.py
+    - run_all_checks()
+    - check_database()
+    - check_whatsapp()
+    - check_openai() — every 120 mins
+    - check_paystack()
+    - check_conversations()
+    - check_security()
+    - escalate_critical(issue, detail)
+    - HealthCheck model for storing results
 
-Super Admin Dashboard:
-- Platform Health tab showing all checks
-- Green/amber/red status per system
-- Last check timestamp
-- "Run Check Now" button
-- Alert history (last 7 days)
-- Auto-refresh every 60 seconds
+  backend/app/admin/health_router.py
+    - GET /admin/health/status
+    - GET /admin/health/history?days=7
+    - POST /admin/health/run (manual trigger)
 
-Routes needed:
-  GET /admin/health/status — current health snapshot
-  GET /admin/health/history — last 7 days of checks
-  POST /admin/health/run — trigger manual check
+  backend/run_health_check.py
+    - One-shot script for cron job
+    - Runs all 15-minute checks
+    - Runs OpenAI check every 120 minutes
+      (tracks last OpenAI check time in DB)
 
-Scheduled job:
-  backend/run_health_check.py — runs every 15 minutes
-  Add to render.yaml as cron: "*/15 * * * *"
+  backend/migrate_health.py
+    - Creates health_checks table
+
+render.yaml cron job:
+  name: est8go-health-cron
+  schedule: "*/15 * * * *"
+  command: python backend/run_health_check.py
+
+Super Admin Dashboard additions:
+  - New "Health" tab showing all system statuses
+  - Each system: icon + name + status + last checked
+  - Alert history list (last 7 days)
+  - "Run Full Check" button
+  - Auto-refresh every 60 seconds
+  - Red banner at top of ALL tabs when critical alert active
+  - Amber badge on Health nav item when warnings exist
+
+Email alert format (on CRITICAL):
+  Subject: EST8GO ALERT: [System] is down
+  Body:
+    System: WhatsApp API
+    Status: CRITICAL
+    Detail: Token expired — all tenant bots offline
+    Time: 14:32 WAT 25 May 2026
+    Action needed: Refresh WhatsApp access token
+    [View Dashboard] button
+
+ESTIMATED COST:
+  Render cron job:    ~1,500/month
+  OpenAI checks:      ~216/month (120-min intervals)
+  Total:              ~1,716/month
+  ROI vs 1hr outage:  29x return
 
 ### 3. Tenant Recovery Speed Settings
 Add to business dashboard Settings section:
