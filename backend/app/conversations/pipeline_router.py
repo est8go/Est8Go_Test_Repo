@@ -179,9 +179,9 @@ def classify_lead(convo: Conversation) -> dict:
 @router.get("/active", tags=["Active Sales Pipeline"])
 async def get_active_pipeline(
     db: Session = Depends(get_db),
-    x_tenant_id: str = Header(None),
     stage_filter: Optional[str] = None,
     temp_filter: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
 ):
     """
     ACTIVE SALES PIPELINE:
@@ -192,10 +192,9 @@ async def get_active_pipeline(
         stage_filter: awareness/verification/commitment/handshake
         temp_filter:  hot/warm/cold
     """
-    if not x_tenant_id:
-        raise HTTPException(status_code=400, detail="X-Tenant-Id header required")
-
-    tenant_id = int(x_tenant_id)
+    tenant_id = current_user.tenant_id
+    if not tenant_id:
+        raise HTTPException(status_code=403, detail="No tenant associated with this account")
 
     # Fetch all active conversations
     query = (
@@ -248,17 +247,18 @@ async def get_active_pipeline(
 async def get_lead_detail(
     conversation_id: int,
     db: Session = Depends(get_db),
-    x_tenant_id: str = Header(None),
+    current_user: User = Depends(get_current_user),
 ):
     """Returns full detail for a single lead including chat history."""
-    if not x_tenant_id:
-        raise HTTPException(status_code=400, detail="X-Tenant-Id header required")
+    tenant_id = current_user.tenant_id
+    if not tenant_id:
+        raise HTTPException(status_code=403, detail="No tenant associated with this account")
 
     convo = (
         db.query(Conversation)
         .filter(
             Conversation.id == conversation_id,
-            Conversation.tenant_id == int(x_tenant_id),
+            Conversation.tenant_id == tenant_id,
         )
         .first()
     )
@@ -512,17 +512,16 @@ async def send_hot_lead_alert(
 @router.get("/summary/stats", tags=["Active Sales Pipeline"])
 async def get_pipeline_summary(
     db: Session = Depends(get_db),
-    x_tenant_id: str = Header(None),
+    current_user: User = Depends(get_current_user),
 ):
     """
     PIPELINE SUMMARY:
     High-level stats for the Realtor dashboard header.
     Shows total leads, hot leads, pipeline value, and conversion rate.
     """
-    if not x_tenant_id:
-        raise HTTPException(status_code=400, detail="X-Tenant-Id header required")
-
-    tenant_id = int(x_tenant_id)
+    tenant_id = current_user.tenant_id
+    if not tenant_id:
+        raise HTTPException(status_code=403, detail="No tenant associated with this account")
 
     all_convos = (
         db.query(Conversation).filter(Conversation.tenant_id == tenant_id).all()

@@ -7,6 +7,8 @@ from typing import Optional
 # Database & Dependencies
 from app.database.db import get_db  # Use the central one, don't redefine it
 from app.tenants.deps import get_tenant_id
+from app.auth.deps import get_current_user
+from app.users.models import User
 
 # Models & Services
 from app.conversations.models import Conversation
@@ -56,17 +58,15 @@ def add_message(
 async def human_takeover(
     user_phone: str,
     db: Session = Depends(get_db),
-    x_tenant_id: Optional[str] = Header(None),  # Header now correctly imported
+    current_user: User = Depends(get_current_user),
 ):
     """
     Silences the bot so a human Realtor can chat directly.
     Ensures that Realtor A cannot silence Realtor B's bot.
     """
-    # 1. Convert Header to Integer (since your tenant IDs are integers)
-    try:
-        tenant_id = int(x_tenant_id) if x_tenant_id else 1
-    except ValueError:
-        tenant_id = 1
+    tenant_id = current_user.tenant_id
+    if not tenant_id:
+        raise HTTPException(status_code=400, detail="No tenant associated with this account")
 
     # 2. Find the conversation for this specific user AND specific tenant
     convo = (
@@ -100,18 +100,20 @@ async def human_takeover(
 
 @router.get("/realtor/leads", tags=["Realtor Portal"])
 async def get_realtor_leads(
-    db: Session = Depends(get_db), x_tenant_id: str = Header(None)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Returns all active leads and their chat status for a specific Realtor.
     """
-    if not x_tenant_id:
-        raise HTTPException(status_code=400, detail="X-Tenant-Id header missing")
+    tenant_id = current_user.tenant_id
+    if not tenant_id:
+        raise HTTPException(status_code=403, detail="No tenant associated with this account")
 
     # Fetch conversations for this tenant, ordered by most recent activity
     convos = (
         db.query(Conversation)
-        .filter(Conversation.tenant_id == int(x_tenant_id))
+        .filter(Conversation.tenant_id == tenant_id)
         .order_by(Conversation.updated_at.desc())
         .all()
     )
