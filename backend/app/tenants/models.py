@@ -51,6 +51,7 @@ class Tenant(Base):
 
     # --- DIRECT CHANNEL IDs (single channel per platform) ---
     # For multiple numbers per tenant use TenantChannel table instead
+    whatsapp_phone_number = Column(String(20), nullable=True)   # Option A setup: plain +234... number
     whatsapp_phone_number_id = Column(String(100), unique=True, nullable=True)
     facebook_page_id = Column(String(100), unique=True, nullable=True)
     instagram_account_id = Column(String(100), unique=True, nullable=True)

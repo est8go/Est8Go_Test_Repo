@@ -252,6 +252,12 @@ async def submit_onboarding(
 
     if setup_option == "A" and wa_phone:
         try:
+            if hasattr(tenant, "whatsapp_phone_number"):
+                tenant.whatsapp_phone_number = wa_phone
+                db.commit()
+        except Exception as _wpe:
+            logger.warning(f"WhatsApp phone number storage failed: {_wpe}")
+        try:
             import os as _os
             from app.services.email_service import _send, _base_template
             biz_name  = body.get("business_name", "New Tenant")
@@ -278,13 +284,17 @@ async def submit_onboarding(
                 f"WhatsApp setup needed: {biz_name}",
                 _base_template("New WhatsApp Setup Request", _body_html),
             )
+            logger.info(
+                f"WhatsApp setup email sent to est8go@gmail.com "
+                f"for tenant: {tenant.business_name}"
+            )
         except Exception as _wae:
-            logger.warning(f"WhatsApp setup notification email failed: {_wae}")
+            logger.error(f"WhatsApp setup email FAILED: {str(_wae)}")
 
     # Award welcome credits (10 bonus, 90-day expiry)
     try:
-        from app.credits.service import award_credits as _award
-        _award(
+        from app.credits.service import award_credits
+        credit_result = award_credits(
             tenant_id   = tenant.id,
             credits     = 10,
             credit_type = "bonus",
@@ -292,20 +302,31 @@ async def submit_onboarding(
             expiry_days = 90,
             db          = db,
         )
-    except Exception as _we:
-        logger.warning(f"Welcome credits failed: {_we}")
-
-    superusers = db.query(User).filter(
-        User.role == "superuser",
-        User.is_active == True,
-    ).all()
-    for su in superusers:
-        send_onboarding_complete(
-            su.email,
-            tenant.business_name,
-            body.get("email", ""),
-            link.plan,
+        logger.info(
+            f"Welcome credits awarded: tenant={tenant.id} "
+            f"result={credit_result}"
         )
+    except Exception as e:
+        logger.error(
+            f"Welcome credits FAILED: tenant={tenant.id} "
+            f"error={str(e)}"
+        )
+
+    try:
+        superusers = db.query(User).filter(
+            User.role == "superuser",
+            User.is_active == True,
+            User.is_platform_user == True,
+        ).all()
+        for su in superusers:
+            send_onboarding_complete(
+                su.email,
+                tenant.business_name or "New Tenant",
+                body.get("email", ""),
+                link.plan,
+            )
+    except Exception as e:
+        logger.error(f"Onboarding complete email failed: {e}")
 
     return {"success": True, "message": "Account created successfully"}
 
