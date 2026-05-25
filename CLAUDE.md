@@ -62,6 +62,23 @@ Super admin: est8go@gmail.com / Est8Go@2026
   bot → automation, AI assistant → sales assistant
   Bot active → Automation active, AI Assist → Smart Assist
   Variable names and function names unchanged
+- Data Retention Policy:
+  retention_service.py — 3-stage sweep (backfill suspended_at, anonymise PII at 30d, disable automation at 12mo dormancy)
+  run_retention.py — daily cron at 02:00 UTC
+  migrate_retention.py — 4 new columns on Supabase (suspended_at, anonymised_at on tenants; deleted_at, anonymised_at on users)
+  suspend_tenant stamps suspended_at, reactivate clears it
+  render.yaml — est8go-retention-cron added
+- Platform Health Monitor + Issues Tracker:
+  health_service.py — checks DB/WhatsApp/Paystack/OpenAI/conversations/security
+  health_router.py — GET /admin/health/status, /history, POST /run
+  issues_router.py — full CRUD for platform issues
+  run_health_check.py — 15-min cron, OpenAI throttled to 120min
+  migrate_health.py — health_checks table created on Supabase
+  render.yaml — est8go-health-cron every 15 minutes
+  Super Admin — Health Monitor tab + Issues Tracker tab in menu drawer
+  Auto-escalation emails on CRITICAL alerts to est8go@gmail.com
+  Red banner across all tabs on CRITICAL, amber badge on warnings
+  platform_issues table — RLS enabled on Supabase
 
 ## DO NOT OVERWRITE ⚠️
 - backend/app/conversations/intent_filter.py
@@ -97,173 +114,25 @@ Wallet: Split purchased vs bonus, deduct bonus first
 
 ## NEXT TASKS (in order)
 
-### 1. Data Retention Policy
-Create backend/app/services/retention_service.py:
-- Suspended tenants: hidden immediately
-- After 30 days: anonymise PII (name → [Suspended], email → [redacted])
-- After 90 days: hard delete available to Super Admin
-- Deleted staff: same 30/90 day lifecycle
-- Dormant accounts: 12 months → bot offline, credits preserved
-- Create backend/run_retention.py scheduled job
-- Add to render.yaml as daily cron
-
-### 2. Platform Health Monitor (High Priority)
-Continuous infrastructure monitoring with immediate
-escalation to Super Admin on critical issues.
-
-Backend: Create backend/app/services/health_service.py
-
-CHECK INTERVALS:
-  Every 15 minutes (free checks):
-    - Database connectivity + response time
-    - WhatsApp API connectivity
-    - Paystack API connectivity
-    - Stuck conversations (HANDOFF > 24hrs)
-    - Failed payments (pending > 30 mins)
-    - Security: failed logins > 10 in 1 hour
-
-  Every 120 minutes (OpenAI active check):
-    - Send minimal test prompt to GPT-4o-mini
-    - Verify response received within 10 seconds
-    - Check error rate from last 100 AI calls
-    - Cost: ~₦216/month
-
-ESCALATION LEVELS:
-  INFO:     Log only
-  WARNING:  Log + amber badge on Super Admin dashboard
-  CRITICAL: Log + immediate email to est8go@gmail.com
-            + red alert banner on Super Admin dashboard
-            + retry check after 5 minutes to confirm
-
-CRITICAL TRIGGERS (immediate email escalation):
-  - Database unreachable
-  - WhatsApp API returning 401 (token expired)
-  - WhatsApp webhook silent > 2 hours during business hours
-  - OpenAI API unreachable or error rate > 10%
-  - Paystack API unreachable
-  - Failed login attempts > 10 in 1 hour (security breach)
-  - Any endpoint returning 500 errors > 5 times in 10 mins
-
-WARNING TRIGGERS (dashboard badge only):
-  - Database response time > 2 seconds
-  - OpenAI response time > 8 seconds
-  - Conversations stuck in HANDOFF > 24hrs
-  - Tenants with credit balance < 10
-  - Pending payments > 30 minutes
-  - WhatsApp token expiry < 7 days away
-
-HEALTH STATUS COLORS:
-  Green  = all systems operational
-  Amber  = warning — monitor closely
-  Red    = critical — immediate action needed
-  Grey   = check not yet run
-
-Backend files to create:
-  backend/app/services/health_service.py
-    - run_all_checks()
-    - check_database()
-    - check_whatsapp()
-    - check_openai() — every 120 mins
-    - check_paystack()
-    - check_conversations()
-    - check_security()
-    - escalate_critical(issue, detail)
-    - HealthCheck model for storing results
-
-  backend/app/admin/health_router.py
-    - GET /admin/health/status
-    - GET /admin/health/history?days=7
-    - POST /admin/health/run (manual trigger)
-
-  backend/run_health_check.py
-    - One-shot script for cron job
-    - Runs all 15-minute checks
-    - Runs OpenAI check every 120 minutes
-      (tracks last OpenAI check time in DB)
-
-  backend/migrate_health.py
-    - Creates health_checks table
-
-render.yaml cron job:
-  name: est8go-health-cron
-  schedule: "*/15 * * * *"
-  command: python backend/run_health_check.py
-
-Super Admin Dashboard additions:
-  - New "Health" tab showing all system statuses
-  - Each system: icon + name + status + last checked
-  - Alert history list (last 7 days)
-  - "Run Full Check" button
-  - Auto-refresh every 60 seconds
-  - Red banner at top of ALL tabs when critical alert active
-  - Amber badge on Health nav item when warnings exist
-
-Email alert format (on CRITICAL):
-  Subject: EST8GO ALERT: [System] is down
-  Body:
-    System: WhatsApp API
-    Status: CRITICAL
-    Detail: Token expired — all tenant bots offline
-    Time: 14:32 WAT 25 May 2026
-    Action needed: Refresh WhatsApp access token
-    [View Dashboard] button
-
-ESTIMATED COST:
-  Render cron job:    ~1,500/month
-  OpenAI checks:      ~216/month (120-min intervals)
-  Total:              ~1,716/month
-  ROI vs 1hr outage:  29x return
-
-ISSUES TRACKER (part of Health Monitor):
-Database table: platform_issues
-  - id, title, description, severity, status
-  - affected_area, tenant_id, assigned_to
-  - diagnosis, fix_applied, resolved_at
-  - created_at, updated_at
-
-Super Admin Dashboard — Issues tab:
-  - View all open/resolved issues
-  - Create new issue manually
-  - Auto-created by health monitor on critical alerts
-  - Severity: critical/high/medium/low
-  - Status: open/in_progress/resolved
-  - Assign to staff member
-  - Add diagnosis and fix notes
-  - Resolve with one click
-  - Export as CSV
-
-API endpoints:
-  GET  /admin/issues — list all issues
-  POST /admin/issues — create new issue
-  PATCH /admin/issues/{id} — update status/notes
-  POST /admin/issues/{id}/resolve — mark resolved
-
-ISSUES.md sync:
-  When issue resolved in dashboard →
-  append to ISSUES.md via git commit
-  So Claude always has current issue history
-
-### 3. Tenant Recovery Speed Settings
+### 1. Tenant Recovery Speed Settings
 Add to business dashboard Settings section:
 - Recovery speed: Gentle / Standard / Aggressive
-- Send window: configurable start/end time
-- Auto-stop keywords: add custom keywords
+- Send window: configurable start/end time WAT
 - Store in tenant settings or company_profiles table
 
-### 4. Diaspora Trust Certificate PDF
+### 2. Diaspora Trust Certificate PDF
 - backend/app/services/trust_certificate_service.py
 - Uses WeasyPrint or ReportLab
 - Shows: trust score, GPS coords, docs verified, Est8Go seal
 - Deducts 20 credits on generation
-- Available from Trust tab in dashboard
 
-### 5. Super Admin MMEF Monitoring
+### 3. Super Admin MMEF Monitoring
 - Show MMEF compliance per tenant in Super Admin
 - Flag tenants approaching grace period
 - Manual override for special cases
 - Background job: run_mmef_check.py daily
 
-### 6. Market Intelligence (Phase 3)
+### 4. Market Intelligence (Phase 3)
 - Property price trends by location
 - Transaction volume by area
 - Trust score distribution
