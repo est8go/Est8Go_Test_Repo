@@ -79,6 +79,12 @@ Super admin: est8go@gmail.com / Est8Go@2026
   Auto-escalation emails on CRITICAL alerts to est8go@gmail.com
   Red banner across all tabs on CRITICAL, amber badge on warnings
   platform_issues table — RLS enabled on Supabase
+- Tenant Recovery Speed Settings:
+  migrate_recovery_settings.py — 3 new columns on company_profiles (recovery_speed, send_window_start, send_window_end)
+  GET/PATCH /tenants/me/profile/recovery-settings — lightweight dedicated endpoint
+  recovery_engine.py — is_good_send_time() accepts window_start/end, should_send_reminder() accepts speed + window params, _get_tenant_recovery_settings() caches per-run
+  Speed multipliers: Gentle=2x, Standard=1x, Aggressive=0.5x (min 30min)
+  Business dashboard — Settings tab (menu-only): speed cards + WAT send window selectors + timing preview
 
 ## DO NOT OVERWRITE ⚠️
 - backend/app/conversations/intent_filter.py
@@ -114,25 +120,19 @@ Wallet: Split purchased vs bonus, deduct bonus first
 
 ## NEXT TASKS (in order)
 
-### 1. Tenant Recovery Speed Settings
-Add to business dashboard Settings section:
-- Recovery speed: Gentle / Standard / Aggressive
-- Send window: configurable start/end time WAT
-- Store in tenant settings or company_profiles table
-
-### 2. Diaspora Trust Certificate PDF
+### 1. Diaspora Trust Certificate PDF
 - backend/app/services/trust_certificate_service.py
 - Uses WeasyPrint or ReportLab
 - Shows: trust score, GPS coords, docs verified, Est8Go seal
 - Deducts 20 credits on generation
 
-### 3. Super Admin MMEF Monitoring
+### 2. Super Admin MMEF Monitoring
 - Show MMEF compliance per tenant in Super Admin
 - Flag tenants approaching grace period
 - Manual override for special cases
 - Background job: run_mmef_check.py daily
 
-### 4. Market Intelligence (Phase 3)
+### 3. Market Intelligence (Phase 3)
 - Property price trends by location
 - Transaction volume by area
 - Trust score distribution

@@ -3,7 +3,12 @@ from sqlalchemy.orm import Session
 from app.database.db import get_db
 from app.auth.deps import get_current_user
 from app.company_profiles.models import CompanyProfile
-from app.company_profiles.schemas import CompanyProfileOut, CompanyProfileUpdate
+from app.company_profiles.schemas import (
+    CompanyProfileOut,
+    CompanyProfileUpdate,
+    RecoverySettingsUpdate,
+    RecoverySettingsOut,
+)
 
 router = APIRouter(prefix="/tenants/me/profile", tags=["Company Profile"])
 
@@ -69,3 +74,47 @@ def update_my_profile(
         raise HTTPException(
             status_code=500, detail="Database integrity error. Check Render logs."
         )
+
+
+@router.get("/recovery-settings", response_model=RecoverySettingsOut)
+def get_recovery_settings(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    profile = (
+        db.query(CompanyProfile)
+        .filter(CompanyProfile.tenant_id == current_user.tenant_id)
+        .first()
+    )
+    if not profile:
+        return RecoverySettingsOut(
+            recovery_speed="standard",
+            send_window_start=7,
+            send_window_end=21,
+        )
+    return profile
+
+
+@router.patch("/recovery-settings", response_model=RecoverySettingsOut)
+def update_recovery_settings(
+    payload: RecoverySettingsUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    profile = (
+        db.query(CompanyProfile)
+        .filter(CompanyProfile.tenant_id == current_user.tenant_id)
+        .first()
+    )
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found. Complete company setup first.")
+    profile.recovery_speed = payload.recovery_speed
+    profile.send_window_start = payload.send_window_start
+    profile.send_window_end = payload.send_window_end
+    try:
+        db.commit()
+        db.refresh(profile)
+        return profile
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Save failed: {e}")

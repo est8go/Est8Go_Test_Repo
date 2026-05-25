@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field
+from typing import Literal, Optional
+from pydantic import BaseModel, Field, field_validator
 
-# (Optional is removed because everything is now MANDATORY)
+# (Optional is removed from the main profile — everything is MANDATORY)
+# Recovery settings have their own lightweight schema.
 
 
 class CompanyProfileBase(BaseModel):
@@ -48,6 +50,32 @@ class CompanyProfileUpdate(CompanyProfileBase):
 class CompanyProfileOut(CompanyProfileBase):
     id: int
     tenant_id: int
+    recovery_speed: str = "standard"
+    send_window_start: int = 7
+    send_window_end: int = 21
+
+    class Config:
+        from_attributes = True
+
+
+class RecoverySettingsUpdate(BaseModel):
+    recovery_speed: Literal["gentle", "standard", "aggressive"]
+    send_window_start: int = Field(..., ge=0, le=23)
+    send_window_end: int = Field(..., ge=0, le=23)
+
+    @field_validator("send_window_end")
+    @classmethod
+    def end_after_start(cls, v: int, info) -> int:
+        start = info.data.get("send_window_start")
+        if start is not None and v <= start:
+            raise ValueError("send_window_end must be after send_window_start")
+        return v
+
+
+class RecoverySettingsOut(BaseModel):
+    recovery_speed: str
+    send_window_start: int
+    send_window_end: int
 
     class Config:
         from_attributes = True

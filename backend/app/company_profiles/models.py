@@ -2,6 +2,8 @@ from sqlalchemy import Column, Integer, String, Text, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from app.database.base import Base
 
+_VALID_SPEEDS = ("gentle", "standard", "aggressive")
+
 
 class CompanyProfile(Base):
     __tablename__ = "company_profiles"
@@ -25,5 +27,10 @@ class CompanyProfile(Base):
 
     payment_rules = Column(Text, nullable=False)
     verification_policy = Column(Text, nullable=False)
+
+    # --- RECOVERY SETTINGS ---
+    recovery_speed = Column(String(20), nullable=False, default="standard")
+    send_window_start = Column(Integer, nullable=False, default=7)   # hour WAT
+    send_window_end = Column(Integer, nullable=False, default=21)     # hour WAT
 
     tenant = relationship("Tenant", back_populates="profile")

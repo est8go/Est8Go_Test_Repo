@@ -150,18 +150,17 @@ REMINDER_TIMING = {
 }
 
 
-def is_good_send_time() -> bool:
+_SPEED_MULTIPLIER = {"gentle": 2.0, "standard": 1.0, "aggressive": 0.5}
+
+
+def is_good_send_time(window_start: int = 7, window_end: int = 21) -> bool:
     """
-    Only send recovery messages during business hours.
-    Nigerian timezone WAT = UTC+1.
-    Never send between 9pm and 7am.
+    Only send recovery messages within the tenant's configured send window.
+    Nigerian timezone WAT = UTC+1. Defaults: 7am–9pm WAT.
     """
-    from datetime import datetime, timezone, timedelta
     wat = timezone(timedelta(hours=1))
     now = datetime.now(wat)
-    hour = now.hour
-    # Allow sends between 7:00 AM and 9:00 PM WAT only
-    return 7 <= hour <= 21
+    return window_start <= now.hour <= window_end
 
 
 STOP_KEYWORDS = [
@@ -207,57 +206,55 @@ async def check_buyer_opted_out(
         return False
 
 
-def should_send_reminder(convo: Conversation) -> tuple:
+def should_send_reminder(
+    convo: Conversation,
+    speed: str = "standard",
+    window_start: int = 7,
+    window_end: int = 21,
+) -> tuple:
     """
     Determines if a conversation should receive a reminder.
 
     Returns:
         (should_send: bool, nudge_index: int, reason: str)
     """
-    # Never remind if bot is inactive (Realtor took over)
     if not getattr(convo, "is_bot_active", True):
         return False, 0, "Bot inactive"
 
-    # Never remind if closed
     if convo.funnel_stage == "closed":
         return False, 0, "Conversation closed"
 
-    # Never send outside business hours (7am-9pm WAT)
-    if not is_good_send_time():
-        return False, 0, "Outside business hours (WAT)"
+    if not is_good_send_time(window_start, window_end):
+        return False, 0, f"Outside send window ({window_start}:00–{window_end}:00 WAT)"
 
     stage = convo.funnel_stage or "awareness"
     timing = REMINDER_TIMING.get(stage, [])
     count = convo.reminder_count or 0
     score = convo.lead_score or 0
 
-    # Max reminders reached for this stage
     if count >= len(timing):
         return False, 0, f"Max reminders ({count}) reached for {stage}"
 
-    # Check timing — has enough time passed since last activity?
     last_active = convo.last_active_at or convo.updated_at
     if not last_active:
         return False, 0, "No activity timestamp"
 
     now = datetime.now(timezone.utc)
-
-    # Handle timezone-naive datetimes
     if last_active.tzinfo is None:
         last_active = last_active.replace(tzinfo=timezone.utc)
 
     hours_since = (now - last_active).total_seconds() / 3600
-    required_hours = timing[count][0]
+    multiplier = _SPEED_MULTIPLIER.get(speed, 1.0)
+    required_hours = max(0.5, timing[count][0] * multiplier)
 
     if hours_since < required_hours:
-        return False, 0, f"Too soon ({hours_since:.1f}h < {required_hours}h required)"
+        return False, 0, f"Too soon ({hours_since:.1f}h < {required_hours:.1f}h required)"
 
-    # High-value override — use special template
     nudge_index = count
     if score >= 70:
         return True, -1, f"High-value buyer (score={score})"
 
-    return True, nudge_index, f"Stage={stage}, Nudge={count+1}"
+    return True, nudge_index, f"Stage={stage}, Nudge={count+1}, Speed={speed}"
 
 
 def build_reminder_message(
@@ -310,6 +307,29 @@ def build_reminder_message(
 # ================================================================
 
 
+def _get_tenant_recovery_settings(db: Session, tenant_id: int, cache: dict) -> dict:
+    """Returns recovery settings for a tenant, cached per run to avoid repeat queries."""
+    if tenant_id not in cache:
+        try:
+            from app.company_profiles.models import CompanyProfile
+            profile = (
+                db.query(CompanyProfile)
+                .filter(CompanyProfile.tenant_id == tenant_id)
+                .first()
+            )
+            if profile:
+                cache[tenant_id] = {
+                    "speed": getattr(profile, "recovery_speed", "standard") or "standard",
+                    "window_start": getattr(profile, "send_window_start", 7) if profile.send_window_start is not None else 7,
+                    "window_end": getattr(profile, "send_window_end", 21) if profile.send_window_end is not None else 21,
+                }
+            else:
+                cache[tenant_id] = {"speed": "standard", "window_start": 7, "window_end": 21}
+        except Exception:
+            cache[tenant_id] = {"speed": "standard", "window_start": 7, "window_end": 21}
+    return cache[tenant_id]
+
+
 async def run_dropoff_recovery(db: Session):
     """
     Master recovery function.
@@ -321,7 +341,6 @@ async def run_dropoff_recovery(db: Session):
     logger.info("🔄 DROP-OFF RECOVERY: Scanning conversations...")
 
     try:
-        # Fetch all active conversations that haven't been closed
         active_convos = (
             db.query(Conversation)
             .filter(
@@ -335,10 +354,17 @@ async def run_dropoff_recovery(db: Session):
         sent = 0
         skipped = 0
         errors = 0
+        _settings_cache: dict = {}
 
         for convo in active_convos:
             try:
-                should_send, nudge_index, reason = should_send_reminder(convo)
+                settings = _get_tenant_recovery_settings(db, convo.tenant_id, _settings_cache)
+                should_send, nudge_index, reason = should_send_reminder(
+                    convo,
+                    speed=settings["speed"],
+                    window_start=settings["window_start"],
+                    window_end=settings["window_end"],
+                )
 
                 if not should_send:
                     skipped += 1

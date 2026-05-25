@@ -1871,6 +1871,35 @@
     @media (max-width: 360px) {
       .cc-pill { display: none; }
     }
+
+    /* ── RECOVERY SETTINGS ─────────────────── */
+    .speed-card {
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      background: var(--surface2);
+    }
+    .speed-card:active { opacity: 0.8; }
+    .speed-card.selected {
+      border-color: var(--indigo);
+      background: var(--indigo-dim);
+    }
+    .speed-icon { font-size: 22px; margin-bottom: 6px; }
+    .speed-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .speed-desc {
+      font-size: 10px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .speed-card.selected .speed-label { color: var(--indigo); }
   </style>
 </head>
 
@@ -1915,7 +1944,7 @@
             <div class="user-menu-item" onclick="toast('Profile editor coming soon','info');closeMenu()">
               <span>👤</span><span>Edit Profile</span>
             </div>
-            <div class="user-menu-item" onclick="toast('Settings coming soon','info');closeMenu()">
+            <div class="user-menu-item" onclick="switchTab('settings');closeMenu()">
               <span>⚙️</span><span>Settings</span>
             </div>
             <div style="height:1px;background:var(--border);margin:4px 0"></div>
@@ -2411,6 +2440,90 @@
 
     </div>
 
+    <!-- ─────────────── SETTINGS TAB (menu only) ─────────────── -->
+    <div id="settingsTab" class="tab" style="padding-top:4px">
+      <div class="sep">Recovery Settings</div>
+
+      <!-- Speed selector -->
+      <div style="background:var(--surface);border:1px solid var(--border);
+                  border-radius:var(--r-lg);padding:20px;margin-bottom:14px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;
+                    text-transform:uppercase;color:var(--muted);margin-bottom:14px">
+          Recovery Speed
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+          Controls how quickly follow-up messages are sent to buyers who go quiet.
+          Timing adjustments apply across all funnel stages.
+        </div>
+        <div id="speedCards" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div class="speed-card" id="speedGentle" onclick="selectSpeed('gentle')">
+            <div class="speed-icon">🌿</div>
+            <div class="speed-label">Gentle</div>
+            <div class="speed-desc">2× longer<br>intervals</div>
+          </div>
+          <div class="speed-card" id="speedStandard" onclick="selectSpeed('standard')">
+            <div class="speed-icon">⚖️</div>
+            <div class="speed-label">Standard</div>
+            <div class="speed-desc">Default<br>timing</div>
+          </div>
+          <div class="speed-card" id="speedAggressive" onclick="selectSpeed('aggressive')">
+            <div class="speed-icon">🔥</div>
+            <div class="speed-label">Aggressive</div>
+            <div class="speed-desc">2× faster<br>follow-ups</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Send window -->
+      <div style="background:var(--surface);border:1px solid var(--border);
+                  border-radius:var(--r-lg);padding:20px;margin-bottom:14px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;
+                    text-transform:uppercase;color:var(--muted);margin-bottom:14px">
+          Send Window (WAT)
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+          Recovery messages are only sent within this time window.
+          Outside this window, messages are held until the next run.
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--muted);
+                          display:block;margin-bottom:6px">Start Time</label>
+            <select id="windowStart" class="field" style="font-size:14px">
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--muted);
+                          display:block;margin-bottom:6px">End Time</label>
+            <select id="windowEnd" class="field" style="font-size:14px">
+            </select>
+          </div>
+        </div>
+        <div id="windowError"
+          style="display:none;color:var(--risk);font-size:12px;margin-top:10px">
+          End time must be after start time.
+        </div>
+      </div>
+
+      <!-- Timing reference -->
+      <div style="background:var(--surface);border:1px solid var(--border);
+                  border-radius:var(--r-lg);padding:16px;margin-bottom:14px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;
+                    text-transform:uppercase;color:var(--muted);margin-bottom:12px">
+          Effective Timing Preview
+        </div>
+        <div id="timingPreview" style="font-size:12px;color:var(--muted);line-height:1.8">
+        </div>
+      </div>
+
+      <button id="saveSettingsBtn"
+        onclick="saveRecoverySettings()"
+        class="btn btn-ind btn-md btn-full"
+        style="margin-bottom:24px">
+        Save Settings
+      </button>
+    </div>
+
   </div><!-- /scrollArea -->
 
   <!-- ══════════════════════════════════════
@@ -2726,6 +2839,11 @@
           <span>Analytics</span>
           <span class="drawer-badge" style="font-size:9px;background:var(--warn-dim);color:var(--warn);padding:2px 8px;border-radius:99px;font-weight:700">Soon</span>
         </div>
+        <div class="drawer-item" onclick="switchTab('settings');closeMenuDrawer()">
+          <div class="drawer-icon" style="background:var(--surface2)">⚙️</div>
+          <span>Settings</span>
+          <svg class="drawer-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </div>
         <div style="height:1px;background:var(--border);margin:16px 0"></div>
         <p style="font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Channels</p>
         <div class="drawer-item">
@@ -2962,12 +3080,12 @@
     }
 
     /* ── TAB SWITCHER ────────────────────────── */
-    const MENU_ONLY_TABS = ['trust', 'studio', 'network', 'analytics', 'credits'];
+    const MENU_ONLY_TABS = ['trust', 'studio', 'network', 'analytics', 'credits', 'settings'];
 
     function switchTab(tab) {
       if (tab === 'menu') { openMenuDrawer(); return; }
       ST.tab = tab;
-      const allTabs = ['home', 'properties', 'pipeline', 'operations', 'trust', 'studio', 'network', 'analytics', 'credits'];
+      const allTabs = ['home', 'properties', 'pipeline', 'operations', 'trust', 'studio', 'network', 'analytics', 'credits', 'settings'];
       allTabs.forEach(t => {
         g(t + 'Tab')?.classList.remove('active');
         const btnId = 'btn' + t.charAt(0).toUpperCase() + t.slice(1);
@@ -2991,6 +3109,7 @@
       if (tab === 'network') loadNetwork();
       if (tab === 'analytics') loadAnalytics();
       if (tab === 'credits') loadCreditsTab();
+      if (tab === 'settings') loadSettingsTab();
     }
 
     /* ── HOME ────────────────────────────────── */
@@ -3533,6 +3652,91 @@
     /* ── ANALYTICS ───────────────────────────── */
     async function loadAnalytics() {
       // Placeholder — analytics endpoint not yet implemented
+    }
+
+    /* ── SETTINGS TAB ────────────────────────── */
+    let _selectedSpeed = 'standard';
+
+    const SPEED_TIMING = {
+      gentle:     { awareness: ['8h','48h','96h','14d'], verification: ['4h','24h','48h'], commitment: ['2h','8h','24h'], handshake: ['2h','8h'] },
+      standard:   { awareness: ['4h','24h','48h','7d'],  verification: ['2h','12h','24h'], commitment: ['1h','4h','12h'], handshake: ['1h','4h'] },
+      aggressive: { awareness: ['2h','12h','24h','84h'], verification: ['1h','6h','12h'],  commitment: ['30m','2h','6h'],  handshake: ['30m','2h'] },
+    };
+
+    function _buildHourOptions(selectEl, selected) {
+      selectEl.innerHTML = '';
+      for (let h = 0; h <= 23; h++) {
+        const label = h === 0 ? '12:00 AM' : h < 12 ? `${h}:00 AM` : h === 12 ? '12:00 PM' : `${h - 12}:00 PM`;
+        const opt = document.createElement('option');
+        opt.value = h;
+        opt.textContent = label;
+        if (h === selected) opt.selected = true;
+        selectEl.appendChild(opt);
+      }
+    }
+
+    function selectSpeed(speed) {
+      _selectedSpeed = speed;
+      ['gentle', 'standard', 'aggressive'].forEach(s => {
+        g('speed' + s.charAt(0).toUpperCase() + s.slice(1))?.classList.toggle('selected', s === speed);
+      });
+      _renderTimingPreview();
+    }
+
+    function _renderTimingPreview() {
+      const t = SPEED_TIMING[_selectedSpeed] || SPEED_TIMING.standard;
+      const lines = [
+        `<b>Awareness:</b> ${t.awareness.join(' → ')}`,
+        `<b>Verification:</b> ${t.verification.join(' → ')}`,
+        `<b>Commitment:</b> ${t.commitment.join(' → ')}`,
+        `<b>Handshake:</b> ${t.handshake.join(' → ')}`,
+      ];
+      if (g('timingPreview')) g('timingPreview').innerHTML = lines.join('<br>');
+    }
+
+    async function loadSettingsTab() {
+      try {
+        const res = await fetch('/tenants/me/profile/recovery-settings', { headers: CFG.H });
+        if (!res.ok) { toast('Could not load settings','warn'); return; }
+        const s = await res.json();
+        _selectedSpeed = s.recovery_speed || 'standard';
+        selectSpeed(_selectedSpeed);
+        _buildHourOptions(g('windowStart'), s.send_window_start ?? 7);
+        _buildHourOptions(g('windowEnd'), s.send_window_end ?? 21);
+      } catch (e) {
+        selectSpeed('standard');
+        _buildHourOptions(g('windowStart'), 7);
+        _buildHourOptions(g('windowEnd'), 21);
+      }
+    }
+
+    async function saveRecoverySettings() {
+      const start = parseInt(g('windowStart')?.value ?? 7);
+      const end   = parseInt(g('windowEnd')?.value ?? 21);
+      if (end <= start) {
+        if (g('windowError')) g('windowError').style.display = 'block';
+        return;
+      }
+      if (g('windowError')) g('windowError').style.display = 'none';
+      const btn = g('saveSettingsBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+      try {
+        const res = await fetch('/tenants/me/profile/recovery-settings', {
+          method: 'PATCH',
+          headers: { ...CFG.H, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ recovery_speed: _selectedSpeed, send_window_start: start, send_window_end: end }),
+        });
+        if (res.ok) {
+          toast('Recovery settings saved ✓', 'success');
+        } else {
+          const d = await res.json().catch(() => ({}));
+          toast(d.detail || 'Save failed', 'warn');
+        }
+      } catch (e) {
+        toast('Network error', 'warn');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Save Settings'; }
+      }
     }
 
     /* ── MENU DRAWER ─────────────────────────── */
