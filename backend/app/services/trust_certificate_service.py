@@ -545,7 +545,8 @@ def generate_trust_certificate(
 
     try:
         from weasyprint import HTML
-        pdf_bytes = HTML(string=html).write_pdf()
+        document = HTML(string=html)
+        pdf_bytes = document.write_pdf()
         return pdf_bytes
     except ImportError:
         logger.error("WeasyPrint not installed")
