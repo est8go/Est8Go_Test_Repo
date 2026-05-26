@@ -821,3 +821,93 @@ def mmef_extend_grace(
         new_value={"month_year": current_month, "grace_days": 7},
     )
     return {"success": True, "message": "Grace period extended by 7 days"}
+
+
+# ================================================================
+# MARKET INTELLIGENCE
+# ================================================================
+
+@router.get("/market-intelligence", tags=["Super Admin"])
+async def get_market_intelligence(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_superuser),
+):
+    """
+    Market intelligence for the Super Admin.
+    Returns price trends by location, trust score distribution,
+    transaction volume, and property type breakdown.
+    """
+
+    total_listings = db.query(Listing).count()
+    avg_price_val  = db.query(func.avg(Listing.price)).scalar()
+    avg_trust_val  = db.query(func.avg(Listing.trust_score)).scalar()
+
+    # Gold+ = score >= 70 (gold or emerald)
+    verified_count = db.query(Listing).filter(Listing.trust_score >= 70).count()
+
+    # Price & trust by location (top 20 by volume)
+    loc_rows = (
+        db.query(
+            Listing.location,
+            func.count(Listing.id).label("count"),
+            func.avg(Listing.price).label("avg_price"),
+            func.min(Listing.price).label("min_price"),
+            func.max(Listing.price).label("max_price"),
+            func.avg(Listing.trust_score).label("avg_trust"),
+        )
+        .filter(Listing.location.isnot(None))
+        .group_by(Listing.location)
+        .order_by(func.count(Listing.id).desc())
+        .limit(20)
+        .all()
+    )
+
+    # Trust grade distribution
+    trust_dist = {
+        grade: db.query(Listing).filter(Listing.trust_grade == grade).count()
+        for grade in ("emerald", "gold", "silver", "bronze", "ungraded")
+    }
+
+    # By property type
+    type_rows = (
+        db.query(
+            Listing.property_type,
+            func.count(Listing.id).label("count"),
+            func.avg(Listing.price).label("avg_price"),
+            func.avg(Listing.trust_score).label("avg_trust"),
+        )
+        .filter(Listing.property_type.isnot(None))
+        .group_by(Listing.property_type)
+        .order_by(func.count(Listing.id).desc())
+        .all()
+    )
+
+    return {
+        "summary": {
+            "total_listings":  total_listings,
+            "avg_price":       round(float(avg_price_val  or 0)),
+            "avg_trust_score": round(float(avg_trust_val  or 0), 1),
+            "verified_count":  verified_count,
+        },
+        "price_by_location": [
+            {
+                "location":  row.location,
+                "count":     row.count,
+                "avg_price": round(float(row.avg_price or 0)),
+                "min_price": round(float(row.min_price or 0)),
+                "max_price": round(float(row.max_price or 0)),
+                "avg_trust": round(float(row.avg_trust or 0), 1),
+            }
+            for row in loc_rows
+        ],
+        "trust_distribution": trust_dist,
+        "by_property_type": [
+            {
+                "type":      row.property_type,
+                "count":     row.count,
+                "avg_price": round(float(row.avg_price or 0)),
+                "avg_trust": round(float(row.avg_trust or 0), 1),
+            }
+            for row in type_rows
+        ],
+    }

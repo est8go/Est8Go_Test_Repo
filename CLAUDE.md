@@ -92,6 +92,13 @@ Super admin: est8go@gmail.com / Est8Go@2026
   New listings always start as pending_review
   Verify queue now shows pending_review listings
   All existing listings recalculated correctly (migrate_fix_ai_default.py)
+- Market Intelligence (Phase 3):
+  GET /admin/market-intelligence — price trends, trust distribution, volume, property type breakdown
+  Super Admin menu drawer → Market Intelligence tab
+  4 stat cards: Total Listings, Avg Price, Avg Trust Score, Gold+ Verified
+  Trust grade distribution bars (emerald/gold/silver/bronze/ungraded)
+  Price & volume by location (avg/min/max price, avg trust, listing count)
+  By property type table (count, avg price, avg trust)
 - Super Admin MMEF Monitoring:
   GET /admin/mmef/compliance — filters Core/Growth tenants
   POST /admin/mmef/{id}/override — manual compliance override
@@ -136,16 +143,6 @@ Welcome: 10 bonus credits on signup
 Ledger: Immutable, 11 event types
 Wallet: Split purchased vs bonus, deduct bonus first
 
-## ISSUES
-
-### ACTIVE ISSUE: Trust Certificate PDF
-WeasyPrint version conflict on Render.
-Error: PDF.__init__() takes 1 positional argument but 3 were given
-Fix: Pin weasyprint to >=52.5,<53 in requirements.txt
-File: backend/app/services/trust_certificate_service.py
-Line: HTML(string=html).write_pdf()
-Status: OPEN
-
 ## NEXT TASKS (in order)
 
 ### 1. Diaspora Trust Certificate PDF
@@ -155,13 +152,7 @@ Status: OPEN
 - Deducts 20 credits on generation
 - Available from Trust tab in dashboard
 
-### 2. Market Intelligence (Phase 3)
-- Property price trends by location
-- Transaction volume by area
-- Trust score distribution
-- Available at /admin/market-intelligence
-
-### 3. Conversation engine full test
+### 2. Conversation engine full test (NEXT)
 - Test complete WhatsApp flow with real listings
 - Single message extraction
 - Objection handling

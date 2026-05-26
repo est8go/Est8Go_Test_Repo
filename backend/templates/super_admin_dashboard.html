@@ -604,6 +604,76 @@
 
     </div>
 
+    <!-- MARKET INTELLIGENCE TAB (menu-only) -->
+    <div id="marketTab" class="tab">
+
+      <!-- Summary Stats -->
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);
+                  gap:10px;margin-bottom:14px;padding:16px 16px 0">
+        <div style="background:var(--surface);border:1px solid var(--border);
+                    border-radius:var(--r-lg);padding:14px;text-align:center">
+          <div style="font-size:9px;font-weight:700;letter-spacing:0.05em;
+                      text-transform:uppercase;color:var(--muted)">Total Listings</div>
+          <div id="miTotal"
+            style="font-family:'Syne',sans-serif;font-size:28px;
+                   font-weight:800;color:var(--indigo);margin-top:4px">&#x2014;</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);
+                    border-radius:var(--r-lg);padding:14px;text-align:center">
+          <div style="font-size:9px;font-weight:700;letter-spacing:0.05em;
+                      text-transform:uppercase;color:var(--muted)">Avg Price</div>
+          <div id="miAvgPrice"
+            style="font-family:'Syne',sans-serif;font-size:20px;
+                   font-weight:800;color:var(--text);margin-top:4px">&#x2014;</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);
+                    border-radius:var(--r-lg);padding:14px;text-align:center">
+          <div style="font-size:9px;font-weight:700;letter-spacing:0.05em;
+                      text-transform:uppercase;color:var(--muted)">Avg Trust Score</div>
+          <div id="miAvgTrust"
+            style="font-family:'Syne',sans-serif;font-size:28px;
+                   font-weight:800;color:var(--em);margin-top:4px">&#x2014;</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);
+                    border-radius:var(--r-lg);padding:14px;text-align:center">
+          <div style="font-size:9px;font-weight:700;letter-spacing:0.05em;
+                      text-transform:uppercase;color:var(--muted)">Gold+ Verified</div>
+          <div id="miVerified"
+            style="font-family:'Syne',sans-serif;font-size:28px;
+                   font-weight:800;color:var(--warn);margin-top:4px">&#x2014;</div>
+        </div>
+      </div>
+
+      <!-- Trust Grade Distribution -->
+      <div style="padding:0 16px;margin-bottom:14px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.15em;
+                    text-transform:uppercase;color:var(--muted);margin-bottom:10px">
+          Trust Grade Distribution
+        </div>
+        <div id="miTrustDist"></div>
+      </div>
+
+      <!-- Price by Location -->
+      <div style="padding:0 16px;margin-bottom:14px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.15em;
+                    text-transform:uppercase;color:var(--muted);margin-bottom:10px">
+          Price &amp; Volume by Location
+        </div>
+        <div id="miLocList"></div>
+      </div>
+
+      <!-- By Property Type -->
+      <div style="padding:0 16px;margin-bottom:14px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.15em;
+                    text-transform:uppercase;color:var(--muted);margin-bottom:10px">
+          By Property Type
+        </div>
+        <div id="miTypeList"></div>
+      </div>
+
+      <div style="height:16px"></div>
+    </div>
+
   </div><!-- /scrollArea -->
 
   <!-- ══ BOTTOM NAV (5 tabs) ══ -->
@@ -681,6 +751,11 @@
     <div class="menu-drawer-row" onclick="closeMenuDrawer();switchTab('mmef')">
       <span style="font-size:18px;width:28px;text-align:center">📊</span>
       <span style="flex:1;font-size:14px;font-weight:500">MMEF Compliance</span>
+      <svg width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+    </div>
+    <div class="menu-drawer-row" onclick="closeMenuDrawer();switchTab('market')">
+      <span style="font-size:18px;width:28px;text-align:center">📈</span>
+      <span style="flex:1;font-size:14px;font-weight:500">Market Intelligence</span>
       <svg width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
     </div>
     <div class="menu-drawer-sec">Channels</div>
@@ -1025,7 +1100,7 @@
   function closeMenuDrawer() { g('menuDrawer').classList.remove('open'); }
 
   // ── SINGLE SWITCHTAB ───────────────────────────────────────────
-  const MENU_ONLY_TABS = ['staff','billing','conversations','risk','credits','health','issues','mmef'];
+  const MENU_ONLY_TABS = ['staff','billing','conversations','risk','credits','health','issues','mmef','market'];
 
   function switchTab(name) {
     if (name === 'menu') { openMenuDrawer(); return; }
@@ -1054,6 +1129,7 @@
       health:        loadHealthStatus,
       issues:        loadIssues,
       mmef:          loadMmef,
+      market:        loadMarket,
     };
     if (loaders[name]) loaders[name]();
   }
@@ -2204,6 +2280,124 @@
           ` : ''}
         </div>`;
     }).join('');
+  }
+
+  // ── MARKET INTELLIGENCE ───────────────────────────────────────
+  function miPrice(p) {
+    if (p >= 1e9)  return '₦' + (p / 1e9).toFixed(1) + 'B';
+    if (p >= 1e6)  return '₦' + (p / 1e6).toFixed(1) + 'M';
+    if (p >= 1e3)  return '₦' + (p / 1e3).toFixed(0) + 'K';
+    return '₦' + p.toLocaleString();
+  }
+
+  async function loadMarket() {
+    try {
+      const res = await Auth.fetch('/admin/market-intelligence');
+      if (!res?.ok) return;
+      const d = await res.json();
+
+      const s = d.summary || {};
+      if (g('miTotal'))    g('miTotal').textContent    = s.total_listings  ?? 0;
+      if (g('miAvgPrice')) g('miAvgPrice').textContent = miPrice(s.avg_price ?? 0);
+      if (g('miAvgTrust')) g('miAvgTrust').textContent = (s.avg_trust_score ?? 0) + '/100';
+      if (g('miVerified')) g('miVerified').textContent = s.verified_count  ?? 0;
+
+      renderMiTrustDist(d.trust_distribution || {}, s.total_listings || 1);
+      renderMiLocList(d.price_by_location || []);
+      renderMiTypeList(d.by_property_type || []);
+    } catch(e) {
+      console.error('Market intelligence load failed:', e);
+    }
+  }
+
+  function renderMiTrustDist(dist, total) {
+    const el = g('miTrustDist');
+    if (!el) return;
+    const GRADES = [
+      { key: 'emerald',  label: 'Emerald',  color: 'var(--em)'    },
+      { key: 'gold',     label: 'Gold',     color: 'var(--warn)'  },
+      { key: 'silver',   label: 'Silver',   color: '#94A3B8'      },
+      { key: 'bronze',   label: 'Bronze',   color: '#CD7F32'      },
+      { key: 'ungraded', label: 'Ungraded', color: 'var(--muted)' },
+    ];
+    el.innerHTML = GRADES.map(g2 => {
+      const count = dist[g2.key] || 0;
+      const pct   = total > 0 ? Math.round((count / total) * 100) : 0;
+      return `
+        <div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;
+                      font-size:12px;margin-bottom:4px">
+            <span style="font-weight:600;color:${g2.color}">${g2.label}</span>
+            <span style="color:var(--muted)">${count} listings &mdash; ${pct}%</span>
+          </div>
+          <div style="background:var(--surface2);border-radius:99px;height:6px;overflow:hidden">
+            <div style="height:100%;border-radius:99px;background:${g2.color};
+                        width:${pct}%;transition:width 0.5s ease"></div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderMiLocList(rows) {
+    const el = g('miLocList');
+    if (!el) return;
+    if (!rows.length) {
+      el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">No location data</div>';
+      return;
+    }
+    el.innerHTML = rows.map(r => {
+      const trustColor = r.avg_trust >= 70 ? 'var(--em)' : r.avg_trust >= 40 ? 'var(--warn)' : 'var(--risk)';
+      return `
+        <div style="background:var(--surface);border:1px solid var(--border);
+                    border-radius:var(--r-lg);padding:14px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div>
+              <div style="font-weight:700;font-size:14px">${sanitise(r.location)}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">
+                ${r.count} listing${r.count !== 1 ? 's' : ''}
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800">
+                ${miPrice(r.avg_price)}
+              </div>
+              <div style="font-size:10px;color:var(--muted)">avg price</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
+            <span>Min: ${miPrice(r.min_price)}</span>
+            <span>Max: ${miPrice(r.max_price)}</span>
+            <span style="color:${trustColor};font-weight:600">Trust: ${r.avg_trust}/100</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderMiTypeList(rows) {
+    const el = g('miTypeList');
+    if (!el) return;
+    if (!rows.length) {
+      el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">No data</div>';
+      return;
+    }
+    el.innerHTML = `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
+        <div style="display:grid;grid-template-columns:1fr auto auto auto;
+                    font-size:9px;font-weight:700;letter-spacing:0.1em;
+                    text-transform:uppercase;color:var(--muted);
+                    padding:10px 14px;border-bottom:1px solid var(--border);gap:12px">
+          <span>Type</span><span>Count</span><span>Avg Price</span><span>Avg Trust</span>
+        </div>
+        ${rows.map((r, i) => `
+          <div style="display:grid;grid-template-columns:1fr auto auto auto;
+                      gap:12px;padding:10px 14px;font-size:12px;
+                      ${i < rows.length - 1 ? 'border-bottom:1px solid var(--border)' : ''}">
+            <span style="font-weight:600;text-transform:capitalize">${sanitise(r.type)}</span>
+            <span style="color:var(--muted)">${r.count}</span>
+            <span>${miPrice(r.avg_price)}</span>
+            <span style="color:${r.avg_trust >= 70 ? 'var(--em)' : r.avg_trust >= 40 ? 'var(--warn)' : 'var(--risk)'};font-weight:600">${r.avg_trust}</span>
+          </div>`).join('')}
+      </div>`;
   }
 
   async function mmefOverride(tenantId, name) {
