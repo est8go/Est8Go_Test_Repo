@@ -1,7 +1,7 @@
 import os
 import logging
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, Header, Form, File, UploadFile, HTTPException
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
@@ -96,6 +96,7 @@ async def realtor_upload_property(
             status="verified" if gps_score >= 80 else "pending_review",
             source="realtor_portal",
         )
+        new_listing.gps_verified_at = datetime.now(timezone.utc)
         db.add(new_listing)
         db.commit()
         db.refresh(new_listing)
@@ -117,8 +118,24 @@ async def realtor_upload_property(
                 db.add(ListingImage(listing_id=new_listing.id, url=url))
             db.commit()
 
-        trust_score = calculate_confidence_score(new_listing)
-        label = get_trust_label(trust_score)
+        # Recalculate and persist trust score after all data is saved
+        gps_pts     = 30 if new_listing.latitude and new_listing.longitude else 0
+        ai_pts      = 20 if getattr(new_listing, 'ai_verified_real', False) else 0
+        doc_pts     = getattr(new_listing, 'document_score', 0) or 0
+        witness_pts = min((getattr(new_listing, 'witness_count', 0) or 0) * 5, 10)
+        total       = gps_pts + ai_pts + doc_pts + witness_pts
+
+        new_listing.trust_score = total
+        new_listing.trust_grade = (
+            'emerald' if total >= 85 else
+            'gold'    if total >= 70 else
+            'silver'  if total >= 55 else
+            'bronze'  if total > 0  else
+            'ungraded'
+        )
+        db.commit()
+
+        label = get_trust_label(total)
 
         feedback = (
             "To reach 85% (Emerald Green), please add a landmark and wait for AI audit."
@@ -131,8 +148,11 @@ async def realtor_upload_property(
         return {
             "status": "success",
             "listing_id": new_listing.id,
+            "trust_score": total,
+            "trust_grade": new_listing.trust_grade,
+            "gps_verified_at": new_listing.gps_verified_at.isoformat(),
             "verification": {
-                "score": f"{trust_score}%",
+                "score": f"{total}%",
                 "label": label["text"],
                 "color": label["color"],
                 "coaching": feedback,
