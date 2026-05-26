@@ -85,6 +85,17 @@ Super admin: est8go@gmail.com / Est8Go@2026
   Business dashboard Settings tab: 3 speed cards (Gentle/Standard/Aggressive), WAT send window selector, live timing preview table
   Recovery engine reads per-tenant settings on each run
   migrate_recovery_settings.py run on production
+- Super Admin MMEF Monitoring:
+  GET /admin/mmef/compliance — filters Core/Growth tenants
+  POST /admin/mmef/{id}/override — manual compliance override
+  POST /admin/mmef/{id}/extend-grace — extend grace 7 days
+  run_mmef_check.py — daily cron at 01:00 UTC
+  Warning emails at 7 and 3 days left in month
+  MMEF tab in Super Admin with 4 stat cards
+  Progress bar per tenant with colour coding
+  Mark Compliant + Extend Grace buttons
+  est8go-mmef-cron added to render.yaml
+  Mobile label fix — 9px font, Non-Compliant splits 2 lines
 
 ## DO NOT OVERWRITE ⚠️
 - backend/app/conversations/intent_filter.py
@@ -125,18 +136,23 @@ Wallet: Split purchased vs bonus, deduct bonus first
 - Uses WeasyPrint or ReportLab
 - Shows: trust score, GPS coords, docs verified, Est8Go seal
 - Deducts 20 credits on generation
+- Available from Trust tab in dashboard
 
-### 2. Super Admin MMEF Monitoring
-- Show MMEF compliance per tenant in Super Admin
-- Flag tenants approaching grace period
-- Manual override for special cases
-- Background job: run_mmef_check.py daily
-
-### 3. Market Intelligence (Phase 3)
+### 2. Market Intelligence (Phase 3)
 - Property price trends by location
 - Transaction volume by area
 - Trust score distribution
 - Available at /admin/market-intelligence
+
+### 3. Conversation engine full test
+- Test complete WhatsApp flow with real listings
+- Single message extraction
+- Objection handling
+- Handshake + Google Maps delivery
+- Session memory hot resume
+
+### 4. Admin phone numbers for lead alerts
+- Set realtor phone numbers so pipeline alerts deliver
 
 ## BACKEND STACK
 - FastAPI + SQLAlchemy + PostgreSQL (Render)
