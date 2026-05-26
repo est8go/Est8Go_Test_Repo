@@ -3187,9 +3187,9 @@
 
         // Ecosystem health pill
         const pill = g('healthPill');
-        if (trust > 0 && trust < 40) {
+        if (trust > 0 && trust < 30) {
           if (pill) { pill.className = 'health-pill risk'; g('healthText').textContent = 'Risk Elevated'; }
-        } else if (trust > 0) {
+        } else {
           if (pill) { pill.className = 'health-pill stable'; g('healthText').textContent = 'Trust Stable'; }
         }
 
@@ -3208,7 +3208,7 @@
         const now = new Date();
         const unverified = listings.filter(l => !l.trust_grade || l.trust_grade === 'ungraded' || l.trust_grade === 'flagged');
         const expired = listings.filter(l => l.gps_expires_at && new Date(l.gps_expires_at) < now);
-        const atRisk = listings.filter(l => l.trust_score && l.trust_score < 40);
+        const atRisk = listings.filter(l => l.trust_score > 0 && l.trust_score < 30);
 
         if (!unverified.length && !expired.length && !atRisk.length) { zone.innerHTML = ''; return; }
         const flaggedListings = listings.filter(l => l.trust_grade === 'flagged');
