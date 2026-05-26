@@ -1,11 +1,12 @@
 import re
+import calendar
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from app.database.db import get_db
 from app.users.models import User, PLATFORM_ROLES
@@ -14,6 +15,7 @@ from app.auth.deps import require_platform_user, require_superuser
 from app.listings.models import Listing
 from app.conversations.models import Conversation
 from app.database.audit import log_action
+from app.credits.models import MmefTracking, CreditTransaction, CreditWallet
 
 router = APIRouter(prefix="/admin", tags=["Super Admin"])
 
@@ -656,3 +658,166 @@ def reject_listing(
                target_table="listings", target_id=listing.id,
                new_value={"status": "rejected"})
     return {"success": True}
+
+
+# ================================================================
+# MMEF COMPLIANCE — monitor Core & Growth tenants
+# ================================================================
+
+_MMEF_THRESHOLDS = {"core": 2500, "growth": 6000}
+
+
+@router.get("/mmef/compliance")
+def get_mmef_compliance(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_superuser),
+):
+    """Returns MMEF compliance status for all Core and Growth tenants."""
+    current_month = datetime.utcnow().strftime("%Y-%m")
+    now = datetime.utcnow()
+    days_in_month = calendar.monthrange(now.year, now.month)[1]
+    days_left = days_in_month - now.day
+
+    tenants = db.query(Tenant).filter(
+        Tenant.plan.in_(["core", "growth"]),
+        Tenant.is_active == True,
+    ).all()
+
+    results = []
+    for tenant in tenants:
+        threshold = _MMEF_THRESHOLDS.get(tenant.plan, 0)
+
+        purchased = db.query(
+            func.sum(CreditTransaction.amount_ngn)
+        ).filter(
+            CreditTransaction.tenant_id == tenant.id,
+            CreditTransaction.status == "completed",
+            CreditTransaction.month_year == current_month,
+        ).scalar() or 0
+
+        mmef = db.query(MmefTracking).filter(
+            MmefTracking.tenant_id == tenant.id,
+            MmefTracking.month_year == current_month,
+        ).first()
+
+        pct = round((purchased / threshold) * 100) if threshold > 0 else 100
+
+        if purchased >= threshold:
+            status = "compliant"
+        elif mmef and mmef.grace_until and mmef.grace_until > now:
+            status = "grace_period"
+        elif pct >= 70:
+            status = "at_risk"
+        else:
+            status = "non_compliant"
+
+        wallet = db.query(CreditWallet).filter(
+            CreditWallet.tenant_id == tenant.id
+        ).first()
+
+        results.append({
+            "tenant_id":      tenant.id,
+            "tenant_name":    tenant.business_name or "—",
+            "plan":           tenant.plan,
+            "threshold_ngn":  threshold,
+            "purchased_ngn":  purchased,
+            "percentage":     min(pct, 100),
+            "status":         status,
+            "days_left":      days_left,
+            "grace_until":    mmef.grace_until.isoformat() if mmef and mmef.grace_until else None,
+            "credit_balance": (wallet.purchased_balance + wallet.bonus_balance) if wallet else 0,
+            "month_year":     current_month,
+        })
+
+    order = {"non_compliant": 0, "at_risk": 1, "grace_period": 2, "compliant": 3}
+    results.sort(key=lambda x: order.get(x["status"], 4))
+
+    return {
+        "month_year":    current_month,
+        "total":         len(results),
+        "compliant":     sum(1 for r in results if r["status"] == "compliant"),
+        "at_risk":       sum(1 for r in results if r["status"] == "at_risk"),
+        "grace":         sum(1 for r in results if r["status"] == "grace_period"),
+        "non_compliant": sum(1 for r in results if r["status"] == "non_compliant"),
+        "tenants":       results,
+    }
+
+
+@router.post("/mmef/{tenant_id}/override")
+def mmef_override(
+    tenant_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_superuser),
+):
+    """Super Admin manually marks a tenant as MMEF compliant for current month."""
+    current_month = datetime.utcnow().strftime("%Y-%m")
+
+    tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    threshold = _MMEF_THRESHOLDS.get(tenant.plan, 0)
+
+    mmef = db.query(MmefTracking).filter(
+        MmefTracking.tenant_id == tenant_id,
+        MmefTracking.month_year == current_month,
+    ).first()
+
+    if mmef:
+        mmef.met = True
+        mmef.purchased_ngn = threshold
+    else:
+        mmef = MmefTracking(
+            tenant_id=tenant_id,
+            month_year=current_month,
+            tier=tenant.plan,
+            required_ngn=threshold,
+            purchased_ngn=threshold,
+            met=True,
+        )
+        db.add(mmef)
+
+    db.commit()
+    log_action(
+        db, actor=current_user, action="mmef_override",
+        target_table="mmef_tracking", target_id=tenant_id,
+        new_value={"month_year": current_month, "met": True},
+    )
+    return {"success": True, "message": f"MMEF override applied for {tenant.business_name}"}
+
+
+@router.post("/mmef/{tenant_id}/extend-grace")
+def mmef_extend_grace(
+    tenant_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_superuser),
+):
+    """Extend grace period by 7 days for a tenant."""
+    current_month = datetime.utcnow().strftime("%Y-%m")
+
+    mmef = db.query(MmefTracking).filter(
+        MmefTracking.tenant_id == tenant_id,
+        MmefTracking.month_year == current_month,
+    ).first()
+
+    if mmef:
+        new_grace = (mmef.grace_until or datetime.utcnow()) + timedelta(days=7)
+        mmef.grace_until = new_grace
+    else:
+        tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+        mmef = MmefTracking(
+            tenant_id=tenant_id,
+            month_year=current_month,
+            tier=tenant.plan if tenant else "core",
+            required_ngn=_MMEF_THRESHOLDS.get(tenant.plan if tenant else "core", 2500),
+            grace_until=datetime.utcnow() + timedelta(days=7),
+        )
+        db.add(mmef)
+
+    db.commit()
+    log_action(
+        db, actor=current_user, action="mmef_grace_extended",
+        target_table="mmef_tracking", target_id=tenant_id,
+        new_value={"month_year": current_month, "grace_days": 7},
+    )
+    return {"success": True, "message": "Grace period extended by 7 days"}

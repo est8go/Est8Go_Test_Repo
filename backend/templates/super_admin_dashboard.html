@@ -549,6 +549,60 @@
       <div style="height:8px"></div>
     </div>
 
+    <!-- MMEF TAB (menu-only) -->
+    <div id="mmefTab" class="tab">
+
+      <!-- Summary stats -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);
+                  gap:10px;margin-bottom:14px;padding:16px 16px 0">
+        <div style="background:var(--surface);border:1px solid var(--border);
+                    border-radius:var(--r-lg);padding:14px;text-align:center">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;
+                      text-transform:uppercase;color:var(--muted)">Compliant</div>
+          <div id="mmefCompliant"
+            style="font-family:'Syne',sans-serif;font-size:28px;
+                   font-weight:800;color:var(--em);margin-top:4px">—</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);
+                    border-radius:var(--r-lg);padding:14px;text-align:center">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;
+                      text-transform:uppercase;color:var(--muted)">At Risk</div>
+          <div id="mmefAtRisk"
+            style="font-family:'Syne',sans-serif;font-size:28px;
+                   font-weight:800;color:var(--warn);margin-top:4px">—</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);
+                    border-radius:var(--r-lg);padding:14px;text-align:center">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;
+                      text-transform:uppercase;color:var(--muted)">Grace</div>
+          <div id="mmefGrace"
+            style="font-family:'Syne',sans-serif;font-size:28px;
+                   font-weight:800;color:#6366F1;margin-top:4px">—</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);
+                    border-radius:var(--r-lg);padding:14px;text-align:center">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;
+                      text-transform:uppercase;color:var(--muted)">Non-Compliant</div>
+          <div id="mmefNonCompliant"
+            style="font-family:'Syne',sans-serif;font-size:28px;
+                   font-weight:800;color:var(--risk);margin-top:4px">—</div>
+        </div>
+      </div>
+
+      <!-- Month indicator -->
+      <div id="mmefMonth"
+        style="font-size:10px;font-weight:700;letter-spacing:0.1em;
+               text-transform:uppercase;color:var(--muted);
+               margin-bottom:10px;padding:0 16px">
+        Loading...
+      </div>
+
+      <!-- Tenant list -->
+      <div id="mmefList" style="padding:0 16px"></div>
+      <div style="height:16px"></div>
+
+    </div>
+
   </div><!-- /scrollArea -->
 
   <!-- ══ BOTTOM NAV (5 tabs) ══ -->
@@ -621,6 +675,11 @@
     <div class="menu-drawer-row" onclick="closeMenuDrawer();switchTab('issues')">
       <span style="font-size:18px;width:28px;text-align:center">🔧</span>
       <span style="flex:1;font-size:14px;font-weight:500">Issues Tracker</span>
+      <svg width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+    </div>
+    <div class="menu-drawer-row" onclick="closeMenuDrawer();switchTab('mmef')">
+      <span style="font-size:18px;width:28px;text-align:center">📊</span>
+      <span style="flex:1;font-size:14px;font-weight:500">MMEF Compliance</span>
       <svg width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
     </div>
     <div class="menu-drawer-sec">Channels</div>
@@ -965,7 +1024,7 @@
   function closeMenuDrawer() { g('menuDrawer').classList.remove('open'); }
 
   // ── SINGLE SWITCHTAB ───────────────────────────────────────────
-  const MENU_ONLY_TABS = ['staff','billing','conversations','risk','credits','health','issues'];
+  const MENU_ONLY_TABS = ['staff','billing','conversations','risk','credits','health','issues','mmef'];
 
   function switchTab(name) {
     if (name === 'menu') { openMenuDrawer(); return; }
@@ -993,6 +1052,7 @@
       credits:       loadCreditWallets,
       health:        loadHealthStatus,
       issues:        loadIssues,
+      mmef:          loadMmef,
     };
     if (loaders[name]) loaders[name]();
   }
@@ -2040,6 +2100,129 @@
       }
     } catch(e) { toast('Error', 'var(--risk)'); }
     finally { if (btn) { btn.textContent = 'Run Check'; btn.disabled = false; } }
+  }
+
+  // ── MMEF COMPLIANCE ───────────────────────────────────────────
+  async function loadMmef() {
+    try {
+      const res = await Auth.fetch('/admin/mmef/compliance');
+      if (!res?.ok) return;
+      const data = await res.json();
+
+      if (g('mmefCompliant'))    g('mmefCompliant').textContent    = data.compliant     ?? 0;
+      if (g('mmefAtRisk'))       g('mmefAtRisk').textContent       = data.at_risk       ?? 0;
+      if (g('mmefGrace'))        g('mmefGrace').textContent        = data.grace         ?? 0;
+      if (g('mmefNonCompliant')) g('mmefNonCompliant').textContent = data.non_compliant ?? 0;
+      if (g('mmefMonth'))
+        g('mmefMonth').textContent = `MMEF Compliance — ${data.month_year}`;
+
+      renderMmef(data.tenants || []);
+    } catch(e) {
+      console.error('MMEF load failed:', e);
+    }
+  }
+
+  function renderMmef(tenants) {
+    const list = g('mmefList');
+    if (!list) return;
+
+    if (!tenants.length) {
+      list.innerHTML = `
+        <div style="text-align:center;padding:40px;color:var(--muted)">
+          <div style="font-size:32px;margin-bottom:10px">📊</div>
+          <div style="font-weight:700;margin-bottom:4px">No Core or Growth tenants yet</div>
+          <div style="font-size:12px">MMEF applies to Core and Growth plan tenants</div>
+        </div>`;
+      return;
+    }
+
+    const STATUS_CONFIG = {
+      compliant:     {color:'var(--em)',    bg:'var(--em-dim)',              label:'Compliant',     icon:'✅'},
+      at_risk:       {color:'var(--warn)',  bg:'var(--warn-dim)',            label:'At Risk',       icon:'⚠️'},
+      grace_period:  {color:'#6366F1',     bg:'rgba(99,102,241,0.1)',       label:'Grace Period',  icon:'⏳'},
+      non_compliant: {color:'var(--risk)', bg:'var(--risk-dim)',            label:'Non-Compliant', icon:'🚨'},
+    };
+
+    list.innerHTML = tenants.map(t => {
+      const cfg = STATUS_CONFIG[t.status] || STATUS_CONFIG.at_risk;
+      const pct = Math.min(t.percentage, 100);
+      const barColor = pct >= 100 ? 'var(--em)' : pct >= 70 ? 'var(--warn)' : 'var(--risk)';
+
+      return `
+        <div style="background:var(--surface);border:1px solid var(--border);
+                    border-radius:var(--r-lg);padding:16px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;
+                      align-items:flex-start;margin-bottom:12px">
+            <div>
+              <div style="font-weight:700;font-size:14px">${sanitise(t.tenant_name)}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px;text-transform:capitalize">
+                ${t.plan} Plan · ${t.days_left} days left this month
+              </div>
+            </div>
+            <div style="background:${cfg.bg};color:${cfg.color};font-size:10px;
+                        font-weight:700;padding:4px 10px;border-radius:99px;white-space:nowrap">
+              ${cfg.icon} ${cfg.label}
+            </div>
+          </div>
+          <div style="background:var(--surface2);border-radius:99px;
+                      height:6px;margin-bottom:8px;overflow:hidden">
+            <div style="height:100%;border-radius:99px;background:${barColor};
+                        width:${pct}%;transition:width 0.5s ease"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;
+                      font-size:12px;margin-bottom:12px">
+            <span style="color:var(--muted)">
+              ₦${t.purchased_ngn.toLocaleString()} of ₦${t.threshold_ngn.toLocaleString()} (${pct}%)
+            </span>
+            <span style="color:var(--muted)">Balance: ${t.credit_balance} credits</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            ${t.status !== 'compliant' ? `
+              <button onclick="mmefOverride(${t.tenant_id},'${sanitise(t.tenant_name)}')"
+                style="flex:1;background:var(--em-dim);border:1px solid var(--em-glow);
+                       color:var(--em);border-radius:10px;padding:7px;font-size:11px;
+                       font-weight:600;cursor:pointer">
+                ✅ Mark Compliant
+              </button>
+              <button onclick="mmefExtendGrace(${t.tenant_id},'${sanitise(t.tenant_name)}')"
+                style="flex:1;background:var(--indigo-dim);border:1px solid var(--indigo-glow);
+                       color:var(--indigo);border-radius:10px;padding:7px;font-size:11px;
+                       font-weight:600;cursor:pointer">
+                ⏳ Extend Grace
+              </button>
+            ` : `
+              <div style="font-size:11px;color:var(--em);font-weight:600;padding:7px 0">
+                ✅ No action needed
+              </div>
+            `}
+          </div>
+          ${t.grace_until ? `
+            <div style="font-size:10px;color:#6366F1;margin-top:8px">
+              ⏳ Grace period until: ${new Date(t.grace_until).toLocaleDateString('en-GB')}
+            </div>
+          ` : ''}
+        </div>`;
+    }).join('');
+  }
+
+  async function mmefOverride(tenantId, name) {
+    if (!confirm(
+      `Mark ${sanitise(name)} as MMEF compliant this month?\n\nThis is a manual override and will be logged.`
+    )) return;
+    try {
+      const res = await Auth.fetch(`/admin/mmef/${tenantId}/override`, {method: 'POST'});
+      if (res?.ok) { toast(`${sanitise(name)} marked compliant`); loadMmef(); }
+      else toast('Override failed', 'var(--risk)');
+    } catch(e) { toast('Error', 'var(--risk)'); }
+  }
+
+  async function mmefExtendGrace(tenantId, name) {
+    if (!confirm(`Extend grace period by 7 days for ${sanitise(name)}?`)) return;
+    try {
+      const res = await Auth.fetch(`/admin/mmef/${tenantId}/extend-grace`, {method: 'POST'});
+      if (res?.ok) { toast(`Grace period extended for ${sanitise(name)}`); loadMmef(); }
+      else toast('Failed', 'var(--risk)');
+    } catch(e) { toast('Error', 'var(--risk)'); }
   }
 
   // ── ISSUES TRACKER ────────────────────────────────────────────
