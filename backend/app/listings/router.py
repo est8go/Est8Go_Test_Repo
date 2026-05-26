@@ -1,8 +1,13 @@
 import os
+import logging
 from typing import Optional, List
+from datetime import datetime
 from fastapi import APIRouter, Depends, Header, Form, File, UploadFile, HTTPException
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from supabase import create_client, Client
+
+logger = logging.getLogger(__name__)
 
 # Database & Auth
 from app.database.db import get_db
@@ -307,3 +312,79 @@ async def delete_listing_manually(
     db.commit()
 
     return {"status": "success", "message": f"Listing #{listing_id} deleted."}
+
+
+# ---------------------------------------------------------
+# 6. TRUST CERTIFICATE — PDF download (costs 20 credits)
+# ---------------------------------------------------------
+
+@router.get("/{listing_id}/trust-certificate")
+async def generate_trust_certificate_pdf(
+    listing_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Generates and returns a PDF trust certificate.
+    Costs 20 Est8 Credits.
+    """
+    tenant_id = current_user.tenant_id
+    if not tenant_id:
+        raise HTTPException(status_code=400, detail="No tenant associated")
+
+    listing = db.query(Listing).filter(
+        Listing.id == listing_id,
+        Listing.tenant_id == tenant_id,
+    ).first()
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+
+    from app.credits.service import get_balance, deduct_credits
+
+    balance = get_balance(tenant_id, db)
+    if balance["available"] < 20:
+        raise HTTPException(
+            status_code=402,
+            detail=(
+                f"Not enough credits. "
+                f"Trust Certificate costs 20 credits. "
+                f"You have {balance['available']} available."
+            ),
+        )
+
+    from app.company_profiles.models import CompanyProfile
+
+    tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+    profile = db.query(CompanyProfile).filter(
+        CompanyProfile.tenant_id == tenant_id
+    ).first()
+
+    try:
+        from app.services.trust_certificate_service import (
+            generate_trust_certificate as gen_cert,
+        )
+        pdf_bytes = gen_cert(listing, tenant, profile)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        logger.error(f"Certificate generation failed: {e}")
+        raise HTTPException(status_code=500, detail="Certificate generation failed")
+
+    # Deduct credits AFTER successful generation
+    try:
+        deduct_credits(
+            tenant_id=tenant_id,
+            action="TRUST_CERTIFICATE",
+            tier=current_user.role or "ACCESS",
+            reference=f"cert_{listing_id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
+            db=db,
+        )
+    except Exception as e:
+        logger.warning(f"Credit deduction failed for cert: {e}")
+
+    filename = f"est8go_trust_cert_{listing_id}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )

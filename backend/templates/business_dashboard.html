@@ -2231,6 +2231,38 @@
         </div>
       </div>
 
+      <!-- Trust Certificate -->
+      <div id="certSection" style="display:none;margin-top:20px">
+        <div style="background:var(--surface);border:1px solid var(--border);
+                    border-radius:var(--r-lg);padding:20px">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div style="font-size:32px">🏅</div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:14px;margin-bottom:3px">
+                Trust Certificate
+              </div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.5">
+                Download an official PDF certificate for this listing. Perfect for
+                overseas buyers who need verified documentation.
+              </div>
+              <div style="font-size:11px;color:var(--warn);margin-top:6px;font-weight:600">
+                Costs 20 Est8 Credits
+              </div>
+            </div>
+          </div>
+          <button id="downloadCertBtn"
+            onclick="downloadCertificate()"
+            style="width:100%;margin-top:14px;background:var(--indigo-lg);
+                   color:white;border:none;border-radius:12px;padding:13px;
+                   font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+                   cursor:pointer;transition:all 0.15s"
+            onmousedown="this.style.transform='scale(0.97)'"
+            onmouseup="this.style.transform=''">
+            📥 Download Trust Certificate (20 credits)
+          </button>
+        </div>
+      </div>
+
     </div>
 
     <!-- ─────────────── PROPERTIES TAB ─────────────── -->
@@ -3427,6 +3459,12 @@
         `${l.witness_count || 0} witness${l.witness_count !== 1 ? 'es' : ''} recorded`;
       if (g('witnessScore')) g('witnessScore').textContent =
         `+${Math.min((l.witness_count || 0) * 5, 10)}`;
+      // Track current listing for certificate download
+      if (l.id) CFG._currentListingId = l.id;
+      const certSection = g('certSection');
+      if (certSection) {
+        certSection.style.display = (l && l.trust_score > 0) ? 'block' : 'none';
+      }
     }
 
     window.loadTrustForListing = function(idx) {
@@ -4099,7 +4137,66 @@
     }
 
     async function viewTrustDash(id) {
+      CFG._currentListingId = id;
       switchTab('trust');
+    }
+
+    async function downloadCertificate() {
+      const listingId = CFG._currentListingId;
+      if (!listingId) {
+        toast('Please select a listing first', 'error');
+        return;
+      }
+
+      const btn = g('downloadCertBtn');
+      if (btn) {
+        btn.textContent = '⏳ Generating certificate...';
+        btn.disabled = true;
+      }
+
+      try {
+        const res = await fetch(
+          `/listings/${listingId}/trust-certificate`,
+          { headers: CFG.H }
+        );
+
+        if (res.status === 402) {
+          const err = await res.json();
+          toast(err.detail || 'Not enough credits', 'error');
+          openModal('buyCreditsModal');
+          loadBundles();
+          return;
+        }
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          toast(err.detail || 'Certificate generation failed', 'error');
+          return;
+        }
+
+        // Download the PDF
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `est8go_trust_cert_${listingId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        toast('✅ Certificate downloaded — 20 credits deducted');
+        loadCreditBalance();
+
+      } catch(e) {
+        toast('Download failed. Please try again.', 'error');
+        console.error('Certificate download failed:', e);
+      } finally {
+        if (btn) {
+          btn.textContent = '📥 Download Trust Certificate (20 credits)';
+          btn.disabled = false;
+        }
+      }
     }
 
     /* ── PROPERTY UPLOAD ─────────────────────── */
