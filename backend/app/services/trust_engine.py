@@ -113,67 +113,24 @@ def is_gps_expired(listing: Listing) -> bool:
 
 def calculate_confidence_score(listing: Listing) -> int:
     """
-    Real-time trust score. Used by search engine to rank listings.
-    Integrates GPS + AI Vision + Documents + Witnesses.
+    Real-time trust score.
+    GPS:30 | AI:20 | Docs:40 | Witness:10 — same formula as calculate_listing_trust.
     """
-    doc_keys = []
-    if getattr(listing, "cof_uploaded", False):
-        doc_keys.append("c_of_o")
-    if getattr(listing, "deed_uploaded", False):
-        doc_keys.append("deed_of_assignment")
-    if getattr(listing, "survey_uploaded", False):
-        doc_keys.append("survey_plan")
+    gps_score = 30 if (
+        getattr(listing, "latitude", None)
+        and getattr(listing, "longitude", None)
+        and getattr(listing, "gps_verified_at", None)
+    ) else 0
 
-    lat = getattr(listing, "latitude", None)
-    lng = getattr(listing, "longitude", None)
-    gps_verified = bool(getattr(listing, "gps_verified_at", None)) or bool(lat and lng)
-    gps_expired = is_gps_expired(listing) if gps_verified else False
+    ai_score = 20 if getattr(listing, "ai_verified_real", False) else 0
 
-    gps_location_match = False
-    if lat and lng and listing.location:
-        gps_location_match = verify_gps_proximity(listing.location, lat, lng) >= 80
+    doc_score = min(getattr(listing, "document_score", 0) or 0, 40)
 
-    try:
-        from app.services.document_trust_engine import calculate_full_trust_score
+    witness_score = min(
+        (getattr(listing, "witness_count", 0) or 0) * 5, 10
+    )
 
-        result = calculate_full_trust_score(
-            gps_verified=gps_verified,
-            gps_expired=gps_expired,
-            gps_location_match=gps_location_match,
-            gps_photo_match=getattr(listing, "gps_photo_match", False),
-            ai_verified=getattr(listing, "ai_verified_real", False),
-            document_keys=doc_keys,
-            witness_count=getattr(listing, "witness_count", 0) or 0,
-        )
-        return result["total_score"]
-
-    except Exception as e:
-        logger.error(f"Trust engine error listing {listing.id}: {e}")
-        return _fallback(listing)
-
-
-def _fallback(listing: Listing) -> int:
-    """Simple fallback so search engine never crashes."""
-    score = 0
-    if listing.status == "verified":
-        score += 40
-    elif listing.status == "pending_review":
-        score += 15
-    lat = getattr(listing, "latitude", None)
-    lng = getattr(listing, "longitude", None)
-    if lat and lng:
-        prox = (
-            verify_gps_proximity(listing.location, lat, lng) if listing.location else 50
-        )
-        score += int((prox / 100) * 30)
-    if getattr(listing, "ai_verified_real", False):
-        score += 20
-    imgs = len(listing.images) if hasattr(listing, "images") and listing.images else 0
-    if imgs >= 3:
-        score += 5
-    if getattr(listing, "nearest_landmark", None):
-        score += 5
-    return score
+    return min(gps_score + ai_score + doc_score + witness_score, 100)
 
 
 # ================================================================
@@ -189,25 +146,32 @@ def get_trust_label(score: int) -> dict:
             "text": "Emerald — Premium Verified",
             "grade": "emerald",
         }
-    if score >= 60:
+    if score >= 70:
         return {
             "color": "gold",
             "icon": "🔵",
             "text": "Gold — Verified",
             "grade": "gold",
         }
-    if score >= 40:
+    if score >= 55:
         return {
             "color": "amber",
             "icon": "🟡",
-            "text": "Amber — Caution",
+            "text": "Amber — In Progress",
             "grade": "silver",
         }
+    if score > 0:
+        return {
+            "color": "rose",
+            "icon": "🟠",
+            "text": "Bronze — Incomplete",
+            "grade": "bronze",
+        }
     return {
-        "color": "rose",
-        "icon": "🔴",
-        "text": "Flagged — Incomplete",
-        "grade": "bronze",
+        "color": "gray",
+        "icon": "⚪",
+        "text": "Ungraded — Not Started",
+        "grade": "ungraded",
     }
 
 
@@ -225,7 +189,13 @@ def recalculate_all_trust_scores(db) -> dict:
         try:
             new_score = calculate_confidence_score(listing)
             listing.trust_score = new_score
-            listing.trust_grade = get_trust_label(new_score)["grade"]
+            listing.trust_grade = (
+                'emerald' if new_score >= 85 else
+                'gold'    if new_score >= 70 else
+                'silver'  if new_score >= 55 else
+                'bronze'  if new_score > 0  else
+                'ungraded'
+            )
             updated += 1
         except Exception as e:
             logger.error(f"Failed listing {listing.id}: {e}")

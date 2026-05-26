@@ -26,19 +26,36 @@ class ListingCreate(ListingBase):
     pass
 
 
-# --- THE FULL OUTPUT (What the Bot and Investors see) ---
+# --- THE FULL OUTPUT (What the Bot, Dashboard and Investors see) ---
 class ListingOut(ListingBase):
     id: int
     tenant_id: int
 
-    # Trust Layer Fields
-    status: str = "unverified"
-    source: str = "internal"
+    # Status
+    status: Optional[str] = "pending_review"
+    source: Optional[str] = "internal"
 
     # Audit Fields (For Investor Transparency)
     created_at: Optional[datetime] = None
     verified_at: Optional[datetime] = None
     verification_notes: Optional[str] = None
+
+    # Trust Score
+    trust_score:     Optional[int]  = 0
+    trust_grade:     Optional[str]  = "ungraded"
+
+    # GPS Verification
+    latitude:        Optional[float]    = None
+    longitude:       Optional[float]    = None
+    gps_verified_at: Optional[datetime] = None
+
+    # AI + Documents + Witnesses
+    ai_verified_real: Optional[bool] = False
+    document_score:   Optional[int]  = 0
+    witness_count:    Optional[int]  = 0
+    cof_uploaded:     Optional[bool] = False
+    deed_uploaded:    Optional[bool] = False
+    survey_uploaded:  Optional[bool] = False
 
     # Visual Layer (The Carousel)
     images: List[ListingImageOut] = []

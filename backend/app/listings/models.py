@@ -95,7 +95,7 @@ class Listing(Base):
     gps_photo_match = Column(Boolean, default=False)  # photos geotagged on site
 
     # --- AI VISION MOAT ---
-    ai_verified_real = Column(Boolean, default=True)
+    ai_verified_real = Column(Boolean, default=False)
     ai_audit_report = Column(Text, nullable=True)
 
     # --- DOCUMENT VERIFICATION ---

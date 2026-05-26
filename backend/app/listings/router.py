@@ -35,6 +35,37 @@ from app.services.trust_engine import (
 router = APIRouter(prefix="/listings", tags=["Listings"])
 
 
+# ──────────────────────────────────────────────────────────────────
+# SINGLE SOURCE OF TRUTH: trust score formula
+# GPS:30 | AI:20 | Docs:40 | Witness:10 — matches trust tab display
+# ──────────────────────────────────────────────────────────────────
+def calculate_listing_trust(listing) -> tuple:
+    gps_score = 30 if (
+        getattr(listing, 'latitude', None)
+        and getattr(listing, 'longitude', None)
+        and getattr(listing, 'gps_verified_at', None)
+    ) else 0
+
+    ai_score = 20 if getattr(listing, 'ai_verified_real', False) else 0
+
+    doc_score = min(getattr(listing, 'document_score', 0) or 0, 40)
+
+    witness_score = min(
+        (getattr(listing, 'witness_count', 0) or 0) * 5, 10
+    )
+
+    total = gps_score + ai_score + doc_score + witness_score
+
+    grade = (
+        'emerald' if total >= 85 else
+        'gold'    if total >= 70 else
+        'silver'  if total >= 55 else
+        'bronze'  if total > 0  else
+        'ungraded'
+    )
+    return total, grade
+
+
 def get_tenant_id_from_user(
     current_user: User,
     x_tenant_id: Optional[int] = None,
@@ -85,6 +116,7 @@ async def realtor_upload_property(
 
         gps_score = verify_gps_proximity(location_name, latitude, longitude)
 
+        # All new listings start as pending_review — Super Admin verifies
         new_listing = Listing(
             tenant_id=x_tenant_id,
             title=title,
@@ -93,7 +125,7 @@ async def realtor_upload_property(
             property_type=prop_type,
             latitude=latitude,
             longitude=longitude,
-            status="verified" if gps_score >= 80 else "pending_review",
+            status="pending_review",
             source="realtor_portal",
         )
         new_listing.gps_verified_at = datetime.now(timezone.utc)
@@ -118,21 +150,10 @@ async def realtor_upload_property(
                 db.add(ListingImage(listing_id=new_listing.id, url=url))
             db.commit()
 
-        # Recalculate and persist trust score after all data is saved
-        gps_pts     = 30 if new_listing.latitude and new_listing.longitude else 0
-        ai_pts      = 20 if getattr(new_listing, 'ai_verified_real', False) else 0
-        doc_pts     = getattr(new_listing, 'document_score', 0) or 0
-        witness_pts = min((getattr(new_listing, 'witness_count', 0) or 0) * 5, 10)
-        total       = gps_pts + ai_pts + doc_pts + witness_pts
-
+        # Calculate and persist trust score using the single source of truth
+        total, grade = calculate_listing_trust(new_listing)
         new_listing.trust_score = total
-        new_listing.trust_grade = (
-            'emerald' if total >= 85 else
-            'gold'    if total >= 70 else
-            'silver'  if total >= 55 else
-            'bronze'  if total > 0  else
-            'ungraded'
-        )
+        new_listing.trust_grade = grade
         db.commit()
 
         label = get_trust_label(total)
