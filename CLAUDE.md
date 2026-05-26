@@ -80,11 +80,11 @@ Super admin: est8go@gmail.com / Est8Go@2026
   Red banner across all tabs on CRITICAL, amber badge on warnings
   platform_issues table — RLS enabled on Supabase
 - Tenant Recovery Speed Settings:
-  migrate_recovery_settings.py — 3 new columns on company_profiles (recovery_speed, send_window_start, send_window_end)
-  GET/PATCH /tenants/me/profile/recovery-settings — lightweight dedicated endpoint
-  recovery_engine.py — is_good_send_time() accepts window_start/end, should_send_reminder() accepts speed + window params, _get_tenant_recovery_settings() caches per-run
-  Speed multipliers: Gentle=2x, Standard=1x, Aggressive=0.5x (min 30min)
-  Business dashboard — Settings tab (menu-only): speed cards + WAT send window selectors + timing preview
+  CompanyProfile model: recovery_speed, send_window_start, send_window_end columns
+  GET/PATCH /tenants/me/profile/recovery-settings
+  Business dashboard Settings tab: 3 speed cards (Gentle/Standard/Aggressive), WAT send window selector, live timing preview table
+  Recovery engine reads per-tenant settings on each run
+  migrate_recovery_settings.py run on production
 
 ## DO NOT OVERWRITE ⚠️
 - backend/app/conversations/intent_filter.py
