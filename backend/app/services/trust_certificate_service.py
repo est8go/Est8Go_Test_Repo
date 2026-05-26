@@ -105,8 +105,9 @@ def generate_trust_certificate(
     docs_html = "".join([
         f'<table class="doc-row" cellpadding="0" cellspacing="0"><tr>'
         f'<td style="width:60%">{d[0]}</td>'
-        f'<td style="width:15%;text-align:center;font-size:16px">'
-        f'{"&#x2705;" if d[1] else "&#x274C;"}</td>'
+        f'<td style="width:15%;text-align:center;'
+        f'color:{"#10B981" if d[1] else "#EF4444"};font-weight:bold;font-size:13px">'
+        f'{"[YES]" if d[1] else "[NO]"}</td>'
         f'<td style="width:25%;text-align:right;'
         f'color:{"#10B981" if d[1] else "#94A3B8"};font-weight:bold">{d[2]}</td>'
         f'</tr></table>'
@@ -122,10 +123,13 @@ def generate_trust_certificate(
 
     body {{
       font-family: Arial, Helvetica, sans-serif;
-      background: #ffffff;
+      background: #f0f0f0;
       color: #0A0F2C;
       font-size: 12px;
       line-height: 1.5;
+      display: flex;
+      justify-content: center;
+      padding: 20px 0;
     }}
 
     .page {{
@@ -133,6 +137,7 @@ def generate_trust_certificate(
       min-height: 297mm;
       padding: 15mm 18mm;
       background: #ffffff;
+      margin: 0 auto;
     }}
 
     /* HEADER */
