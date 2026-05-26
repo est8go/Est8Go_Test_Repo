@@ -85,6 +85,13 @@ Super admin: est8go@gmail.com / Est8Go@2026
   Business dashboard Settings tab: 3 speed cards (Gentle/Standard/Aggressive), WAT send window selector, live timing preview table
   Recovery engine reads per-tenant settings on each run
   migrate_recovery_settings.py run on production
+- Trust score fixes:
+  ai_verified_real default changed to False
+  calculate_listing_trust() single source of truth
+  ListingOut schema now includes all 11 trust fields
+  New listings always start as pending_review
+  Verify queue now shows pending_review listings
+  All existing listings recalculated correctly (migrate_fix_ai_default.py)
 - Super Admin MMEF Monitoring:
   GET /admin/mmef/compliance — filters Core/Growth tenants
   POST /admin/mmef/{id}/override — manual compliance override
@@ -128,6 +135,16 @@ Expiry: Purchased=never, Bonus=90 days, Dormant=12 months
 Welcome: 10 bonus credits on signup
 Ledger: Immutable, 11 event types
 Wallet: Split purchased vs bonus, deduct bonus first
+
+## ISSUES
+
+### ACTIVE ISSUE: Trust Certificate PDF
+WeasyPrint version conflict on Render.
+Error: PDF.__init__() takes 1 positional argument but 3 were given
+Fix: Pin weasyprint to >=52.5,<53 in requirements.txt
+File: backend/app/services/trust_certificate_service.py
+Line: HTML(string=html).write_pdf()
+Status: OPEN
 
 ## NEXT TASKS (in order)
 
