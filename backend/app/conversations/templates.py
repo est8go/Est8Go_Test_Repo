@@ -36,6 +36,7 @@ CITY_AREA_EXAMPLES = {
     "ilorin":        "GRA, Oke Ose, Fate, Tanke, Adewole, Unity, Ipata",
     "abeokuta":      "Ibara, Oke Mosan, Panseke, Kemta, Asero, Sapon",
     "asaba":         "GRA, Okpanam, Cable Point, Infant Jesus, Akwuzu",
+    "makurdi":       "High Level, Low Level, North Bank, Wurukum, Modern Market, Idye, Ankpa Quarters, Wadata, Logo1, Logo2, Cocacola",
 }
 
 # ================================================================
