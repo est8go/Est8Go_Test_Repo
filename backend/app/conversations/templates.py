@@ -22,9 +22,20 @@ CITY_AREA_EXAMPLES = {
     "island":        "Victoria Island, Ikoyi, Lekki, Ajah, Badagry",
     "port harcourt": "GRA, Trans Amadi, Rumuola, Rumuokoro, Elekahia, Diobu",
     "ph":            "GRA, Trans Amadi, Rumuola, Rumuokoro, Elekahia, Diobu",
-    "ibadan":        "Bodija, Jericho, Ring Road, Agodi, Oluyole, Iyaganku",
+    "ibadan":        "Bodija, Jericho, Ring Road, Agodi, Oluyole, Iyaganku, Mokola",
     "kano":          "Nassarawa, Fagge, Tarauni, Gwale, Dala, Ungogo",
-    "enugu":         "GRA, Independence Layout, New Haven, Asata, Achara Layout",
+    "enugu":         "GRA, Independence Layout, New Haven, Asata, Achara Layout, Coal Camp",
+    "benin":         "GRA, Ugbowo, Ekosodin, Uselu, Esigie, New Benin, Akpakpava",
+    "benin city":    "GRA, Ugbowo, Ekosodin, Uselu, Esigie, New Benin, Akpakpava",
+    "warri":         "Effurun, GRA, Ekpan, Ugborikoko, Okumagba, Pessu, Igbudu",
+    "owerri":        "New Owerri, Ikenegbu, Aladinma, Oforola, Nekede, Uratta",
+    "calabar":       "GRA, State Housing, CRUTECH, Big Qua, Lemna, Diamond Hill",
+    "uyo":           "GRA, Ewet Housing, Wellington Bassey, Shelter Afrique, Itam",
+    "jos":           "GRA, Rayfield, Tudun Wada, Nassarawa, Angwan Rogo, Bukuru",
+    "kaduna":        "GRA, Barnawa, Ungwan Rimi, Malali, Rigasa, Kawo, Tudun Wada",
+    "ilorin":        "GRA, Oke Ose, Fate, Tanke, Adewole, Unity, Ipata",
+    "abeokuta":      "Ibara, Oke Mosan, Panseke, Kemta, Asero, Sapon",
+    "asaba":         "GRA, Okpanam, Cable Point, Infant Jesus, Akwuzu",
 }
 
 # ================================================================
