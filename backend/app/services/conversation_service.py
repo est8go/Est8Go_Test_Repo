@@ -601,6 +601,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     await send_meta_message(sender_id, summary)
                     # Lock state to HANDOFF — prevents search re-triggering
                     prefs["last_viewed_id"] = matches[0].id
+                    prefs["last_viewed_title"] = matches[0].title or ""
                     convo.data_json = json.dumps(prefs)
                     convo.state = "HANDOFF"
                     convo.funnel_stage = "commitment"
@@ -608,9 +609,11 @@ async def handle_incoming_message(data: dict, db: Session):
                         tzinfo=None
                     )
                     db.commit()
+                    logger.info(f"Saved last_viewed_id: {matches[0].id}")
 
                     # Save last viewed listing ID so handshake works
                     prefs["last_viewed_id"] = matches[0].id
+                    prefs["last_viewed_title"] = matches[0].title or ""
                     convo.data_json = json.dumps(prefs)
                     convo.funnel_stage = "commitment"
                     convo.last_active_at = datetime.now(timezone.utc).replace(
@@ -676,41 +679,20 @@ async def handle_incoming_message(data: dict, db: Session):
                         convo.funnel_stage = "closed"
                         convo.state = "CLOSED"
                         db.commit()
-                        listing_title = "the property"
-                        logger.info(
-                            f"HANDSHAKE DEBUG: convo.data_json = {convo.data_json}"
-                        )
-                        try:
-                            data = json.loads(convo.data_json or "{}")
-                            logger.info(
-                                f"HANDSHAKE DEBUG: parsed data keys = {list(data.keys())}"
-                            )
-                            last_id = data.get("last_viewed_id") or data.get(
-                                "last_listing_id"
-                            )
-                            logger.info(f"HANDSHAKE DEBUG: last_id = {last_id}")
-                            if last_id:
+                        data = json.loads(convo.data_json or "{}")
+                        last_id = data.get("last_viewed_id")
+                        listing_title = data.get("last_viewed_title") or "the property"
+                        if last_id:
+                            try:
                                 lst = (
                                     db.query(Listing)
                                     .filter(Listing.id == int(last_id))
                                     .first()
                                 )
-                                logger.info(f"HANDSHAKE DEBUG: listing found = {lst}")
                                 if lst and lst.title:
                                     listing_title = lst.title
-                                    logger.info(
-                                        f"HANDSHAKE DEBUG: title = {listing_title}"
-                                    )
-                                else:
-                                    logger.warning(
-                                        f"Listing {last_id} not found in DB"
-                                    )
-                            else:
-                                logger.warning(
-                                    f"No last_viewed_id in data_json: {data}"
-                                )
-                        except Exception as e:
-                            logger.error(f"HANDSHAKE DEBUG ERROR: {e}")
+                            except Exception as e:
+                                logger.error(f"Listing lookup failed: {e}")
                         confirmation = (
                             f"Perfect, {first_name}! ✅\n\n"
                             f"Your inspection for *{listing_title}* "
@@ -751,6 +733,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             carousel_data = prepare_meta_carousel(matches)
                             await send_meta_carousel(sender_id, carousel_data)
                             prefs["last_viewed_id"] = matches[0].id
+                            prefs["last_viewed_title"] = matches[0].title or ""
                             convo.data_json = json.dumps(prefs)
                             convo.state = "HANDOFF"
                             convo.funnel_stage = "commitment"
@@ -758,6 +741,7 @@ async def handle_incoming_message(data: dict, db: Session):
                                 tzinfo=None
                             )
                             db.commit()
+                            logger.info(f"Saved last_viewed_id: {matches[0].id}")
                         else:
                             await send_meta_message(
                                 sender_id, build_no_match_message(prefs.get("location"))
