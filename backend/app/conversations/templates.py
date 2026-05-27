@@ -2,6 +2,31 @@
 from __future__ import annotations
 from typing import Optional
 
+CITY_TERMS = {
+    # Nigeria's major cities/states — too broad for property search
+    "abuja", "fct", "lagos", "port harcourt", "ph",
+    "ibadan", "kano", "enugu", "benin", "benin city",
+    "warri", "owerri", "calabar", "uyo", "jos",
+    "kaduna", "zaria", "sokoto", "ilorin", "asaba",
+    "akure", "bauchi", "maiduguri", "yola", "gombe",
+    "lafia", "lokoja", "makurdi", "abeokuta", "ado ekiti",
+    "osogbo", "ile ife", "oyo", "sagamu", "mainland",
+    "island",
+}
+
+CITY_AREA_EXAMPLES = {
+    "abuja":         "Maitama, Asokoro, Gwarinpa, Wuse, Jabi, Garki, Lugbe, Kubwa",
+    "fct":           "Maitama, Asokoro, Gwarinpa, Wuse, Jabi, Garki, Lugbe, Kubwa",
+    "lagos":         "Lekki, Ikeja, Victoria Island, Ikoyi, Ajah, Surulere, Yaba, Magodo",
+    "mainland":      "Surulere, Yaba, Gbagada, Ojodu, Maryland, Isolo, Festac",
+    "island":        "Victoria Island, Ikoyi, Lekki, Ajah, Badagry",
+    "port harcourt": "GRA, Trans Amadi, Rumuola, Rumuokoro, Elekahia, Diobu",
+    "ph":            "GRA, Trans Amadi, Rumuola, Rumuokoro, Elekahia, Diobu",
+    "ibadan":        "Bodija, Jericho, Ring Road, Agodi, Oluyole, Iyaganku",
+    "kano":          "Nassarawa, Fagge, Tarauni, Gwale, Dala, Ungogo",
+    "enugu":         "GRA, Independence Layout, New Haven, Asata, Achara Layout",
+}
+
 # ================================================================
 # FILLER BYPASS
 # ================================================================
@@ -57,6 +82,21 @@ def get_next_question(current_data: dict) -> Optional[str]:
         return (
             "Are you looking for *Land*, a *House/Duplex*, or an *Apartment*? "
             "Also, which area are you targeting?"
+        )
+
+    # Step 2a: Location is city-level — need specific area
+    location_val = (current_data.get("location") or "").lower().strip()
+    if location_val and location_val in CITY_TERMS:
+        examples = CITY_AREA_EXAMPLES.get(
+            location_val,
+            "please specify a neighbourhood or area"
+        )
+        return (
+            f"Which part of {location_val.title()} are you "
+            f"targeting? 📍\n\n"
+            f"For example: {examples}\n\n"
+            f"Specifying the area helps me find the most "
+            f"relevant verified properties for you."
         )
 
     # Step 2: Need location
