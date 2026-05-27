@@ -547,7 +547,14 @@ async def handle_incoming_message(data: dict, db: Session):
         # --- 9. OBJECTION HANDLER ---
         if intent == "objection":
             objection_key = pipe.get("objection_key", "objection_stalling")
-            response = get_objection_response(objection_key, first_name, biz_name)
+            last_id = prefs.get("last_viewed_id")
+            trust_grade = "Verified"
+            if last_id:
+                viewed = db.get(Listing, last_id)
+                grade_raw = (viewed.trust_grade or "") if viewed else ""
+                if grade_raw and grade_raw != "ungraded":
+                    trust_grade = grade_raw.title()
+            response = get_objection_response(objection_key, first_name, biz_name, trust_grade)
             await send_meta_message(sender_id, response)
             return
 

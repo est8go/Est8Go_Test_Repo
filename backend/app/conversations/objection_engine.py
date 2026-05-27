@@ -33,7 +33,7 @@ OBJECTION_RESPONSES = {
         (
             "Of course, {name}  a property decision is never trivial. 🏠\n\n"
             "While you think it over, let me share one fact: this listing carries an "
-            "*Emerald Trust Score,*  GPS verified, AI-audited, and document checked. "
+            "*{trust_grade} Trust Score,*  GPS verified, AI-audited, and document checked. "
             "That combination is rare in this market.\n\n"
             "Is there anything about the title documents or location you'd like confirmed first?"
         ),
@@ -75,7 +75,7 @@ OBJECTION_RESPONSES = {
     "objection_price": [
         (
             "A fair question, {name}. 💰\n\n"
-            "I will be honest with you, properties with an *Emerald Trust Score* "
+            "I will be honest with you, properties with a *{trust_grade} Trust Score* "
             "rarely drop in price because the documentation and verification work "
             "has already been done for you. You are paying for certainty, not just land.\n\n"
             "That said, our agent can discuss *flexible payment structures* directly with you. "
@@ -218,7 +218,9 @@ OBJECTION_RESPONSES = {
 # ================================================================
 
 
-def get_objection_response(response_key: str, name: str, biz_name: str) -> str:
+def get_objection_response(
+    response_key: str, name: str, biz_name: str, trust_grade: str = "Verified"
+) -> str:
     """
     Returns a randomised executive objection response.
 
@@ -226,6 +228,7 @@ def get_objection_response(response_key: str, name: str, biz_name: str) -> str:
         response_key: The objection key from OBJECTION_RESPONSES
         name:         Buyer's first name
         biz_name:     Tenant's business name
+        trust_grade:  The listing's trust grade (Emerald/Gold/Silver/Bronze/Verified)
 
     Returns:
         Formatted response string
@@ -239,7 +242,7 @@ def get_objection_response(response_key: str, name: str, biz_name: str) -> str:
     )
 
     template = random.choice(templates)
-    return template.format(name=name, biz_name=biz_name)
+    return template.format(name=name, biz_name=biz_name, trust_grade=trust_grade)
 
 
 # ================================================================
