@@ -2,6 +2,19 @@
 # Responsible for high-converting property summaries and referral handshakes.
 
 
+def _trust_grade(score) -> str:
+    s = score or 0
+    if s >= 85:
+        return "Emerald"
+    if s >= 70:
+        return "Gold"
+    if s >= 55:
+        return "Silver"
+    if s >= 30:
+        return "Bronze"
+    return "Unrated"
+
+
 # 🔹 SOCKET: Update build_property_summary in message_builder.py
 
 
@@ -16,16 +29,22 @@ def build_property_summary(
     price = f"₦{int(prop.price):,}" if prop.price else "Price on request"
     # 🔹 SOCKET: Explicitly pulling location
     location = prop.location if prop.location else "Abuja"
-    trust = getattr(prop, "calculated_trust", 95)
+    trust = prop.trust_score or 0
+
+    boutique_section = (
+        f"🛍️ *Browse the other {len(matches) - 1} options in our Boutique:* \n{boutique_link}\n\n"
+        if len(matches) > 1
+        else ""
+    )
 
     return (
         f"✨ *Verified Match Found for {first_name}!* \n\n"
         f"🏠 *{prop.title}*\n"
         f"📍 Location: {location}\n"  # 📌 LOCATION RESTORED
         f"💰 Price: {price}\n"
-        f"🛡️ Trust Score: {trust}% (Emerald)\n\n"
+        f"🛡️ Trust Score: {trust}% ({_trust_grade(trust)})\n\n"
         f"🔗 *View High-Res Photos & GPS Audit:* \n{showroom_link}\n\n"
-        f"🛍️ *Browse the other {total_count - 1} options in our Boutique:* \n{boutique_link}\n\n"
+        f"{boutique_section}"
         f"**Would you like to schedule a physical site inspection for this property?** Just give me a date! 📅"
     )
 
@@ -46,7 +65,7 @@ def build_referral_summary(prop, original_biz_name: str) -> str:
     price = f"₦{int(prop.price):,}" if prop.price else "Price on request"
     # 🔹 SOCKET: Explicitly pulling location
     location = prop.location if prop.location else "Abuja"
-    trust = getattr(prop, "calculated_trust", 95)
+    trust = prop.trust_score or 0
 
     return (
         f"I searched the vault for *{original_biz_name}*, but they don't have a direct match today. 🔍\n\n"
@@ -54,7 +73,7 @@ def build_referral_summary(prop, original_biz_name: str) -> str:
         f"🏠 *{prop.title}*\n"
         f"📍 Location: {location}\n"  # 📌 LOCATION RESTORED
         f"💰 Price: {price}\n"
-        f"🛡️ Trust Score: {trust}% (Physical Site Verified)\n\n"
+        f"🛡️ Trust Score: {trust}% ({_trust_grade(trust)})\n\n"
         f"🔗 *Tap to view photos and GPS Audit:* \n{direct_link}\n\n"
         f"**Would you like me to connect you with the lead agent for an inspection?**"
     )
