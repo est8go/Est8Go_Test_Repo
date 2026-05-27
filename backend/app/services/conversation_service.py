@@ -15,6 +15,7 @@ Complete pipeline:
 import logging
 import json
 import json as _json
+import re
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
@@ -652,6 +653,63 @@ async def handle_incoming_message(data: dict, db: Session):
 
             # Intercept completed_flag — trigger search instead of sending raw text
             if final_reply == "completed_flag" or raw_reply == "completed_flag":
+
+                # GUARD: If buyer is in handshake stage,
+                # they are confirming inspection time — do NOT re-trigger search
+                if convo.funnel_stage == "handshake":
+                    msg_lower = text_body.lower()
+                    time_keywords = [
+                        "tomorrow", "today", "monday", "tuesday",
+                        "wednesday", "thursday", "friday", "saturday",
+                        "sunday", "next week", "morning", "afternoon",
+                        "evening", "am", "pm", "noon", "weekend",
+                        "january", "february", "march", "april", "may",
+                        "june", "july", "august", "september", "october",
+                        "november", "december",
+                    ]
+                    has_time = any(kw in msg_lower for kw in time_keywords)
+                    has_time_pattern = bool(
+                        re.search(r"\d{1,2}(:\d{2})?\s*(am|pm)?", msg_lower)
+                    )
+
+                    if has_time or has_time_pattern:
+                        convo.funnel_stage = "closed"
+                        convo.state = "CLOSED"
+                        db.commit()
+                        listing_title = "the property"
+                        try:
+                            last_id = json.loads(convo.data_json or "{}").get(
+                                "last_viewed_id"
+                            )
+                            if last_id:
+                                lst = db.get(Listing, last_id)
+                                if lst:
+                                    listing_title = lst.title
+                        except Exception:
+                            pass
+                        confirmation = (
+                            f"Perfect, {first_name}! ✅\n\n"
+                            f"Your inspection for *{listing_title}* "
+                            f"has been noted.\n\n"
+                            f"Our lead agent will reach out shortly "
+                            f"to confirm the exact time and meeting point. "
+                            f"Please keep your phone available. 📱\n\n"
+                            f"Thank you for choosing *{biz_name}* — "
+                            f"where every property is verified before "
+                            f"it reaches you. 🏠"
+                        )
+                        await send_meta_message(sender_id, confirmation)
+                        return
+
+                    else:
+                        await send_meta_message(
+                            sender_id,
+                            f"What time works best for your inspection, "
+                            f"{first_name}? "
+                            f"(e.g. Tomorrow 10am, Friday afternoon) 📅",
+                        )
+                        return
+
                 if prefs.get("location") and prefs.get("budget"):
                     try:
                         search_result = execute_premium_search(db, tenant_id, prefs)
