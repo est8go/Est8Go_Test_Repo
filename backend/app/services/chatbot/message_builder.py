@@ -42,7 +42,7 @@ def build_property_summary(
         f"🏠 *{prop.title}*\n"
         f"📍 Location: {location}\n"  # 📌 LOCATION RESTORED
         f"💰 Price: {price}\n"
-        f"🛡️ Trust Score: {trust}% ({_trust_grade(trust)})\n\n"
+        f"🛡️ Trust Score: {trust}/100 ({_trust_grade(trust)})\n\n"
         f"🔗 *View High-Res Photos & GPS Audit:* \n{showroom_link}\n\n"
         f"{boutique_section}"
         f"**Would you like to schedule a physical site inspection for this property?** Just give me a date! 📅"
@@ -73,7 +73,7 @@ def build_referral_summary(prop, original_biz_name: str) -> str:
         f"🏠 *{prop.title}*\n"
         f"📍 Location: {location}\n"  # 📌 LOCATION RESTORED
         f"💰 Price: {price}\n"
-        f"🛡️ Trust Score: {trust}% ({_trust_grade(trust)})\n\n"
+        f"🛡️ Trust Score: {trust}/100 ({_trust_grade(trust)})\n\n"
         f"🔗 *Tap to view photos and GPS Audit:* \n{direct_link}\n\n"
         f"**Would you like me to connect you with the lead agent for an inspection?**"
     )

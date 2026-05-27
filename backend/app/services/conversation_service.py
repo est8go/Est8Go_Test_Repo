@@ -678,15 +678,31 @@ async def handle_incoming_message(data: dict, db: Session):
                         db.commit()
                         listing_title = "the property"
                         try:
-                            last_id = json.loads(convo.data_json or "{}").get(
-                                "last_viewed_id"
+                            data = json.loads(convo.data_json or "{}")
+                            last_id = data.get("last_viewed_id") or data.get(
+                                "last_listing_id"
                             )
                             if last_id:
-                                lst = db.get(Listing, last_id)
-                                if lst:
+                                lst = (
+                                    db.query(Listing)
+                                    .filter(Listing.id == int(last_id))
+                                    .first()
+                                )
+                                if lst and lst.title:
                                     listing_title = lst.title
-                        except Exception:
-                            pass
+                                    logger.info(
+                                        f"Listing title found: {listing_title}"
+                                    )
+                                else:
+                                    logger.warning(
+                                        f"Listing {last_id} not found in DB"
+                                    )
+                            else:
+                                logger.warning(
+                                    f"No last_viewed_id in data_json: {data}"
+                                )
+                        except Exception as e:
+                            logger.error(f"Listing title lookup failed: {e}")
                         confirmation = (
                             f"Perfect, {first_name}! ✅\n\n"
                             f"Your inspection for *{listing_title}* "
