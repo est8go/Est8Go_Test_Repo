@@ -45,7 +45,7 @@ def build_property_summary(
         f"🛡️ Trust Score: {trust}/100 ({_trust_grade(trust)})\n\n"
         f"🔗 *View High-Res Photos & GPS Audit:* \n{showroom_link}\n\n"
         f"{boutique_section}"
-        f"**Would you like to schedule a physical site inspection for this property?** Just give me a date! 📅"
+        f"Would you like to schedule a physical site inspection for this property? Just give me a date! 📅"
     )
 
 
@@ -69,13 +69,13 @@ def build_referral_summary(prop, original_biz_name: str) -> str:
 
     return (
         f"I searched the vault for *{original_biz_name}*, but they don't have a direct match today. 🔍\n\n"
-        f"However, Est8Go has found a **Premium Verified** alternative from our network:\n\n"
+        f"However, Est8Go has found a verified alternative from our network:\n\n"
         f"🏠 *{prop.title}*\n"
         f"📍 Location: {location}\n"  # 📌 LOCATION RESTORED
         f"💰 Price: {price}\n"
         f"🛡️ Trust Score: {trust}/100 ({_trust_grade(trust)})\n\n"
         f"🔗 *Tap to view photos and GPS Audit:* \n{direct_link}\n\n"
-        f"**Would you like me to connect you with the lead agent for an inspection?**"
+        f"Would you like me to connect you with the lead agent for an inspection?"
     )
 
 
@@ -100,7 +100,7 @@ def build_inspection_confirmation(
             f"I've shared your interest with the lead agent for *{prop_title}*. \n\n"
             "📍 *Site Location:* \n"
             "This property is currently undergoing its final GPS audit. "
-            "The agent will send you a **Direct WhatsApp Location Pin** once you connect! \n\n"
+            "The agent will send you a direct WhatsApp location pin once you connect.\n\n"
             "What time works best for your arrival? 🚗"
         )
 

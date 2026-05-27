@@ -193,9 +193,9 @@ OBJECTION_RESPONSES = {
         (
             "That is exactly the right question to ask, {name}. 🔍\n\n"
             "At *{biz_name}*, every listing passes three independent checks:\n\n"
-            "📍 *GPS Verification;*  Our system is designed to ensure site physical confirmation\n"
-            "🤖 *AI Vision Audit;* Photos scanned for CGI or stolen images\n"
-            "📄 *Document Check;* Title documents verified and scored\n\n"
+            "📍 GPS Verification: physical site location confirmed\n"
+            "🤖 AI Vision Audit: photos scanned for CGI or stolen images\n"
+            "📄 Document Check: title documents verified and scored\n\n"
             "You can see the full audit trail at the property link. "
             "This is not a promise, it is mathematical proof."
         ),

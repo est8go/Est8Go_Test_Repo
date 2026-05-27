@@ -76,9 +76,9 @@ def get_next_question(current_data: dict) -> Optional[str]:
     if not current_data.get("property_type"):
         return (
             "What type of property are you looking for? 🏠\n\n"
-            "• *Land* — plots for development\n"
-            "• *House* — detached or semi-detached\n"
-            "• *Apartment* — flats and units"
+            "Land — plots for development\n"
+            "House — detached, semi-detached or duplex\n"
+            "Apartment — flats and studio units"
         )
 
     # STEP 2 — Location missing entirely
