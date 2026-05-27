@@ -677,21 +677,29 @@ async def handle_incoming_message(data: dict, db: Session):
                         convo.state = "CLOSED"
                         db.commit()
                         listing_title = "the property"
+                        logger.info(
+                            f"HANDSHAKE DEBUG: convo.data_json = {convo.data_json}"
+                        )
                         try:
                             data = json.loads(convo.data_json or "{}")
+                            logger.info(
+                                f"HANDSHAKE DEBUG: parsed data keys = {list(data.keys())}"
+                            )
                             last_id = data.get("last_viewed_id") or data.get(
                                 "last_listing_id"
                             )
+                            logger.info(f"HANDSHAKE DEBUG: last_id = {last_id}")
                             if last_id:
                                 lst = (
                                     db.query(Listing)
                                     .filter(Listing.id == int(last_id))
                                     .first()
                                 )
+                                logger.info(f"HANDSHAKE DEBUG: listing found = {lst}")
                                 if lst and lst.title:
                                     listing_title = lst.title
                                     logger.info(
-                                        f"Listing title found: {listing_title}"
+                                        f"HANDSHAKE DEBUG: title = {listing_title}"
                                     )
                                 else:
                                     logger.warning(
@@ -702,7 +710,7 @@ async def handle_incoming_message(data: dict, db: Session):
                                     f"No last_viewed_id in data_json: {data}"
                                 )
                         except Exception as e:
-                            logger.error(f"Listing title lookup failed: {e}")
+                            logger.error(f"HANDSHAKE DEBUG ERROR: {e}")
                         confirmation = (
                             f"Perfect, {first_name}! ✅\n\n"
                             f"Your inspection for *{listing_title}* "
