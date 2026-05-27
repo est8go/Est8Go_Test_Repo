@@ -347,6 +347,15 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
 
     # Unknown intent — escalate to GPT
     updated_data = extract_preferences(text_clean, current_data)
+    # Preserve internal tracking keys GPT strips out
+    for key in (
+        "last_viewed_id",
+        "last_viewed_title",
+        "last_viewed_price",
+        "last_viewed_location",
+    ):
+        if key in current_data and key not in updated_data:
+            updated_data[key] = current_data[key]
     convo.data_json = json.dumps(updated_data)
     next_q = get_next_question(updated_data)
 
