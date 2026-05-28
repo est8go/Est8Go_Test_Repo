@@ -919,9 +919,10 @@ async def get_market_intelligence(
     verified_count = db.query(Listing).filter(Listing.trust_score >= 70).count()
 
     # Price & trust by location (top 20 by volume)
+    # Group by lowercased location to merge "Guzape" and "guzape" etc.
     loc_rows = (
         db.query(
-            Listing.location,
+            func.lower(Listing.location).label("location_lower"),
             func.count(Listing.id).label("count"),
             func.avg(Listing.price).label("avg_price"),
             func.min(Listing.price).label("min_price"),
@@ -929,7 +930,7 @@ async def get_market_intelligence(
             func.avg(Listing.trust_score).label("avg_trust"),
         )
         .filter(Listing.location.isnot(None))
-        .group_by(Listing.location)
+        .group_by(func.lower(Listing.location))
         .order_by(func.count(Listing.id).desc())
         .limit(20)
         .all()
@@ -973,7 +974,7 @@ async def get_market_intelligence(
         },
         "price_by_location": [
             {
-                "location":  row.location,
+                "location":  row.location_lower.title() if row.location_lower else "—",
                 "count":     row.count,
                 "avg_price": round(float(row.avg_price or 0)),
                 "min_price": round(float(row.min_price or 0)),
