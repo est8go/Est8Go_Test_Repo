@@ -27,12 +27,13 @@ def build_property_summary(
     boutique_link = f"https://est8go-api.onrender.com/public/matches?ids={all_ids}"
 
     price = f"₦{int(prop.price):,}" if prop.price else "Price on request"
-    # 🔹 SOCKET: Explicitly pulling location
-    location = prop.location if prop.location else "Abuja"
+    location = (prop.location or "Abuja").title()
     trust = prop.trust_score or 0
 
+    count = len(matches) - 1
+    options_text = "other option" if count == 1 else f"{count} other options"
     boutique_section = (
-        f"🛍️ *Browse the other {len(matches) - 1} options in our Boutique:* \n{boutique_link}\n\n"
+        f"🛍️ Browse {options_text} in our verified vault:\n{boutique_link}\n\n"
         if len(matches) > 1
         else ""
     )
@@ -40,22 +41,47 @@ def build_property_summary(
     return (
         f"✨ *Verified Match Found for {first_name}!* \n\n"
         f"🏠 *{prop.title}*\n"
-        f"📍 Location: {location}\n"  # 📌 LOCATION RESTORED
+        f"📍 Location: {location}\n"
         f"💰 Price: {price}\n"
         f"🛡️ Trust Score: {trust}/100 ({_trust_grade(trust)})\n\n"
         f"🔗 *View High-Res Photos & GPS Audit:* \n{showroom_link}\n\n"
         f"{boutique_section}"
-        f"Would you like to schedule a physical site inspection for this property? Just give me a date! 📅"
+        f"Would you like to schedule a physical site inspection for this property? Just say the word and we will arrange it. 📅"
     )
 
 
-def build_no_match_message(location: str) -> str:
-    """Elite recovery when the vault is undergoing audit."""
+def build_no_results_message(
+    location: str, property_type: str, budget=None
+) -> str:
+    loc = location.title() if location else "that area"
+    ptype = property_type.title() if property_type else "property"
+
+    budget_note = ""
+    if budget:
+        try:
+            budget_int = int(budget)
+            if budget_int < 10_000_000:
+                budget_note = (
+                    f"\n\nNote: Your budget of "
+                    f"₦{budget_int / 1_000_000:.0f}M may be below "
+                    f"market rate for verified properties in "
+                    f"{loc}. Would you like to explore a "
+                    f"higher budget or a different area?"
+                )
+        except (ValueError, TypeError):
+            pass
+
     return (
-        f"I've scanned our verified inventory for *{location}*. 🔍\n\n"
-        "At the moment, we are performing physical site-audits on new arrivals. "
-        "To maintain our Truth Standard, only properties with confirmed GPS "
-        "coordinates are visible in the vault."
+        f"We don't have verified {ptype} listings "
+        f"in {loc} right now. 🔍\n\n"
+        f"This could mean:\n"
+        f"Our agents are currently auditing new "
+        f"arrivals in that area, or\n"
+        f"Inventory in {loc} is currently limited.\n\n"
+        f"Would you like to:\n"
+        f"Explore a nearby area, or\n"
+        f"Search a different property type?"
+        f"{budget_note}"
     )
 
 
@@ -63,15 +89,14 @@ def build_referral_summary(prop, original_biz_name: str) -> str:
     """The Complete Broker Handshake: Includes Location and Direct Link."""
     direct_link = f"https://est8go-api.onrender.com/public/property/{prop.id}"
     price = f"₦{int(prop.price):,}" if prop.price else "Price on request"
-    # 🔹 SOCKET: Explicitly pulling location
-    location = prop.location if prop.location else "Abuja"
+    location = (prop.location or "Abuja").title()
     trust = prop.trust_score or 0
 
     return (
         f"I searched the vault for *{original_biz_name}*, but they don't have a direct match today. 🔍\n\n"
         f"However, Est8Go has found a verified alternative from our network:\n\n"
         f"🏠 *{prop.title}*\n"
-        f"📍 Location: {location}\n"  # 📌 LOCATION RESTORED
+        f"📍 Location: {location}\n"
         f"💰 Price: {price}\n"
         f"🛡️ Trust Score: {trust}/100 ({_trust_grade(trust)})\n\n"
         f"🔗 *Tap to view photos and GPS Audit:* \n{direct_link}\n\n"

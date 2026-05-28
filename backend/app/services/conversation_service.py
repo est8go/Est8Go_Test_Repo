@@ -33,7 +33,7 @@ from app.services.meta_sender_service import (
 )
 
 # Logic Engines
-from app.conversations.templates import is_filler, get_next_question
+from app.conversations.templates import is_filler, get_next_question, normalise_location
 from app.conversations.brain import extract_preferences
 from app.conversations.ai_fallback import is_company_faq, answer_company_faq
 from app.company_profiles.models import CompanyProfile
@@ -55,7 +55,7 @@ from app.conversations.objection_engine import (
 from app.services.chatbot.search_service import execute_premium_search
 from app.services.chatbot.message_builder import (
     build_property_summary,
-    build_no_match_message,
+    build_no_results_message,
     build_referral_summary,
     build_inspection_confirmation,
 )
@@ -276,6 +276,8 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
         for k, v in intent_result.extracted.items():
             if v:  # only update if value is not None/empty
                 current_data[k] = v
+        if current_data.get("location"):
+            current_data["location"] = normalise_location(current_data["location"])
         convo.data_json = json.dumps(current_data)
         db.commit()
 
@@ -356,6 +358,8 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
     ):
         if key in current_data and key not in updated_data:
             updated_data[key] = current_data[key]
+    if updated_data.get("location"):
+        updated_data["location"] = normalise_location(updated_data["location"])
     convo.data_json = json.dumps(updated_data)
     next_q = get_next_question(updated_data)
 
@@ -540,6 +544,31 @@ async def handle_incoming_message(data: dict, db: Session):
             )
             convo = db.get(Conversation, res["conversation_id"])
 
+        # --- 7b. CLOSED STATE RESET ---
+        # If buyer sends any message after a closed funnel, start fresh
+        if convo.funnel_stage == "closed":
+            convo.funnel_stage = "awareness"
+            convo.state = "ACTIVE"
+            convo.data_json = json.dumps({})
+            db.commit()
+            # Continue processing as a fresh conversation
+
+        # --- 7c. COMMITMENT DECLINE ---
+        # Buyer said No after inspection offer — offer soft alternative
+        _decline_words = {"no", "not now", "maybe later", "not interested", "no thanks", "nope", "nah"}
+        if convo.funnel_stage == "commitment" and text_body.lower().strip() in _decline_words:
+            _data = json.loads(convo.data_json or "{}")
+            _location = (_data.get("location") or "that area").title()
+            await send_meta_message(
+                sender_id,
+                f"No problem at all, {first_name}. 😊\n\n"
+                f"When you're ready, just say Yes and we'll arrange "
+                f"the inspection immediately.\n\n"
+                f"In the meantime, would you like to see other verified "
+                f"properties in {_location}, or explore a different area?",
+            )
+            return
+
         # --- 8. INTENT PIPELINE ---
         pipe = add_message_service(convo.id, text_body, tenant_id, db)
         # Merge pipe prefs with saved conversation prefs
@@ -642,7 +671,12 @@ async def handle_incoming_message(data: dict, db: Session):
 
                 else:
                     await send_meta_message(
-                        sender_id, build_no_match_message(prefs.get("location"))
+                        sender_id,
+                        build_no_results_message(
+                            prefs.get("location", ""),
+                            prefs.get("property_type", ""),
+                            prefs.get("budget_max") or prefs.get("budget"),
+                        ),
                     )
                     # Keep state active so buyer can refine search
                     convo.state = "ACTIVE"
@@ -753,7 +787,12 @@ async def handle_incoming_message(data: dict, db: Session):
                             logger.info(f"Saved last_viewed_id: {matches[0].id}")
                         else:
                             await send_meta_message(
-                                sender_id, build_no_match_message(prefs.get("location"))
+                                sender_id,
+                                build_no_results_message(
+                                    prefs.get("location", ""),
+                                    prefs.get("property_type", ""),
+                                    prefs.get("budget_max") or prefs.get("budget"),
+                                ),
                             )
                     except Exception as e:
                         logger.error(f"Search from completed_flag failed: {e}")

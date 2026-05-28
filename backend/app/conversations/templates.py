@@ -39,6 +39,32 @@ CITY_AREA_EXAMPLES = {
     "makurdi":       "High Level, Low Level, North Bank, Wurukum, Modern Market, Idye, Ankpa Quarters, Wadata, Logo1, Logo2, Cocacola",
 }
 
+LOCATION_ALIASES = {
+    # Abuja
+    "gwarimpa":          "gwarinpa",
+    "gwariampa":         "gwarinpa",
+    "maitamma":          "maitama",
+    "wuse2":             "wuse",
+    "wuse 2":            "wuse",
+    "wi":                "wuse",
+    # Lagos
+    "lekki 1":           "lekki",
+    "lekki phase 1":     "lekki",
+    "lekki phase1":      "lekki",
+    "v.i":               "victoria island",
+    "vi":                "victoria island",
+    "v/i":               "victoria island",
+    "ikeja gra":         "ikeja",
+    # Port Harcourt
+    "p.h":               "port harcourt",
+    # General
+    "trans amadi":       "trans amadi",
+    "gra":               "gra",
+    "maryland":          "maryland",
+    "ikoyi":             "ikoyi",
+}
+
+
 # ================================================================
 # FILLER BYPASS
 # ================================================================
@@ -59,6 +85,13 @@ FILLER_WORDS = {
 
 def is_filler(text: str) -> bool:
     return text.strip().lower() in FILLER_WORDS
+
+
+def normalise_location(loc: str) -> str:
+    if not loc:
+        return loc
+    loc_lower = loc.lower().strip()
+    return LOCATION_ALIASES.get(loc_lower, loc_lower)
 
 
 # ================================================================
