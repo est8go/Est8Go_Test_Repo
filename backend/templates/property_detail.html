@@ -113,6 +113,14 @@
                class="block w-full mt-10 bg-black text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-all text-center">
                 I am Interested
             </a>
+            {% if wa_number %}
+            <a href="https://wa.me/{{ wa_number }}"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="block w-full mt-3 bg-[#25D366] text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-all text-center">
+                💬 Continue on WhatsApp
+            </a>
+            {% endif %}
         </div>
     </div>
 

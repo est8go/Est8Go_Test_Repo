@@ -66,7 +66,7 @@ def build_property_summary(
         f"📍 Location: {location}\n"
         f"💰 Price: *{price}*\n"
         f"🛡️ Trust Score: *{trust}/100 ({_trust_grade(trust)})*\n\n"
-        f"🔗 *View High-Res Photos & GPS Audit:* \n{showroom_link}\n\n"
+        f"🔗 *View Property Details & Photos:* \n{showroom_link}\n\n"
         f"{boutique_section}"
         f"Would you like to schedule a physical site inspection for this property? Just say the word and we will arrange it. 📅"
     )

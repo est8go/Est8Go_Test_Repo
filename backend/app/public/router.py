@@ -94,6 +94,7 @@ async def get_property_page(
                 "trust_text": trust.get("text", "Verified"),
                 "trust_color": trust.get("color", "green"),
                 "wa_link": wa_link,
+                "wa_number": wa_number,
             },
         )
     except Exception as e:

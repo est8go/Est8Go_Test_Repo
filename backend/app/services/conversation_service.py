@@ -880,8 +880,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             matches[0], matches, total, first_name
                         )
 
-                    await send_meta_message(sender_id, summary)
-                    # Send first property image if available
+                    # Send image+summary as one card, or fall back to text only
                     try:
                         from app.listings.models import ListingImage
                         from app.services.notification_service import send_meta_image_message
@@ -889,11 +888,12 @@ async def handle_incoming_message(data: dict, db: Session):
                             ListingImage.listing_id == matches[0].id
                         ).first()
                         if _img and _img.url:
-                            await send_meta_image_message(
-                                sender_id, _img.url, matches[0].title or ""
-                            )
+                            await send_meta_image_message(sender_id, _img.url, summary)
+                        else:
+                            await send_meta_message(sender_id, summary)
                     except Exception as _img_e:
                         logger.warning(f"Image send failed: {_img_e}")
+                        await send_meta_message(sender_id, summary)
                     # Lock state to HANDOFF — prevents search re-triggering
                     prefs["last_viewed_id"] = matches[0].id
                     prefs["last_viewed_title"] = matches[0].title or ""
@@ -980,6 +980,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         bool(re.search(r"\b\d{1,2}(:\d{2})?\s*(am|pm)\b", msg_lower, re.IGNORECASE))
                         or bool(re.search(r"\b\d{1,2}:\d{2}\b", msg_lower))
                         or bool(re.search(r"\b\d{1,2}\s*(am|pm)\b", msg_lower, re.IGNORECASE))
+                        or bool(re.search(r"\b\d{1,2}\s*o'?clock\b", msg_lower, re.IGNORECASE))
                     )
 
                     if has_time or has_time_pattern:
@@ -1036,8 +1037,7 @@ async def handle_incoming_message(data: dict, db: Session):
                                 summary = build_property_summary(
                                     matches[0], matches, total, first_name
                                 )
-                            await send_meta_message(sender_id, summary)
-                            # Send first property image if available
+                            # Send image+summary as one card, or fall back to text only
                             try:
                                 from app.listings.models import ListingImage
                                 from app.services.notification_service import send_meta_image_message
@@ -1045,11 +1045,12 @@ async def handle_incoming_message(data: dict, db: Session):
                                     ListingImage.listing_id == matches[0].id
                                 ).first()
                                 if _img2 and _img2.url:
-                                    await send_meta_image_message(
-                                        sender_id, _img2.url, matches[0].title or ""
-                                    )
+                                    await send_meta_image_message(sender_id, _img2.url, summary)
+                                else:
+                                    await send_meta_message(sender_id, summary)
                             except Exception as _img2_e:
                                 logger.warning(f"Image send failed: {_img2_e}")
+                                await send_meta_message(sender_id, summary)
                             carousel_data = prepare_meta_carousel(matches)
                             await send_meta_carousel(sender_id, carousel_data)
                             prefs["last_viewed_id"] = matches[0].id

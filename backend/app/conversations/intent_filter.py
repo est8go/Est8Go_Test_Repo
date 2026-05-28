@@ -237,6 +237,10 @@ PRICE_TRIGGER_WORDS = {
     "budget friendly",
 }
 
+# Short location tokens that must match as whole words (not substrings of longer words)
+# e.g. "ph" must not match "physical", "phone", "photograph"
+LOCATION_FALSE_POSITIVES = {"ph"}
+
 # Nigerian locations — comprehensive
 LOCATION_WORDS = [
     # Abuja
@@ -550,12 +554,13 @@ def extract_location_from_text(
 
     words = set(text_lower.split())
     for loc in LOCATION_WORDS:
-        if (
-            " " not in loc
-            and loc not in {"area", "around", "near", "zone"}
-            and loc in text_lower
-        ):
-            return loc
+        if " " not in loc and loc not in {"area", "around", "near", "zone"}:
+            if loc in LOCATION_FALSE_POSITIVES:
+                # Only match when the token is a standalone word, not a substring
+                if re.search(r"\b" + re.escape(loc) + r"\b", text_lower):
+                    return loc
+            elif loc in text_lower:
+                return loc
 
     return None
 
