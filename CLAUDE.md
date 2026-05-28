@@ -164,21 +164,14 @@ Wallet: Split purchased vs bonus, deduct bonus first
 
 ## NEXT TASKS (in order)
 
-### 1. Light/Dark Theme System (Next Priority)
-Add theme toggle to both dashboards:
-- backend/templates/business_dashboard.html
-- backend/templates/super_admin_dashboard.html
-
-Features:
-- Auto-detects system preference (prefers-color-scheme)
-- Manual toggle button in header (🌙/☀️)
-- Saves preference to localStorage
-- No flash of wrong theme on load (inline script before first paint)
-- Light theme: white cards, #F0F4F8 background, #0F172A text, full readability in daylight
-- Zero backend changes needed
-
-Start next session with:
-"Read CLAUDE.md. Build the light/dark theme system for both dashboards."
+### 1. Light/Dark Theme System (Priority 1)
+Add to both business_dashboard.html and super_admin_dashboard.html:
+- Auto system preference detection (prefers-color-scheme)
+- Manual toggle 🌙/☀️ in header
+- localStorage persistence
+- No theme flash on load (inline script before first paint)
+- Light: #F0F4F8 bg, #FFFFFF cards, #0F172A text
+- Zero backend changes
 
 ### 2. Diaspora Trust Certificate PDF
 - backend/app/services/trust_certificate_service.py
