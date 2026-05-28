@@ -164,14 +164,30 @@ Wallet: Split purchased vs bonus, deduct bonus first
 
 ## NEXT TASKS (in order)
 
-### 1. Diaspora Trust Certificate PDF
+### 1. Light/Dark Theme System (Next Priority)
+Add theme toggle to both dashboards:
+- backend/templates/business_dashboard.html
+- backend/templates/super_admin_dashboard.html
+
+Features:
+- Auto-detects system preference (prefers-color-scheme)
+- Manual toggle button in header (🌙/☀️)
+- Saves preference to localStorage
+- No flash of wrong theme on load (inline script before first paint)
+- Light theme: white cards, #F0F4F8 background, #0F172A text, full readability in daylight
+- Zero backend changes needed
+
+Start next session with:
+"Read CLAUDE.md. Build the light/dark theme system for both dashboards."
+
+### 2. Diaspora Trust Certificate PDF
 - backend/app/services/trust_certificate_service.py
 - Uses WeasyPrint or ReportLab
 - Shows: trust score, GPS coords, docs verified, Est8Go seal
 - Deducts 20 credits on generation
 - Available from Trust tab in dashboard
 
-### 2. Conversation Engine Final Polish
+### 3. Conversation Engine Final Polish
 1. Fix "ph" extracted from "physical" as Port Harcourt
    File: backend/app/conversations/intent_filter.py
    Add LOCATION_FALSE_POSITIVES set — skip single-word matches that appear inside longer words
@@ -194,7 +210,7 @@ Wallet: Split purchased vs bonus, deduct bonus first
    File: backend/app/services/chatbot/message_builder.py
    Change "View High-Res Photos & GPS Audit" to "View Property Details & Photos"
 
-### 3. Conversation engine full test
+### 4. Conversation engine full test
 - Test complete WhatsApp flow with real listings
 - Single message extraction
 - Objection handling
