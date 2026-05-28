@@ -829,14 +829,20 @@ async def handle_incoming_message(data: dict, db: Session):
                         "tomorrow", "today", "monday", "tuesday",
                         "wednesday", "thursday", "friday", "saturday",
                         "sunday", "next week", "morning", "afternoon",
-                        "evening", "am", "pm", "noon", "weekend",
+                        "evening", "noon", "weekend", "prompt", "sharp",
+                        "o'clock", "oclock", "by", "around",
                         "january", "february", "march", "april", "may",
                         "june", "july", "august", "september", "october",
                         "november", "december",
+                        "6am", "7am", "8am", "9am", "10am", "11am", "12pm",
+                        "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm",
+                        "8pm", "9pm",
                     ]
                     has_time = any(kw in msg_lower for kw in time_keywords)
-                    has_time_pattern = bool(
-                        re.search(r"\d{1,2}(:\d{2})?\s*(am|pm)?", msg_lower)
+                    has_time_pattern = (
+                        bool(re.search(r"\b\d{1,2}(:\d{2})?\s*(am|pm)\b", msg_lower, re.IGNORECASE))
+                        or bool(re.search(r"\b\d{1,2}:\d{2}\b", msg_lower))
+                        or bool(re.search(r"\b\d{1,2}\s*(am|pm)\b", msg_lower, re.IGNORECASE))
                     )
 
                     if has_time or has_time_pattern:
