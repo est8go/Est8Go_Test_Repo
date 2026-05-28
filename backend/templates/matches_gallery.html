@@ -56,9 +56,10 @@
                         <span
                             class="bg-white/5 px-3 py-1 rounded-lg text-[10px] font-bold text-slate-400">Verified</span>
                     </div>
-                    <a href="https://wa.me/2348000000000?text=I want to buy: {{ item.title }}"
-                        class="block w-full premium-gradient text-white text-center py-4 rounded-2xl font-black shadow-lg">CHAT
-                        TO BUY</a>
+                    <a href="https://wa.me/{{ wa_number }}?text=Hi%2C+I+am+interested+in+Est8Go+property+%23{{ item.id }}"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="block w-full premium-gradient text-white text-center py-4 rounded-2xl font-black shadow-lg">CHAT TO BUY</a>
                 </div>
             </div>
             {% endfor %}

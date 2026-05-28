@@ -360,6 +360,17 @@ PROPERTY_TYPE_MAP = {
     ],
 }
 
+# Property reference pattern — catches "Est8Go property #24" from WhatsApp button clicks
+PROPERTY_REF_PATTERN = re.compile(r"est8go property #(\d+)", re.IGNORECASE)
+
+
+def detect_property_reference(text: str) -> Optional[int]:
+    match = PROPERTY_REF_PATTERN.search(text or "")
+    if match:
+        return int(match.group(1))
+    return None
+
+
 # 12 Nigerian RE objections
 OBJECTION_MAP = {
     "get back to you": "objection_stalling",
@@ -525,6 +536,17 @@ def classify_intent(
         9. Filler
         10. Unknown → GPT
     """
+    # ── 0. PROPERTY PAGE LEAD — highest priority ────────
+    _prop_id = detect_property_reference(text or "")
+    if _prop_id:
+        return IntentResult(
+            intent="property_page_lead",
+            confidence="high",
+            extracted={"listing_id": _prop_id},
+            response_key="property_page_lead",
+            needs_gpt=False,
+        )
+
     if current_prefs is None:
         current_prefs = {}
 

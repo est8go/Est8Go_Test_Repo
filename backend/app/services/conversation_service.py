@@ -43,6 +43,7 @@ from app.conversations.intent_filter import (
     classify_intent,
     calculate_lead_score,
     determine_funnel_stage,
+    detect_property_reference,
 )
 
 # Objection Engine
@@ -324,6 +325,15 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
         if r[0]
     ]
     intent_result = classify_intent(text_clean, current_data, tenant_locations)
+
+    # PROPERTY PAGE LEAD — short-circuit before any merge or GPT
+    if intent_result.intent == "property_page_lead":
+        return {
+            "reply": "property_page_lead_flag",
+            "prefs": current_data,
+            "intent": "property_page_lead",
+            "listing_id": intent_result.extracted.get("listing_id"),
+        }
 
     # ALWAYS merge extracted data immediately — before get_next_question
     if intent_result.extracted:
@@ -704,6 +714,74 @@ async def handle_incoming_message(data: dict, db: Session):
         # Update lead score and funnel stage after every message
         update_conversation_intelligence(convo, prefs, intent, db)
 
+        # --- 8b. PROPERTY PAGE LEAD FAST-TRACK ---
+        if intent == "property_page_lead":
+            _lid = pipe.get("listing_id")
+            if _lid:
+                try:
+                    _lst = (
+                        db.query(Listing)
+                        .filter(Listing.id == _lid, Listing.tenant_id == tenant_id)
+                        .first()
+                    )
+                    if not _lst:
+                        await send_meta_message(
+                            sender_id,
+                            f"Hi {first_name}! 👋\n\n"
+                            f"I could not find that listing. "
+                            f"It may have been removed or is no longer available.\n\n"
+                            f"What property are you looking for? "
+                            f"I can help you find verified options.",
+                        )
+                        return
+
+                    # Fast-track to COMMITMENT
+                    _data = json.loads(convo.data_json or "{}")
+                    _data["last_viewed_id"]    = _lst.id
+                    _data["last_viewed_title"] = _lst.title
+                    _data["location"]          = _lst.location
+                    _data["property_type"]     = _lst.property_type
+                    _data["budget_max"]        = _lst.price
+                    convo.data_json            = json.dumps(_data)
+                    convo.funnel_stage         = "commitment"
+                    convo.lead_score           = 75
+                    convo.last_active_at       = datetime.now(timezone.utc).replace(tzinfo=None)
+                    db.commit()
+
+                    _price = _lst.price or 0
+                    if _price >= 1_000_000_000:
+                        _price_fmt = f"₦{_price/1_000_000_000:.1f}B"
+                    elif _price >= 1_000_000:
+                        _price_fmt = f"₦{_price/1_000_000:.0f}M"
+                    else:
+                        _price_fmt = f"₦{_price:,}"
+
+                    _score = _lst.trust_score or 0
+                    _grade = (_lst.trust_grade or "ungraded").title()
+
+                    await send_meta_message(
+                        sender_id,
+                        f"Hi {first_name}! 👋\n\n"
+                        f"Excellent choice. You have selected a verified Est8Go listing:\n\n"
+                        f"*{_lst.title}*\n"
+                        f"📍 {(_lst.location or '').title()}\n"
+                        f"💰 *{_price_fmt}*\n"
+                        f"🛡️ Trust Score: *{_score}/100 ({_grade})*\n\n"
+                        f"This property has been GPS-verified and is ready for inspection.\n\n"
+                        f"Would you like to schedule a site visit? "
+                        f"Just give me a preferred time and our agent will confirm. 📅",
+                    )
+
+                    # Alert realtor immediately
+                    try:
+                        await alert_realtor_of_lead(db, _lid, sender_id, biz_name)
+                    except Exception as _ae:
+                        logger.warning(f"Property page lead realtor alert failed: {_ae}")
+
+                except Exception as _ppe:
+                    logger.error(f"Property page lead handler failed: {_ppe}")
+            return
+
         # --- 9. OBJECTION HANDLER ---
         if intent == "objection":
             objection_key = pipe.get("objection_key", "objection_stalling")
@@ -741,6 +819,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 "search_ready",
                 "media_request",
                 "availability",
+                "property_page_lead",
             )
         ):
             try:

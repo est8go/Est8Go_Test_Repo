@@ -1,4 +1,7 @@
 import logging
+import os
+import re as _re
+import urllib.parse
 from datetime import datetime
 from pathlib import Path
 from typing import List
@@ -24,6 +27,41 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 # --- 2. UNIFIED ROUTER ---
 router = APIRouter(prefix="/public", tags=["Public Pages"])
 
+# --- 3. HELPERS ---
+
+
+def _get_wa_number(listing, db: Session) -> str:
+    """Returns E.164 WhatsApp number (e.g. 2348012345678) for wa.me links."""
+    raw = ""
+    try:
+        if listing and listing.tenant_id:
+            from app.tenants.models import Tenant
+            tenant = db.query(Tenant).filter(Tenant.id == listing.tenant_id).first()
+            raw = getattr(tenant, "whatsapp_phone_number", "") or ""
+    except Exception:
+        pass
+    if not raw:
+        raw = os.getenv("WHATSAPP_BUSINESS_NUMBER", "") or ""
+    digits = _re.sub(r"\D", "", raw)
+    if not digits:
+        return ""
+    if digits.startswith("234"):
+        return digits
+    if digits.startswith("0"):
+        return "234" + digits[1:]
+    if len(digits) == 10:
+        return "234" + digits
+    return digits
+
+
+def _wa_url(wa_number: str, listing_id: int, title: str = "") -> str:
+    """Builds a pre-filled wa.me URL with property reference."""
+    text = f"Hi, I am interested in Est8Go property #{listing_id}"
+    if title:
+        text += f" — {title}"
+    return f"https://wa.me/{wa_number}?text={urllib.parse.quote(text)}"
+
+
 # --- 3. ROUTES ---
 
 
@@ -43,6 +81,8 @@ async def get_property_page(
 
         score = calculate_confidence_score(listing)
         trust = get_trust_label(score)
+        wa_number = _get_wa_number(listing, db)
+        wa_link = _wa_url(wa_number, listing.id, listing.title or "")
 
         return templates.TemplateResponse(
             request=request,  # Modern FastAPI requirement
@@ -53,6 +93,7 @@ async def get_property_page(
                 "trust_icon": trust.get("icon", "🟢"),
                 "trust_text": trust.get("text", "Verified"),
                 "trust_color": trust.get("color", "green"),
+                "wa_link": wa_link,
             },
         )
     except Exception as e:
@@ -349,8 +390,13 @@ async def get_matches_page(request: Request, ids: str, db: Session = Depends(get
             .all()
         )
 
+        # Get wa_number from first listing's tenant
+        wa_number = _get_wa_number(listings[0], db) if listings else ""
+
         return templates.TemplateResponse(
-            request=request, name="matches_gallery.html", context={"listings": listings}
+            request=request,
+            name="matches_gallery.html",
+            context={"listings": listings, "wa_number": wa_number},
         )
     except Exception as e:
         logger.error(f"Gallery Error: {e}")
