@@ -597,6 +597,41 @@ def update_staff_phone(
 
 
 # ================================================================
+# STAFF — list all tenant staff (superuser only)
+# ================================================================
+
+@router.get("/staff")
+def list_staff(
+    current_user: User = Depends(require_superuser),
+    db: Session = Depends(get_db),
+):
+    """
+    Returns all tenant (non-platform) users ordered by tenant.
+    Used by Super Admin to manage lead-alert phone numbers.
+    """
+    users = (
+        db.query(User)
+        .filter(User.is_platform_user == False, User.is_active == True)
+        .order_by(User.tenant_id, User.id)
+        .all()
+    )
+    result = []
+    for u in users:
+        tenant = db.query(Tenant).filter(Tenant.id == u.tenant_id).first()
+        result.append({
+            "id":           u.id,
+            "email":        u.email,
+            "role":         u.role,
+            "tenant_id":    u.tenant_id,
+            "tenant_name":  tenant.business_name if tenant else "—",
+            "phone_number": u.phone_number or None,
+            "has_phone":    bool(u.phone_number),
+            "created_at":   u.created_at.isoformat() if u.created_at else None,
+        })
+    return result
+
+
+# ================================================================
 # VERIFY QUEUE — pending listings with images + GPS + docs
 # ================================================================
 
@@ -920,6 +955,15 @@ async def get_market_intelligence(
         .all()
     )
 
+    # Top listings by trust score
+    top_listings = (
+        db.query(Listing)
+        .filter(Listing.trust_score > 0)
+        .order_by(Listing.trust_score.desc())
+        .limit(5)
+        .all()
+    )
+
     return {
         "summary": {
             "total_listings":  total_listings,
@@ -947,5 +991,16 @@ async def get_market_intelligence(
                 "avg_trust": round(float(row.avg_trust or 0), 1),
             }
             for row in type_rows
+        ],
+        "top_listings": [
+            {
+                "id":          l.id,
+                "title":       l.title,
+                "location":    (l.location or "—").title(),
+                "trust_score": l.trust_score,
+                "trust_grade": l.trust_grade or "ungraded",
+                "price":       l.price or 0,
+            }
+            for l in top_listings
         ],
     }

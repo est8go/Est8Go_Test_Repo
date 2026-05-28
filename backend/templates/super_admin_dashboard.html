@@ -399,6 +399,18 @@
           <div class="empty"><div class="empty-icon">🔑</div><p style="font-size:12px">No pending role requests</p></div>
         </div>
       </div>
+
+      <!-- LEAD ALERT PHONE NUMBERS -->
+      <div style="margin:16px 16px 0">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Lead Alert Numbers</div>
+        <div style="background:var(--warn-dim);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:12px;color:var(--warn)">
+          ⚠️ Staff without phone numbers will not receive hot lead alerts when buyers show interest.
+        </div>
+        <div id="tenantStaffList">
+          <div class="empty"><div class="empty-icon">📱</div><p style="font-size:12px">Loading tenant staff...</p></div>
+        </div>
+      </div>
+      <div style="height:12px"></div>
     </div>
 
     <!-- BILLING TAB (menu-only) -->
@@ -669,6 +681,15 @@
           By Property Type
         </div>
         <div id="miTypeList"></div>
+      </div>
+
+      <!-- Top Verified Listings -->
+      <div style="padding:0 16px;margin-bottom:14px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.15em;
+                    text-transform:uppercase;color:var(--muted);margin-bottom:10px">
+          Top Verified Listings
+        </div>
+        <div id="miTopListings"></div>
       </div>
 
       <div style="height:16px"></div>
@@ -1121,7 +1142,7 @@
       tenants:       () => { loadTenants(); loadSignupLinks(); },
       verify:        loadVerifyQueue,
       audit:         loadAuditLogs,
-      staff:         () => { loadStaff(); loadRoleRequests(); },
+      staff:         () => { loadStaff(); loadRoleRequests(); loadTenantStaff(); },
       billing:       loadBillingData,
       conversations: loadConversations,
       risk:          loadRiskData,
@@ -1587,6 +1608,75 @@
       if (res?.ok) { toast('Staff member deactivated', 'var(--warn)'); loadStaff(); }
       else { toast('Failed to deactivate', 'var(--risk)'); }
     } catch (e) { toast('Connection error', 'var(--risk)'); }
+  }
+
+  // ── TENANT STAFF PHONE MANAGEMENT ─────────────────────────────
+  async function loadTenantStaff() {
+    try {
+      const res = await Auth.fetch('/admin/staff');
+      if (!res?.ok) return;
+      const staff = await res.json();
+      renderTenantStaff(staff);
+    } catch(e) { console.error('Tenant staff load failed:', e); }
+  }
+
+  function renderTenantStaff(staff) {
+    const list = g('tenantStaffList');
+    if (!list) return;
+    if (!staff.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><p style="font-size:12px">No tenant staff found</p></div>';
+      return;
+    }
+    list.innerHTML = staff.map(s => `
+      <div style="background:var(--surface);border:1px solid var(--border);
+                  border-radius:14px;padding:12px;margin-bottom:8px;
+                  display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:10px;
+                    background:var(--indigo-dim);display:flex;align-items:center;
+                    justify-content:center;font-weight:800;font-size:13px;
+                    color:var(--indigo);flex-shrink:0">
+          ${sanitise(s.email[0].toUpperCase())}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;
+                      white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            ${sanitise(s.email)}
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">
+            ${sanitise(s.tenant_name)} &middot; ${sanitise(s.role)}
+          </div>
+          <div style="font-size:10px;margin-top:3px;
+                      color:${s.has_phone ? 'var(--em)' : 'var(--warn)'}">
+            ${s.has_phone ? '📱 ' + sanitise(s.phone_number) : '⚠️ No phone — lead alerts disabled'}
+          </div>
+        </div>
+        <button onclick="setStaffPhone(${s.id},'${sanitise(s.email)}')"
+          style="background:var(--surface2);border:1px solid var(--border2);
+                 color:var(--text);border-radius:8px;padding:6px 10px;
+                 font-size:10px;font-weight:600;cursor:pointer;flex-shrink:0;
+                 min-height:36px">
+          ${s.has_phone ? 'Edit' : 'Set Phone'}
+        </button>
+      </div>`).join('');
+  }
+
+  async function setStaffPhone(userId, email) {
+    const phone = prompt(`Enter WhatsApp number for ${email}:\nFormat: 08012345678 or 2348012345678`);
+    if (!phone) return;
+    try {
+      const res = await Auth.fetch(`/admin/staff/${userId}/phone`, {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({phone})
+      });
+      if (res?.ok) {
+        const data = await res.json();
+        toast(`Phone set: ${data.phone}`);
+        loadTenantStaff();
+      } else {
+        toast('Failed to set phone', 'var(--risk)');
+      }
+    } catch(e) { toast('Error setting phone', 'var(--risk)'); }
   }
 
   // ── BILLING ────────────────────────────────────────────────────
@@ -2305,9 +2395,56 @@
       renderMiTrustDist(d.trust_distribution || {}, s.total_listings || 1);
       renderMiLocList(d.price_by_location || []);
       renderMiTypeList(d.by_property_type || []);
+      renderMiTopListings(d.top_listings || []);
     } catch(e) {
       console.error('Market intelligence load failed:', e);
     }
+  }
+
+  function renderMiTopListings(listings) {
+    const el = g('miTopListings');
+    if (!el) return;
+    if (!listings.length) {
+      el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">No verified listings yet</div>';
+      return;
+    }
+    const GRADE_COLORS = {
+      Emerald:'var(--em)', Gold:'var(--warn)', Silver:'#94A3B8',
+      Bronze:'#CD7F32', ungraded:'var(--muted)'
+    };
+    el.innerHTML = listings.map((l, i) => {
+      const color = GRADE_COLORS[l.trust_grade] || 'var(--muted)';
+      const price = l.price >= 1e9
+        ? `&#8358;${(l.price/1e9).toFixed(1)}B`
+        : l.price >= 1e6
+        ? `&#8358;${(l.price/1e6).toFixed(0)}M`
+        : `&#8358;${l.price.toLocaleString()}`;
+      return `
+        <div style="background:var(--surface);border:1px solid var(--border);
+                    border-radius:var(--r-lg);padding:12px;margin-bottom:8px;
+                    display:flex;align-items:center;gap:10px">
+          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;
+                      color:var(--muted);width:22px;flex-shrink:0;text-align:center">
+            ${i + 1}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:600;white-space:nowrap;
+                        overflow:hidden;text-overflow:ellipsis">
+              ${sanitise(l.title)}
+            </div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">
+              ${sanitise(l.location)} &middot; ${price}
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-family:'Syne',sans-serif;font-size:15px;
+                        font-weight:800;color:${color}">${l.trust_score}</div>
+            <div style="font-size:9px;color:${color};text-transform:capitalize">
+              ${sanitise(l.trust_grade)}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
   }
 
   function renderMiTrustDist(dist, total) {
