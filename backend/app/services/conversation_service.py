@@ -157,6 +157,60 @@ def build_resume_message(
 
 
 # ================================================================
+# RETURNING BUYER HELPERS
+# ================================================================
+
+
+def is_returning_buyer(convo) -> bool:
+    """True when buyer has an active mid-funnel search and was gone >30 mins."""
+    if not convo or not convo.last_active_at:
+        return False
+    if convo.funnel_stage in ("awareness", "closed", None):
+        return False
+    last = convo.last_active_at
+    if last.tzinfo is None:
+        last = last.replace(tzinfo=timezone.utc)
+    now = datetime.now(timezone.utc)
+    return (now - last).total_seconds() > 1800
+
+
+def build_welcome_back_message(convo, display_name: str) -> str:
+    """Resume message that recalls the buyer's previous search criteria."""
+    data = json.loads(convo.data_json or "{}")
+    location = data.get("location", "").title()
+    prop_type = data.get("property_type", "").title()
+    budget = data.get("budget_max") or data.get("budget")
+
+    memory_parts = []
+    if prop_type:
+        memory_parts.append(prop_type)
+    if location:
+        memory_parts.append(f"in {location}")
+    if budget:
+        try:
+            budget_int = int(budget)
+            memory_parts.append(f"budget ₦{budget_int / 1_000_000:.0f}M")
+        except (ValueError, TypeError):
+            memory_parts.append(f"budget {budget}")
+
+    memory_str = " ".join(memory_parts)
+
+    if memory_str:
+        return (
+            f"Welcome back, {display_name}! \U0001f44b\n\n"
+            f"I remember you were looking for *{memory_str}*.\n\n"
+            f"Would you like to continue that search, or start fresh?\n\n"
+            f"Reply *Continue* to pick up where we left off, "
+            f"or *New Search* to start over."
+        )
+    return (
+        f"Welcome back, {display_name}! \U0001f44b\n\n"
+        f"Good to hear from you again. "
+        f"What property are you looking for today?"
+    )
+
+
+# ================================================================
 # LEAD SCORE UPDATER
 # ================================================================
 
@@ -521,12 +575,18 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"*{areas}* {emoji}. {question}",
                 )
 
+            elif is_returning_buyer(convo):
+                # Returning buyer with active search — show memory recap
+                convo.session_count = (convo.session_count or 1) + 1
+                db.commit()
+                welcome_msg = build_welcome_back_message(convo, first_name)
+                await send_meta_message(sender_id, welcome_msg)
+
             else:
-                # Returning user — ONE resume message only
+                # Returning user — generic resume message
                 prefs = json.loads(convo.data_json or "{}")
                 convo.session_count = (convo.session_count or 1) + 1
                 db.commit()
-
                 resume_msg = build_resume_message(
                     session_state, first_name, biz_name, prefs
                 )
@@ -566,6 +626,67 @@ async def handle_incoming_message(data: dict, db: Session):
                 f"the inspection immediately.\n\n"
                 f"In the meantime, would you like to see other verified "
                 f"properties in {_location}, or explore a different area?",
+            )
+            return
+
+        # --- 7d. CONTINUE / NEW SEARCH HANDLERS ---
+        _text_lower = text_body.lower().strip()
+
+        if _text_lower in ("continue", "yes continue", "yes, continue"):
+            _current = json.loads(convo.data_json or "{}")
+            _next_q = get_next_question(_current)
+            if _next_q:
+                await send_meta_message(sender_id, _next_q)
+                return
+            # All data collected — run search immediately
+            if _current.get("location") and (
+                _current.get("budget") or _current.get("budget_max")
+            ):
+                try:
+                    _sr = execute_premium_search(db, tenant_id, _current)
+                    _ms = _sr.get("data", [])
+                    if _ms:
+                        _sum = build_property_summary(
+                            _ms[0], _ms, _sr.get("total_count", 0), first_name
+                        )
+                        await send_meta_message(sender_id, _sum)
+                        await send_meta_carousel(
+                            sender_id, prepare_meta_carousel(_ms)
+                        )
+                        _current["last_viewed_id"] = _ms[0].id
+                        _current["last_viewed_title"] = _ms[0].title or ""
+                        convo.data_json = json.dumps(_current)
+                        convo.state = "HANDOFF"
+                        convo.funnel_stage = "commitment"
+                        convo.last_active_at = datetime.now(timezone.utc).replace(
+                            tzinfo=None
+                        )
+                        db.commit()
+                    else:
+                        await send_meta_message(
+                            sender_id,
+                            build_no_results_message(
+                                _current.get("location", ""),
+                                _current.get("property_type", ""),
+                                _current.get("budget_max") or _current.get("budget"),
+                            ),
+                        )
+                except Exception as _e:
+                    logger.error(f"Continue search failed: {_e}")
+            return
+
+        if _text_lower in ("new search", "start fresh", "fresh start"):
+            convo.data_json = json.dumps({})
+            convo.funnel_stage = "awareness"
+            convo.state = "ACTIVE"
+            convo.lead_score = 0
+            db.commit()
+            await send_meta_message(
+                sender_id,
+                "Starting fresh. What type of property are you looking for?\n\n"
+                "Land — plots for development\n"
+                "House — detached, semi-detached or duplex\n"
+                "Apartment — flats and studio units",
             )
             return
 

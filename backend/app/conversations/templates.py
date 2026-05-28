@@ -132,7 +132,7 @@ def get_next_question(current_data: dict) -> Optional[str]:
         )
         city_display = location_val.title()
         return (
-            f"Which area of {city_display} are you targeting? 📍\n\n"
+            f"Which area of *{city_display}* are you targeting? 📍\n\n"
             f"For example: {examples}\n\n"
             f"This helps me find the most relevant "
             f"verified properties for you."
@@ -143,8 +143,8 @@ def get_next_question(current_data: dict) -> Optional[str]:
         prop_type = current_data.get("property_type", "property").title()
         location = current_data.get("location", "").title()
         return (
-            f"What is your budget for the {prop_type} "
-            f"in {location}? 💰\n\n"
+            f"What is your budget for the *{prop_type}* "
+            f"in *{location}*? 💰\n\n"
             f"(e.g. '50m', '20m to 80m', '₦45,000,000')"
         )
 

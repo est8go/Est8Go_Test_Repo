@@ -42,8 +42,8 @@ def build_property_summary(
         f"✨ *Verified Match Found for {first_name}!* \n\n"
         f"🏠 *{prop.title}*\n"
         f"📍 Location: {location}\n"
-        f"💰 Price: {price}\n"
-        f"🛡️ Trust Score: {trust}/100 ({_trust_grade(trust)})\n\n"
+        f"💰 Price: *{price}*\n"
+        f"🛡️ Trust Score: *{trust}/100 ({_trust_grade(trust)})*\n\n"
         f"🔗 *View High-Res Photos & GPS Audit:* \n{showroom_link}\n\n"
         f"{boutique_section}"
         f"Would you like to schedule a physical site inspection for this property? Just say the word and we will arrange it. 📅"
@@ -73,7 +73,7 @@ def build_no_results_message(
 
     return (
         f"We don't have verified {ptype} listings "
-        f"in {loc} right now. 🔍\n\n"
+        f"in *{loc}* right now. 🔍\n\n"
         f"This could mean:\n"
         f"Our agents are currently auditing new "
         f"arrivals in that area, or\n"
