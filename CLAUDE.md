@@ -117,6 +117,18 @@ Super admin: est8go@gmail.com / Est8Go@2026
   Fast-track to commitment stage on button tap (funnel_stage=commitment, lead_score=75)
   Realtor hot lead alert fires immediately via alert_realtor_of_lead
   Full funnel path: property page tap → property card → inspection booking
+- 10 conversation engine improvements:
+  AI AUDITED badge gated on ai_verified_real (property_detail.html)
+  Trust badge: ≥70 → Verified Trusted Listing, ≥30 → GPS Verified
+  PROPERTY_TYPE_ALIASES + normalise_property_type() — flat→apartment, plot→land etc
+  PATCH /admin/staff/{id}/phone — set realtor phone via Super Admin
+  Realtor alert fallback to tenant.whatsapp_phone_number when phone_number is null
+  NEARBY_AREAS map — no-results message suggests nearby areas (Maitama→Asokoro etc)
+  Budget parser: 100k→100,000; half million→500,000; quarter million→250,000
+  Trust score displays as /100 with GPS Verified / Pending Verification label
+  COMPARISON_PATTERNS intent + comparison handler + last_match_ids saved per search
+  send_meta_image_message() — first property photo sent after text delivery
+  Recovery awareness nudge 1 personalised with previous search context
 
 ## DO NOT OVERWRITE ⚠️
 - backend/app/conversations/intent_filter.py
@@ -159,15 +171,35 @@ Wallet: Split purchased vs bonus, deduct bonus first
 - Deducts 20 credits on generation
 - Available from Trust tab in dashboard
 
-### 2. Conversation engine full test (NEXT)
+### 2. Conversation Engine Final Polish
+1. Fix "ph" extracted from "physical" as Port Harcourt
+   File: backend/app/conversations/intent_filter.py
+   Add LOCATION_FALSE_POSITIVES set — skip single-word matches that appear inside longer words
+
+2. Fix "9 o'clock" time detection
+   File: backend/app/services/conversation_service.py
+   Add r"\b\d{1,2}\s*o'?clock\b" pattern to has_time_pattern regex block
+
+3. Image as card with caption (not separate message)
+   File: backend/app/services/conversation_service.py + notification_service.py
+   Combine text + image into single WhatsApp image message with caption
+   instead of text message followed by separate image
+
+4. Property page "Continue on WhatsApp" button
+   File: backend/templates/property_detail.html
+   Add green WhatsApp button below "I am Interested" that links back to
+   the tenant's WhatsApp chat (wa.me link, no pre-filled text)
+
+5. Property page link text update
+   File: backend/app/services/chatbot/message_builder.py
+   Change "View High-Res Photos & GPS Audit" to "View Property Details & Photos"
+
+### 3. Conversation engine full test
 - Test complete WhatsApp flow with real listings
 - Single message extraction
 - Objection handling
 - Handshake + Google Maps delivery
 - Session memory hot resume
-
-### 4. Admin phone numbers for lead alerts
-- Set realtor phone numbers so pipeline alerts deliver
 
 ## BACKEND STACK
 - FastAPI + SQLAlchemy + PostgreSQL (Render)
