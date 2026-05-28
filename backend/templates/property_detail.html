@@ -70,18 +70,19 @@
                 <div>
                     <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Verification Analysis</p>
                     <div class="flex items-center">
-                        <span class="text-2xl font-black text-gray-900 mr-2">{{ trust_icon }} {{ trust_score }}%</span>
-                        <span class="text-xs font-extrabold text-{{ trust_color }}-600 uppercase">{{ trust_text
-                            }}</span>
+                        <span class="text-2xl font-black text-gray-900 mr-2">{{ trust_icon }} {{ trust_score }}/100</span>
+                        <span class="text-xs font-extrabold text-{{ trust_color }}-600 uppercase">{% if listing.gps_verified_at %}GPS Verified{% else %}Pending Verification{% endif %}</span>
                     </div>
                 </div>
+                {% if listing.ai_verified_real %}
                 <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100">
                     <span class="text-[9px] font-black text-blue-600 uppercase">AI Audited</span>
                 </div>
+                {% endif %}
             </div>
 
             <!-- TRUST BADGE -->
-            {% if listing.status == 'verified' %}
+            {% if trust_score and trust_score >= 70 %}
             <div class="mt-4 flex items-center bg-blue-50 p-3 rounded-lg border border-blue-100">
                 <svg class="w-6 h-6 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path
@@ -89,6 +90,15 @@
                     </path>
                 </svg>
                 <span class="text-blue-800 font-bold text-sm uppercase">Verified Trusted Listing</span>
+            </div>
+            {% elif trust_score and trust_score >= 30 %}
+            <div class="mt-4 flex items-center bg-green-50 p-3 rounded-lg border border-green-100">
+                <svg class="w-6 h-6 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                        d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z">
+                    </path>
+                </svg>
+                <span class="text-green-800 font-bold text-sm uppercase">GPS Verified</span>
             </div>
             {% endif %}
 

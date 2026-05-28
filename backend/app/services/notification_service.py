@@ -76,8 +76,24 @@ async def alert_realtor_of_lead(
             .first()
         )
 
-        if not agent or not agent.phone_number:
-            logger.warning(f"⚠️ Alert failed: No active admin found for {biz_name}")
+        alert_phone = agent.phone_number if (agent and agent.phone_number) else None
+        if not alert_phone:
+            # Fallback: use tenant's registered WhatsApp number
+            from app.tenants.models import Tenant as _Tenant
+            import re as _re
+            _tenant = db.query(_Tenant).filter(
+                _Tenant.id == listing.tenant_id
+            ).first()
+            _raw = getattr(_tenant, "whatsapp_phone_number", None) if _tenant else None
+            if _raw:
+                _digits = _re.sub(r"\D", "", _raw)
+                if _digits.startswith("0"):
+                    _digits = "234" + _digits[1:]
+                alert_phone = _digits or None
+        if not alert_phone:
+            logger.warning(
+                f"⚠️ No phone for realtor alert: tenant={listing.tenant_id}"
+            )
             return
 
         # 3. Format the High-Intent Alert
@@ -91,7 +107,7 @@ async def alert_realtor_of_lead(
         )
 
         # 4. Push the alert to the Agent's WhatsApp
-        await send_meta_text_message(agent.phone_number, alert_text)
+        await send_meta_text_message(alert_phone, alert_text)
         logger.info(
             f"🚀 Lead Alert for {biz_name} pushed to Agent {agent.phone_number}"
         )
@@ -139,6 +155,40 @@ async def check_for_abandoned_chats(db: Session):
 # ---------------------------------------------------------
 # INSPECTION LOGIC
 # ---------------------------------------------------------
+
+
+async def send_meta_image_message(
+    to: str,
+    image_url: str,
+    caption: str,
+    phone_number_id: str = None,
+) -> bool:
+    """Sends a WhatsApp image message with optional caption."""
+    token = META_ACCESS_TOKEN
+    pid = phone_number_id or BUSINESS_PHONE_ID
+    if not token or not pid:
+        logger.warning("Meta credentials missing — image message not sent")
+        return False
+    url = f"https://graph.facebook.com/v19.0/{pid}/messages"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": to,
+        "type": "image",
+        "image": {"link": image_url, "caption": caption},
+    }
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(url, json=payload, headers=headers, timeout=30)
+            if resp.status_code != 200:
+                logger.warning(f"Image send non-200: {resp.text}")
+            return resp.status_code == 200
+    except Exception as e:
+        logger.warning(f"Image send failed: {e}")
+        return False
 
 
 async def schedule_inspection_logic(

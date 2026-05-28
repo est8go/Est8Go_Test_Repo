@@ -86,6 +86,10 @@ class ChangeStaffRoleRequest(BaseModel):
     role: str
 
 
+class UpdateStaffPhoneRequest(BaseModel):
+    phone: str
+
+
 # ================================================================
 # PULSE — platform health snapshot
 # ================================================================
@@ -556,6 +560,40 @@ def change_staff_role(
         "success": True,
         "message": f"{user.email} role changed from {old_role} to {payload.role}.",
     }
+
+
+# ================================================================
+# STAFF — update phone number (superuser only)
+# ================================================================
+
+@router.patch("/staff/{user_id}/phone")
+def update_staff_phone(
+    user_id: int,
+    payload: UpdateStaffPhoneRequest,
+    current_user: User = Depends(require_superuser),
+    db: Session = Depends(get_db),
+):
+    """
+    Set or update the WhatsApp phone number for a staff/admin user.
+    Normalises to E.164 format (e.g. 2348012345678).
+    Superuser only.
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    phone_clean = re.sub(r"[\s\-\(\)]", "", payload.phone)
+    if phone_clean.startswith("+"):
+        phone_clean = phone_clean[1:]
+    elif phone_clean.startswith("0"):
+        phone_clean = "234" + phone_clean[1:]
+    user.phone_number = phone_clean
+    db.commit()
+    log_action(
+        db, actor=current_user, action="staff_phone_updated",
+        target_table="users", target_id=user.id,
+        new_value={"phone_number": phone_clean},
+    )
+    return {"success": True, "phone": phone_clean}
 
 
 # ================================================================

@@ -360,6 +360,68 @@ PROPERTY_TYPE_MAP = {
     ],
 }
 
+PROPERTY_TYPE_ALIASES = {
+    # Apartment/flat variants and typos
+    "flat":          "apartment",
+    "flats":         "apartment",
+    "appartment":    "apartment",
+    "appartments":   "apartment",
+    "aprtment":      "apartment",
+    "studio":        "apartment",
+    "condo":         "apartment",
+    "condominium":   "apartment",
+    "unit":          "apartment",
+    # House variants
+    "bungalow":      "house",
+    "mansion":       "house",
+    "duplex":        "house",
+    "duplexes":      "house",
+    "terrace":       "house",
+    "townhouse":     "house",
+    "semi detached": "house",
+    "detached":      "house",
+    "villa":         "house",
+    # Land variants
+    "plot":          "land",
+    "plots":         "land",
+    "parcel":        "land",
+    "parcels":       "land",
+    "acres":         "land",
+    "hectare":       "land",
+    "hectares":      "land",
+    "sqm":           "land",
+    "dry land":      "land",
+    "dry plot":      "land",
+}
+
+COMPARISON_PATTERNS = [
+    "compare",
+    "difference between",
+    "which is better",
+    "tell me more about option",
+    "more about number",
+    "option 1",
+    "option 2",
+    "option 3",
+    "first one",
+    "second one",
+    "third one",
+    "the first one",
+    "the second one",
+    "the last one",
+    "number 1",
+    "number 2",
+]
+
+
+def normalise_property_type(ptype: str) -> str:
+    if not ptype:
+        return ptype
+    return PROPERTY_TYPE_ALIASES.get(
+        ptype.lower().strip(), ptype.lower().strip()
+    )
+
+
 # Property reference pattern — catches "Est8Go property #24" from WhatsApp button clicks
 PROPERTY_REF_PATTERN = re.compile(r"est8go property #(\d+)", re.IGNORECASE)
 
@@ -435,6 +497,17 @@ def extract_budget_from_text(text: str) -> Optional[int]:
             upper = int(val2 * 1_000_000)
         return upper
 
+    # Pattern: number + k (thousands) e.g. "100k" → 100,000
+    k_match = re.search(r"(\d+\.?\d*)\s*k\b", text)
+    if k_match:
+        return int(float(k_match.group(1)) * 1_000)
+
+    # Half / quarter million shorthand
+    if "half million" in text or "half a million" in text:
+        return 500_000
+    if "quarter million" in text:
+        return 250_000
+
     # Pattern: number + billion
     billion_pattern = r"(\d+\.?\d*)\s*(?:b\b|billion)"
     b_match = re.search(billion_pattern, text)
@@ -497,6 +570,12 @@ def extract_property_type(text: str) -> Optional[str]:
         for kw in keywords:
             if kw in text_lower:
                 return prop_type
+    # Second pass: check aliases (catches typos and extra synonyms)
+    for alias, prop_type in sorted(
+        PROPERTY_TYPE_ALIASES.items(), key=lambda x: -len(x[0])
+    ):
+        if alias in text_lower:
+            return prop_type
     return None
 
 
@@ -669,6 +748,16 @@ def classify_intent(
             confidence="high",
             extracted={},
             response_key="budget_nudge",
+            needs_gpt=False,
+        )
+
+    # ── 7.5. COMPARISON ─────────────────────────────────
+    if any(pattern in text_lower for pattern in COMPARISON_PATTERNS):
+        return IntentResult(
+            intent="comparison",
+            confidence="high",
+            extracted={},
+            response_key="comparison",
             needs_gpt=False,
         )
 

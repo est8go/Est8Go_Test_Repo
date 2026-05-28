@@ -279,6 +279,36 @@ def build_reminder_message(
     # Determine missing field for verification stage
     missing_field = "budget" if prefs.get("location") else "preferred location"
 
+    # Build search context string from previous preferences
+    location  = (prefs.get("location") or "").title()
+    prop_type = (prefs.get("property_type") or "").title()
+    budget    = prefs.get("budget_max") or prefs.get("budget")
+    search_context = ""
+    if prop_type or location:
+        _parts = []
+        if prop_type:
+            _parts.append(prop_type)
+        if location:
+            _parts.append(f"in {location}")
+        if budget:
+            try:
+                _b = int(budget)
+                if _b >= 1_000_000:
+                    _parts.append(f"around ₦{_b / 1_000_000:.0f}M")
+            except (ValueError, TypeError):
+                pass
+        search_context = " ".join(_parts)
+
+    # Awareness nudge 1 with context — override template if context available
+    if stage == "awareness" and nudge_index == 0 and search_context:
+        return (
+            f"Hi {name}! 👋\n\n"
+            f"Just checking in — you were looking for "
+            f"*{search_context}* a few hours ago.\n\n"
+            f"We have verified listings that match your criteria. "
+            f"Would you like to continue your search? 🏠"
+        )
+
     # High-value buyers get special template
     if nudge_index == -1:
         templates = RECOVERY_MESSAGES.get("high_value", [])

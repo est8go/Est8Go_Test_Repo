@@ -782,6 +782,50 @@ async def handle_incoming_message(data: dict, db: Session):
                     logger.error(f"Property page lead handler failed: {_ppe}")
             return
 
+        # --- 8c. COMPARISON HANDLER ---
+        if intent == "comparison":
+            _data = json.loads(convo.data_json or "{}")
+            _match_ids = _data.get("last_match_ids", [])
+            if not _match_ids:
+                await send_meta_message(
+                    sender_id,
+                    f"Please run a property search first, {first_name}, "
+                    f"and I'll compare the results for you.",
+                )
+            elif len(_match_ids) == 1:
+                await send_meta_message(
+                    sender_id,
+                    "There is only one property in your last search. "
+                    "Would you like more details about it?",
+                )
+            else:
+                _cmp_listings = (
+                    db.query(Listing)
+                    .filter(Listing.id.in_(_match_ids))
+                    .all()
+                )
+                _cmp_text = (
+                    f"Here is a comparison of your "
+                    f"{len(_cmp_listings)} matched properties:\n\n"
+                )
+                for _i, _l in enumerate(_cmp_listings, 1):
+                    _p = _l.price or 0
+                    _price_m = (
+                        f"₦{_p/1_000_000:.0f}M"
+                        if _p >= 1_000_000
+                        else f"₦{_p:,}"
+                    )
+                    _grade = (_l.trust_grade or "ungraded").title()
+                    _cmp_text += (
+                        f"*Option {_i}: {_l.title}*\n"
+                        f"📍 {(_l.location or '').title()}\n"
+                        f"💰 {_price_m}\n"
+                        f"🛡️ {_l.trust_score or 0}/100 ({_grade})\n\n"
+                    )
+                _cmp_text += "Which would you like to explore further?"
+                await send_meta_message(sender_id, _cmp_text)
+            return
+
         # --- 9. OBJECTION HANDLER ---
         if intent == "objection":
             objection_key = pipe.get("objection_key", "objection_stalling")
@@ -837,9 +881,23 @@ async def handle_incoming_message(data: dict, db: Session):
                         )
 
                     await send_meta_message(sender_id, summary)
+                    # Send first property image if available
+                    try:
+                        from app.listings.models import ListingImage
+                        from app.services.notification_service import send_meta_image_message
+                        _img = db.query(ListingImage).filter(
+                            ListingImage.listing_id == matches[0].id
+                        ).first()
+                        if _img and _img.url:
+                            await send_meta_image_message(
+                                sender_id, _img.url, matches[0].title or ""
+                            )
+                    except Exception as _img_e:
+                        logger.warning(f"Image send failed: {_img_e}")
                     # Lock state to HANDOFF — prevents search re-triggering
                     prefs["last_viewed_id"] = matches[0].id
                     prefs["last_viewed_title"] = matches[0].title or ""
+                    prefs["last_match_ids"] = [m.id for m in matches]
                     convo.data_json = json.dumps(prefs)
                     convo.state = "HANDOFF"
                     convo.funnel_stage = "commitment"
@@ -979,10 +1037,24 @@ async def handle_incoming_message(data: dict, db: Session):
                                     matches[0], matches, total, first_name
                                 )
                             await send_meta_message(sender_id, summary)
+                            # Send first property image if available
+                            try:
+                                from app.listings.models import ListingImage
+                                from app.services.notification_service import send_meta_image_message
+                                _img2 = db.query(ListingImage).filter(
+                                    ListingImage.listing_id == matches[0].id
+                                ).first()
+                                if _img2 and _img2.url:
+                                    await send_meta_image_message(
+                                        sender_id, _img2.url, matches[0].title or ""
+                                    )
+                            except Exception as _img2_e:
+                                logger.warning(f"Image send failed: {_img2_e}")
                             carousel_data = prepare_meta_carousel(matches)
                             await send_meta_carousel(sender_id, carousel_data)
                             prefs["last_viewed_id"] = matches[0].id
                             prefs["last_viewed_title"] = matches[0].title or ""
+                            prefs["last_match_ids"] = [m.id for m in matches]
                             convo.data_json = json.dumps(prefs)
                             convo.state = "HANDOFF"
                             convo.funnel_stage = "commitment"

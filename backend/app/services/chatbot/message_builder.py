@@ -1,6 +1,28 @@
 # EST8GO PREMIUM MESSAGE BUILDER
 # Responsible for high-converting property summaries and referral handshakes.
 
+NEARBY_AREAS = {
+    "maitama":         ["asokoro", "wuse", "garki"],
+    "asokoro":         ["maitama", "garki", "wuse"],
+    "gwarinpa":        ["kubwa", "lugbe", "lokogoma"],
+    "kubwa":           ["gwarinpa", "lugbe", "gwagwalada"],
+    "lugbe":           ["kubwa", "gwarinpa", "lokogoma"],
+    "lekki":           ["ajah", "victoria island", "ikoyi"],
+    "ajah":            ["lekki", "sangotedo", "abraham adesanya"],
+    "ikeja":           ["maryland", "ojodu", "magodo"],
+    "victoria island": ["ikoyi", "lekki", "oniru"],
+    "ikoyi":           ["victoria island", "lekki", "obalende"],
+    "surulere":        ["yaba", "gbagada", "magodo"],
+    "yaba":            ["surulere", "gbagada", "maryland"],
+    "garki":           ["maitama", "wuse", "asokoro"],
+    "wuse":            ["garki", "maitama", "jabi"],
+    "jabi":            ["wuse", "maitama", "lifecamp"],
+    "gbagada":         ["yaba", "surulere", "maryland"],
+    "magodo":          ["ojodu", "ikeja", "gbagada"],
+    "ojodu":           ["magodo", "ikeja", "berger"],
+    "lokogoma":        ["gwarinpa", "lugbe", "kubwa"],
+}
+
 
 def _trust_grade(score) -> str:
     s = score or 0
@@ -71,16 +93,25 @@ def build_no_results_message(
         except (ValueError, TypeError):
             pass
 
+    location_lower = (location or "").lower().strip()
+    nearby = NEARBY_AREAS.get(location_lower, [])
+    nearby_text = ""
+    if nearby:
+        nearby_formatted = ", ".join(a.title() for a in nearby[:3])
+        nearby_text = (
+            f"\n\nNearby areas with active listings:\n"
+            f"{nearby_formatted}\n\n"
+            f"Would you like me to search any of these?"
+        )
+
     return (
         f"We don't have verified {ptype} listings "
         f"in *{loc}* right now. 🔍\n\n"
         f"This could mean:\n"
         f"Our agents are currently auditing new "
         f"arrivals in that area, or\n"
-        f"Inventory in {loc} is currently limited.\n\n"
-        f"Would you like to:\n"
-        f"Explore a nearby area, or\n"
-        f"Search a different property type?"
+        f"Inventory in {loc} is currently limited."
+        f"{nearby_text}"
         f"{budget_note}"
     )
 
