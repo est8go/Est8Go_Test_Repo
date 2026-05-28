@@ -28,6 +28,17 @@ Fix applied:
 
 ## RESOLVED ISSUES
 
+## Issue #3
+Date: 28 May 2026
+Status: RESOLVED
+Problem: Property page button opened wrong WhatsApp
+Fix: _get_wa_number() normalises to E.164 format,
+     falls back to WHATSAPP_BUSINESS_NUMBER env var
+     wa.me URL built with proper encoding
+Files: backend/app/public/router.py,
+       backend/templates/property_detail.html,
+       backend/templates/matches_gallery.html
+
 ## Issue #2
 Date: 26 May 2026
 Status: RESOLVED

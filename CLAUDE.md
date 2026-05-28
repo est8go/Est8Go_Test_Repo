@@ -110,6 +110,13 @@ Super admin: est8go@gmail.com / Est8Go@2026
   Mark Compliant + Extend Grace buttons
   est8go-mmef-cron added to render.yaml
   Mobile label fix — 9px font, Non-Compliant splits 2 lines
+- Property page WhatsApp buttons fully wired:
+  I am Interested + Chat to Buy → correct WA Business number
+  _get_wa_number() normalises E.164 from tenant or WHATSAPP_BUSINESS_NUMBER env
+  Property reference detection in intent_filter (priority 0, before all checks)
+  Fast-track to commitment stage on button tap (funnel_stage=commitment, lead_score=75)
+  Realtor hot lead alert fires immediately via alert_realtor_of_lead
+  Full funnel path: property page tap → property card → inspection booking
 
 ## DO NOT OVERWRITE ⚠️
 - backend/app/conversations/intent_filter.py
