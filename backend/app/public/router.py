@@ -65,37 +65,61 @@ def _wa_url(wa_number: str, listing_id: int, title: str = "") -> str:
 # --- 3. ROUTES ---
 
 
+def _property_context(listing, db: Session) -> dict:
+    score = calculate_confidence_score(listing)
+    trust = get_trust_label(score)
+    wa_number = _get_wa_number(listing, db)
+    wa_link = _wa_url(wa_number, listing.id, listing.title or "")
+    return {
+        "listing": listing,
+        "trust_score": score,
+        "trust_icon": trust.get("icon", "🟢"),
+        "trust_text": trust.get("text", "Verified"),
+        "trust_color": trust.get("color", "green"),
+        "wa_link": wa_link,
+        "wa_number": wa_number,
+    }
+
+
+def _fetch_listing(listing_id: int, db: Session):
+    return (
+        db.query(Listing)
+        .options(joinedload(Listing.images), joinedload(Listing.tenant))
+        .filter(Listing.id == listing_id)
+        .first()
+    )
+
+
+@router.get("/property/{listing_id}/classic", response_class=HTMLResponse)
+async def get_property_page_classic(
+    request: Request, listing_id: int, db: Session = Depends(get_db)
+):
+    try:
+        listing = _fetch_listing(listing_id, db)
+        if not listing:
+            raise HTTPException(status_code=404, detail="Property not found")
+        return templates.TemplateResponse(
+            request=request,
+            name="property_detail_classic.html",
+            context=_property_context(listing, db),
+        )
+    except Exception as e:
+        logger.error(f"❌ Property Classic Page Error: {e}")
+        return HTMLResponse(content="Internal Server Error: Check Render Logs", status_code=500)
+
+
 @router.get("/property/{listing_id}", response_class=HTMLResponse)
 async def get_property_page(
     request: Request, listing_id: int, db: Session = Depends(get_db)
 ):
     try:
-        listing = (
-            db.query(Listing)
-            .options(joinedload(Listing.images))
-            .filter(Listing.id == listing_id)
-            .first()
-        )
+        listing = _fetch_listing(listing_id, db)
         if not listing:
             raise HTTPException(status_code=404, detail="Property not found")
-
-        score = calculate_confidence_score(listing)
-        trust = get_trust_label(score)
-        wa_number = _get_wa_number(listing, db)
-        wa_link = _wa_url(wa_number, listing.id, listing.title or "")
-
         return templates.TemplateResponse(
-            request=request,  # Modern FastAPI requirement
+            request=request,
             name="property_detail.html",
-            context={
-                "listing": listing,
-                "trust_score": score,
-                "trust_icon": trust.get("icon", "🟢"),
-                "trust_text": trust.get("text", "Verified"),
-                "trust_color": trust.get("color", "green"),
-                "wa_link": wa_link,
-                "wa_number": wa_number,
-            },
+            context=_property_context(listing, db),
         )
     except Exception as e:
         logger.error(f"❌ Property Page Error: {e}")
