@@ -127,17 +127,22 @@ html[data-theme="light"] .vault-hero{
 .filter-chip:active{opacity:.8}
 
 /* ── Listings ── */
-.listings-container{padding:16px;max-width:var(--max-w);margin:0 auto}
+.listings-container{padding:16px;max-width:960px;margin:0 auto}
 .listings-header{
   display:flex;justify-content:space-between;align-items:center;
   margin-bottom:16px;
 }
 .listings-count{font-size:12px;font-weight:600;color:var(--muted)}
 
+/* ── Responsive grid ── */
+.prop-grid{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:640px){.prop-grid{grid-template-columns:1fr 1fr}}
+@media(min-width:960px){.prop-grid{grid-template-columns:1fr 1fr 1fr}}
+
 /* ── Property card ── */
 .prop-card{
   background:var(--surface);border:1px solid var(--border);
-  border-radius:20px;overflow:hidden;margin-bottom:16px;
+  border-radius:20px;overflow:hidden;
   transition:transform .15s;
 }
 .prop-card:active{transform:scale(.98)}
@@ -246,7 +251,7 @@ html[data-theme="light"] .vault-hero{
         <div class="vault-stat-label">GPS Verified</div>
       </div>
       <div class="vault-stat">
-        <div class="vault-stat-number" style="color:var(--warn)">{{ ai_count }}</div>
+        <div class="vault-stat-number" style="color:{{ 'var(--em)' if ai_count > 0 else 'var(--muted)' }}">{{ ai_count if ai_count > 0 else '—' }}</div>
         <div class="vault-stat-label">AI Audited</div>
       </div>
     </div>
@@ -280,6 +285,7 @@ html[data-theme="light"] .vault-hero{
   </div>
 
   {% if listings %}
+  <div class="prop-grid">
     {% for listing in listings %}
     {% set grade_colors = {'emerald':'#10B981','gold':'#F59E0B','silver':'#94A3B8','bronze':'#CD7F32','ungraded':'#64748B'} %}
     {% set grade_color  = grade_colors.get(listing.trust_grade or 'ungraded', '#64748B') %}
@@ -339,6 +345,7 @@ html[data-theme="light"] .vault-hero{
       </div>
     </div>
     {% endfor %}
+  </div>
   {% else %}
     <div class="empty-state">
       <div class="empty-icon">🏠</div>

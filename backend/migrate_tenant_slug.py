@@ -49,7 +49,7 @@ for t in tenants:
         if existing:
             candidate = f"{candidate}-{t.id}"
         t.slug = candidate
-        print(f"  [OK] {t.business_name!r} → {candidate!r}")
+        print(f"  [OK] {t.business_name!r} -> {candidate!r}")
         updated += 1
 
 db.commit()
