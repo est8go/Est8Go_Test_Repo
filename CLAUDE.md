@@ -217,6 +217,16 @@ Requirements:
 - data-location="maitama"
 - Works on WordPress, Wix, Squarespace, custom HTML
 
+IMPORTANT CONTEXT FOR NEXT SESSION:
+- Property page live at /public/property/{id}
+- Tenant vault live at /public/{tenant_slug}
+- Bravieshomz slug: bravieshomz-limited
+- embed.js goes in backend/static/embed.js
+- Serve via FastAPI StaticFiles already configured
+- Public API endpoint needed first:
+  GET /public/api/{tenant_slug}/listings
+  Must have CORS headers for cross-origin requests
+
 ### 2. Light/Dark Theme System ✅ DONE
 Added to business_dashboard.html and super_admin_dashboard.html:
 - Auto system preference detection, manual toggle 🌙/☀️, localStorage persistence
