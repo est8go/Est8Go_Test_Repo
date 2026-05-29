@@ -170,7 +170,10 @@ Add to both business_dashboard.html and super_admin_dashboard.html:
 - Manual toggle 🌙/☀️ in header
 - localStorage persistence
 - No theme flash on load (inline script before first paint)
-- Light: #F0F4F8 bg, #FFFFFF cards, #0F172A text
+- Use EXACT brand colours from EST8GO BRAND COLOUR SYSTEM section above
+- Light bg: #F8FAFC, cards: #FFFFFF, text: #0F172A, muted: #64748B
+- Accent colours (indigo, emerald, warn, risk) same in both themes
+- Only bg/card/text/border change between themes
 - Zero backend changes
 
 ### 2. Diaspora Trust Certificate PDF
@@ -209,6 +212,47 @@ Add to both business_dashboard.html and super_admin_dashboard.html:
 - Objection handling
 - Handshake + Google Maps delivery
 - Session memory hot resume
+
+## EST8GO BRAND COLOUR SYSTEM
+
+### Dark Theme (Default)
+Background:     #0F172A
+Cards:          #111827
+Surfaces:       #1E293B
+Border:         rgba(255,255,255,0.07)
+Text Primary:   #F8FAFC
+Text Muted:     #94A3B8
+Text Disabled:  #64748B
+
+### Light Theme
+Background:     #F8FAFC
+Cards:          #FFFFFF
+Border:         rgba(15,23,42,0.08)
+Text Primary:   #0F172A
+Text Muted:     #64748B
+
+### Accent Colours (Both Themes)
+Primary Indigo:  #4F46E5
+Deep Indigo:     #4338CA
+Emerald Trust:   #10B981
+Amber Warning:   #F59E0B
+Crimson Risk:    #F43F5E
+Info Blue:       #3B82F6
+Neutral Slate:   #334155
+
+### Gradients
+Indigo:  linear-gradient(135deg, #4338CA 0%, #4F46E5 100%)
+Trust:   linear-gradient(135deg, #059669 0%, #10B981 100%)
+Surface: linear-gradient(180deg, #111827 0%, #0F172A 100%)
+
+### Typography
+Body:     Inter
+Headings: Syne (weights 700, 800)
+
+### Brand Feel
+Calm operational intelligence — NOT flashy neon crypto UI
+Communicates: trust, professionalism, operational clarity,
+confidence, verification, modern African infrastructure
 
 ## BACKEND STACK
 - FastAPI + SQLAlchemy + PostgreSQL (Render)

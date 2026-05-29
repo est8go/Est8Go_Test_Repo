@@ -2,6 +2,9 @@
 <html lang="en">
 
 <head>
+  <script>
+    (function(){var t=localStorage.getItem('est8go-theme')||((window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark');document.documentElement.setAttribute('data-theme',t);})();
+  </script>
   <script src="/static/js/auth_guard.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -40,6 +43,16 @@
       --r-lg: 20px;
       --r-pill: 999px;
       --nav-h: 64px;
+    }
+
+    html[data-theme="light"] {
+      --bg:      #F8FAFC;
+      --surface: #FFFFFF;
+      --surface2: #EEF2F7;
+      --text:    #0F172A;
+      --muted:   #64748B;
+      --border:  rgba(15,23,42,0.08);
+      --border2: rgba(15,23,42,0.14);
     }
 
     /* ═══════════════════════════════════════════
@@ -1674,7 +1687,7 @@
       border-radius: 16px;
       padding: 0 18px;
       background: #1E293B;
-      border: 1px solid rgba(255,255,255,0.18);
+      border: 1px solid var(--border2);
       cursor: pointer;
       animation: fabItem 0.22s cubic-bezier(0.2,0.8,0.2,1) both;
       white-space: nowrap;
@@ -1781,7 +1794,7 @@
 
     .soon-tag {
       font-size: 8px;
-      background: rgba(255,255,255,0.1);
+      background: var(--border2);
       padding: 1px 5px;
       border-radius: 4px;
     }
@@ -1928,8 +1941,9 @@
         </div>
       </div>
 
-      <!-- Right: health pill + avatar -->
+      <!-- Right: theme toggle + health pill + avatar -->
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <button id="themeToggle" onclick="toggleTheme()" title="Toggle theme" style="width:36px;height:36px;border-radius:10px;background:var(--surface2);border:1px solid var(--border2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s">🌙</button>
         <div class="health-pill stable" id="healthPill">
           <span class="health-dot"></span>
           <span id="healthText">Trust Stable</span>
@@ -2983,6 +2997,7 @@
 
     /* ── INIT ────────────────────────────────── */
     window.addEventListener('DOMContentLoaded', async () => {
+      (function(){const t=document.documentElement.getAttribute('data-theme')||'dark';const b=document.getElementById('themeToggle');if(b)b.textContent=t==='dark'?'🌙':'☀️';})();
       const ok = await resolveCurrentUser();
       if (!ok) return;
       initHeaderCollapse();
@@ -4307,6 +4322,18 @@
         closeMenu();
       }
     });
+
+    /* ── THEME TOGGLE ────────────────────────── */
+    function toggleTheme() {
+      const root = document.documentElement;
+      const next = (root.getAttribute('data-theme') || 'dark') === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('est8go-theme', next);
+      const btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = next === 'dark' ? '🌙' : '☀️';
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', next === 'dark' ? '#0F172A' : '#F8FAFC');
+    }
 
     /* ── USER MENU ───────────────────────────── */
     function toggleUserMenu() {

@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en" data-require-superuser="true">
 <head>
+  <script>
+    (function(){var t=localStorage.getItem('est8go-theme')||((window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark');document.documentElement.setAttribute('data-theme',t);})();
+  </script>
   <script src="/static/js/auth_guard.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
@@ -36,7 +39,21 @@
       --r:           16px;
       --r-lg:        20px;
       --nav-h:       64px;
+      --track:       rgba(255,255,255,0.06);
     }
+
+    html[data-theme="light"] {
+      --bg:      #F8FAFC;
+      --surface: #FFFFFF;
+      --surface2: #EEF2F7;
+      --surface3: #E2E8F0;
+      --text:    #0F172A;
+      --muted:   #64748B;
+      --border:  rgba(15,23,42,0.08);
+      --border2: rgba(15,23,42,0.14);
+      --track:   rgba(15,23,42,0.08);
+    }
+
     *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
     body { display: flex; flex-direction: column; }
@@ -85,7 +102,7 @@
     .metric-label { font-size: 9px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
 
     /* HEALTH BAR */
-    .health-bar { height: 3px; border-radius: 100px; background: rgba(255,255,255,0.06); overflow: hidden; margin-top: 6px; }
+    .health-bar { height: 3px; border-radius: 100px; background: var(--track); overflow: hidden; margin-top: 6px; }
     .health-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--em), #34D399); transition: width 0.6s cubic-bezier(0.2,0.8,0.2,1); }
 
     /* PILLS */
@@ -111,7 +128,7 @@
     .verify-card { margin-bottom: 12px; padding: 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); }
     .verify-signal { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
     .verify-signal:last-child { border-bottom: none; }
-    .signal-bar-wrap { width: 80px; height: 4px; background: rgba(255,255,255,0.06); border-radius: 100px; }
+    .signal-bar-wrap { width: 80px; height: 4px; background: var(--track); border-radius: 100px; }
     .signal-bar { height: 100%; border-radius: 100px; }
 
     /* AUDIT ROW */
@@ -174,7 +191,7 @@
     /* FUNNEL */
     .funnel-stage { margin-bottom: 10px; }
     .funnel-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-    .funnel-bar-wrap { height: 8px; background: rgba(255,255,255,0.05); border-radius: 100px; overflow: hidden; }
+    .funnel-bar-wrap { height: 8px; background: var(--track); border-radius: 100px; overflow: hidden; }
     .funnel-bar { height: 100%; border-radius: 100px; transition: width 1s cubic-bezier(0.2,0.8,0.2,1); }
 
     /* CV SEARCH */
@@ -226,7 +243,9 @@
           <span id="staffName" style="font-size:10px;color:var(--muted)">Loading...</span>
         </div>
       </div>
-      <div style="position:relative">
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <button id="themeToggle" onclick="toggleTheme()" title="Toggle theme" style="width:36px;height:36px;border-radius:10px;background:var(--surface2);border:1px solid var(--border2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s">🌙</button>
+        <div style="position:relative">
         <div id="userAvatar" onclick="toggleUserMenu()" style="width:40px;height:40px;border-radius:12px;border:1.5px solid var(--em-glow);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;background:var(--surface2);cursor:pointer;flex-shrink:0">SA</div>
         <div class="user-menu" id="userMenu">
           <div style="padding:10px 12px 8px;border-bottom:1px solid var(--border);margin-bottom:6px">
@@ -239,6 +258,7 @@
             Sign Out
           </button>
         </div>
+      </div>
       </div>
     </div>
     <!-- Header metrics -->
@@ -1065,6 +1085,7 @@
 
   // ── AUTH INIT ──────────────────────────────────────────────────
   window.addEventListener('DOMContentLoaded', () => {
+    (function(){const t=document.documentElement.getAttribute('data-theme')||'dark';const b=document.getElementById('themeToggle');if(b)b.textContent=t==='dark'?'🌙':'☀️';})();
     const email = localStorage.getItem('user_email') || '';
     const role  = localStorage.getItem('user_role') || '';
     g('menuEmail').textContent = email;
@@ -1098,6 +1119,18 @@
       t.style.opacity = '0';
       t.style.transform = 'translateX(-50%) translateY(20px)';
     }, 2800);
+  }
+
+  // ── THEME TOGGLE ────────────────────────────────────────────────
+  function toggleTheme() {
+    const root = document.documentElement;
+    const next = (root.getAttribute('data-theme') || 'dark') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem('est8go-theme', next);
+    const btn = document.getElementById('themeToggle');
+    if (btn) btn.textContent = next === 'dark' ? '🌙' : '☀️';
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', next === 'dark' ? '#0F172A' : '#F8FAFC');
   }
 
   // ── USER MENU ──────────────────────────────────────────────────
