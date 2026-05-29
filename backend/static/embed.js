@@ -1,4 +1,4 @@
-/*! Est8Go Embed Widget v1.0 — est8go-api.onrender.com */
+/*! Est8Go Embed Widget v1.1 — est8go-api.onrender.com */
 (function () {
   'use strict';
 
@@ -15,17 +15,26 @@
   var tenant = script.getAttribute('data-tenant');
   if (!tenant) return;
 
+  // ── Config ───────────────────────────────────────────────────
   var cfg = {
-    tenant: tenant,
-    theme: (script.getAttribute('data-theme') || 'auto').toLowerCase(),
-    limit: Math.min(24, Math.max(1, parseInt(script.getAttribute('data-limit'), 10) || 6)),
-    type: script.getAttribute('data-type') || '',
-    location: script.getAttribute('data-location') || ''
+    tenant:       tenant,
+    theme:        (script.getAttribute('data-theme') || 'dark').toLowerCase(),
+    limit:        Math.min(24, Math.max(1, parseInt(script.getAttribute('data-limit'), 10) || 6)),
+    type:         script.getAttribute('data-type') || '',
+    location:     script.getAttribute('data-location') || '',
+    columns:      Math.min(3, Math.max(1, parseInt(script.getAttribute('data-columns'), 10) || 3)),
+    accent:       script.getAttribute('data-accent') || '#4F46E5',
+    radius:       Math.min(32, Math.max(0, parseInt(script.getAttribute('data-radius'), 10) || 16)),
+    showPrice:    script.getAttribute('data-show-price') !== 'false',
+    showWa:       script.getAttribute('data-show-wa') !== 'false',
+    showTrust:    script.getAttribute('data-show-trust') !== 'false',
+    showBranding: script.getAttribute('data-show-branding') !== 'false'
   };
 
   // ── Host element (inserted after <script> tag) ───────────────
   var host = document.createElement('div');
   host.id = 'est8go-widget-' + cfg.tenant.replace(/[^a-z0-9]/gi, '-');
+  host.className = 'est8go-embed-host';
   script.parentNode.insertBefore(host, script.nextSibling);
 
   // ── Shadow DOM ───────────────────────────────────────────────
@@ -36,20 +45,24 @@
     root = host; // graceful fallback for very old browsers
   }
 
-  // ── Theme resolution ─────────────────────────────────────────
-  function isDark() {
-    if (cfg.theme === 'dark') return true;
-    if (cfg.theme === 'light') return false;
-    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  // ── Widget wrapper reference (for live class toggling) ───────
+  var wrapper = null;
+
+  // ── Theme helpers ────────────────────────────────────────────
+  function isLight() {
+    if (cfg.theme === 'light') return true;
+    if (cfg.theme === 'dark') return false;
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
+  }
+
+  function themeClass() {
+    return isLight() ? ' light' : '';
   }
 
   // ── Trust grade colours ──────────────────────────────────────
   var GRADE_COLORS = {
-    emerald: '#10B981',
-    gold: '#F59E0B',
-    silver: '#94A3B8',
-    bronze: '#CD7F32',
-    ungraded: '#64748B'
+    emerald: '#10B981', gold: '#F59E0B', silver: '#94A3B8',
+    bronze: '#CD7F32', ungraded: '#64748B'
   };
 
   // ── Helpers ──────────────────────────────────────────────────
@@ -75,52 +88,80 @@
     return 'https://wa.me/' + num + '?text=' + encodeURIComponent(text);
   }
 
-  // ── Shadow DOM CSS ───────────────────────────────────────────
-  function buildCss(dark) {
-    var bg   = dark ? '#0F172A' : '#F8FAFC';
-    var surf = dark ? '#111827' : '#FFFFFF';
-    var sf2  = dark ? '#1E293B' : '#EEF2F7';
-    var bdr  = dark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.10)';
-    var txt  = dark ? '#F8FAFC' : '#0F172A';
-    var mut  = dark ? '#94A3B8' : '#64748B';
+  // ── CSS — CSS-variable-based so theme switches via class ─────
+  function buildCss() {
+    var c2 = Math.min(cfg.columns, 2);
+    var c3 = cfg.columns;
 
     return [
       '@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Syne:wght@700;800&display=swap");',
       '*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}',
       ':host{display:block;width:100%;font-family:"Inter",-apple-system,Arial,sans-serif;-webkit-font-smoothing:antialiased}',
-      '.widget{background:' + bg + ';padding:16px;border-radius:16px}',
+
+      // Dark vars (default)
+      '.widget{'
+        + '--w-bg:#0F172A;--w-surface:#111827;--w-sf2:#1E293B;'
+        + '--w-bdr:rgba(255,255,255,0.08);--w-txt:#F8FAFC;--w-mut:#94A3B8;'
+        + '--w-em:#10B981;'
+        + '--w-acc:' + cfg.accent + ';'
+        + '--w-rad:' + cfg.radius + 'px;'
+        + 'background:var(--w-bg);padding:16px;'
+        + 'font-family:"Inter",-apple-system,Arial,sans-serif;-webkit-font-smoothing:antialiased'
+      + '}',
+
+      // Light vars override
+      '.widget.light{'
+        + '--w-bg:#F8FAFC;--w-surface:#FFFFFF;--w-sf2:#EEF2F7;'
+        + '--w-bdr:rgba(15,23,42,0.08);--w-txt:#0F172A;--w-mut:#64748B'
+      + '}',
+
+      // Responsive grid
       '.grid{display:grid;grid-template-columns:1fr;gap:16px}',
-      '@media(min-width:500px){.grid{grid-template-columns:1fr 1fr}}',
-      '@media(min-width:900px){.grid{grid-template-columns:1fr 1fr 1fr}}',
-      '.card{background:' + surf + ';border:1px solid ' + bdr + ';border-radius:16px;overflow:hidden;display:flex;flex-direction:column;transition:transform .15s}',
+      '@media(min-width:480px){.grid{grid-template-columns:repeat(' + c2 + ',1fr)}}',
+      '@media(min-width:768px){.grid{grid-template-columns:repeat(' + c3 + ',1fr)}}',
+
+      // Cards
+      '.card{background:var(--w-surface);border:1px solid var(--w-bdr);border-radius:var(--w-rad);overflow:hidden;display:flex;flex-direction:column;transition:transform .15s}',
       '.card:hover{transform:translateY(-2px)}',
-      '.img-wrap{position:relative;height:185px;background:' + sf2 + ';overflow:hidden;flex-shrink:0}',
+
+      // Image area
+      '.img-wrap{position:relative;height:185px;background:var(--w-sf2);overflow:hidden;flex-shrink:0}',
       '.img-wrap img{width:100%;height:100%;object-fit:cover;display:block}',
-      '.img-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:42px;color:' + mut + '}',
+      '.img-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:42px;color:var(--w-mut)}',
+
+      // Trust overlay
       '.trust{position:absolute;top:10px;right:10px;background:rgba(15,23,42,.88);border-radius:9px;padding:5px 9px;display:flex;align-items:center;gap:5px}',
       '.trust-n{font-family:"Syne",Arial,sans-serif;font-size:16px;font-weight:800;line-height:1}',
       '.trust-g{font-size:9px;font-weight:700;text-transform:capitalize;opacity:.85}',
       '.gps{position:absolute;bottom:10px;left:10px;background:rgba(16,185,129,.92);border-radius:7px;padding:3px 9px;font-size:9px;font-weight:700;color:#fff}',
+
+      // Card body
       '.body{padding:12px;display:flex;flex-direction:column;flex:1}',
-      '.title{font-size:14px;font-weight:700;color:' + txt + ';line-height:1.35;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.7em}',
-      '.loc{font-size:11px;color:' + mut + ';margin-bottom:8px}',
-      '.price{font-family:"Syne",Arial,sans-serif;font-size:20px;font-weight:800;color:#10B981;margin-bottom:10px}',
+      '.title{font-size:14px;font-weight:700;color:var(--w-txt);line-height:1.35;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.7em}',
+      '.loc{font-size:11px;color:var(--w-mut);margin-bottom:8px}',
+      '.price{font-family:"Syne",Arial,sans-serif;font-size:20px;font-weight:800;color:var(--w-em);margin-bottom:10px}',
+
+      // Buttons
       '.actions{margin-top:auto;display:flex;gap:8px}',
-      '.btn-v{flex:1;background:#4F46E5;color:#fff;border:none;border-radius:9px;padding:10px;font-size:12px;font-weight:700;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:"Inter",Arial,sans-serif;transition:opacity .15s}',
+      '.btn-v{flex:1;background:var(--w-acc);color:#fff;border:none;border-radius:var(--w-rad);padding:10px;font-size:12px;font-weight:700;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:"Inter",Arial,sans-serif;transition:opacity .15s}',
       '.btn-v:hover{opacity:.87}',
-      '.btn-w{width:38px;height:38px;background:#25D366;border:none;border-radius:9px;display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;cursor:pointer;transition:opacity .15s}',
+      '.btn-w{width:38px;height:38px;background:#25D366;border:none;border-radius:var(--w-rad);display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;cursor:pointer;transition:opacity .15s}',
       '.btn-w:hover{opacity:.87}',
-      '.seal-row{display:flex;justify-content:flex-end;padding-top:12px;margin-top:8px;border-top:1px solid ' + bdr + '}',
-      '.seal{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#10B981;text-decoration:none;opacity:.8;transition:opacity .15s}',
+
+      // Seal row
+      '.seal-row{display:flex;justify-content:flex-end;align-items:center;padding-top:12px;margin-top:8px;border-top:1px solid var(--w-bdr)}',
+      '.seal{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:var(--w-em);text-decoration:none;opacity:.8;transition:opacity .15s}',
       '.seal:hover{opacity:1}',
-      '.loader,.err{text-align:center;padding:40px 16px;font-size:13px;color:' + mut + ';background:' + bg + ';border-radius:16px}',
-      '.empty{text-align:center;padding:48px 16px;color:' + mut + '}',
+
+      // State screens
+      '.loader,.err{text-align:center;padding:40px 16px;font-size:13px;color:var(--w-mut)}',
+      '.empty{text-align:center;padding:48px 16px;color:var(--w-mut)}',
       '.empty-ico{font-size:40px;margin-bottom:12px}',
       '.empty-msg{font-size:13px;font-weight:600}'
     ].join('\n');
   }
 
-  // ── Card HTML ────────────────────────────────────────────────
+  // ── WhatsApp SVG ─────────────────────────────────────────────
   var WA_SVG = '<svg width="17" height="17" viewBox="0 0 24 24" fill="white">'
     + '<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15'
     + '-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475'
@@ -137,62 +178,90 @@
     + 'c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005'
     + 'c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>';
 
+  // ── Card HTML ────────────────────────────────────────────────
   function cardHtml(l) {
     var gc = GRADE_COLORS[l.trust_grade] || '#64748B';
+
+    var trustHtml = cfg.showTrust
+      ? '<div class="trust">'
+        + '<span class="trust-n" style="color:' + gc + '">' + (l.trust_score || 0) + '</span>'
+        + '<span class="trust-g" style="color:' + gc + '">' + esc(l.trust_grade || 'ungraded') + '</span>'
+        + '</div>'
+      : '';
+
+    var gpsHtml = l.gps_verified
+      ? '<div class="gps">&#128205; GPS Verified</div>'
+      : '';
+
+    var priceHtml = cfg.showPrice
+      ? '<div class="price">' + formatPrice(l.price) + '</div>'
+      : '';
+
+    var waHtml = cfg.showWa && l.wa_number
+      ? '<a class="btn-w" href="' + esc(waHref(l.wa_number, l.id, l.title)) + '"'
+        + ' target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">' + WA_SVG + '</a>'
+      : '';
+
     return '<div class="card">'
       + '<div class="img-wrap">'
       + (l.image_url
         ? '<img src="' + esc(l.image_url) + '" alt="' + esc(l.title) + '" loading="lazy">'
         : '<div class="img-empty">&#127968;</div>')
-      + '<div class="trust">'
-      + '<span class="trust-n" style="color:' + gc + '">' + (l.trust_score || 0) + '</span>'
-      + '<span class="trust-g" style="color:' + gc + '">' + esc(l.trust_grade || 'ungraded') + '</span>'
-      + '</div>'
-      + (l.gps_verified ? '<div class="gps">&#128205; GPS Verified</div>' : '')
+      + trustHtml + gpsHtml
       + '</div>'
       + '<div class="body">'
       + '<div class="title">' + esc(l.title) + '</div>'
       + '<div class="loc">&#128205; ' + esc(l.location || '') + (l.property_type ? ' &middot; ' + esc(l.property_type) : '') + '</div>'
-      + '<div class="price">' + formatPrice(l.price) + '</div>'
+      + priceHtml
       + '<div class="actions">'
       + '<a class="btn-v" href="' + esc(l.property_url) + '" target="_blank" rel="noopener noreferrer">View Details &rarr;</a>'
-      + (l.wa_number
-        ? '<a class="btn-w" href="' + esc(waHref(l.wa_number, l.id, l.title)) + '" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">' + WA_SVG + '</a>'
-        : '')
+      + waHtml
       + '</div>'
       + '</div>'
       + '</div>';
   }
 
-  // ── Paint ────────────────────────────────────────────────────
-  var SEAL_HTML = '<div class="seal-row">'
-    + '<a class="seal" href="https://est8go-api.onrender.com" target="_blank" rel="noopener noreferrer">'
-    + '&#128737;&#65039; Verified by Est8Go'
-    + '</a></div>';
+  function sealHtml() {
+    return '<div class="seal-row">'
+      + '<a class="seal" href="https://est8go-api.onrender.com" target="_blank" rel="noopener noreferrer">'
+      + '&#128737;&#65039;'
+      + (cfg.showBranding ? ' Verified by Est8Go' : '')
+      + '</a></div>';
+  }
 
-  function paint(listings) {
-    var dark = isDark();
-    var inner;
+  function buildInner(listings) {
     if (!listings || !listings.length) {
-      inner = '<div class="empty"><div class="empty-ico">&#127968;</div>'
-        + '<div class="empty-msg">No verified properties available</div></div>';
-    } else {
-      inner = '<div class="grid">' + listings.map(cardHtml).join('') + '</div>';
+      return '<div class="empty">'
+        + '<div class="empty-ico">&#127968;</div>'
+        + '<div class="empty-msg">No verified properties available</div>'
+        + '</div>';
     }
-    root.innerHTML = '<style>' + buildCss(dark) + '</style>'
-      + '<div class="widget">' + inner + SEAL_HTML + '</div>';
+    return '<div class="grid">' + listings.map(cardHtml).join('') + '</div>';
+  }
+
+  // ── Paint (always wraps in .widget for CSS var scope) ────────
+  function paint(listings) {
+    root.innerHTML = '<style>' + buildCss() + '</style>'
+      + '<div class="widget' + themeClass() + '">'
+      + buildInner(listings) + sealHtml()
+      + '</div>';
+    wrapper = root.querySelector('.widget');
   }
 
   function showLoading() {
-    var dark = isDark();
-    root.innerHTML = '<style>' + buildCss(dark) + '</style>'
-      + '<div class="loader">Loading verified properties&hellip;</div>';
+    root.innerHTML = '<style>' + buildCss() + '</style>'
+      + '<div class="widget' + themeClass() + '">'
+      + '<div class="loader">Loading verified properties&hellip;</div>'
+      + '</div>';
+    wrapper = root.querySelector('.widget');
   }
 
   function showError() {
-    var dark = isDark();
-    root.innerHTML = '<style>' + buildCss(dark) + '</style>'
-      + '<div class="err">Unable to load properties. Please try again later.</div>';
+    root.innerHTML = '<style>' + buildCss() + '</style>'
+      + '<div class="widget' + themeClass() + '">'
+      + '<div class="err">Unable to load properties. Please try again later.</div>'
+      + '</div>';
+    wrapper = root.querySelector('.widget');
   }
 
   // ── API fetch ────────────────────────────────────────────────
@@ -215,8 +284,10 @@
   refresh();
   setInterval(refresh, REFRESH_MS);
 
+  // Auto theme: toggle .light class on wrapper directly — no re-fetch needed
   if (cfg.theme === 'auto' && window.matchMedia) {
-    window.matchMedia('(prefers-color-scheme: dark)')
-      .addEventListener('change', refresh);
+    window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', function (e) {
+      if (wrapper) wrapper.classList.toggle('light', e.matches);
+    });
   }
 }());

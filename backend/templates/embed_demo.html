@@ -35,98 +35,42 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);-webkit
 a{color:inherit;text-decoration:none}
 button{cursor:pointer;font-family:inherit}
 
-/* ── Top nav ── */
-.nav{
-  position:sticky;top:0;z-index:100;
-  background:var(--bg);border-bottom:1px solid var(--border);
-  padding:14px 20px;
-  display:flex;align-items:center;justify-content:space-between;
-}
+/* ── Nav ── */
+.nav{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
 .nav-brand{display:flex;align-items:center;gap:10px}
-.nav-logo{
-  width:34px;height:34px;border-radius:10px;
-  background:linear-gradient(135deg,#4338CA,#4F46E5);
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--font-head);font-size:13px;font-weight:800;color:#fff;
-}
+.nav-logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#4338CA,#4F46E5);display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:13px;font-weight:800;color:#fff}
 .nav-name{font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text)}
-.nav-pill{
-  font-size:10px;font-weight:700;color:var(--em);
-  background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);
-  border-radius:99px;padding:3px 8px;margin-left:4px;
-}
+.nav-pill{font-size:10px;font-weight:700;color:var(--em);background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);border-radius:99px;padding:3px 8px;margin-left:4px}
 .nav-right{display:flex;align-items:center;gap:10px}
-.theme-btn{
-  width:34px;height:34px;border-radius:9px;
-  background:var(--surface2);border:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;
-  font-size:15px;color:var(--text);
-}
-.nav-cta{
-  background:var(--indigo);color:#fff;border:none;border-radius:9px;
-  padding:8px 14px;font-size:12px;font-weight:700;
-  text-decoration:none;display:inline-flex;align-items:center;gap:5px;
-}
+.theme-btn{width:34px;height:34px;border-radius:9px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text)}
+.nav-cta{background:var(--indigo);color:#fff;border:none;border-radius:9px;padding:8px 14px;font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
 
-/* ── Page sections ── */
+/* ── Page ── */
 .page{max-width:900px;margin:0 auto;padding:0 20px 80px}
 
 /* ── Hero ── */
 .hero{padding:60px 0 48px;text-align:center}
-.hero-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  background:rgba(79,70,229,.12);border:1px solid rgba(79,70,229,.25);
-  border-radius:99px;padding:6px 14px;
-  font-size:11px;font-weight:700;color:var(--indigo);margin-bottom:20px;
-}
-.hero-title{
-  font-family:var(--font-head);font-size:clamp(28px,5vw,44px);font-weight:800;
-  line-height:1.15;margin-bottom:14px;
-}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(79,70,229,.12);border:1px solid rgba(79,70,229,.25);border-radius:99px;padding:6px 14px;font-size:11px;font-weight:700;color:var(--indigo);margin-bottom:20px}
+.hero-title{font-family:var(--font-head);font-size:clamp(28px,5vw,44px);font-weight:800;line-height:1.15;margin-bottom:14px}
 .hero-title span{color:var(--indigo)}
 .hero-sub{font-size:16px;color:var(--muted);max-width:540px;margin:0 auto 32px;line-height:1.6}
 .hero-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
-.hero-tag{
-  font-size:11px;font-weight:600;color:var(--muted);
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:99px;padding:5px 12px;
-}
+.hero-tag{font-size:11px;font-weight:600;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:99px;padding:5px 12px}
 
-/* ── Section headers ── */
+/* ── Sections ── */
 .section{margin-top:56px}
-.section-label{
-  font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--em);margin-bottom:10px;
-}
-.section-title{
-  font-family:var(--font-head);font-size:22px;font-weight:800;
-  margin-bottom:8px;
-}
+.section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--em);margin-bottom:10px}
+.section-title{font-family:var(--font-head);font-size:22px;font-weight:800;margin-bottom:8px}
 .section-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.6}
 
 /* ── Code block ── */
-.code-block{
-  background:var(--code-bg);border:1px solid var(--border2);
-  border-radius:var(--r);overflow:hidden;
-}
-.code-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:12px 16px;border-bottom:1px solid var(--border2);
-}
+.code-block{background:var(--code-bg);border:1px solid var(--border2);border-radius:var(--r);overflow:hidden}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border2)}
 .code-lang{font-size:11px;font-weight:600;color:var(--muted)}
-.copy-btn{
-  display:flex;align-items:center;gap:5px;
-  font-size:11px;font-weight:700;color:var(--muted);
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:7px;padding:5px 10px;transition:color .15s;
-}
+.copy-btn{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:5px 10px;transition:color .15s}
 .copy-btn:hover{color:var(--em)}
 .copy-btn.copied{color:var(--em)}
-pre{
-  margin:0;padding:20px;overflow-x:auto;
-  font-family:var(--font-mono);font-size:13px;line-height:1.6;
-  color:#E2E8F0;background:var(--code-bg);
-}
+pre{margin:0;padding:20px;overflow-x:auto;font-family:var(--font-mono);font-size:13px;line-height:1.6;color:#E2E8F0;background:var(--code-bg)}
 .tok-tag{color:#F87171}
 .tok-attr{color:#93C5FD}
 .tok-val{color:#86EFAC}
@@ -134,85 +78,72 @@ pre{
 
 /* ── Steps ── */
 .steps{display:grid;gap:16px;margin-top:20px}
-.step{
-  display:flex;gap:16px;align-items:flex-start;
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r);padding:20px;
-}
-.step-num{
-  width:32px;height:32px;border-radius:10px;
-  background:linear-gradient(135deg,#4338CA,#4F46E5);
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--font-head);font-size:14px;font-weight:800;color:#fff;
-  flex-shrink:0;
-}
-.step-body{}
+.step{display:flex;gap:16px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.step-num{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#4338CA,#4F46E5);display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:14px;font-weight:800;color:#fff;flex-shrink:0}
 .step-title{font-size:14px;font-weight:700;margin-bottom:4px}
 .step-desc{font-size:13px;color:var(--muted);line-height:1.5}
 
-/* ── Live preview ── */
-.demo-box{
+/* ── Demo controls ── */
+.demo-controls{
+  display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;
   background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r);padding:24px;
-  position:relative;overflow:hidden;
+  border-radius:var(--r);padding:16px 20px;margin-bottom:16px;
 }
-.demo-label{
-  position:absolute;top:14px;right:14px;z-index:10;
+.demo-control{display:flex;flex-direction:column;gap:5px}
+.demo-control label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.demo-control select,.demo-control input[type="color"]{
+  background:var(--surface2);border:1px solid var(--border2);
+  color:var(--text);border-radius:8px;padding:7px 10px;
+  font-size:12px;font-family:var(--font-body);cursor:pointer;
+  min-width:120px;
+}
+.demo-control input[type="color"]{padding:2px 4px;height:34px;width:54px;min-width:0}
+.demo-controls-label{font-size:11px;font-weight:600;color:var(--em);margin-bottom:4px;width:100%}
+
+/* ── Demo box ── */
+.demo-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;position:relative;min-height:80px}
+.demo-live-badge{
+  display:inline-flex;align-items:center;gap:5px;
   font-size:10px;font-weight:700;color:var(--em);
   background:rgba(16,185,129,.10);border:1px solid rgba(16,185,129,.25);
-  border-radius:99px;padding:3px 8px;
-  display:flex;align-items:center;gap:4px;
+  border-radius:99px;padding:3px 10px;margin-bottom:16px;
 }
 
-/* ── Attributes table ── */
+/* ── Attribute table ── */
 .attr-table{width:100%;border-collapse:collapse;font-size:13px}
-.attr-table th{
-  text-align:left;padding:10px 14px;
-  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--muted);border-bottom:1px solid var(--border);
-}
-.attr-table td{
-  padding:12px 14px;border-bottom:1px solid var(--border);
-  vertical-align:top;line-height:1.5;
-}
+.attr-table th{text-align:left;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
+.attr-table td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
 .attr-table tr:last-child td{border-bottom:none}
 .attr-name{font-family:var(--font-mono);font-size:12px;color:var(--indigo);font-weight:600}
 .attr-default{font-family:var(--font-mono);font-size:11px;color:var(--em)}
 .attr-desc{color:var(--muted)}
+.plan-badge{font-size:9px;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap}
+.plan-all{background:rgba(16,185,129,.12);color:#10B981}
+.plan-growth{background:rgba(79,70,229,.12);color:#7C6FF7}
+.plan-pro{background:rgba(245,158,11,.12);color:#F59E0B}
 
-/* ── Platform grid ── */
-.platform-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:20px}
-.platform-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-sm);padding:16px;text-align:center;
-}
+/* ── Platforms ── */
+.platform-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-top:20px}
+.platform-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;text-align:center}
 .platform-icon{font-size:24px;margin-bottom:8px}
 .platform-name{font-size:12px;font-weight:700;margin-bottom:4px}
 .platform-status{font-size:10px;color:var(--em);font-weight:600}
 
 /* ── FAQ ── */
 .faq-list{display:grid;gap:12px;margin-top:20px}
-.faq{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-sm);padding:18px 20px;
-}
+.faq{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:18px 20px}
 .faq-q{font-size:14px;font-weight:700;margin-bottom:6px}
 .faq-a{font-size:13px;color:var(--muted);line-height:1.6}
 
 /* ── Footer ── */
-.footer{
-  text-align:center;padding:32px 20px;border-top:1px solid var(--border);margin-top:72px;
-}
-.footer-seal{
-  display:inline-flex;align-items:center;gap:8px;
-  font-size:12px;color:var(--muted);
-}
+.footer{text-align:center;padding:32px 20px;border-top:1px solid var(--border);margin-top:72px}
+.footer-seal{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
 .footer-seal strong{color:var(--em)}
 
-/* ── Responsive ── */
 @media(max-width:600px){
   .hero{padding:40px 0 32px}
   .nav-cta span{display:none}
+  .demo-controls{gap:8px}
 }
 </style>
 </head>
@@ -246,7 +177,7 @@ pre{
       <span class="hero-tag">Auto-refreshes every 30 min</span>
       <span class="hero-tag">Light / Dark / Auto theme</span>
       <span class="hero-tag">Mobile responsive</span>
-      <span class="hero-tag">GPS &amp; AI trust scores</span>
+      <span class="hero-tag">Custom accent &amp; radius</span>
     </div>
   </section>
 
@@ -267,7 +198,7 @@ pre{
       <pre id="snippet"><span class="tok-tag">&lt;script</span>
   <span class="tok-attr">src</span>=<span class="tok-val">"{{ base_url }}/static/embed.js"</span>
   <span class="tok-attr">data-tenant</span>=<span class="tok-val">"your-agency-slug"</span>
-  <span class="tok-attr">data-theme</span>=<span class="tok-val">"auto"</span>
+  <span class="tok-attr">data-theme</span>=<span class="tok-val">"dark"</span>
   <span class="tok-attr">data-limit</span>=<span class="tok-val">"6"</span><span class="tok-tag">&gt;&lt;/script&gt;</span></pre>
     </div>
   </section>
@@ -281,39 +212,91 @@ pre{
         <div class="step-num">1</div>
         <div class="step-body">
           <div class="step-title">Find your agency slug</div>
-          <div class="step-desc">Your slug is the last part of your Est8Go vault URL — e.g. if your vault is at <code style="font-family:var(--font-mono);font-size:12px;color:var(--indigo)">est8go-api.onrender.com/public/bravieshomz-limited</code> then your slug is <code style="font-family:var(--font-mono);font-size:12px;color:var(--indigo)">bravieshomz-limited</code>.</div>
+          <div class="step-desc">Your slug is the last part of your vault URL — e.g. if your vault is <code style="font-family:var(--font-mono);font-size:12px;color:var(--indigo)">/public/bravieshomz-limited</code> then your slug is <code style="font-family:var(--font-mono);font-size:12px;color:var(--indigo)">bravieshomz-limited</code>.</div>
         </div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
         <div class="step-body">
           <div class="step-title">Paste the script tag</div>
-          <div class="step-desc">Add the script tag to any page — inside the body, in a widget area, or in a code block. No backend changes needed.</div>
+          <div class="step-desc">Add the tag to any page — in a body widget area, code block, or HTML file. No backend changes needed.</div>
         </div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
         <div class="step-body">
-          <div class="step-title">Your listings appear instantly</div>
-          <div class="step-desc">The widget fetches your verified listings, renders them in a sandboxed Shadow DOM (so your site's CSS can't interfere), and auto-refreshes every 30 minutes.</div>
+          <div class="step-title">Listings appear instantly</div>
+          <div class="step-desc">The widget fetches your verified listings, renders them inside an isolated Shadow DOM, and auto-refreshes every 30 minutes.</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- LIVE DEMO -->
+  <!-- LIVE INTERACTIVE DEMO -->
   <section class="section">
     <div class="section-label">Live Preview</div>
-    <h2 class="section-title">See it working right now.</h2>
-    <p class="section-sub">The widget below is live — fetching real listings from Bravieshomz Limited via the Est8Go API.</p>
+    <h2 class="section-title">Interactive demo — try it now.</h2>
+    <p class="section-sub">Adjust the controls and watch the widget update in real time. No page reload required.</p>
 
-    <div class="demo-box">
-      <div class="demo-label">● LIVE</div>
+    <!-- Controls -->
+    <div class="demo-controls">
+      <div style="font-size:11px;font-weight:600;color:var(--em);width:100%;margin-bottom:2px">⚙ Live configuration</div>
+
+      <div class="demo-control">
+        <label>Theme</label>
+        <select onchange="updateDemo('theme', this.value)">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+          <option value="auto">Auto (OS)</option>
+        </select>
+      </div>
+
+      <div class="demo-control">
+        <label>Columns</label>
+        <select onchange="updateDemo('columns', this.value)">
+          <option value="3">3 columns</option>
+          <option value="2">2 columns</option>
+          <option value="1">1 column</option>
+        </select>
+      </div>
+
+      <div class="demo-control">
+        <label>Listings</label>
+        <select onchange="updateDemo('limit', this.value)">
+          <option value="6">6 listings</option>
+          <option value="3">3 listings</option>
+          <option value="12">12 listings</option>
+        </select>
+      </div>
+
+      <div class="demo-control">
+        <label>Card radius</label>
+        <select onchange="updateDemo('radius', this.value)">
+          <option value="16">16px (default)</option>
+          <option value="8">8px (sharp)</option>
+          <option value="24">24px (round)</option>
+          <option value="0">0px (square)</option>
+        </select>
+      </div>
+
+      <div class="demo-control">
+        <label>Accent colour</label>
+        <input type="color" value="#4F46E5" onchange="updateDemo('accent', this.value)">
+      </div>
+    </div>
+
+    <!-- Widget container -->
+    <div id="demo-container" class="demo-box">
+      <div class="demo-live-badge">● LIVE — Bravieshomz Limited</div>
       <script
+        id="demo-script"
         src="{{ base_url }}/static/embed.js"
         data-tenant="bravieshomz-limited"
-        data-theme="auto"
-        data-limit="6">
+        data-theme="dark"
+        data-limit="6"
+        data-columns="3"
+        data-accent="#4F46E5"
+        data-radius="16">
       </script>
     </div>
   </section>
@@ -321,8 +304,8 @@ pre{
   <!-- ATTRIBUTES -->
   <section class="section">
     <div class="section-label">Configuration</div>
-    <h2 class="section-title">All data attributes.</h2>
-    <p class="section-sub">Every attribute is optional except <code style="font-family:var(--font-mono);font-size:13px;color:var(--indigo)">data-tenant</code>.</p>
+    <h2 class="section-title">All 12 data attributes.</h2>
+    <p class="section-sub">Every attribute is optional except <code style="font-family:var(--font-mono);font-size:13px;color:var(--indigo)">data-tenant</code>. Growth+ attributes require the Growth plan or higher.</p>
 
     <div class="code-block" style="overflow:hidden;border-radius:var(--r)">
       <table class="attr-table">
@@ -331,6 +314,7 @@ pre{
             <th>Attribute</th>
             <th>Values</th>
             <th>Default</th>
+            <th>Plan</th>
             <th>Description</th>
           </tr>
         </thead>
@@ -339,31 +323,85 @@ pre{
             <td><span class="attr-name">data-tenant</span></td>
             <td style="color:var(--muted);font-size:12px">your-slug</td>
             <td><span class="attr-default">—</span></td>
-            <td class="attr-desc"><strong>Required.</strong> Your agency slug from your Est8Go vault URL.</td>
+            <td><span class="plan-badge plan-all">All</span></td>
+            <td class="attr-desc"><strong>Required.</strong> Your agency slug from the vault URL.</td>
           </tr>
           <tr>
             <td><span class="attr-name">data-theme</span></td>
-            <td style="color:var(--muted);font-size:12px">light · dark · auto</td>
-            <td><span class="attr-default">auto</span></td>
-            <td class="attr-desc">Widget colour scheme. <code style="font-size:11px;font-family:var(--font-mono)">auto</code> follows the visitor's OS preference and updates live.</td>
+            <td style="color:var(--muted);font-size:12px">dark · light · auto</td>
+            <td><span class="attr-default">dark</span></td>
+            <td><span class="plan-badge plan-all">All</span></td>
+            <td class="attr-desc">Widget colour scheme. <code style="font-size:11px;font-family:var(--font-mono)">auto</code> follows OS preference and updates live without re-loading.</td>
           </tr>
           <tr>
             <td><span class="attr-name">data-limit</span></td>
             <td style="color:var(--muted);font-size:12px">1 – 24</td>
             <td><span class="attr-default">6</span></td>
-            <td class="attr-desc">Maximum number of property cards to show. Listings are sorted by trust score (highest first).</td>
+            <td><span class="plan-badge plan-all">All</span></td>
+            <td class="attr-desc">Max properties to show. Sorted by trust score, highest first.</td>
           </tr>
           <tr>
             <td><span class="attr-name">data-type</span></td>
-            <td style="color:var(--muted);font-size:12px">land · house · apartment · …</td>
+            <td style="color:var(--muted);font-size:12px">land · house · apartment</td>
             <td><span class="attr-default">all</span></td>
-            <td class="attr-desc">Filter by property type. Match your listing types exactly.</td>
+            <td><span class="plan-badge plan-all">All</span></td>
+            <td class="attr-desc">Filter by property type. Must match your listing types exactly.</td>
           </tr>
           <tr>
             <td><span class="attr-name">data-location</span></td>
             <td style="color:var(--muted);font-size:12px">maitama · lekki · …</td>
             <td><span class="attr-default">all</span></td>
-            <td class="attr-desc">Filter by location name (partial match, case-insensitive).</td>
+            <td><span class="plan-badge plan-all">All</span></td>
+            <td class="attr-desc">Filter by location. Partial match, case-insensitive.</td>
+          </tr>
+          <tr>
+            <td><span class="attr-name">data-columns</span></td>
+            <td style="color:var(--muted);font-size:12px">1 · 2 · 3</td>
+            <td><span class="attr-default">3</span></td>
+            <td><span class="plan-badge plan-growth">Growth+</span></td>
+            <td class="attr-desc">Max columns on desktop. Mobile is always 1 col; tablet max 2 col.</td>
+          </tr>
+          <tr>
+            <td><span class="attr-name">data-accent</span></td>
+            <td style="color:var(--muted);font-size:12px">#hex colour</td>
+            <td><span class="attr-default">#4F46E5</span></td>
+            <td><span class="plan-badge plan-growth">Growth+</span></td>
+            <td class="attr-desc">Button background colour. Use your brand colour.</td>
+          </tr>
+          <tr>
+            <td><span class="attr-name">data-radius</span></td>
+            <td style="color:var(--muted);font-size:12px">0 – 32 (px)</td>
+            <td><span class="attr-default">16</span></td>
+            <td><span class="plan-badge plan-growth">Growth+</span></td>
+            <td class="attr-desc">Card and button border-radius in pixels.</td>
+          </tr>
+          <tr>
+            <td><span class="attr-name">data-show-price</span></td>
+            <td style="color:var(--muted);font-size:12px">true · false</td>
+            <td><span class="attr-default">true</span></td>
+            <td><span class="plan-badge plan-growth">Growth+</span></td>
+            <td class="attr-desc">Set to <code style="font-size:11px;font-family:var(--font-mono)">false</code> to hide the price on each card.</td>
+          </tr>
+          <tr>
+            <td><span class="attr-name">data-show-wa</span></td>
+            <td style="color:var(--muted);font-size:12px">true · false</td>
+            <td><span class="attr-default">true</span></td>
+            <td><span class="plan-badge plan-growth">Growth+</span></td>
+            <td class="attr-desc">Set to <code style="font-size:11px;font-family:var(--font-mono)">false</code> to hide the WhatsApp button on each card.</td>
+          </tr>
+          <tr>
+            <td><span class="attr-name">data-show-trust</span></td>
+            <td style="color:var(--muted);font-size:12px">true · false</td>
+            <td><span class="attr-default">true</span></td>
+            <td><span class="plan-badge plan-growth">Growth+</span></td>
+            <td class="attr-desc">Set to <code style="font-size:11px;font-family:var(--font-mono)">false</code> to hide the trust score overlay on images.</td>
+          </tr>
+          <tr>
+            <td><span class="attr-name">data-show-branding</span></td>
+            <td style="color:var(--muted);font-size:12px">true · false</td>
+            <td><span class="attr-default">true</span></td>
+            <td><span class="plan-badge plan-pro">Pro only</span></td>
+            <td class="attr-desc">Set to <code style="font-size:11px;font-family:var(--font-mono)">false</code> to hide the "Verified by Est8Go" text (shield icon always shown).</td>
           </tr>
         </tbody>
       </table>
@@ -377,7 +415,7 @@ pre{
 
     <div style="display:grid;gap:16px">
       <div>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Show only land listings in Maitama, dark theme:</p>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Land listings only, Maitama, custom green accent:</p>
         <div class="code-block">
           <div class="code-header">
             <span class="code-lang">HTML</span>
@@ -392,12 +430,13 @@ pre{
   <span class="tok-attr">data-theme</span>=<span class="tok-val">"dark"</span>
   <span class="tok-attr">data-type</span>=<span class="tok-val">"land"</span>
   <span class="tok-attr">data-location</span>=<span class="tok-val">"maitama"</span>
-  <span class="tok-attr">data-limit</span>=<span class="tok-val">"12"</span><span class="tok-tag">&gt;&lt;/script&gt;</span></pre>
+  <span class="tok-attr">data-limit</span>=<span class="tok-val">"12"</span>
+  <span class="tok-attr">data-accent</span>=<span class="tok-val">"#10B981"</span><span class="tok-tag">&gt;&lt;/script&gt;</span></pre>
         </div>
       </div>
 
       <div>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Light theme, max 3 cards — great for sidebars:</p>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Light theme sidebar — 1 column, sharp corners, price hidden:</p>
         <div class="code-block">
           <div class="code-header">
             <span class="code-lang">HTML</span>
@@ -410,7 +449,10 @@ pre{
   <span class="tok-attr">src</span>=<span class="tok-val">"{{ base_url }}/static/embed.js"</span>
   <span class="tok-attr">data-tenant</span>=<span class="tok-val">"your-agency-slug"</span>
   <span class="tok-attr">data-theme</span>=<span class="tok-val">"light"</span>
-  <span class="tok-attr">data-limit</span>=<span class="tok-val">"3"</span><span class="tok-tag">&gt;&lt;/script&gt;</span></pre>
+  <span class="tok-attr">data-columns</span>=<span class="tok-val">"1"</span>
+  <span class="tok-attr">data-radius</span>=<span class="tok-val">"8"</span>
+  <span class="tok-attr">data-limit</span>=<span class="tok-val">"3"</span>
+  <span class="tok-attr">data-show-price</span>=<span class="tok-val">"false"</span><span class="tok-tag">&gt;&lt;/script&gt;</span></pre>
         </div>
       </div>
     </div>
@@ -420,38 +462,14 @@ pre{
   <section class="section">
     <div class="section-label">Compatibility</div>
     <h2 class="section-title">Works everywhere.</h2>
-    <p class="section-sub">The widget is a plain script tag — it works wherever you can add HTML.</p>
+    <p class="section-sub">A plain script tag — works wherever you can add HTML.</p>
     <div class="platform-grid">
-      <div class="platform-card">
-        <div class="platform-icon">🔵</div>
-        <div class="platform-name">WordPress</div>
-        <div class="platform-status">✓ Compatible</div>
-      </div>
-      <div class="platform-card">
-        <div class="platform-icon">🟣</div>
-        <div class="platform-name">Wix</div>
-        <div class="platform-status">✓ Compatible</div>
-      </div>
-      <div class="platform-card">
-        <div class="platform-icon">⬛</div>
-        <div class="platform-name">Squarespace</div>
-        <div class="platform-status">✓ Compatible</div>
-      </div>
-      <div class="platform-card">
-        <div class="platform-icon">🟠</div>
-        <div class="platform-name">Webflow</div>
-        <div class="platform-status">✓ Compatible</div>
-      </div>
-      <div class="platform-card">
-        <div class="platform-icon">⚪</div>
-        <div class="platform-name">Custom HTML</div>
-        <div class="platform-status">✓ Compatible</div>
-      </div>
-      <div class="platform-card">
-        <div class="platform-icon">🔴</div>
-        <div class="platform-name">Ghost</div>
-        <div class="platform-status">✓ Compatible</div>
-      </div>
+      <div class="platform-card"><div class="platform-icon">🔵</div><div class="platform-name">WordPress</div><div class="platform-status">✓ Compatible</div></div>
+      <div class="platform-card"><div class="platform-icon">🟣</div><div class="platform-name">Wix</div><div class="platform-status">✓ Compatible</div></div>
+      <div class="platform-card"><div class="platform-icon">⬛</div><div class="platform-name">Squarespace</div><div class="platform-status">✓ Compatible</div></div>
+      <div class="platform-card"><div class="platform-icon">🟠</div><div class="platform-name">Webflow</div><div class="platform-status">✓ Compatible</div></div>
+      <div class="platform-card"><div class="platform-icon">⚪</div><div class="platform-name">Custom HTML</div><div class="platform-status">✓ Compatible</div></div>
+      <div class="platform-card"><div class="platform-icon">🔴</div><div class="platform-name">Ghost</div><div class="platform-status">✓ Compatible</div></div>
     </div>
   </section>
 
@@ -462,23 +480,23 @@ pre{
     <div class="faq-list">
       <div class="faq">
         <div class="faq-q">Will the widget slow down my website?</div>
-        <div class="faq-a">No. The script loads asynchronously and uses Shadow DOM — it has zero impact on your page's CSS or layout until it renders. Images are lazy-loaded.</div>
+        <div class="faq-a">No. The script loads asynchronously, runs in Shadow DOM isolation, and lazy-loads all images. It has zero impact on your page's own CSS or layout.</div>
       </div>
       <div class="faq">
-        <div class="faq-q">Do I need to log in or create an API key?</div>
-        <div class="faq-a">No. Your agency slug is all that's needed. The API only returns verified listings — it never exposes private data.</div>
+        <div class="faq-q">Do I need an API key or login?</div>
+        <div class="faq-a">No. Your agency slug is all that's needed. The API only returns verified public listings — no private data is ever exposed.</div>
       </div>
       <div class="faq">
         <div class="faq-q">Can I embed multiple widgets on the same page?</div>
         <div class="faq-a">Yes. Each script tag creates an independent widget with its own Shadow DOM. You can show different property types or locations side-by-side.</div>
       </div>
       <div class="faq">
-        <div class="faq-q">How do I get my agency slug?</div>
-        <div class="faq-a">Your slug is in your Est8Go vault URL. If your vault is at <code style="font-family:var(--font-mono);font-size:12px;color:var(--indigo)">/public/bravieshomz-limited</code>, your slug is <code style="font-family:var(--font-mono);font-size:12px;color:var(--indigo)">bravieshomz-limited</code>. Contact your Est8Go administrator if you are unsure.</div>
+        <div class="faq-q">What does data-theme="auto" actually do?</div>
+        <div class="faq-a">It reads the visitor's OS dark/light preference and switches the widget theme to match — without re-fetching data. If the visitor changes their OS theme while the page is open, the widget updates instantly.</div>
       </div>
       <div class="faq">
         <div class="faq-q">What happens when I add new listings?</div>
-        <div class="faq-a">The widget auto-refreshes every 30 minutes. New verified listings appear automatically — no changes to your website code required.</div>
+        <div class="faq-a">The widget auto-refreshes every 30 minutes. New verified listings appear automatically — no changes to your site code required.</div>
       </div>
     </div>
   </section>
@@ -493,6 +511,7 @@ pre{
 </div>
 
 <script>
+// ── Page theme toggle ────────────────────────────────────────────
 (function(){
   var t = document.documentElement.getAttribute('data-theme') || 'dark';
   document.getElementById('themeBtn').textContent = t === 'dark' ? '🌙' : '☀️';
@@ -506,32 +525,68 @@ function toggleTheme() {
   document.getElementById('themeBtn').textContent = next === 'dark' ? '🌙' : '☀️';
 }
 
+// ── Copy code ────────────────────────────────────────────────────
 function copyCode(preId, btnId) {
   var pre = document.getElementById(preId);
-  var text = pre.textContent || pre.innerText;
+  var text = (pre.textContent || pre.innerText).trim();
   var btn = document.getElementById(btnId);
-  navigator.clipboard.writeText(text.trim()).then(function () {
+  function markCopied() {
     btn.classList.add('copied');
     btn.innerHTML = btn.innerHTML.replace('Copy', 'Copied!');
     setTimeout(function () {
       btn.classList.remove('copied');
       btn.innerHTML = btn.innerHTML.replace('Copied!', 'Copy');
     }, 2000);
-  }).catch(function () {
-    var ta = document.createElement('textarea');
-    ta.value = text.trim();
-    ta.style.cssText = 'position:fixed;opacity:0;top:-999px';
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    btn.classList.add('copied');
-    btn.innerHTML = btn.innerHTML.replace('Copy', 'Copied!');
-    setTimeout(function () {
-      btn.classList.remove('copied');
-      btn.innerHTML = btn.innerHTML.replace('Copied!', 'Copy');
-    }, 2000);
+  }
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(markCopied).catch(function () {
+      fallbackCopy(text); markCopied();
+    });
+  } else {
+    fallbackCopy(text); markCopied();
+  }
+}
+function fallbackCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;opacity:0;top:-999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+}
+
+// ── Live demo ────────────────────────────────────────────────────
+var EMBED_SRC = '{{ base_url }}/static/embed.js';
+
+var demoConfig = {
+  tenant: 'bravieshomz-limited',
+  theme: 'dark',
+  limit: '6',
+  columns: '3',
+  accent: '#4F46E5',
+  radius: '16'
+};
+
+function updateDemo(attr, value) {
+  demoConfig[attr] = value;
+
+  // Remove old script tag
+  var oldScript = document.getElementById('demo-script');
+  if (oldScript) oldScript.remove();
+
+  // Remove old widget host element(s) created by embed.js
+  var oldHosts = document.querySelectorAll('.est8go-embed-host');
+  oldHosts.forEach(function (el) { el.remove(); });
+
+  // Inject fresh script with updated config (cache-bust forces re-execution)
+  var s = document.createElement('script');
+  s.id = 'demo-script';
+  s.src = EMBED_SRC + '?t=' + Date.now();
+  Object.keys(demoConfig).forEach(function (k) {
+    s.setAttribute('data-' + k, demoConfig[k]);
   });
+  document.getElementById('demo-container').appendChild(s);
 }
 </script>
 
