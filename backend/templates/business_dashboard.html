@@ -140,6 +140,81 @@
       color: #F8FAFC !important;
     }
 
+    /* FIX 1 — stat card tinted backgrounds */
+    html[data-theme="light"] .im-card.hot,
+    html[data-theme="light"] .im-card.em,
+    html[data-theme="light"] .im-card.ind {
+      background: #FFFFFF !important;
+      border-color: rgba(15,23,42,0.08) !important;
+    }
+
+    /* FIX 2 — avatars */
+    html[data-theme="light"] #userAvatar {
+      background: linear-gradient(135deg, #4338CA 0%, #4F46E5 100%) !important;
+      color: #FFFFFF !important;
+      border-color: rgba(79,70,229,0.20) !important;
+    }
+
+    html[data-theme="light"] .avatar,
+    html[data-theme="light"] .tenant-avatar,
+    html[data-theme="light"] .biz-avatar,
+    html[data-theme="light"] .user-avatar,
+    html[data-theme="light"] [class*="avatar"] {
+      background: linear-gradient(135deg, #4338CA 0%, #4F46E5 100%) !important;
+      color: #FFFFFF !important;
+      border: 2px solid rgba(79,70,229,0.20) !important;
+    }
+
+    html[data-theme="light"] #avatarBtn,
+    html[data-theme="light"] .header-avatar {
+      background: #4F46E5 !important;
+      color: #FFFFFF !important;
+      border: 2px solid rgba(79,70,229,0.25) !important;
+    }
+
+    /* FIX 3 — trust overlay text stays readable over photo */
+    html[data-theme="light"] .prop-trust-overlay {
+      color: #F8FAFC !important;
+    }
+
+    /* Trust badge generic */
+    html[data-theme="light"] .trust-badge,
+    html[data-theme="light"] .grade-badge,
+    html[data-theme="light"] .trust-pill,
+    html[data-theme="light"] [class*="trust-grade"] {
+      background: rgba(15,23,42,0.06) !important;
+      color: #334155 !important;
+      border: 1px solid rgba(15,23,42,0.12) !important;
+    }
+
+    html[data-theme="light"] .grade-bronze,
+    html[data-theme="light"] [data-grade="bronze"] {
+      background: rgba(205,127,50,0.12) !important;
+      color: #92400E !important;
+      border: 1px solid rgba(205,127,50,0.25) !important;
+    }
+
+    html[data-theme="light"] .grade-silver,
+    html[data-theme="light"] [data-grade="silver"] {
+      background: rgba(148,163,184,0.15) !important;
+      color: #475569 !important;
+      border: 1px solid rgba(148,163,184,0.30) !important;
+    }
+
+    html[data-theme="light"] .grade-gold,
+    html[data-theme="light"] [data-grade="gold"] {
+      background: rgba(245,158,11,0.12) !important;
+      color: #92400E !important;
+      border: 1px solid rgba(245,158,11,0.25) !important;
+    }
+
+    html[data-theme="light"] .grade-emerald,
+    html[data-theme="light"] [data-grade="emerald"] {
+      background: rgba(16,185,129,0.10) !important;
+      color: #065F46 !important;
+      border: 1px solid rgba(16,185,129,0.25) !important;
+    }
+
     /* ═══════════════════════════════════════════
        RESET
     ═══════════════════════════════════════════ */
@@ -3083,6 +3158,7 @@
     /* ── INIT ────────────────────────────────── */
     window.addEventListener('DOMContentLoaded', async () => {
       (function(){const t=document.documentElement.getAttribute('data-theme')||'dark';const b=document.getElementById('themeToggle');if(b)b.textContent=t==='dark'?'🌙':'☀️';})();
+      updateStatCardTheme();
       const ok = await resolveCurrentUser();
       if (!ok) return;
       initHeaderCollapse();
@@ -4409,6 +4485,20 @@
     });
 
     /* ── THEME TOGGLE ────────────────────────── */
+    function updateStatCardTheme() {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      const cards = [
+        { el: document.querySelector('.im-card.hot'), dark: 'rgba(244,63,94,0.10)',  light: '#FFFFFF' },
+        { el: document.querySelector('.im-card.em'),  dark: 'rgba(16,185,129,0.10)', light: '#FFFFFF' },
+        { el: document.querySelector('.im-card.ind'), dark: 'rgba(67,56,202,0.22)',  light: '#FFFFFF' },
+      ];
+      cards.forEach(c => {
+        if (!c.el) return;
+        c.el.style.background = isLight ? c.light : c.dark;
+        c.el.style.border = isLight ? '1px solid rgba(15,23,42,0.08)' : '';
+      });
+    }
+
     function toggleTheme() {
       const root = document.documentElement;
       const next = (root.getAttribute('data-theme') || 'dark') === 'dark' ? 'light' : 'dark';
@@ -4418,6 +4508,7 @@
       if (btn) btn.textContent = next === 'dark' ? '🌙' : '☀️';
       const meta = document.querySelector('meta[name="theme-color"]');
       if (meta) meta.setAttribute('content', next === 'dark' ? '#0F172A' : '#F8FAFC');
+      updateStatCardTheme();
     }
 
     /* ── USER MENU ───────────────────────────── */
