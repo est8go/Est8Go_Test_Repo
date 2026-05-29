@@ -154,6 +154,27 @@ Super admin: est8go@gmail.com / Est8Go@2026
   Tenant.slug column added to model, unique index, auto-generated on signup
   migrate_tenant_slug.py — run to backfill slugs for existing tenants
   urlencode Jinja2 filter registered on templates.env
+- Est8Go Embed Widget (Phase 3) — backend/static/embed.js + /public/api/{tenant_slug}/listings:
+  embed.js v1.1 — zero dependencies, vanilla JS, Shadow DOM isolation
+  Light/dark/auto theme via CSS variables (.widget / .widget.light classes)
+  Customisation: data-accent (hex), data-radius (px), data-columns (1-3)
+  data-show-price, data-show-wa, data-show-trust, data-show-branding (true/false)
+  Responsive grid: 1 col mobile / ≤2 col @480px / cfg.columns @768px
+  Auto-refreshes every 30 minutes via setInterval
+  Auto theme: matchMedia listener toggles .light class — no re-fetch
+  host.className='est8go-embed-host' for demo widget cleanup
+  Interactive developer demo at /public/embed with live controls
+  (theme/columns/limit/radius/accent update widget without page reload)
+  JSON API: GET /public/api/{tenant_slug}/listings (type/location/limit params)
+  Returns: id, title, location, property_type, price, trust_score, trust_grade,
+  gps_verified, image_url, wa_number, property_url
+  Works on WordPress, Wix, Squarespace, Webflow, custom HTML
+  Attribute table: 12 attrs with Plan column (All / Growth+ / Pro only)
+- Hosting recommendation documented:
+  Stage 1 (now): Render Starter $7/mo + Supabase free
+  Stage 2 (10-50 tenants): Render Standard + Supabase Pro
+  Stage 3 (50+): Railway or DigitalOcean
+  Domain: api.est8go.com → CNAME to Render
 
 ## DO NOT OVERWRITE ⚠️
 - backend/app/conversations/intent_filter.py
@@ -189,43 +210,60 @@ Wallet: Split purchased vs bonus, deduct bonus first
 
 ## NEXT TASKS (in order)
 
-### 1. Phase 3 — Est8Go Embed Widget (Priority 1)
-File: backend/static/embed.js
-API:  GET /public/api/{tenant_slug}/listings (JSON, CORS enabled)
-Demo: backend/templates/embed_demo.html → /embed
+### 1. Est8Go Landing Page (Priority 1) ✅ EMBED DONE
+URL: est8go.com (hosted on Namecheap or Netlify free)
+File: landing/index.html (standalone, no backend needed)
 
-One script tag embeds property grid on ANY website:
-<script src="https://est8go-api.onrender.com/embed.js"
-        data-tenant="bravieshomz-limited"
-        data-theme="light"
-        data-limit="6">
-</script>
+World class landing page that makes real estate companies say "I need this."
 
-Requirements:
-- Zero dependencies (vanilla JS only)
-- Shadow DOM so host-site CSS cannot interfere
-- Fetches from GET /public/api/{tenant_slug}/listings
-- Shows: image, trust score, price, location, GPS badge
-- "View Details" links to Est8Go property page
-- "I am Interested" links to WhatsApp
-- "Verified by Est8Go" seal bottom-right
-- Auto-refreshes every 30 minutes
-- Responsive: 1 col mobile, 2 col tablet, 3 col desktop
-- data-theme="light|dark|auto"
-- data-limit="6|12|24"
-- data-type="land|house|apartment"
-- data-location="maitama"
-- Works on WordPress, Wix, Squarespace, custom HTML
+Sections:
+1. Hero — "Truth as a Service" tagline
+   - Headline: "The Trust Layer for African Real Estate"
+   - Subheadline: GPS verified. AI audited. Document checked.
+   - CTA: "Get Started Free" → tenant signup link
+   - CTA: "See Live Demo" → /public/bravieshomz-limited
+   - Hero visual: property card with trust score ring
 
-IMPORTANT CONTEXT FOR NEXT SESSION:
-- Property page live at /public/property/{id}
-- Tenant vault live at /public/{tenant_slug}
-- Bravieshomz slug: bravieshomz-limited
-- embed.js goes in backend/static/embed.js
-- Serve via FastAPI StaticFiles already configured
-- Public API endpoint needed first:
-  GET /public/api/{tenant_slug}/listings
-  Must have CORS headers for cross-origin requests
+2. Problem section
+   - "₦billions lost to property fraud every year"
+   - 3 pain points: fake listings, stolen photos, forged documents
+
+3. Solution — How Est8Go Works
+   - Step 1: List your property
+   - Step 2: GPS verify on-site
+   - Step 3: AI audits your photos
+   - Step 4: Buyers trust your listing
+
+4. Trust Score explanation
+   - Visual breakdown: GPS 30pts, AI 20pts, Docs 40pts, Witnesses 10pts
+   - Grade tiers: Bronze / Silver / Gold / Emerald
+
+5. Embed Widget showcase
+   - "Add to your website in 60 seconds"
+   - Live embed demo using bravieshomz-limited
+   - One line of code snippet
+
+6. Pricing tiers
+   - Pilot (free), Starter, Growth, Pro, Enterprise
+
+7. Social proof
+   - "X properties verified"
+   - "X trusted agents"
+   - "X diaspora buyers served"
+
+8. CTA Footer
+   - "Start verifying your listings today"
+   - WhatsApp contact button
+
+Design: Est8Go brand colours, Inter + Syne fonts
+        Mobile-first, fast load, no frameworks, no CDN
+        Light/dark theme toggle
+
+CONTEXT:
+- Embed widget live at /static/embed.js
+- Tenant slug for live demo: bravieshomz-limited
+- Signup link generated via Super Admin → Tenants tab
+- Live API base: https://est8go-api.onrender.com
 
 ### 2. Light/Dark Theme System ✅ DONE
 Added to business_dashboard.html and super_admin_dashboard.html:
