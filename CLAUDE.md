@@ -164,26 +164,59 @@ Wallet: Split purchased vs bonus, deduct bonus first
 
 ## NEXT TASKS (in order)
 
-### 1. Light/Dark Theme System (Priority 1)
-Add to both business_dashboard.html and super_admin_dashboard.html:
-- Auto system preference detection (prefers-color-scheme)
-- Manual toggle 🌙/☀️ in header
-- localStorage persistence
-- No theme flash on load (inline script before first paint)
-- Use EXACT brand colours from EST8GO BRAND COLOUR SYSTEM section above
-- Light bg: #F8FAFC, cards: #FFFFFF, text: #0F172A, muted: #64748B
-- Accent colours (indigo, emerald, warn, risk) same in both themes
-- Only bg/card/text/border change between themes
-- Zero backend changes
+### 1. World Class Property Page Redesign (Priority 1)
+URL: /public/property/{id} (same URL — no breaking changes)
+File: backend/templates/property_detail.html
 
-### 2. Diaspora Trust Certificate PDF
+PHASE 1 — Property Page Redesign:
+1. Full-width hero image carousel with dot navigation
+2. Trust score animated ring (large, prominent)
+3. Verification timeline:
+   GPS verified date
+   AI audit status
+   Documents uploaded
+   Witness count
+4. Embedded GPS map preview (Google Maps iframe)
+5. Agent profile card with Est8Go Verified badge
+6. Action buttons:
+   I am Interested (WhatsApp)
+   Download Trust Certificate (20 credits)
+   Share Property
+7. Property details grid (type/price/size/location)
+8. Light/dark theme support
+9. Mobile-first, fast load
+10. Open Graph meta tags for social sharing
+
+PHASE 2 — Embed Widget:
+File: backend/static/embed.js
+- One script tag embeds property grid on any website
+- Fetches via GET /public/{tenant_slug}/listings
+- Auto-updates when listings change
+- Responsive grid layout
+- Links back to Est8Go property pages
+- "Verified by Est8Go" seal on each card
+
+PHASE 3 — Business Model:
+- Embed as premium feature per plan tier
+- White-label option for Pro plan
+- Analytics for embedded pages
+
+NOTE: WhatsApp links still use same URL /public/property/{id} — no breaking changes.
+Keep classic version at /public/property/{id}/classic as rollback during redesign.
+
+### 2. Light/Dark Theme System ✅ DONE
+Added to business_dashboard.html and super_admin_dashboard.html:
+- Auto system preference detection, manual toggle 🌙/☀️, localStorage persistence
+- No theme flash on load, exact brand colours, zero backend changes
+
+### 3. Diaspora Trust Certificate PDF
 - backend/app/services/trust_certificate_service.py
 - Uses WeasyPrint or ReportLab
 - Shows: trust score, GPS coords, docs verified, Est8Go seal
 - Deducts 20 credits on generation
 - Available from Trust tab in dashboard
 
-### 3. Conversation Engine Final Polish
+### 4. Conversation Engine Final Polish
 1. Fix "ph" extracted from "physical" as Port Harcourt
    File: backend/app/conversations/intent_filter.py
    Add LOCATION_FALSE_POSITIVES set — skip single-word matches that appear inside longer words
@@ -206,7 +239,7 @@ Add to both business_dashboard.html and super_admin_dashboard.html:
    File: backend/app/services/chatbot/message_builder.py
    Change "View High-Res Photos & GPS Audit" to "View Property Details & Photos"
 
-### 4. Conversation engine full test
+### 5. Conversation engine full test
 - Test complete WhatsApp flow with real listings
 - Single message extraction
 - Objection handling
