@@ -54,6 +54,32 @@
       --track:   rgba(15,23,42,0.08);
     }
 
+    html[data-theme="light"] .tenant-avatar,
+    html[data-theme="light"] .t-avatar,
+    html[data-theme="light"] .tenant-icon,
+    html[data-theme="light"] [class*="tenant-av"] {
+      color: #FFFFFF !important;
+      border: none !important;
+    }
+
+    html[data-theme="light"] .avatar-initials,
+    html[data-theme="light"] .initials-badge {
+      color: #FFFFFF !important;
+    }
+
+    html[data-theme="light"] .tenants-list .avatar,
+    html[data-theme="light"] #tenantsList .avatar,
+    html[data-theme="light"] .tenant-row .avatar {
+      color: #FFFFFF !important;
+      filter: brightness(1.3);
+    }
+
+    html[data-theme="light"] [style*="background:#1E293B"] span,
+    html[data-theme="light"] [style*="background: #1E293B"] span,
+    html[data-theme="light"] [style*="background:rgb(30,41,59)"] span {
+      color: #FFFFFF !important;
+    }
+
     *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
     body { display: flex; flex-direction: column; }
@@ -1291,7 +1317,7 @@
         : '';
       return `
         <div class="tenant-row fade-in">
-          <div class="tenant-avatar" style="background:${color}">${initials}</div>
+          <div class="tenant-avatar" style="background:${color};color:#FFFFFF">${initials}</div>
           <div style="flex:1;min-width:0">
             <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sanitise(t.name)}</div>
             <div style="font-size:11px;color:var(--muted);margin-top:2px">
@@ -1587,7 +1613,7 @@
         : '';
       return `
         <div class="tenant-row">
-          <div class="tenant-avatar" style="background:${deptColor};border:1px solid var(--border2)">${sanitise(initials)}</div>
+          <div class="tenant-avatar" style="background:${deptColor};border:1px solid var(--border2);color:#FFFFFF">${sanitise(initials)}</div>
           <div style="flex:1;min-width:0">
             <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">${sanitise(s.first_name || s.email.split('@')[0])}</div>
             <div style="font-size:11px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sanitise(s.email)}</div>
@@ -1791,7 +1817,7 @@
     if (!tenants.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">👁️</div><p style="font-size:13px">No suspicious patterns detected</p></div>'; return; }
     el.innerHTML = tenants.map(t => `
       <div class="tenant-row">
-        <div class="tenant-avatar" style="background:var(--risk-dim);border:1px solid rgba(244,63,94,0.2)">${sanitise((t.name||'?').slice(0,2).toUpperCase())}</div>
+        <div class="tenant-avatar" style="background:var(--risk-dim);border:1px solid rgba(244,63,94,0.2);color:#FFFFFF">${sanitise((t.name||'?').slice(0,2).toUpperCase())}</div>
         <div style="flex:1;min-width:0">
           <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">${sanitise(t.name)}</div>
           <div style="font-size:11px;color:var(--risk);margin-top:2px">${sanitise(t.reason)}</div>
