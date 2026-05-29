@@ -129,6 +129,31 @@ Super admin: est8go@gmail.com / Est8Go@2026
   COMPARISON_PATTERNS intent + comparison handler + last_match_ids saved per search
   send_meta_image_message() — first property photo sent after text delivery
   Recovery awareness nudge 1 personalised with previous search context
+- Light/Dark theme system — business_dashboard.html + super_admin_dashboard.html:
+  No-flash IIFE, localStorage persistence, system preference detection, manual toggle
+- World class property page redesign (Phase 1) — property_detail.html:
+  Hero image carousel with touch/drag swipe and dot navigation
+  Animated SVG trust score ring (colour-coded by grade, draws on load)
+  Verification timeline: GPS date, AI audit, docs (C of O/Deed/Survey), witnesses
+  Embedded Google Maps iframe (only when lat+lng present)
+  Agent profile card with plan badge and Est8Go Verified badge
+  Sticky action bar: I am Interested (WhatsApp), Chat, Share
+  Web Share API + clipboard fallback
+  Open Graph + Twitter Card meta tags for social sharing
+  Light/dark theme with no-flash, mobile-first, touch targets 44px+
+  Classic rollback preserved at /public/property/{id}/classic
+- Public tenant vault page (Phase 2) — /public/{tenant_slug}:
+  Agency header with Est8Go Verified badge and WhatsApp Chat button
+  Hero stats: total listings, GPS verified count, AI audited count
+  Sticky filter chips by property type and location (query params)
+  Property grid: 1 col mobile → 2 col @640px → 3 col @960px
+  Trust score overlay (colour-coded by grade) on each card
+  GPS Verified tag on verified listings
+  WhatsApp button per card with property reference pre-filled
+  Powered by Est8Go footer
+  Tenant.slug column added to model, unique index, auto-generated on signup
+  migrate_tenant_slug.py — run to backfill slugs for existing tenants
+  urlencode Jinja2 filter registered on templates.env
 
 ## DO NOT OVERWRITE ⚠️
 - backend/app/conversations/intent_filter.py
@@ -164,45 +189,33 @@ Wallet: Split purchased vs bonus, deduct bonus first
 
 ## NEXT TASKS (in order)
 
-### 1. World Class Property Page Redesign (Priority 1)
-URL: /public/property/{id} (same URL — no breaking changes)
-File: backend/templates/property_detail.html
-
-PHASE 1 — Property Page Redesign:
-1. Full-width hero image carousel with dot navigation
-2. Trust score animated ring (large, prominent)
-3. Verification timeline:
-   GPS verified date
-   AI audit status
-   Documents uploaded
-   Witness count
-4. Embedded GPS map preview (Google Maps iframe)
-5. Agent profile card with Est8Go Verified badge
-6. Action buttons:
-   I am Interested (WhatsApp)
-   Download Trust Certificate (20 credits)
-   Share Property
-7. Property details grid (type/price/size/location)
-8. Light/dark theme support
-9. Mobile-first, fast load
-10. Open Graph meta tags for social sharing
-
-PHASE 2 — Embed Widget:
+### 1. Phase 3 — Est8Go Embed Widget (Priority 1)
 File: backend/static/embed.js
-- One script tag embeds property grid on any website
-- Fetches via GET /public/{tenant_slug}/listings
-- Auto-updates when listings change
-- Responsive grid layout
-- Links back to Est8Go property pages
-- "Verified by Est8Go" seal on each card
+API:  GET /public/api/{tenant_slug}/listings (JSON, CORS enabled)
+Demo: backend/templates/embed_demo.html → /embed
 
-PHASE 3 — Business Model:
-- Embed as premium feature per plan tier
-- White-label option for Pro plan
-- Analytics for embedded pages
+One script tag embeds property grid on ANY website:
+<script src="https://est8go-api.onrender.com/embed.js"
+        data-tenant="bravieshomz-limited"
+        data-theme="light"
+        data-limit="6">
+</script>
 
-NOTE: WhatsApp links still use same URL /public/property/{id} — no breaking changes.
-Keep classic version at /public/property/{id}/classic as rollback during redesign.
+Requirements:
+- Zero dependencies (vanilla JS only)
+- Shadow DOM so host-site CSS cannot interfere
+- Fetches from GET /public/api/{tenant_slug}/listings
+- Shows: image, trust score, price, location, GPS badge
+- "View Details" links to Est8Go property page
+- "I am Interested" links to WhatsApp
+- "Verified by Est8Go" seal bottom-right
+- Auto-refreshes every 30 minutes
+- Responsive: 1 col mobile, 2 col tablet, 3 col desktop
+- data-theme="light|dark|auto"
+- data-limit="6|12|24"
+- data-type="land|house|apartment"
+- data-location="maitama"
+- Works on WordPress, Wix, Squarespace, custom HTML
 
 ### 2. Light/Dark Theme System ✅ DONE
 Added to business_dashboard.html and super_admin_dashboard.html:
