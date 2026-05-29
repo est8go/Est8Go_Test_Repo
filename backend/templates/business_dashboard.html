@@ -55,6 +55,91 @@
       --border2: rgba(15,23,42,0.14);
     }
 
+    html[data-theme="light"] body {
+      background: #F8FAFC !important;
+    }
+
+    html[data-theme="light"] body::before {
+      background:
+        radial-gradient(ellipse 90% 55% at -5% -15%,
+          rgba(16,185,129,0.04) 0%, transparent 55%),
+        radial-gradient(ellipse 70% 50% at 110% 100%,
+          rgba(79,70,229,0.03) 0%, transparent 60%),
+        linear-gradient(168deg,
+          #F8FAFC 0%, #F1F5F9 55%, #F8FAFC 100%)
+        !important;
+    }
+
+    html[data-theme="light"] body::after {
+      background-image:
+        linear-gradient(rgba(15,23,42,0.03) 1px,
+          transparent 1px),
+        linear-gradient(90deg, rgba(15,23,42,0.03) 1px,
+          transparent 1px) !important;
+      opacity: 0.5;
+    }
+
+    html[data-theme="light"] .im-card {
+      background: #FFFFFF !important;
+      border: 1px solid rgba(15,23,42,0.08) !important;
+      box-shadow: 0 1px 3px rgba(15,23,42,0.06) !important;
+    }
+
+    html[data-theme="light"] .im-card::before,
+    html[data-theme="light"] .im-card::after {
+      display: none !important;
+    }
+
+    html[data-theme="light"] #bottomNav {
+      background: #FFFFFF !important;
+      border-top: 1px solid rgba(15,23,42,0.08) !important;
+      box-shadow: 0 -1px 8px rgba(15,23,42,0.06) !important;
+    }
+
+    html[data-theme="light"] #bottomNav * {
+      color: #64748B;
+    }
+
+    html[data-theme="light"] .nav-item.active svg,
+    html[data-theme="light"] .nav-item.active span {
+      color: #4F46E5 !important;
+    }
+
+    html[data-theme="light"] #bizBar,
+    html[data-theme="light"] .biz-bar {
+      background: #FFFFFF !important;
+      border-color: rgba(15,23,42,0.08) !important;
+    }
+
+    html[data-theme="light"] [style*="var(--surface)"],
+    html[data-theme="light"] .card,
+    html[data-theme="light"] .surface {
+      background: #FFFFFF !important;
+    }
+
+    html[data-theme="light"] .pipeline-card,
+    html[data-theme="light"] #pipelineCard {
+      background: #FFFFFF !important;
+      border-color: rgba(15,23,42,0.08) !important;
+    }
+
+    html[data-theme="light"] .lead-row,
+    html[data-theme="light"] .follow-up-item {
+      background: #FFFFFF !important;
+      border-color: rgba(15,23,42,0.08) !important;
+    }
+
+    html[data-theme="light"] #appHeader,
+    html[data-theme="light"] .app-header {
+      background: rgba(248,250,252,0.97) !important;
+      border-bottom: 1px solid rgba(15,23,42,0.08) !important;
+    }
+
+    html[data-theme="light"] .fab-action {
+      background: #1E293B !important;
+      color: #F8FAFC !important;
+    }
+
     /* ═══════════════════════════════════════════
        RESET
     ═══════════════════════════════════════════ */
