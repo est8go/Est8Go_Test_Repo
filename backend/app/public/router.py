@@ -20,9 +20,9 @@ from app.services.trust_engine import calculate_confidence_score, get_trust_labe
 logger = logging.getLogger(__name__)
 
 # --- 1. ROBUST PATH HANDLING ---
-# This looks for the 'templates' folder inside the 'backend' root
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+templates.env.filters['urlencode'] = lambda s: urllib.parse.quote(str(s), safe='')
 
 # --- 2. UNIFIED ROUTER ---
 router = APIRouter(prefix="/public", tags=["Public Pages"])
@@ -269,9 +269,12 @@ async def submit_onboarding(
 
     body = await request.json()
 
+    biz_name_raw = body.get("business_name", "")
+    auto_slug = _re.sub(r'[^a-z0-9]+', '-', biz_name_raw.lower()).strip('-') if biz_name_raw else None
     tenant = Tenant(
-        name          = body.get("business_name", ""),
-        business_name = body.get("business_name", ""),
+        name          = biz_name_raw,
+        business_name = biz_name_raw,
+        slug          = auto_slug,
         tenant_type   = body.get("business_type", "agency"),
         areas_covered = body.get("areas_covered", ""),
         tone          = body.get("tone", "friendly"),
@@ -426,3 +429,76 @@ async def get_matches_page(request: Request, ids: str, db: Session = Depends(get
     except Exception as e:
         logger.error(f"Gallery Error: {e}")
         return HTMLResponse("Gallery temporarily unavailable", status_code=500)
+
+
+@router.get("/{tenant_slug}", response_class=HTMLResponse)
+async def tenant_public_vault(
+    tenant_slug: str,
+    request: Request,
+    property_type: str = None,
+    location: str = None,
+    db: Session = Depends(get_db),
+):
+    """
+    Public property vault page for a tenant agency.
+    Accessible at /public/{tenant_slug} e.g. /public/bravieshomz
+    """
+    try:
+        from app.tenants.models import Tenant
+        from app.company_profiles.models import CompanyProfile
+
+        tenant = db.query(Tenant).filter(Tenant.slug == tenant_slug).first()
+        if not tenant:
+            tenant = db.query(Tenant).filter(
+                Tenant.business_name.ilike(f"%{tenant_slug.replace('-', ' ')}%")
+            ).first()
+        if not tenant:
+            raise HTTPException(status_code=404, detail="Agency not found")
+
+        profile = db.query(CompanyProfile).filter(
+            CompanyProfile.tenant_id == tenant.id
+        ).first()
+
+        query = (
+            db.query(Listing)
+            .options(joinedload(Listing.images))
+            .filter(Listing.tenant_id == tenant.id, Listing.trust_score > 0)
+        )
+        if property_type:
+            query = query.filter(Listing.property_type == property_type)
+        if location:
+            query = query.filter(Listing.location.ilike(f"%{location}%"))
+
+        listings = query.order_by(Listing.trust_score.desc()).all()
+
+        all_listings = db.query(Listing).filter(Listing.tenant_id == tenant.id).all()
+        locations = sorted(set(l.location.title() for l in all_listings if l.location))
+        types = sorted(set(l.property_type for l in all_listings if l.property_type))
+
+        raw_wa = getattr(tenant, 'whatsapp_phone_number', None) or os.getenv('WHATSAPP_BUSINESS_NUMBER', '')
+        digits = _re.sub(r'\D', '', raw_wa)
+        if digits.startswith('0'):
+            digits = '234' + digits[1:]
+        elif len(digits) == 10:
+            digits = '234' + digits
+
+        return templates.TemplateResponse(
+            request=request,
+            name="tenant_vault.html",
+            context={
+                "tenant": tenant,
+                "profile": profile,
+                "listings": listings,
+                "locations": locations,
+                "types": types,
+                "wa_number": digits,
+                "base_url": os.getenv("BASE_URL", "https://est8go-api.onrender.com"),
+                "selected_type": property_type,
+                "selected_location": location,
+            },
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Tenant Vault Error [{tenant_slug}]: {e}")
+        return HTMLResponse(content="Internal Server Error: Check Render Logs", status_code=500)

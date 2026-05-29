@@ -35,6 +35,7 @@ class Tenant(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
     business_name = Column(String(255), nullable=True)
+    slug = Column(String(100), nullable=True, unique=True, index=True)
 
     # What kind of business is this tenant?
     # Enforced at DB level via CHECK constraint — see migration SQL.
