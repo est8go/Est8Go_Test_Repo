@@ -5,9 +5,8 @@ import urllib.parse
 from datetime import datetime
 from pathlib import Path
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from fastapi.responses import FileResponse
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
 
@@ -429,6 +428,78 @@ async def get_matches_page(request: Request, ids: str, db: Session = Depends(get
     except Exception as e:
         logger.error(f"Gallery Error: {e}")
         return HTMLResponse("Gallery temporarily unavailable", status_code=500)
+
+
+@router.get("/embed", response_class=HTMLResponse)
+async def embed_demo_page(request: Request):
+    """Developer documentation page for the Est8Go embed widget."""
+    return templates.TemplateResponse(
+        request=request,
+        name="embed_demo.html",
+        context={"base_url": os.getenv("BASE_URL", "https://est8go-api.onrender.com")},
+    )
+
+
+@router.get("/api/{tenant_slug}/listings")
+async def public_listings_api(
+    tenant_slug: str,
+    limit: int = Query(6, ge=1, le=24),
+    prop_type: str = Query(None, alias="type"),
+    location: str = None,
+    db: Session = Depends(get_db),
+):
+    """
+    Public JSON API for the Est8Go embed widget.
+    CORS is handled by the app-level CORSMiddleware (allow_origins=*).
+    """
+    from app.tenants.models import Tenant as _Tenant
+
+    tenant = db.query(_Tenant).filter(_Tenant.slug == tenant_slug).first()
+    if not tenant:
+        tenant = db.query(_Tenant).filter(
+            _Tenant.business_name.ilike(f"%{tenant_slug.replace('-', ' ')}%")
+        ).first()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Agency not found")
+
+    query = (
+        db.query(Listing)
+        .options(joinedload(Listing.images))
+        .filter(Listing.tenant_id == tenant.id, Listing.trust_score > 0)
+    )
+    if prop_type:
+        query = query.filter(Listing.property_type == prop_type)
+    if location:
+        query = query.filter(Listing.location.ilike(f"%{location}%"))
+
+    listings = query.order_by(Listing.trust_score.desc()).limit(limit).all()
+
+    raw_wa = getattr(tenant, "whatsapp_phone_number", None) or os.getenv("WHATSAPP_BUSINESS_NUMBER", "")
+    digits = _re.sub(r"\D", "", raw_wa)
+    if digits.startswith("0"):
+        digits = "234" + digits[1:]
+    elif len(digits) == 10:
+        digits = "234" + digits
+
+    base_url = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+
+    data = [
+        {
+            "id": lst.id,
+            "title": lst.title,
+            "location": lst.location,
+            "property_type": lst.property_type,
+            "price": lst.price,
+            "trust_score": lst.trust_score or 0,
+            "trust_grade": lst.trust_grade or "ungraded",
+            "gps_verified": bool(lst.gps_verified_at),
+            "image_url": lst.images[0].url if lst.images else None,
+            "wa_number": digits,
+            "property_url": f"{base_url}/public/property/{lst.id}",
+        }
+        for lst in listings
+    ]
+    return JSONResponse(content=data)
 
 
 @router.get("/{tenant_slug}", response_class=HTMLResponse)
