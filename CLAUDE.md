@@ -210,7 +210,28 @@ Wallet: Split purchased vs bonus, deduct bonus first
 
 ## NEXT TASKS (in order)
 
-### 1. Est8Go Landing Page (Priority 1) ✅ EMBED DONE
+### Landing Page Stage 4 (Priority 1)
+File: landing/index.html
+Stage 1, 2, 3 complete. Stage 4 pending.
+
+Find comment: <!-- STAGE 4 GOES HERE -->
+Apply Stage 4 from Claude.ai conversation.
+
+Stage 4 contains:
+- Pricing section (horizontal scroll mobile,
+  5-column grid desktop, animated border on Core)
+- Testimonials (3 cards + stats counter animation)
+- Final CTA section
+- Footer (4-column links)
+- All CSS and JS for above sections
+
+After Stage 4:
+- Deploy updated landing/index.html to Netlify
+  (drag and drop landing folder)
+- Test on mobile and desktop
+- Verify all animations work
+
+### 1. Est8Go Landing Page ✅ STAGES 1–3 COMPLETE
 URL: est8go.com (hosted on Namecheap or Netlify free)
 File: landing/index.html (standalone, no backend needed)
 
