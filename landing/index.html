@@ -1132,6 +1132,591 @@
     body { padding-bottom: 80px; }
   }
 
+  /* ════════════════════════════════
+     MARQUEE BAR
+  ════════════════════════════════ */
+  .marquee-bar {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    padding: 12px 0;
+  }
+
+  .marquee-track {
+    display: flex;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .marquee-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    white-space: nowrap;
+    animation: marqueeScroll 30s linear infinite;
+    padding-right: 32px;
+  }
+
+  @keyframes marqueeScroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  .marquee-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+  }
+
+  .marquee-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .marquee-dot.em     { background: var(--em); }
+  .marquee-dot.indigo { background: var(--indigo); }
+  .marquee-dot.warn   { background: var(--warn); }
+
+  .marquee-sep {
+    color: var(--border2);
+    font-size: 16px;
+  }
+
+  /* ════════════════════════════════
+     INTRO STORY CARDS
+  ════════════════════════════════ */
+  .intro-section {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .intro-header {
+    margin-bottom: 48px;
+  }
+
+  .story-scroll-wrap {
+    position: relative;
+  }
+
+  /* Mobile: horizontal scroll */
+  .story-cards {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .story-cards::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Desktop: 2x2 grid */
+  @media (min-width: 768px) {
+    .story-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      overflow: visible;
+    }
+  }
+
+  .story-card {
+    flex-shrink: 0;
+    width: 280px;
+    scroll-snap-align: start;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  @media (min-width: 768px) {
+    .story-card {
+      width: 100%;
+      flex-shrink: unset;
+    }
+
+    .story-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+    }
+  }
+
+  .story-card-glow {
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: glowPulse 4s ease-in-out infinite;
+  }
+
+  @keyframes glowPulse {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50%       { opacity: 1; transform: scale(1.1); }
+  }
+
+  .glow-risk   { background: radial-gradient(circle, rgba(244,63,94,0.15) 0%, transparent 70%); }
+  .glow-indigo { background: radial-gradient(circle, rgba(79,70,229,0.15) 0%, transparent 70%); }
+  .glow-em     { background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%); }
+  .glow-warn   { background: radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%); }
+
+  .story-card-inner {
+    padding: 24px;
+  }
+
+  .story-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  .story-icon-risk   { background: rgba(244,63,94,0.12); }
+  .story-icon-indigo { background: rgba(79,70,229,0.12); }
+  .story-icon-em     { background: rgba(16,185,129,0.12); }
+  .story-icon-warn   { background: rgba(245,158,11,0.12); }
+
+  .story-counter-wrap {
+    margin-bottom: 12px;
+  }
+
+  .story-counter {
+    font-family: 'Syne', sans-serif;
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+
+  .problem-card-story .story-counter { color: var(--risk); }
+  .result-card-story .story-counter  { color: var(--warn); }
+
+  .story-shield-anim {
+    margin-bottom: 12px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+  }
+
+  .story-method-icons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .method-icon-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: opacity 0.3s, transform 0.3s;
+  }
+
+  .method-icon-item.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .method-icon-label {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .method-arrow {
+    color: var(--em);
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .method-arrow.visible {
+    opacity: 1;
+  }
+
+  .story-card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+
+  .story-card-body {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .story-card-tag {
+    display: inline-block;
+    border-radius: 99px;
+    padding: 4px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .risk-tag   { background: rgba(244,63,94,0.12); color: var(--risk); }
+  .indigo-tag { background: rgba(79,70,229,0.12); color: var(--indigo); }
+  .em-tag     { background: rgba(16,185,129,0.10); color: var(--em); }
+  .warn-tag   { background: rgba(245,158,11,0.10); color: var(--warn); }
+
+  /* Story dots */
+  .story-dots {
+    display: flex;
+    gap: 6px;
+    margin-top: 16px;
+    justify-content: center;
+  }
+
+  @media (min-width: 768px) {
+    .story-dots { display: none; }
+  }
+
+  .story-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border2);
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+
+  .story-dot.active {
+    width: 20px;
+    border-radius: 99px;
+    background: var(--indigo);
+  }
+
+  /* ════════════════════════════════
+     SEAL SECTION
+  ════════════════════════════════ */
+  .seal-section {
+    background: var(--bg);
+  }
+
+  .seal-header {
+    margin-bottom: 48px;
+  }
+
+  .seal-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-bottom: 48px;
+  }
+
+  @media (min-width: 640px) {
+    .seal-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .seal-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .seal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    transition: all 0.2s;
+  }
+
+  @media (min-width: 1024px) {
+    .seal-card {
+      flex-direction: column;
+      gap: 12px;
+    }
+  }
+
+  .seal-card:hover {
+    border-color: var(--indigo);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(79,70,229,0.1);
+  }
+
+  .seal-card-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .seal-icon-em     { background: rgba(16,185,129,0.12); }
+  .seal-icon-indigo { background: rgba(79,70,229,0.12); }
+  .seal-icon-warn   { background: rgba(245,158,11,0.12); }
+  .seal-icon-text   { background: rgba(148,163,184,0.12); }
+
+  .seal-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .seal-card-body {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 8px;
+    font-style: italic;
+  }
+
+  .seal-card-pts {
+    display: inline-block;
+    background: rgba(16,185,129,0.10);
+    color: var(--em);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 99px;
+  }
+
+  /* Seal visual */
+  .seal-visual {
+    text-align: center;
+    padding: 40px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+  }
+
+  .seal-badge-large {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .seal-badge-ring {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 3px solid var(--em);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+      0 0 0 8px rgba(16,185,129,0.08),
+      0 0 40px rgba(16,185,129,0.2);
+    animation: sealPulse 3s ease-in-out infinite;
+  }
+
+  @keyframes sealPulse {
+    0%, 100% { box-shadow: 0 0 0 8px rgba(16,185,129,0.08), 0 0 40px rgba(16,185,129,0.2); }
+    50%       { box-shadow: 0 0 0 16px rgba(16,185,129,0.04), 0 0 60px rgba(16,185,129,0.3); }
+  }
+
+  .seal-badge-inner {
+    text-align: center;
+  }
+
+  .seal-badge-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--em);
+    line-height: 1;
+  }
+
+  .seal-badge-text {
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--em);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  .seal-badge-check {
+    font-size: 20px;
+    color: var(--em);
+    margin-top: 4px;
+  }
+
+  .seal-badge-grade {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 16px;
+    border-radius: 99px;
+  }
+
+  .emerald-seal {
+    background: rgba(16,185,129,0.12);
+    color: var(--em);
+    border: 1px solid rgba(16,185,129,0.25);
+  }
+
+  .seal-note {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* ════════════════════════════════
+     SERVICES SECTION
+  ════════════════════════════════ */
+  .services-section {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .services-header {
+    margin-bottom: 48px;
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  @media (min-width: 640px) {
+    .services-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .services-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .service-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .service-card:hover {
+    border-color: var(--indigo);
+    transform: translateY(-4px);
+    box-shadow:
+      0 12px 32px rgba(0,0,0,0.15),
+      0 0 0 1px rgba(79,70,229,0.1);
+  }
+
+  .service-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .service-icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    transition: transform 0.2s;
+  }
+
+  .service-card:hover .service-icon-wrap {
+    transform: scale(1.1) rotate(-3deg);
+  }
+
+  .svc-indigo { background: rgba(79,70,229,0.12); }
+  .svc-em     { background: rgba(16,185,129,0.12); }
+  .svc-purple { background: rgba(139,92,246,0.12); }
+  .svc-warn   { background: rgba(245,158,11,0.12); }
+  .svc-risk   { background: rgba(244,63,94,0.12); }
+
+  .service-card-arrow {
+    font-size: 18px;
+    color: var(--muted);
+    transition: color 0.2s, transform 0.2s;
+  }
+
+  .service-card:hover .service-card-arrow {
+    color: var(--indigo);
+    transform: translateX(4px);
+  }
+
+  .service-card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .service-card-body {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    flex: 1;
+  }
+
+  .service-card-tag {
+    display: inline-block;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 99px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    align-self: flex-start;
+    transition: all 0.2s;
+  }
+
+  .service-card:hover .service-card-tag {
+    background: rgba(79,70,229,0.08);
+    border-color: rgba(79,70,229,0.2);
+    color: var(--indigo);
+  }
+
   </style>
 </head>
 <body>
@@ -1625,7 +2210,519 @@
   </div>
 </section>
 
-<!-- STAGE 2 GOES HERE -->
+<!-- ══════════════════════════════════
+     SOCIAL PROOF MARQUEE BAR
+══════════════════════════════════ -->
+<div class="marquee-bar">
+  <div class="marquee-track">
+    <div class="marquee-content" id="marqueeContent">
+      <span class="marquee-item">
+        <span class="marquee-dot em"></span>
+        30+ Properties Verified
+      </span>
+      <span class="marquee-sep">·</span>
+      <span class="marquee-item">
+        <span class="marquee-dot indigo"></span>
+        12 Trusted Agencies
+      </span>
+      <span class="marquee-sep">·</span>
+      <span class="marquee-item">
+        <span class="marquee-dot warn"></span>
+        340+ Diaspora Buyers Served
+      </span>
+      <span class="marquee-sep">·</span>
+      <span class="marquee-item">
+        <span class="marquee-dot em"></span>
+        GPS · AI · Documents · Witnesses
+      </span>
+      <span class="marquee-sep">·</span>
+      <span class="marquee-item">
+        <span class="marquee-dot indigo"></span>
+        Nigeria's First Property Trust Infrastructure
+      </span>
+      <span class="marquee-sep">·</span>
+      <span class="marquee-item">
+        <span class="marquee-dot warn"></span>
+        Abuja · Lagos · Port Harcourt · Ibadan
+      </span>
+      <span class="marquee-sep">·</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     INTRODUCTION — 4 STORY CARDS
+══════════════════════════════════ -->
+<section class="section intro-section" id="intro">
+  <div class="container">
+
+    <div class="intro-header fade-up">
+      <span class="section-label">What is Est8Go</span>
+      <h2 class="section-title">
+        Nigeria's property trust<br/>
+        infrastructure
+      </h2>
+      <p class="section-sub">
+        Not a listing site. Not an agency.
+        Est8Go is the verification layer that sits
+        between agents and buyers — proving every
+        listing is real before money changes hands.
+      </p>
+    </div>
+
+    <!-- Story cards — horizontal scroll mobile,
+         2x2 grid desktop -->
+    <div class="story-scroll-wrap">
+      <div class="story-cards" id="storyCards">
+
+        <!-- Card 1: The Problem -->
+        <div class="story-card problem-card-story
+                    fade-up delay-1">
+          <div class="story-card-glow glow-risk"></div>
+          <div class="story-card-inner">
+            <div class="story-icon-wrap
+                        story-icon-risk">
+              ⚠️
+            </div>
+            <div class="story-counter-wrap">
+              <span class="story-counter"
+                    data-target="2.1"
+                    data-suffix="T"
+                    data-prefix="₦"
+                    id="counter1">
+                ₦0T
+              </span>
+            </div>
+            <div class="story-card-title">
+              Lost to Property Fraud
+            </div>
+            <div class="story-card-body">
+              Every year in Nigeria. Fake listings,
+              stolen photos, forged documents.
+              Diaspora buyers are the biggest victims.
+            </div>
+            <div class="story-card-tag risk-tag">
+              The Problem
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: The Solution -->
+        <div class="story-card solution-card-story
+                    fade-up delay-2">
+          <div class="story-card-glow glow-indigo"></div>
+          <div class="story-card-inner">
+            <div class="story-icon-wrap
+                        story-icon-indigo">
+              🛡️
+            </div>
+            <div class="story-shield-anim"
+                 id="shieldAnim">
+              <svg width="60" height="60"
+                   viewBox="0 0 60 60">
+                <path d="M30 5 L50 15 L50 35
+                         Q50 50 30 55
+                         Q10 50 10 35 L10 15 Z"
+                      fill="none"
+                      stroke="rgba(79,70,229,0.3)"
+                      stroke-width="2"/>
+                <path d="M30 5 L50 15 L50 35
+                         Q50 50 30 55
+                         Q10 50 10 35 L10 15 Z"
+                      fill="none"
+                      stroke="#4F46E5"
+                      stroke-width="2"
+                      stroke-dasharray="0 200"
+                      id="shieldPath"
+                      style="transition: stroke-dasharray
+                             1.5s ease"/>
+                <text x="30" y="35"
+                      text-anchor="middle"
+                      font-size="18"
+                      fill="#4F46E5"
+                      opacity="0"
+                      id="shieldCheck">✓</text>
+              </svg>
+            </div>
+            <div class="story-card-title">
+              We Verify. You Trust.
+            </div>
+            <div class="story-card-body">
+              Est8Go doesn't list properties.
+              We verify them. GPS confirmed,
+              AI audited, document checked —
+              before any buyer sees them.
+            </div>
+            <div class="story-card-tag indigo-tag">
+              The Solution
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: The Method -->
+        <div class="story-card method-card-story
+                    fade-up delay-3">
+          <div class="story-card-glow glow-em"></div>
+          <div class="story-card-inner">
+            <div class="story-icon-wrap
+                        story-icon-em">
+              ⚡
+            </div>
+            <div class="story-method-icons">
+              <div class="method-icon-item"
+                   id="mIcon1">
+                <span>📍</span>
+                <span class="method-icon-label">GPS</span>
+              </div>
+              <div class="method-arrow">→</div>
+              <div class="method-icon-item"
+                   id="mIcon2">
+                <span>🔍</span>
+                <span class="method-icon-label">AI</span>
+              </div>
+              <div class="method-arrow">→</div>
+              <div class="method-icon-item"
+                   id="mIcon3">
+                <span>📄</span>
+                <span class="method-icon-label">Docs</span>
+              </div>
+              <div class="method-arrow">→</div>
+              <div class="method-icon-item"
+                   id="mIcon4">
+                <span>✅</span>
+                <span class="method-icon-label">Trust</span>
+              </div>
+            </div>
+            <div class="story-card-title">
+              Four Independent Checks
+            </div>
+            <div class="story-card-body">
+              Every listing passes GPS, AI photo
+              audit, document verification, and
+              witness attestation before earning
+              a trust score.
+            </div>
+            <div class="story-card-tag em-tag">
+              The Method
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: The Result -->
+        <div class="story-card result-card-story
+                    fade-up delay-4">
+          <div class="story-card-glow glow-warn"></div>
+          <div class="story-card-inner">
+            <div class="story-icon-wrap
+                        story-icon-warn">
+              🏆
+            </div>
+            <div class="story-counter-wrap">
+              <span class="story-counter"
+                    data-target="100"
+                    data-suffix="/100"
+                    data-prefix=""
+                    id="counter2">
+                0/100
+              </span>
+            </div>
+            <div class="story-card-title">
+              Maximum Trust Score
+            </div>
+            <div class="story-card-body">
+              Diaspora buyers wire funds.
+              Agents close deals 3x faster.
+              Properties with Emerald scores
+              sell without question.
+            </div>
+            <div class="story-card-tag warn-tag">
+              The Result
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Mobile scroll dots -->
+      <div class="story-dots" id="storyDots">
+        <div class="story-dot active"
+             onclick="scrollStory(0)"></div>
+        <div class="story-dot"
+             onclick="scrollStory(1)"></div>
+        <div class="story-dot"
+             onclick="scrollStory(2)"></div>
+        <div class="story-dot"
+             onclick="scrollStory(3)"></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     EST8GO SEAL SECTION
+══════════════════════════════════ -->
+<section class="section seal-section">
+  <div class="container">
+
+    <div class="seal-header fade-up">
+      <span class="section-label">The Est8Go Seal</span>
+      <h2 class="section-title">
+        What verified means<br/>to buyers
+      </h2>
+      <p class="section-sub">
+        When buyers see the Est8Go seal on a listing,
+        they know exactly what was verified and when.
+        No guessing. No trust issues.
+      </p>
+    </div>
+
+    <div class="seal-grid">
+
+      <div class="seal-card fade-up delay-1">
+        <div class="seal-card-icon-wrap
+                    seal-icon-em">
+          📍
+        </div>
+        <div class="seal-card-content">
+          <div class="seal-card-title">
+            GPS Verified
+          </div>
+          <div class="seal-card-body">
+            "I can open Google Maps and stand at
+            the exact same coordinates. The property
+            exists at that location."
+          </div>
+          <div class="seal-card-pts">+30 points</div>
+        </div>
+      </div>
+
+      <div class="seal-card fade-up delay-2">
+        <div class="seal-card-icon-wrap
+                    seal-icon-indigo">
+          🔍
+        </div>
+        <div class="seal-card-content">
+          <div class="seal-card-title">
+            AI Audited
+          </div>
+          <div class="seal-card-body">
+            "The photos were not stolen from Google
+            Maps or other listings. They show a real,
+            physical property."
+          </div>
+          <div class="seal-card-pts">+20 points</div>
+        </div>
+      </div>
+
+      <div class="seal-card fade-up delay-3">
+        <div class="seal-card-icon-wrap
+                    seal-icon-warn">
+          📄
+        </div>
+        <div class="seal-card-content">
+          <div class="seal-card-title">
+            Document Verified
+          </div>
+          <div class="seal-card-body">
+            "The Certificate of Occupancy, Deed of
+            Assignment, and Survey Plan have been
+            uploaded and checked."
+          </div>
+          <div class="seal-card-pts">+40 points</div>
+        </div>
+      </div>
+
+      <div class="seal-card fade-up delay-4">
+        <div class="seal-card-icon-wrap
+                    seal-icon-text">
+          👥
+        </div>
+        <div class="seal-card-content">
+          <div class="seal-card-title">
+            Witness Confirmed
+          </div>
+          <div class="seal-card-body">
+            "Real buyers visited this property and
+            confirmed it matches the listing.
+            Human attestation on record."
+          </div>
+          <div class="seal-card-pts">+10 points</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Seal visual -->
+    <div class="seal-visual fade-up">
+      <div class="seal-badge-large">
+        <div class="seal-badge-ring">
+          <div class="seal-badge-inner">
+            <div class="seal-badge-logo">E8</div>
+            <div class="seal-badge-text">
+              EST8GO<br/>VERIFIED
+            </div>
+            <div class="seal-badge-check">✓</div>
+          </div>
+        </div>
+        <div class="seal-badge-grade emerald-seal">
+          Emerald Grade
+        </div>
+      </div>
+      <p class="seal-note">
+        The Est8Go seal appears on every verified
+        listing page, trust certificate, and embed
+        widget. It becomes the standard buyers
+        look for before any transaction.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SERVICES HORIZONTAL SCROLL
+══════════════════════════════════ -->
+<section class="section services-section"
+         id="services">
+  <div class="container">
+
+    <div class="services-header fade-up">
+      <span class="section-label">Our Services</span>
+      <h2 class="section-title">
+        Everything you need<br/>to earn buyer trust
+      </h2>
+      <p class="section-sub">
+        Six powerful tools built specifically
+        for Nigerian real estate professionals.
+      </p>
+    </div>
+
+    <!-- Desktop 3x2 grid -->
+    <div class="services-grid">
+
+      <div class="service-card fade-up delay-1"
+           onclick="location.href='#how'">
+        <div class="service-card-top">
+          <div class="service-icon-wrap
+                      svc-indigo">💬</div>
+          <div class="service-card-arrow">→</div>
+        </div>
+        <div class="service-card-title">
+          WhatsApp Sales Engine
+        </div>
+        <div class="service-card-body">
+          Kora qualifies leads, books inspections,
+          and recovers dropped conversations
+          automatically on WhatsApp 24/7.
+        </div>
+        <div class="service-card-tag">
+          Kora AI Engine
+        </div>
+      </div>
+
+      <div class="service-card fade-up delay-2">
+        <div class="service-card-top">
+          <div class="service-icon-wrap
+                      svc-em">📍</div>
+          <div class="service-card-arrow">→</div>
+        </div>
+        <div class="service-card-title">
+          GPS Verification
+        </div>
+        <div class="service-card-body">
+          Capture exact coordinates on-site.
+          Prove photos were taken at the property
+          location — not downloaded from the internet.
+        </div>
+        <div class="service-card-tag">
+          +30 Trust Points
+        </div>
+      </div>
+
+      <div class="service-card fade-up delay-3">
+        <div class="service-card-top">
+          <div class="service-icon-wrap
+                      svc-purple">🔍</div>
+          <div class="service-card-arrow">→</div>
+        </div>
+        <div class="service-card-title">
+          AI Photo Audit
+        </div>
+        <div class="service-card-body">
+          Computer vision checks every photo for
+          stolen images, CGI renders, and confirms
+          each shows a real physical property.
+        </div>
+        <div class="service-card-tag">
+          +20 Trust Points
+        </div>
+      </div>
+
+      <div class="service-card fade-up delay-1">
+        <div class="service-card-top">
+          <div class="service-icon-wrap
+                      svc-warn">📄</div>
+          <div class="service-card-arrow">→</div>
+        </div>
+        <div class="service-card-title">
+          Document Verification
+        </div>
+        <div class="service-card-body">
+          Upload C of O, Deed of Assignment, and
+          Survey Plan. Buyers see verified documents
+          before making any decision.
+        </div>
+        <div class="service-card-tag">
+          +40 Trust Points
+        </div>
+      </div>
+
+      <div class="service-card fade-up delay-2"
+           onclick="location.href='#embed'">
+        <div class="service-card-top">
+          <div class="service-icon-wrap
+                      svc-em">🌐</div>
+          <div class="service-card-arrow">→</div>
+        </div>
+        <div class="service-card-title">
+          Website Embed Widget
+        </div>
+        <div class="service-card-body">
+          One script tag embeds your verified
+          listings on any website. Auto-updates
+          when listings change. No developer needed.
+        </div>
+        <div class="service-card-tag">
+          Works Everywhere
+        </div>
+      </div>
+
+      <div class="service-card fade-up delay-3">
+        <div class="service-card-top">
+          <div class="service-icon-wrap
+                      svc-risk">🏅</div>
+          <div class="service-card-arrow">→</div>
+        </div>
+        <div class="service-card-title">
+          Trust Certificate PDF
+        </div>
+        <div class="service-card-body">
+          Downloadable PDF with trust score, GPS
+          coordinates, document records, and the
+          Est8Go seal. For diaspora buyers who need
+          proof before wiring funds.
+        </div>
+        <div class="service-card-tag">
+          Diaspora Ready
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
 <!-- STAGE 3 GOES HERE -->
 <!-- STAGE 4 GOES HERE -->
 
@@ -1805,6 +2902,125 @@ window.addEventListener('scroll', () => {
     );
   });
 }, { passive: true });
+
+// ── MARQUEE DUPLICATE ──────────────
+// Duplicate marquee content for seamless loop
+document.addEventListener('DOMContentLoaded', () => {
+  const mc = document.getElementById('marqueeContent');
+  if (mc) {
+    const clone = mc.cloneNode(true);
+    mc.parentElement.appendChild(clone);
+  }
+});
+
+// ── STORY CARDS ────────────────────
+function scrollStory(index) {
+  const scroll = document.getElementById('storyCards');
+  if (!scroll) return;
+  const cards = scroll.querySelectorAll('.story-card');
+  if (cards[index]) {
+    cards[index].scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'start'
+    });
+  }
+}
+
+// Story card scroll dots
+const storyCards = document.getElementById('storyCards');
+if (storyCards) {
+  storyCards.addEventListener('scroll', () => {
+    const cards = storyCards.querySelectorAll('.story-card');
+    const dots = document.querySelectorAll('.story-dot');
+    const cardWidth = cards[0]?.offsetWidth + 16 || 296;
+    const activeIndex = Math.round(
+      storyCards.scrollLeft / cardWidth
+    );
+    dots.forEach((d, i) => {
+      d.classList.toggle('active', i === activeIndex);
+    });
+  });
+}
+
+// ── STORY CARD ANIMATIONS ──────────
+const storyObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+
+      // Counter animations
+      e.target.querySelectorAll('.story-counter')
+        .forEach(counter => {
+          const target = parseFloat(
+            counter.getAttribute('data-target')
+          );
+          const suffix = counter.getAttribute(
+            'data-suffix'
+          ) || '';
+          const prefix = counter.getAttribute(
+            'data-prefix'
+          ) || '';
+          const isDecimal = target % 1 !== 0;
+          let current = 0;
+          const step = target / 60;
+          const interval = setInterval(() => {
+            current += step;
+            if (current >= target) {
+              current = target;
+              clearInterval(interval);
+            }
+            counter.textContent = prefix +
+              (isDecimal
+                ? current.toFixed(1)
+                : Math.round(current)) +
+              suffix;
+          }, 25);
+        });
+
+      // Shield animation
+      const shieldPath = e.target.querySelector(
+        '#shieldPath'
+      );
+      const shieldCheck = e.target.querySelector(
+        '#shieldCheck'
+      );
+      if (shieldPath) {
+        setTimeout(() => {
+          shieldPath.style.strokeDasharray = '200 200';
+        }, 300);
+      }
+      if (shieldCheck) {
+        setTimeout(() => {
+          shieldCheck.style.opacity = '1';
+          shieldCheck.style.transition = 'opacity 0.3s';
+        }, 1500);
+      }
+
+      // Method icons stagger
+      const icons = e.target.querySelectorAll(
+        '.method-icon-item'
+      );
+      const arrows = e.target.querySelectorAll(
+        '.method-arrow'
+      );
+      icons.forEach((icon, i) => {
+        setTimeout(() => {
+          icon.classList.add('visible');
+        }, 300 + i * 300);
+      });
+      arrows.forEach((arrow, i) => {
+        setTimeout(() => {
+          arrow.classList.add('visible');
+        }, 500 + i * 300);
+      });
+    });
+  },
+  { threshold: 0.3 }
+);
+
+document.querySelectorAll('.story-card')
+  .forEach(el => storyObserver.observe(el));
 </script>
 
 </body>
