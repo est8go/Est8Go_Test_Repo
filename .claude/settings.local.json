@@ -5,7 +5,14 @@
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
       "Bash(python -c ' *)",
-      "Bash(python migrate_add_role_columns.py)"
+      "Bash(python migrate_add_role_columns.py)",
+      "Bash(dir \"c:\\\\Users\\\\Pricy\\\\Documents\\\\ai_multitenant_saas\\\\backend\\\\app\")",
+      "Bash(mkdir \"c:\\\\Users\\\\Pricy\\\\Documents\\\\ai_multitenant_saas\\\\backend\\\\app\\\\credits\" 2>/dev/null; echo done)",
+      "Bash(python migrate_credits.py)",
+      "Bash(python seed_credit_bundles.py)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Pricy\\Documents\\ai_multitenant_saas\\backend\\app"
     ]
   }
 }
