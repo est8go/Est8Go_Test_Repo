@@ -1717,6 +1717,683 @@
     color: var(--indigo);
   }
 
+  /* ════════════════════════════════
+     HOW IT WORKS
+  ════════════════════════════════ */
+  .how-section {
+    background: var(--bg);
+  }
+
+  .how-header {
+    margin-bottom: 40px;
+  }
+
+  .how-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 6px;
+    width: fit-content;
+  }
+
+  .how-tab {
+    background: transparent;
+    border: none;
+    border-radius: var(--r-md);
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .how-tab.active {
+    background: var(--indigo);
+    color: white;
+    box-shadow: 0 4px 12px rgba(79,70,229,0.3);
+  }
+
+  .how-content {
+    transition: all 0.3s;
+  }
+
+  .how-content.hidden {
+    display: none;
+  }
+
+  .how-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .how-step {
+    display: flex;
+    gap: 20px;
+  }
+
+  .how-step-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 48px;
+  }
+
+  .how-step-num {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: white;
+    flex-shrink: 0;
+    z-index: 1;
+    box-shadow: 0 4px 16px rgba(79,70,229,0.3);
+  }
+
+  .how-step-line {
+    width: 2px;
+    flex: 1;
+    min-height: 24px;
+    background: linear-gradient(
+      to bottom, var(--indigo), var(--border2)
+    );
+    margin: 6px 0;
+    opacity: 0.4;
+  }
+
+  .how-step-last .how-step-line {
+    display: none;
+  }
+
+  .how-step-right {
+    padding-bottom: 28px;
+    flex: 1;
+  }
+
+  .how-step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 20px;
+    transition: all 0.2s;
+  }
+
+  .how-step-card:hover {
+    border-color: var(--indigo);
+    box-shadow: 0 8px 24px rgba(79,70,229,0.08);
+    transform: translateX(4px);
+  }
+
+  .how-step-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+
+  .how-step-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .how-step-body {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .how-step-tag {
+    display: inline-block;
+    background: rgba(16,185,129,0.10);
+    color: var(--em);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 99px;
+    border: 1px solid rgba(16,185,129,0.2);
+  }
+
+  /* ════════════════════════════════
+     TRUST SCORE
+  ════════════════════════════════ */
+  .trust-section {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .trust-header {
+    margin-bottom: 48px;
+  }
+
+  .trust-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+
+  @media (min-width: 900px) {
+    .trust-layout {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 60px;
+    }
+  }
+
+  /* Left: pillars */
+  .trust-pillars {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .trust-pillar {
+    cursor: default;
+  }
+
+  .trust-pillar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .trust-pillar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .trust-pillar-icon {
+    font-size: 18px;
+  }
+
+  .trust-pillar-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .trust-pillar-pts {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  .trust-pillar-bar-bg {
+    height: 8px;
+    background: var(--surface2);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .trust-pillar-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    width: 0;
+    transition: width 1.4s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .trust-pillar-tooltip {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* Grade tiers */
+  .trust-grades {
+    margin-top: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .trust-grade-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .tg-pill {
+    border-radius: 99px;
+    padding: 3px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    min-width: 70px;
+    text-align: center;
+  }
+
+  .emerald-pill {
+    background: rgba(16,185,129,0.12);
+    color: #10B981;
+  }
+
+  .gold-pill {
+    background: rgba(245,158,11,0.12);
+    color: #F59E0B;
+  }
+
+  .silver-pill {
+    background: rgba(148,163,184,0.12);
+    color: #94A3B8;
+  }
+
+  .bronze-pill {
+    background: rgba(205,127,50,0.12);
+    color: #CD7F32;
+  }
+
+  .tg-range {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text2);
+    flex-shrink: 0;
+    min-width: 50px;
+  }
+
+  .tg-desc {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* Right: ring */
+  .trust-ring-side {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  @media (min-width: 900px) {
+    .trust-ring-side {
+      width: 300px;
+    }
+  }
+
+  .trust-ring-wrap {
+    position: relative;
+    width: 240px;
+    height: 240px;
+  }
+
+  .trust-ring-svg {
+    width: 240px;
+    height: 240px;
+  }
+
+  .trust-ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 4px;
+  }
+
+  .trust-ring-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 64px;
+    font-weight: 800;
+    color: var(--em);
+    line-height: 1;
+    letter-spacing: -3px;
+  }
+
+  .trust-ring-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .trust-ring-grade {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 99px;
+    margin-top: 4px;
+  }
+
+  .emerald-grade {
+    background: rgba(16,185,129,0.12);
+    color: var(--em);
+  }
+
+  /* Breakdown mini cards */
+  .trust-breakdown-mini {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+
+  @media (min-width: 900px) {
+    .trust-breakdown-mini {
+      width: 240px;
+    }
+  }
+
+  .tbm-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 14px;
+    text-align: center;
+    transition: all 0.2s;
+  }
+
+  .tbm-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-2px);
+  }
+
+  .tbm-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .tbm-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  /* ════════════════════════════════
+     EMBED SECTION
+  ════════════════════════════════ */
+  .embed-section {
+    background: var(--bg);
+  }
+
+  .embed-header {
+    margin-bottom: 48px;
+  }
+
+  .embed-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    margin-bottom: 48px;
+  }
+
+  @media (min-width: 900px) {
+    .embed-layout {
+      flex-direction: row;
+      gap: 48px;
+      align-items: flex-start;
+    }
+  }
+
+  /* Left */
+  .embed-left {
+    flex: 1;
+  }
+
+  .embed-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+
+  .embed-step-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .embed-step-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--indigo);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(79,70,229,0.25);
+  }
+
+  .embed-step-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .embed-step-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* Code block */
+  .code-block-stage3 {
+    background: #0D1117;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .code-block-hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .code-lang-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: #6B7280;
+    text-transform: uppercase;
+  }
+
+  .code-copy-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #94A3B8;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .code-copy-btn:hover {
+    background: rgba(255,255,255,0.10);
+    color: #F8FAFC;
+  }
+
+  .code-pre {
+    padding: 16px;
+    overflow-x: auto;
+    margin: 0;
+  }
+
+  .code-pre code {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    display: block;
+  }
+
+  .ct { color: #F97583; }
+  .ca { color: #79B8FF; }
+  .cv { color: #9ECBFF; }
+
+  /* Embed attributes */
+  .embed-attrs {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 16px;
+  }
+
+  .embed-attr-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .embed-attr-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .embed-attr-tag {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .embed-docs-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--indigo);
+    text-decoration: none;
+  }
+
+  .embed-docs-link:hover {
+    text-decoration: underline;
+  }
+
+  /* Right: live preview */
+  .embed-right {
+    flex-shrink: 0;
+  }
+
+  @media (min-width: 900px) {
+    .embed-right { width: 380px; }
+  }
+
+  .embed-preview-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--r-xl);
+    overflow: hidden;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+  }
+
+  .embed-preview-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .embed-live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--em);
+    animation: badgePulse 2s infinite;
+  }
+
+  .embed-live-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .embed-preview-body {
+    padding: 16px;
+  }
+
+  .embed-preview-footer {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* Platform tags */
+  .embed-platforms {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  @media (min-width: 640px) {
+    .embed-platforms {
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+
+  .embed-platforms-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .embed-platform-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .embed-platform {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+  }
+
   </style>
 </head>
 <body>
@@ -2723,7 +3400,603 @@
   </div>
 </section>
 
-<!-- STAGE 3 GOES HERE -->
+<!-- ══════════════════════════════════
+     HOW IT WORKS — TWO TABS
+══════════════════════════════════ -->
+<section class="section how-section" id="how">
+  <div class="container">
+
+    <div class="how-header fade-up">
+      <span class="section-label">How It Works</span>
+      <h2 class="section-title">
+        Built for agents.<br/>
+        Trusted by buyers.
+      </h2>
+      <p class="section-sub">
+        Est8Go works for everyone in the transaction.
+        Choose your perspective.
+      </p>
+    </div>
+
+    <!-- Tab switcher -->
+    <div class="how-tabs fade-up delay-1">
+      <button class="how-tab active"
+              onclick="switchTab('agent')"
+              id="tabAgent">
+        🏢 For Agents
+      </button>
+      <button class="how-tab"
+              onclick="switchTab('buyer')"
+              id="tabBuyer">
+        🏠 For Buyers
+      </button>
+    </div>
+
+    <!-- Agent steps -->
+    <div class="how-content" id="contentAgent">
+      <div class="how-steps">
+
+        <div class="how-step fade-up delay-1">
+          <div class="how-step-left">
+            <div class="how-step-num"
+                 style="background:var(--indigo)">
+              1
+            </div>
+            <div class="how-step-line"></div>
+          </div>
+          <div class="how-step-right">
+            <div class="how-step-card">
+              <div class="how-step-icon">🏠</div>
+              <div class="how-step-title">
+                List Your Property
+              </div>
+              <div class="how-step-body">
+                Add title, price, photos and description
+                through your WhatsApp-connected dashboard.
+                Takes under 5 minutes.
+              </div>
+              <div class="how-step-tag">
+                ⏱ 5 minutes
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="how-step fade-up delay-2">
+          <div class="how-step-left">
+            <div class="how-step-num"
+                 style="background:var(--indigo)">
+              2
+            </div>
+            <div class="how-step-line"></div>
+          </div>
+          <div class="how-step-right">
+            <div class="how-step-card">
+              <div class="how-step-icon">📍</div>
+              <div class="how-step-title">
+                Verify On-Site
+              </div>
+              <div class="how-step-body">
+                Visit the property. Open the dashboard.
+                Tap Capture GPS. Upload photos.
+                Your trust score updates immediately.
+              </div>
+              <div class="how-step-tag">
+                +30 points instantly
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="how-step how-step-last
+                    fade-up delay-3">
+          <div class="how-step-left">
+            <div class="how-step-num"
+                 style="background:var(--em)">
+              3
+            </div>
+            <div class="how-step-line"></div>
+          </div>
+          <div class="how-step-right">
+            <div class="how-step-card">
+              <div class="how-step-icon">💬</div>
+              <div class="how-step-title">
+                Kora Handles Your Leads
+              </div>
+              <div class="how-step-body">
+                Buyers message your WhatsApp number.
+                Kora qualifies them, shows verified
+                listings, books inspections and follows
+                up automatically. You close deals.
+              </div>
+              <div class="how-step-tag">
+                24/7 automated
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Buyer steps -->
+    <div class="how-content hidden" id="contentBuyer">
+      <div class="how-steps">
+
+        <div class="how-step fade-up delay-1">
+          <div class="how-step-left">
+            <div class="how-step-num"
+                 style="background:var(--em)">
+              1
+            </div>
+            <div class="how-step-line"></div>
+          </div>
+          <div class="how-step-right">
+            <div class="how-step-card">
+              <div class="how-step-icon">💬</div>
+              <div class="how-step-title">
+                Chat on WhatsApp
+              </div>
+              <div class="how-step-body">
+                Tell Kora what you're looking for —
+                location, type, budget. Get verified
+                matches instantly. No app download,
+                no registration needed.
+              </div>
+              <div class="how-step-tag">
+                Works on any WhatsApp
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="how-step fade-up delay-2">
+          <div class="how-step-left">
+            <div class="how-step-num"
+                 style="background:var(--em)">
+              2
+            </div>
+            <div class="how-step-line"></div>
+          </div>
+          <div class="how-step-right">
+            <div class="how-step-card">
+              <div class="how-step-icon">🛡️</div>
+              <div class="how-step-title">
+                Check the Trust Score
+              </div>
+              <div class="how-step-body">
+                Every listing has a 0-100 trust score
+                showing exactly what was verified —
+                GPS coordinates, AI photo audit result,
+                documents on record, witnesses.
+              </div>
+              <div class="how-step-tag">
+                Full transparency
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="how-step how-step-last
+                    fade-up delay-3">
+          <div class="how-step-left">
+            <div class="how-step-num"
+                 style="background:var(--em)">
+              3
+            </div>
+            <div class="how-step-line"></div>
+          </div>
+          <div class="how-step-right">
+            <div class="how-step-card">
+              <div class="how-step-icon">🏅</div>
+              <div class="how-step-title">
+                Download the Certificate
+              </div>
+              <div class="how-step-body">
+                Get an official Est8Go Trust Certificate
+                PDF with GPS coordinates, AI audit report
+                and document records. Independent proof
+                before you wire a single naira.
+              </div>
+              <div class="how-step-tag">
+                Diaspora ready
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     TRUST SCORE SECTION
+══════════════════════════════════ -->
+<section class="section trust-section" id="trust">
+  <div class="container">
+
+    <div class="trust-header fade-up">
+      <span class="section-label">
+        The Trust Architecture
+      </span>
+      <h2 class="section-title">
+        100 points.<br/>No guesswork.
+      </h2>
+      <p class="section-sub">
+        Every listing scores across four independent
+        pillars. Buyers see exactly how trustworthy
+        a property is — and why.
+      </p>
+    </div>
+
+    <!-- Desktop: side by side, Mobile: stacked -->
+    <div class="trust-layout">
+
+      <!-- Left: pillars -->
+      <div class="trust-pillars fade-left delay-1">
+
+        <div class="trust-pillar"
+             data-pts="30"
+             data-color="#10B981">
+          <div class="trust-pillar-header">
+            <div class="trust-pillar-left">
+              <span class="trust-pillar-icon">📍</span>
+              <span class="trust-pillar-name">
+                GPS Verification
+              </span>
+            </div>
+            <span class="trust-pillar-pts">30 pts</span>
+          </div>
+          <div class="trust-pillar-bar-bg">
+            <div class="trust-pillar-bar-fill"
+                 data-width="30"
+                 style="background:#10B981">
+            </div>
+          </div>
+          <div class="trust-pillar-tooltip">
+            Location confirmed on-site.
+            Coordinates verified against photos.
+          </div>
+        </div>
+
+        <div class="trust-pillar"
+             data-pts="20"
+             data-color="#4F46E5">
+          <div class="trust-pillar-header">
+            <div class="trust-pillar-left">
+              <span class="trust-pillar-icon">🔍</span>
+              <span class="trust-pillar-name">
+                AI Photo Audit
+              </span>
+            </div>
+            <span class="trust-pillar-pts">20 pts</span>
+          </div>
+          <div class="trust-pillar-bar-bg">
+            <div class="trust-pillar-bar-fill"
+                 data-width="20"
+                 style="background:#4F46E5">
+            </div>
+          </div>
+          <div class="trust-pillar-tooltip">
+            Images verified as original, not stolen
+            or AI-generated.
+          </div>
+        </div>
+
+        <div class="trust-pillar"
+             data-pts="40"
+             data-color="#F59E0B">
+          <div class="trust-pillar-header">
+            <div class="trust-pillar-left">
+              <span class="trust-pillar-icon">📄</span>
+              <span class="trust-pillar-name">
+                Document Verification
+              </span>
+            </div>
+            <span class="trust-pillar-pts">40 pts</span>
+          </div>
+          <div class="trust-pillar-bar-bg">
+            <div class="trust-pillar-bar-fill"
+                 data-width="40"
+                 style="background:#F59E0B">
+            </div>
+          </div>
+          <div class="trust-pillar-tooltip">
+            C of O, Deed of Assignment, and Survey
+            Plan uploaded and checked.
+          </div>
+        </div>
+
+        <div class="trust-pillar"
+             data-pts="10"
+             data-color="#6366F1">
+          <div class="trust-pillar-header">
+            <div class="trust-pillar-left">
+              <span class="trust-pillar-icon">👥</span>
+              <span class="trust-pillar-name">
+                Witness Attestation
+              </span>
+            </div>
+            <span class="trust-pillar-pts">10 pts</span>
+          </div>
+          <div class="trust-pillar-bar-bg">
+            <div class="trust-pillar-bar-fill"
+                 data-width="10"
+                 style="background:#6366F1">
+            </div>
+          </div>
+          <div class="trust-pillar-tooltip">
+            Real buyers visited and confirmed the
+            property matches the listing.
+          </div>
+        </div>
+
+        <!-- Grade tiers -->
+        <div class="trust-grades fade-up delay-2">
+          <div class="trust-grade-row">
+            <span class="tg-pill emerald-pill">
+              Emerald
+            </span>
+            <span class="tg-range">85–100</span>
+            <span class="tg-desc">
+              Maximum buyer confidence
+            </span>
+          </div>
+          <div class="trust-grade-row">
+            <span class="tg-pill gold-pill">Gold</span>
+            <span class="tg-range">70–84</span>
+            <span class="tg-desc">
+              GPS + key documents
+            </span>
+          </div>
+          <div class="trust-grade-row">
+            <span class="tg-pill silver-pill">
+              Silver
+            </span>
+            <span class="tg-range">50–69</span>
+            <span class="tg-desc">
+              GPS verified, partial docs
+            </span>
+          </div>
+          <div class="trust-grade-row">
+            <span class="tg-pill bronze-pill">
+              Bronze
+            </span>
+            <span class="tg-range">0–49</span>
+            <span class="tg-desc">
+              Basic verification
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right: animated ring -->
+      <div class="trust-ring-side fade-right delay-2">
+        <div class="trust-ring-wrap">
+          <svg class="trust-ring-svg"
+               viewBox="0 0 240 240">
+            <!-- Background ring -->
+            <circle cx="120" cy="120" r="100"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.05)"
+                    stroke-width="16"/>
+            <!-- Animated ring -->
+            <circle cx="120" cy="120" r="100"
+                    fill="none"
+                    stroke="#10B981"
+                    stroke-width="16"
+                    stroke-dasharray="0 628"
+                    stroke-linecap="round"
+                    id="trustRingMain"
+                    transform="rotate(-90 120 120)"
+                    style="transition: stroke-dasharray
+                           2s cubic-bezier(0.4,0,0.2,1)"/>
+          </svg>
+          <div class="trust-ring-center">
+            <div class="trust-ring-num"
+                 id="trustRingNum">
+              0
+            </div>
+            <div class="trust-ring-label">
+              Trust Score
+            </div>
+            <div class="trust-ring-grade
+                        emerald-grade"
+                 id="trustRingGrade">
+              Emerald
+            </div>
+          </div>
+        </div>
+
+        <!-- Score breakdown mini cards -->
+        <div class="trust-breakdown-mini">
+          <div class="tbm-card">
+            <div class="tbm-num"
+                 style="color:#10B981">30</div>
+            <div class="tbm-label">GPS</div>
+          </div>
+          <div class="tbm-card">
+            <div class="tbm-num"
+                 style="color:#4F46E5">20</div>
+            <div class="tbm-label">AI Audit</div>
+          </div>
+          <div class="tbm-card">
+            <div class="tbm-num"
+                 style="color:#F59E0B">30</div>
+            <div class="tbm-label">Documents</div>
+          </div>
+          <div class="tbm-card">
+            <div class="tbm-num"
+                 style="color:#6366F1">7</div>
+            <div class="tbm-label">Witnesses</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     EMBED SECTION
+══════════════════════════════════ -->
+<section class="section embed-section" id="embed">
+  <div class="container">
+
+    <div class="embed-header fade-up">
+      <span class="section-label">Embed Widget</span>
+      <h2 class="section-title">
+        Add to your website<br/>in 60 seconds
+      </h2>
+      <p class="section-sub">
+        One script tag. Your verified listings appear
+        live on any website — WordPress, Wix,
+        Squarespace, or plain HTML. Auto-updates
+        every 30 minutes.
+      </p>
+    </div>
+
+    <!-- Desktop: two column. Mobile: stacked -->
+    <div class="embed-layout">
+
+      <!-- Left: code + steps -->
+      <div class="embed-left fade-left delay-1">
+
+        <div class="embed-steps">
+          <div class="embed-step-item">
+            <div class="embed-step-num">1</div>
+            <div>
+              <div class="embed-step-title">
+                Sign up for Est8Go
+              </div>
+              <div class="embed-step-desc">
+                Verify listings through your
+                WhatsApp dashboard.
+              </div>
+            </div>
+          </div>
+          <div class="embed-step-item">
+            <div class="embed-step-num">2</div>
+            <div>
+              <div class="embed-step-title">
+                Copy your snippet
+              </div>
+              <div class="embed-step-desc">
+                Paste anywhere on your website.
+              </div>
+            </div>
+          </div>
+          <div class="embed-step-item">
+            <div class="embed-step-num">3</div>
+            <div>
+              <div class="embed-step-title">
+                Listings go live
+              </div>
+              <div class="embed-step-desc">
+                Auto-refreshed with trust scores
+                and WhatsApp buttons.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Code block -->
+        <div class="code-block-stage3">
+          <div class="code-block-hdr">
+            <span class="code-lang-tag">HTML</span>
+            <button class="code-copy-btn"
+                    onclick="copySnippet(this)">
+              📋 Copy
+            </button>
+          </div>
+          <pre class="code-pre"><code><span class="ct">&lt;script</span>
+  <span class="ca">src</span>=<span class="cv">"https://est8go-api.onrender.com/static/embed.js"</span>
+  <span class="ca">data-tenant</span>=<span class="cv">"your-agency-slug"</span>
+  <span class="ca">data-theme</span>=<span class="cv">"dark"</span>
+  <span class="ca">data-limit</span>=<span class="cv">"6"</span><span class="ct">&gt;&lt;/script&gt;</span></code></pre>
+        </div>
+
+        <!-- Customisation tags -->
+        <div class="embed-attrs">
+          <div class="embed-attr-title">
+            Customise with:
+          </div>
+          <div class="embed-attr-tags">
+            <span class="embed-attr-tag">
+              data-columns
+            </span>
+            <span class="embed-attr-tag">
+              data-accent
+            </span>
+            <span class="embed-attr-tag">
+              data-radius
+            </span>
+            <span class="embed-attr-tag">
+              data-type
+            </span>
+            <span class="embed-attr-tag">
+              data-location
+            </span>
+          </div>
+          <a href="https://est8go-api.onrender.com/public/embed"
+             target="_blank"
+             class="embed-docs-link">
+            Full documentation →
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Right: live preview -->
+      <div class="embed-right fade-right delay-2">
+        <div class="embed-preview-wrap">
+          <div class="embed-preview-header">
+            <div class="embed-live-dot"></div>
+            <span class="embed-live-label">
+              Live — Bravieshomz Limited
+            </span>
+          </div>
+          <div class="embed-preview-body">
+            <script
+              src="https://est8go-api.onrender.com/static/embed.js"
+              data-tenant="bravieshomz-limited"
+              data-theme="dark"
+              data-limit="3"
+              data-columns="1">
+            </script>
+          </div>
+          <div class="embed-preview-footer">
+            Live listings from a real
+            Est8Go-verified agency
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Platform compatibility -->
+    <div class="embed-platforms fade-up">
+      <div class="embed-platforms-label">
+        Works on every platform
+      </div>
+      <div class="embed-platform-list">
+        <span class="embed-platform">WordPress</span>
+        <span class="embed-platform">Wix</span>
+        <span class="embed-platform">Squarespace</span>
+        <span class="embed-platform">Webflow</span>
+        <span class="embed-platform">HTML</span>
+        <span class="embed-platform">React</span>
+        <span class="embed-platform">Vue</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
 <!-- STAGE 4 GOES HERE -->
 
 <!-- STICKY MOBILE BAR -->
@@ -3021,6 +4294,106 @@ const storyObserver = new IntersectionObserver(
 
 document.querySelectorAll('.story-card')
   .forEach(el => storyObserver.observe(el));
+
+// ── HOW IT WORKS TABS ──────────────
+function switchTab(tab) {
+  const agentBtn = document.getElementById('tabAgent');
+  const buyerBtn = document.getElementById('tabBuyer');
+  const agentContent = document.getElementById(
+    'contentAgent'
+  );
+  const buyerContent = document.getElementById(
+    'contentBuyer'
+  );
+
+  if (tab === 'agent') {
+    agentBtn.classList.add('active');
+    buyerBtn.classList.remove('active');
+    agentContent.classList.remove('hidden');
+    buyerContent.classList.add('hidden');
+  } else {
+    buyerBtn.classList.add('active');
+    agentBtn.classList.remove('active');
+    buyerContent.classList.remove('hidden');
+    agentContent.classList.add('hidden');
+  }
+}
+
+// ── TRUST RING ANIMATION ───────────
+const trustRingObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+
+      // Animate main ring (87/100 = 87% of 628)
+      const ring = document.getElementById(
+        'trustRingMain'
+      );
+      const numEl = document.getElementById(
+        'trustRingNum'
+      );
+
+      if (ring) {
+        setTimeout(() => {
+          ring.style.strokeDasharray = '546 628';
+        }, 200);
+      }
+
+      if (numEl) {
+        let count = 0;
+        const target = 87;
+        const step = target / 80;
+        const interval = setInterval(() => {
+          count += step;
+          if (count >= target) {
+            count = target;
+            clearInterval(interval);
+          }
+          numEl.textContent = Math.round(count);
+        }, 20);
+      }
+
+      // Animate pillar bars
+      document.querySelectorAll(
+        '.trust-pillar-bar-fill'
+      ).forEach(bar => {
+        const w = bar.getAttribute('data-width');
+        if (w) {
+          setTimeout(() => {
+            bar.style.width = w + '%';
+          }, 400);
+        }
+      });
+
+      trustRingObserver.unobserve(e.target);
+    });
+  },
+  { threshold: 0.3 }
+);
+
+const trustSection = document.getElementById('trust');
+if (trustSection) {
+  trustRingObserver.observe(trustSection);
+}
+
+// ── CODE SNIPPET COPY ──────────────
+function copySnippet(btn) {
+  const pre = btn.closest('.code-block-stage3')
+    .querySelector('code');
+  const text = pre ? pre.innerText : '';
+
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => {
+      btn.textContent = '📋 Copy';
+    }, 2000);
+  }).catch(() => {
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => {
+      btn.textContent = '📋 Copy';
+    }, 2000);
+  });
+}
 </script>
 
 </body>
