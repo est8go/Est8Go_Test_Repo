@@ -2,977 +2,1810 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1"/>
   <title>Est8Go — The Trust Layer for African Real Estate</title>
-  <meta name="description" content="GPS verified. AI audited. Document checked. The trust infrastructure for Nigerian real estate."/>
-  <meta property="og:title" content="Est8Go — Truth as a Service"/>
-  <meta property="og:description" content="The trust layer for African real estate. GPS verified listings, AI photo audits, document verification."/>
+  <meta name="description"
+        content="GPS verified. AI audited. Document checked. Nigeria's first property trust infrastructure."/>
+  <meta property="og:title"
+        content="Est8Go — Truth as a Service"/>
+  <meta property="og:description"
+        content="Is this property real? Est8Go verifies the ones that are."/>
   <meta property="og:url" content="https://est8go.com"/>
   <meta property="og:type" content="website"/>
-  <meta name="twitter:card" content="summary_large_image"/>
+
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
-  <script>(function(){var t=localStorage.getItem('est8go-theme')||(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t);})();</script>
+  <link rel="preconnect"
+        href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap"
+        rel="stylesheet"/>
+
+  <script>
+    (function(){
+      var t = localStorage.getItem('est8go-theme') ||
+        (window.matchMedia('(prefers-color-scheme:light)').matches
+          ? 'light' : 'dark');
+      document.documentElement.setAttribute('data-theme',t);
+    })();
+  </script>
+
   <style>
-    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    :root{
-      --bg:#0B0F1E;--bg2:#0F172A;--surface:#111827;--surface2:#1E293B;
-      --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
-      --text:#F8FAFC;--text2:#CBD5E1;--muted:#94A3B8;
-      --indigo:#4F46E5;--indigo2:#4338CA;--em:#10B981;--em2:#059669;
-      --warn:#F59E0B;--risk:#F43F5E;
-      --r-sm:10px;--r-md:16px;--r-lg:20px;--r-xl:28px;
+  /* ════════════════════════════════
+     RESET
+  ════════════════════════════════ */
+  *, *::before, *::after {
+    margin: 0; padding: 0;
+    box-sizing: border-box;
+  }
+
+  /* ════════════════════════════════
+     DESIGN TOKENS
+  ════════════════════════════════ */
+  :root {
+    --bg:        #0B0F1E;
+    --bg2:       #0F172A;
+    --surface:   #111827;
+    --surface2:  #1E293B;
+    --border:    rgba(255,255,255,0.07);
+    --border2:   rgba(255,255,255,0.12);
+    --text:      #F8FAFC;
+    --text2:     #CBD5E1;
+    --muted:     #94A3B8;
+    --indigo:    #4F46E5;
+    --indigo2:   #4338CA;
+    --em:        #10B981;
+    --em2:       #059669;
+    --warn:      #F59E0B;
+    --risk:      #F43F5E;
+    --r-sm:      8px;
+    --r-md:      14px;
+    --r-lg:      20px;
+    --r-xl:      28px;
+  }
+
+  [data-theme="light"] {
+    --bg:       #F0F4F8;
+    --bg2:      #F8FAFC;
+    --surface:  #FFFFFF;
+    --surface2: #F1F5F9;
+    --border:   rgba(15,23,42,0.08);
+    --border2:  rgba(15,23,42,0.14);
+    --text:     #0F172A;
+    --text2:    #334155;
+    --muted:    #64748B;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* Animated gradient mesh background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 110% -10%,
+        rgba(79,70,229,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at -10% 110%,
+        rgba(16,185,129,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 50% 50%,
+        rgba(79,70,229,0.04) 0%, transparent 70%);
+    animation: meshMove 12s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes meshMove {
+    0%   { opacity: 1; transform: scale(1) rotate(0deg); }
+    100% { opacity: 0.7; transform: scale(1.1) rotate(3deg); }
+  }
+
+  [data-theme="light"] body::before {
+    background:
+      radial-gradient(ellipse 80% 60% at 110% -10%,
+        rgba(79,70,229,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at -10% 110%,
+        rgba(16,185,129,0.04) 0%, transparent 60%);
+  }
+
+  * { position: relative; z-index: 1; }
+
+  /* ════════════════════════════════
+     SCROLL ANIMATIONS
+  ════════════════════════════════ */
+  .fade-up {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .fade-left {
+    opacity: 0;
+    transform: translateX(-40px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .fade-right {
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .fade-up.visible,
+  .fade-left.visible,
+  .fade-right.visible {
+    opacity: 1;
+    transform: translate(0);
+  }
+  .delay-1 { transition-delay: 0.1s; }
+  .delay-2 { transition-delay: 0.2s; }
+  .delay-3 { transition-delay: 0.3s; }
+  .delay-4 { transition-delay: 0.4s; }
+  .delay-5 { transition-delay: 0.5s; }
+
+  /* ════════════════════════════════
+     TYPOGRAPHY
+  ════════════════════════════════ */
+  .syne { font-family: 'Syne', sans-serif; }
+
+  h1, h2, h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--text);
+  }
+
+  /* ════════════════════════════════
+     LAYOUT
+  ════════════════════════════════ */
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  @media (min-width: 768px) {
+    .container { padding: 0 40px; }
+  }
+
+  @media (min-width: 1200px) {
+    .container { padding: 0 60px; }
+  }
+
+  /* Section spacing */
+  .section {
+    padding: 80px 0;
+  }
+
+  @media (min-width: 768px) {
+    .section { padding: 100px 0; }
+  }
+
+  /* Section labels */
+  .section-label {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: 32px;
+    margin-bottom: 16px;
+  }
+
+  @media (min-width: 768px) {
+    .section-title { font-size: 44px; }
+  }
+
+  .section-sub {
+    font-size: 16px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 560px;
+  }
+
+  /* ════════════════════════════════
+     BUTTONS
+  ════════════════════════════════ */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: var(--r-md);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: none;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: linear-gradient(
+      135deg, var(--indigo2), var(--indigo)
+    );
+    color: white;
+    padding: 13px 24px;
+    box-shadow: 0 4px 20px rgba(79,70,229,0.35);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(79,70,229,0.45);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(79,70,229,0.25);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    padding: 12px 22px;
+    border: 1px solid var(--border2);
+  }
+
+  .btn-ghost:hover {
+    background: var(--surface2);
+    border-color: rgba(255,255,255,0.2);
+  }
+
+  .btn-wa {
+    background: #25D366;
+    color: white;
+    padding: 13px 24px;
+    box-shadow: 0 4px 20px rgba(37,211,102,0.3);
+  }
+
+  .btn-wa:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(37,211,102,0.4);
+  }
+
+  /* Mobile buttons side by side */
+  .btn-sm {
+    padding: 10px 18px;
+    font-size: 13px;
+  }
+
+  /* ════════════════════════════════
+     NAVIGATION
+  ════════════════════════════════ */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    padding: 16px 0;
+    background: rgba(11,15,30,0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.3s;
+  }
+
+  [data-theme="light"] .nav {
+    background: rgba(240,244,248,0.88);
+  }
+
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .nav-logo-mark {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(
+      135deg, var(--indigo2), var(--indigo)
+    );
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(79,70,229,0.3);
+  }
+
+  .nav-wordmark {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  /* Desktop nav links */
+  .nav-links {
+    display: none;
+    align-items: center;
+    gap: 32px;
+  }
+
+  @media (min-width: 768px) {
+    .nav-links { display: flex; }
+  }
+
+  .nav-link {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+    position: relative;
+  }
+
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--indigo);
+    border-radius: 99px;
+    transition: width 0.2s;
+  }
+
+  .nav-link:hover {
+    color: var(--text);
+  }
+
+  .nav-link:hover::after {
+    width: 100%;
+  }
+
+  .nav-link.active {
+    color: var(--text);
+  }
+
+  .nav-link.active::after {
+    width: 100%;
+  }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .nav-theme {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+
+  .nav-theme:hover {
+    background: var(--surface);
+  }
+
+  /* ════════════════════════════════
+     HERO — MOBILE
+  ════════════════════════════════ */
+  .hero {
+    padding: 60px 0 40px;
+    overflow: hidden;
+  }
+
+  @media (min-width: 768px) {
+    .hero { padding: 100px 0 80px; }
+  }
+
+  .hero-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  @media (min-width: 900px) {
+    .hero-inner {
+      flex-direction: row;
+      align-items: center;
+      gap: 60px;
     }
-    [data-theme="light"]{
-      --bg:#F0F4F8;--bg2:#F8FAFC;--surface:#FFFFFF;--surface2:#F1F5F9;
-      --border:rgba(15,23,42,0.08);--border2:rgba(15,23,42,0.14);
-      --text:#0F172A;--text2:#334155;--muted:#64748B;
+  }
+
+  .hero-content {
+    flex: 1;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(16,185,129,0.10);
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 99px;
+    padding: 7px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--em);
+    margin-bottom: 24px;
+  }
+
+  .hero-badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--em);
+    animation: badgePulse 2s infinite;
+  }
+
+  @keyframes badgePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .hero h1 {
+    font-size: 40px;
+    margin-bottom: 20px;
+    line-height: 1.05;
+  }
+
+  @media (min-width: 768px) {
+    .hero h1 { font-size: 60px; }
+  }
+
+  @media (min-width: 1100px) {
+    .hero h1 { font-size: 72px; }
+  }
+
+  .hero h1 .accent {
+    background: linear-gradient(
+      135deg, var(--indigo), #818CF8
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: block;
+  }
+
+  .hero-sub {
+    font-size: 16px;
+    color: var(--text2);
+    line-height: 1.7;
+    margin-bottom: 28px;
+    max-width: 480px;
+  }
+
+  @media (min-width: 768px) {
+    .hero-sub { font-size: 18px; }
+  }
+
+  /* Pills */
+  .hero-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+
+  .hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 99px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    transition: all 0.2s;
+  }
+
+  .hero-pill:hover {
+    border-color: var(--indigo);
+    color: var(--text);
+  }
+
+  .pill-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  /* Hero CTAs */
+  .hero-ctas {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  /* Mobile: side by side small buttons */
+  @media (max-width: 767px) {
+    .hero-ctas .btn-primary {
+      flex: 1;
+      min-width: 0;
+      font-size: 13px;
+      padding: 12px 16px;
     }
-    html{scroll-behavior:smooth}
-    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
-
-    /* Scroll animations */
-    .fade-up{opacity:0;transform:translateY(32px);transition:opacity .6s ease,transform .6s ease}
-    .fade-up.visible{opacity:1;transform:translateY(0)}
-    .d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}
-
-    /* NAV */
-    nav{position:sticky;top:0;z-index:100;padding:14px 20px;
-      background:rgba(11,15,30,0.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-      border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-    [data-theme="light"] nav{background:rgba(240,244,248,0.92)}
-    .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-    .nav-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#4338CA,#4F46E5);border-radius:10px;
-      display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:white;
-      font-family:'Syne',sans-serif;flex-shrink:0}
-    .nav-logo-text{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.5px}
-    .nav-actions{display:flex;align-items:center;gap:8px}
-    .nav-theme{width:36px;height:36px;border-radius:10px;background:var(--surface2);border:1px solid var(--border2);
-      display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer}
-    .nav-cta{background:var(--indigo);color:white;border:none;border-radius:10px;padding:9px 16px;
-      font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;font-family:inherit}
-
-    /* HERO */
-    .hero{padding:60px 20px 50px;position:relative;overflow:hidden}
-    .hero::before{content:'';position:absolute;top:-100px;right:-100px;width:400px;height:400px;
-      background:radial-gradient(circle,rgba(79,70,229,.15) 0%,transparent 70%);pointer-events:none}
-    .hero::after{content:'';position:absolute;bottom:-50px;left:-50px;width:300px;height:300px;
-      background:radial-gradient(circle,rgba(16,185,129,.08) 0%,transparent 70%);pointer-events:none}
-    .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(16,185,129,.10);
-      border:1px solid rgba(16,185,129,.25);border-radius:99px;padding:6px 14px;
-      font-size:12px;font-weight:600;color:var(--em);margin-bottom:24px}
-    .hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--em);animation:pulse 2s infinite}
-    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
-    .hero h1{font-family:'Syne',sans-serif;font-size:42px;font-weight:800;line-height:1.08;
-      letter-spacing:-1.5px;margin-bottom:20px;color:var(--text)}
-    .hero h1 .accent{color:var(--indigo);display:block}
-    .hero-sub{font-size:16px;color:var(--text2);line-height:1.6;margin-bottom:28px;max-width:340px}
-    .hero-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px}
-    .hero-pill{display:inline-flex;align-items:center;gap:6px;background:var(--surface);
-      border:1px solid var(--border2);border-radius:99px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--text2)}
-    .hero-pill-dot{width:6px;height:6px;border-radius:50%}
-    .hero-ctas{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
-    .btn-primary{background:linear-gradient(135deg,#4338CA,#4F46E5);color:white;border:none;
-      border-radius:var(--r-md);padding:16px 24px;font-size:15px;font-weight:700;cursor:pointer;
-      text-decoration:none;text-align:center;display:block;letter-spacing:-.3px;
-      box-shadow:0 4px 24px rgba(79,70,229,.35);transition:transform .15s,box-shadow .15s;font-family:inherit}
-    .btn-primary:active{transform:scale(.97)}
-    .btn-secondary{background:transparent;color:var(--text);border:1px solid var(--border2);
-      border-radius:var(--r-md);padding:15px 24px;font-size:15px;font-weight:600;cursor:pointer;
-      text-decoration:none;text-align:center;display:block;transition:background .15s}
-    .btn-secondary:active{background:var(--surface2)}
-    .hero-trust-note{display:flex;gap:16px;flex-wrap:wrap}
-    .hero-trust-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
-
-    /* Hero card */
-    .hero-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-xl);
-      overflow:hidden;margin-top:40px;
-      box-shadow:0 24px 60px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.04)}
-    .hero-card-image{height:180px;background:linear-gradient(135deg,#0F172A 0%,#1E293B 50%,#0F172A 100%);
-      position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
-    .hero-card-overlay-badges{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between}
-    .badge-gps{background:rgba(16,185,129,.9);color:white;font-size:10px;font-weight:700;
-      padding:4px 10px;border-radius:8px;display:flex;align-items:center;gap:4px}
-    .badge-ai{background:rgba(79,70,229,.9);color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:8px}
-    .hero-card-body{padding:16px}
-    .hero-card-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:4px}
-    .hero-card-location{font-size:12px;color:var(--muted);margin-bottom:12px}
-    .hero-card-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-    .hero-card-price{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--em)}
-    .trust-ring-mini{display:flex;align-items:center;gap:8px}
-    .trust-ring-mini-score{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--em)}
-    .trust-ring-mini-label{font-size:10px;color:var(--muted);line-height:1.3}
-    .hero-card-btn{background:var(--indigo);color:white;border:none;border-radius:12px;padding:12px;
-      font-size:13px;font-weight:700;width:100%;cursor:pointer;text-align:center;font-family:inherit}
-    .float-badge{position:absolute;background:var(--surface);border:1px solid var(--border2);border-radius:12px;
-      padding:8px 12px;font-size:11px;font-weight:600;color:var(--text);
-      box-shadow:0 8px 24px rgba(0,0,0,.2);display:flex;align-items:center;gap:6px;
-      white-space:nowrap;animation:floatAnim 3s ease-in-out infinite}
-    @keyframes floatAnim{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-    .float-badge-2{bottom:80px;left:-10px;animation-delay:1.5s}
-
-    /* SECTION COMMON */
-    .section-label{font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;margin-bottom:16px}
-    .section-title{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;line-height:1.15;
-      letter-spacing:-1px;color:var(--text);margin-bottom:12px}
-    .section-sub{font-size:15px;color:var(--muted);line-height:1.6}
-    .section-header{margin-bottom:40px}
-    .container{max-width:480px;margin:0 auto}
-
-    /* PROBLEM */
-    .problem{padding:70px 20px;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
-    .problem .section-label{color:var(--risk)}
-    .problem-stat{font-family:'Syne',sans-serif;font-size:64px;font-weight:800;color:var(--risk);
-      line-height:1;letter-spacing:-3px;margin-bottom:8px}
-    .problem-stat-sub{font-size:16px;color:var(--muted);margin-bottom:40px;line-height:1.5}
-    .problem-cards{display:flex;flex-direction:column;gap:12px}
-    .problem-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg);
-      padding:20px;display:flex;gap:16px;align-items:flex-start}
-    .problem-icon{width:44px;height:44px;border-radius:12px;background:rgba(244,63,94,.12);
-      display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-    .problem-card-title{font-size:15px;font-weight:700;margin-bottom:4px;color:var(--text)}
-    .problem-card-body{font-size:13px;color:var(--muted);line-height:1.5}
-
-    /* HOW IT WORKS */
-    .how{padding:70px 20px}
-    .how .section-label{color:var(--indigo)}
-    .steps{display:flex;flex-direction:column;gap:4px}
-    .step{display:flex;gap:16px}
-    .step-left{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:44px}
-    .step-num{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-      font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:white;flex-shrink:0;z-index:1}
-    .step-line{width:2px;flex:1;min-height:32px;background:var(--border2);margin:4px 0}
-    .step-last .step-line{display:none}
-    .step-content{padding:0 0 32px;flex:1}
-    .step-content-inner{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px}
-    .step-icon{font-size:28px;margin-bottom:10px;display:block}
-    .step-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px}
-    .step-desc{font-size:13px;color:var(--muted);line-height:1.5}
-
-    /* TRUST */
-    .trust{padding:70px 20px;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
-    .trust .section-label{color:var(--em)}
-    .trust-ring-large{display:flex;align-items:center;justify-content:center;margin:32px 0;position:relative}
-    .trust-ring-svg{width:160px;height:160px;transform:rotate(-90deg)}
-    .trust-ring-text{position:absolute;text-align:center}
-    .trust-ring-number{font-family:'Syne',sans-serif;font-size:48px;font-weight:800;color:var(--em);line-height:1;display:block}
-    .trust-ring-label{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.05em}
-    .trust-grade-badge{display:inline-block;background:rgba(16,185,129,.12);color:var(--em);
-      border:1px solid rgba(16,185,129,.25);border-radius:99px;padding:3px 12px;
-      font-size:11px;font-weight:700;margin-top:6px;letter-spacing:.05em}
-    .pillars{display:flex;flex-direction:column;gap:14px;margin-bottom:32px}
-    .pillar{display:flex;align-items:center;gap:12px}
-    .pillar-icon{font-size:18px;width:32px;flex-shrink:0}
-    .pillar-info{flex:1}
-    .pillar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-    .pillar-name{font-size:13px;font-weight:600;color:var(--text)}
-    .pillar-pts{font-size:12px;font-weight:700;color:var(--muted)}
-    .pillar-bar-bg{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden}
-    .pillar-bar-fill{height:100%;border-radius:99px;width:0;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
-    .grades{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .grade-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-md);padding:14px}
-    .grade-pill{display:inline-block;border-radius:99px;padding:3px 12px;font-size:11px;font-weight:700;margin-bottom:8px}
-    .grade-desc{font-size:11px;color:var(--muted);line-height:1.4;margin-bottom:4px}
-    .grade-range{font-size:11px;font-weight:700;color:var(--text2)}
-
-    /* EMBED */
-    .embed{padding:70px 20px}
-    .embed .section-label{color:var(--indigo)}
-    .embed-steps{display:flex;flex-direction:column;gap:16px;margin:28px 0}
-    .embed-step{display:flex;gap:14px;align-items:flex-start}
-    .embed-step-num{width:32px;height:32px;border-radius:50%;background:var(--indigo);color:white;
-      display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
-    .embed-step-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px}
-    .embed-step-desc{font-size:13px;color:var(--muted);line-height:1.4}
-    .code-block{background:#0D1117;border:1px solid rgba(255,255,255,.08);border-radius:var(--r-md);
-      padding:16px;margin:20px 0;overflow:hidden}
-    .code-block-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-    .code-lang{font-size:10px;font-weight:700;letter-spacing:.1em;color:#6B7280;text-transform:uppercase}
-    .copy-btn{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:5px 10px;
-      font-size:11px;font-weight:600;color:#94A3B8;cursor:pointer;font-family:inherit;transition:all .15s}
-    .copy-btn:hover{background:rgba(255,255,255,.10);color:#F8FAFC}
-    code{font-family:'Courier New',monospace;font-size:12px;line-height:1.7;display:block;overflow-x:auto;color:#94A3B8}
-    .code-tag{color:#F97583}.code-attr{color:#79B8FF}.code-val{color:#9ECBFF}
-    .embed-live{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-xl);overflow:hidden;margin-top:28px}
-    .embed-live-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
-    .live-dot{width:7px;height:7px;border-radius:50%;background:var(--em);animation:pulse 2s infinite}
-    .live-label{font-size:12px;font-weight:600;color:var(--muted)}
-    .embed-live-body{padding:16px}
-
-    /* PRICING */
-    .pricing{padding:70px 20px;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
-    .pricing .section-label{color:var(--indigo)}
-    .pricing-cards{display:flex;flex-direction:column;gap:12px;margin-top:32px}
-    .pricing-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-xl);padding:24px;position:relative}
-    .pricing-card.featured{background:linear-gradient(135deg,rgba(67,56,202,.15) 0%,rgba(79,70,229,.08) 100%);
-      border-color:rgba(79,70,229,.35);
-      box-shadow:0 0 0 1px rgba(79,70,229,.15),0 8px 32px rgba(79,70,229,.12)}
-    .pricing-popular{position:absolute;top:-12px;left:50%;transform:translateX(-50%);
-      background:var(--indigo);color:white;font-size:10px;font-weight:700;
-      letter-spacing:.08em;padding:4px 14px;border-radius:99px;white-space:nowrap}
-    .pricing-plan{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-    .pricing-price{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--text);
-      letter-spacing:-1px;line-height:1;margin-bottom:4px}
-    .pricing-price span{font-size:14px;font-weight:500;color:var(--muted);letter-spacing:0}
-    .pricing-desc{font-size:13px;color:var(--muted);margin-bottom:20px}
-    .pricing-features{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
-    .pricing-features li{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2)}
-    .pricing-features li::before{content:'✓';display:flex;align-items:center;justify-content:center;
-      width:20px;height:20px;border-radius:50%;background:rgba(16,185,129,.12);color:var(--em);
-      font-size:11px;font-weight:700;flex-shrink:0}
-    .pricing-btn{display:block;text-align:center;text-decoration:none;border-radius:var(--r-md);padding:14px;
-      font-size:14px;font-weight:700;transition:all .15s;font-family:inherit;border:none;cursor:pointer}
-    .pricing-btn-primary{background:var(--indigo);color:white;box-shadow:0 4px 16px rgba(79,70,229,.3)}
-    .pricing-btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
-    .pricing-btn-ghost:hover{border-color:var(--indigo);color:var(--indigo)}
-    .pricing-invite-note{text-align:center;font-size:12px;color:var(--muted);margin-top:20px;
-      padding:12px 16px;background:var(--surface2);border-radius:var(--r-md);border:1px solid var(--border)}
-
-    /* PROOF */
-    .proof{padding:70px 20px}
-    .proof .section-label{color:var(--indigo)}
-    .proof-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:32px 0}
-    .proof-stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px 16px;text-align:center}
-    .proof-stat-card.full-width{grid-column:1 / -1}
-    .proof-stat-number{font-family:'Syne',sans-serif;font-size:40px;font-weight:800;color:var(--indigo);
-      line-height:1;letter-spacing:-1px;margin-bottom:6px}
-    .proof-stat-number .plus{color:var(--em)}
-    .proof-stat-label{font-size:12px;color:var(--muted);font-weight:500}
-    .proof-cards{display:flex;flex-direction:column;gap:12px}
-    .proof-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
-      padding:20px;display:flex;gap:14px;align-items:flex-start}
-    .proof-card-icon{font-size:24px;flex-shrink:0}
-    .proof-card-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px}
-    .proof-card-body{font-size:13px;color:var(--muted);line-height:1.5}
-
-    /* FINAL CTA */
-    .final-cta{padding:70px 20px;background:linear-gradient(135deg,#0B0F1E 0%,#0F172A 50%,#0B0F1E 100%);
-      border-top:1px solid var(--border);text-align:center;position:relative;overflow:hidden}
-    .final-cta::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);
-      width:500px;height:300px;background:radial-gradient(ellipse,rgba(79,70,229,.12) 0%,transparent 70%);pointer-events:none}
-    [data-theme="light"] .final-cta{background:linear-gradient(135deg,#EEF2FF 0%,#F0FDF4 100%)}
-    .final-cta h2{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;line-height:1.1;
-      letter-spacing:-1px;margin-bottom:16px;color:var(--text)}
-    .final-cta p{font-size:15px;color:var(--muted);margin-bottom:32px;line-height:1.6}
-    .btn-wa{display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:white;
-      border:none;border-radius:var(--r-md);padding:16px 24px;font-size:15px;font-weight:700;cursor:pointer;
-      text-decoration:none;margin-bottom:12px;box-shadow:0 4px 20px rgba(37,211,102,.3);transition:transform .15s;font-family:inherit}
-    .btn-wa:active{transform:scale(.97)}
-    .final-trust-row{display:flex;justify-content:center;flex-wrap:wrap;gap:16px;margin-top:24px}
-    .final-trust-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
-
-    /* FOOTER */
-    footer{padding:28px 20px;border-top:1px solid var(--border);background:var(--surface)}
-    .footer-inner{display:flex;flex-direction:column;gap:20px}
-    .footer-brand{display:flex;align-items:center;gap:10px}
-    .footer-brand-icon{width:32px;height:32px;background:linear-gradient(135deg,#4338CA,#4F46E5);border-radius:9px;
-      display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:800;
-      font-family:'Syne',sans-serif;flex-shrink:0}
-    .footer-brand-name{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--text)}
-    .footer-copy{font-size:12px;color:var(--muted);margin-top:4px}
-    .footer-links{display:flex;flex-wrap:wrap;gap:16px}
-    .footer-links a{font-size:13px;color:var(--muted);text-decoration:none;font-weight:500}
-    .footer-links a:hover{color:var(--text)}
-
-    /* RESPONSIVE */
-    @media(min-width:768px){
-      .hero h1{font-size:56px}
-      .hero{padding:80px 40px 60px}
-      .problem,.how,.trust,.embed,.pricing,.proof,.final-cta{padding:80px 40px}
-      footer{padding:36px 40px}
-      .footer-inner{flex-direction:row;justify-content:space-between;align-items:center}
-      .proof-stats{grid-template-columns:repeat(3,1fr)}
-      .proof-stat-card.full-width{grid-column:auto}
-      .pricing-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-      .enterprise-card{grid-column:1 / -1;max-width:340px;margin:0 auto;width:100%}
+    .hero-ctas .btn-ghost {
+      flex: 1;
+      min-width: 0;
+      font-size: 13px;
+      padding: 11px 16px;
     }
+  }
+
+  /* Trust notes */
+  .hero-trust {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .hero-trust-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .hero-trust-check {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgba(16,185,129,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--em);
+    font-size: 9px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* ════════════════════════════════
+     HERO RIGHT — SERVICE SHOWCASE
+     Mobile: horizontal scroll cards
+     Desktop: floating property card
+  ════════════════════════════════ */
+  .hero-visual {
+    flex-shrink: 0;
+    width: 100%;
+  }
+
+  @media (min-width: 900px) {
+    .hero-visual {
+      width: 460px;
+    }
+  }
+
+  /* DESKTOP: Property card with floating badges */
+  .hero-desktop-card {
+    display: none;
+    position: relative;
+  }
+
+  @media (min-width: 900px) {
+    .hero-desktop-card { display: block; }
+  }
+
+  .property-card-mockup {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--r-xl);
+    overflow: hidden;
+    box-shadow:
+      0 32px 80px rgba(0,0,0,0.4),
+      0 0 0 1px rgba(255,255,255,0.04);
+    animation: cardFloat 4s ease-in-out infinite;
+  }
+
+  @keyframes cardFloat {
+    0%, 100% { transform: translateY(0) rotate(0.5deg); }
+    50%       { transform: translateY(-12px) rotate(-0.5deg); }
+  }
+
+  .pcm-image {
+    height: 220px;
+    background: linear-gradient(
+      135deg, #0F172A 0%, #1E293B 100%
+    );
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pcm-image svg {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0; left: 0;
+  }
+
+  .pcm-badges {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 2;
+  }
+
+  .pcm-badge {
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .pcm-badge-gps {
+    background: rgba(16,185,129,0.9);
+    color: white;
+    backdrop-filter: blur(8px);
+  }
+
+  .pcm-badge-ai {
+    background: rgba(79,70,229,0.9);
+    color: white;
+    backdrop-filter: blur(8px);
+  }
+
+  .pcm-body {
+    padding: 20px;
+  }
+
+  .pcm-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+
+  .pcm-location {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .pcm-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .pcm-price {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--em);
+  }
+
+  .pcm-trust {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .pcm-ring {
+    position: relative;
+    width: 52px;
+    height: 52px;
+  }
+
+  .pcm-ring svg {
+    transform: rotate(-90deg);
+  }
+
+  .pcm-ring-num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--em);
+  }
+
+  .pcm-trust-info {
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+
+  .pcm-trust-grade {
+    color: var(--em);
+    font-weight: 700;
+    font-size: 12px;
+  }
+
+  .pcm-btn {
+    width: 100%;
+    background: var(--indigo);
+    color: white;
+    border: none;
+    border-radius: var(--r-md);
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+  }
+
+  .pcm-btn:hover {
+    background: var(--indigo2);
+    transform: translateY(-1px);
+  }
+
+  /* Floating badges on desktop */
+  .float-badge {
+    position: absolute;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 10;
+    white-space: nowrap;
+  }
+
+  .float-1 {
+    top: -20px;
+    right: -20px;
+    animation: float1 3s ease-in-out infinite;
+  }
+
+  .float-2 {
+    bottom: 60px;
+    left: -30px;
+    animation: float2 3.5s ease-in-out infinite;
+  }
+
+  .float-3 {
+    bottom: -20px;
+    right: 20px;
+    animation: float3 4s ease-in-out infinite;
+  }
+
+  @keyframes float1 {
+    0%, 100% { transform: translateY(0) rotate(-1deg); }
+    50%       { transform: translateY(-8px) rotate(1deg); }
+  }
+
+  @keyframes float2 {
+    0%, 100% { transform: translateY(0) rotate(1deg); }
+    50%       { transform: translateY(-10px) rotate(-1deg); }
+  }
+
+  @keyframes float3 {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-6px); }
+  }
+
+  /* MOBILE: Horizontal service showcase */
+  .hero-mobile-showcase {
+    display: block;
+    margin-top: 8px;
+  }
+
+  @media (min-width: 900px) {
+    .hero-mobile-showcase { display: none; }
+  }
+
+  .showcase-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .showcase-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-bottom: 8px;
+  }
+
+  .showcase-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .showcase-card {
+    flex-shrink: 0;
+    width: 240px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--r-lg);
+    padding: 20px;
+    scroll-snap-align: start;
+    transition: border-color 0.2s;
+  }
+
+  .showcase-card.active-card {
+    border-color: var(--indigo);
+    box-shadow: 0 0 0 1px rgba(79,70,229,0.2),
+                0 8px 24px rgba(79,70,229,0.12);
+  }
+
+  .showcase-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 14px;
+  }
+
+  /* Animation area inside showcase card */
+  .showcase-anim {
+    height: 80px;
+    border-radius: 10px;
+    background: var(--surface2);
+    margin-bottom: 14px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* WhatsApp chat animation */
+  .chat-anim {
+    width: 100%;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .chat-bubble {
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 500;
+    max-width: 85%;
+    opacity: 0;
+    animation: bubbleIn 0.4s ease forwards;
+  }
+
+  .chat-bubble.buyer {
+    background: rgba(255,255,255,0.08);
+    color: var(--text2);
+    align-self: flex-end;
+    border-bottom-right-radius: 3px;
+    animation-delay: 0.5s;
+  }
+
+  .chat-bubble.kora {
+    background: rgba(79,70,229,0.2);
+    color: var(--indigo);
+    align-self: flex-start;
+    border-bottom-left-radius: 3px;
+    animation-delay: 1.2s;
+  }
+
+  @keyframes bubbleIn {
+    from { opacity: 0; transform: scale(0.8) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  /* GPS animation */
+  .gps-anim {
+    position: relative;
+    width: 60px;
+    height: 60px;
+  }
+
+  .gps-pin {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 28px;
+    animation: pinDrop 1s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    animation-delay: 0.3s;
+    opacity: 0;
+  }
+
+  @keyframes pinDrop {
+    from { opacity: 0; transform: translate(-50%, -80%); }
+    to   { opacity: 1; transform: translate(-50%, -50%); }
+  }
+
+  .gps-pulse {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(16,185,129,0.3);
+    animation: gpsPulse 1.5s ease-out infinite;
+    animation-delay: 1s;
+  }
+
+  @keyframes gpsPulse {
+    0%   { transform: translate(-50%,-50%) scale(1); opacity: 0.6; }
+    100% { transform: translate(-50%,-50%) scale(4); opacity: 0; }
+  }
+
+  /* Trust ring animation */
+  .ring-anim-container {
+    position: relative;
+    width: 70px;
+    height: 70px;
+  }
+
+  .ring-anim-svg {
+    transform: rotate(-90deg);
+    width: 70px;
+    height: 70px;
+  }
+
+  .ring-anim-num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--em);
+  }
+
+  /* Certificate animation */
+  .cert-anim {
+    background: white;
+    border-radius: 8px;
+    width: 110px;
+    padding: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    animation: certSlide 0.6s ease forwards;
+    animation-delay: 0.3s;
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  @keyframes certSlide {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .cert-header {
+    font-size: 7px;
+    font-weight: 800;
+    color: #0F172A;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+
+  .cert-score {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--em);
+  }
+
+  .cert-seal {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 7px;
+    font-weight: 700;
+    color: var(--em);
+    border: 1px solid var(--em);
+    border-radius: 99px;
+    padding: 2px 6px;
+    margin-top: 4px;
+  }
+
+  .showcase-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .showcase-card-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* Showcase dots */
+  .showcase-dots {
+    display: flex;
+    gap: 6px;
+    margin-top: 14px;
+  }
+
+  .showcase-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border2);
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+
+  .showcase-dot.active {
+    width: 20px;
+    border-radius: 99px;
+    background: var(--indigo);
+  }
+
+  /* ════════════════════════════════
+     STICKY MOBILE BOTTOM BAR
+  ════════════════════════════════ */
+  .sticky-bar {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 900;
+    padding: 12px 20px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    background: rgba(11,15,30,0.96);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border2);
+    gap: 10px;
+  }
+
+  [data-theme="light"] .sticky-bar {
+    background: rgba(240,244,248,0.96);
+  }
+
+  @media (max-width: 767px) {
+    .sticky-bar {
+      display: flex;
+    }
+    .sticky-bar .btn {
+      flex: 1;
+      font-size: 13px;
+      padding: 12px 16px;
+    }
+  }
+
+  .sticky-bar.hidden {
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+  }
+
+  .sticky-bar.visible-bar {
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+  }
+
+  /* Add bottom padding on mobile for sticky bar */
+  @media (max-width: 767px) {
+    body { padding-bottom: 80px; }
+  }
+
   </style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav>
-  <a class="nav-logo" href="/">
-    <div class="nav-logo-icon">E8</div>
-    <span class="nav-logo-text">Est8Go</span>
-  </a>
-  <div class="nav-actions">
-    <button class="nav-theme" onclick="toggleTheme()" id="themeBtn">🌙</button>
-    <!-- TODO: Replace 234XXXXXXXXXX with actual WhatsApp business number -->
-    <a class="nav-cta"
-       href="https://wa.me/234XXXXXXXXXX?text=Hi%2C%20I%20would%20like%20to%20request%20access%20to%20Est8Go%20for%20my%20real%20estate%20agency.%20Business%20name%3A%20"
-       target="_blank" rel="noopener">Request Access</a>
+<!-- ══════════════════════════════════
+     NAVIGATION
+══════════════════════════════════ -->
+<nav class="nav" id="mainNav">
+  <div class="container">
+    <div class="nav-inner">
+
+      <a class="nav-logo" href="/">
+        <div class="nav-logo-mark">E8</div>
+        <span class="nav-wordmark">Est8Go</span>
+      </a>
+
+      <div class="nav-links">
+        <a class="nav-link" href="#how">How it Works</a>
+        <a class="nav-link" href="#trust">Trust Score</a>
+        <a class="nav-link" href="#embed">Embed</a>
+        <a class="nav-link" href="#pricing">Pricing</a>
+      </div>
+
+      <div class="nav-actions">
+        <button class="nav-theme"
+                onclick="toggleTheme()"
+                id="themeBtn">🌙</button>
+        <a class="btn btn-ghost"
+           style="display:none"
+           id="navDemoBtn"
+           href="https://est8go-api.onrender.com/public/bravieshomz-limited"
+           target="_blank">
+          Live Demo
+        </a>
+        <a class="btn btn-primary"
+           href="https://wa.me/234XXXXXXXXXX?text=Hi%2C%20I%20would%20like%20to%20request%20access%20to%20Est8Go.%20Agency%3A%20">
+          Request Access
+        </a>
+      </div>
+
+    </div>
   </div>
 </nav>
 
-
-<!-- HERO -->
+<!-- ══════════════════════════════════
+     HERO
+══════════════════════════════════ -->
 <section class="hero">
   <div class="container">
-    <div class="hero-badge fade-up">
-      <span class="hero-badge-dot"></span>
-      Truth as a Service
-    </div>
+    <div class="hero-inner">
 
-    <h1 class="fade-up d1">
-      The Trust Layer
-      <span class="accent">for African<br/>Real Estate</span>
-    </h1>
+      <!-- LEFT: Content -->
+      <div class="hero-content">
 
-    <p class="hero-sub fade-up d2">
-      GPS verified on-site. AI audited for authenticity. Document checked.
-      Stop losing buyers — and commission — to property fraud.
-    </p>
-
-    <div class="hero-pills fade-up d2">
-      <span class="hero-pill"><span class="hero-pill-dot" style="background:#10B981"></span>GPS Verified</span>
-      <span class="hero-pill"><span class="hero-pill-dot" style="background:#4F46E5"></span>AI Audited</span>
-      <span class="hero-pill"><span class="hero-pill-dot" style="background:#F59E0B"></span>Docs Checked</span>
-      <span class="hero-pill"><span class="hero-pill-dot" style="background:#10B981"></span>WhatsApp Native</span>
-    </div>
-
-    <div class="hero-ctas fade-up d3">
-      <!-- TODO: Replace 234XXXXXXXXXX with actual WhatsApp business number -->
-      <a class="btn-primary"
-         href="https://wa.me/234XXXXXXXXXX?text=Hi%2C%20I%20would%20like%20to%20request%20access%20to%20Est8Go%20for%20my%20real%20estate%20agency.%20Business%20name%3A%20"
-         target="_blank" rel="noopener">Request Access &rarr;</a>
-      <a class="btn-secondary"
-         href="https://est8go-api.onrender.com/public/bravieshomz-limited"
-         target="_blank" rel="noopener">See Live Demo</a>
-    </div>
-
-    <div class="hero-trust-note fade-up d4">
-      <span class="hero-trust-item">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="10,3 5,8.5 2,5.5"/></svg>
-        Free to start
-      </span>
-      <span class="hero-trust-item">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="10,3 5,8.5 2,5.5"/></svg>
-        No credit card
-      </span>
-      <span class="hero-trust-item">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="10,3 5,8.5 2,5.5"/></svg>
-        Setup in 5 minutes
-      </span>
-    </div>
-
-    <!-- Property card mockup -->
-    <div class="hero-card fade-up" style="position:relative;margin-top:48px">
-      <div class="hero-card-image">
-        <svg width="220" height="160" viewBox="0 0 220 160" fill="none" aria-hidden="true">
-          <defs>
-            <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#0F172A"/>
-              <stop offset="100%" stop-color="#1E293B"/>
-            </linearGradient>
-          </defs>
-          <rect width="220" height="160" fill="url(#skyG)"/>
-          <circle cx="20" cy="18" r="1" fill="#94A3B8" opacity=".5"/>
-          <circle cx="80" cy="12" r="1.2" fill="#94A3B8" opacity=".4"/>
-          <circle cx="190" cy="22" r="1" fill="#94A3B8" opacity=".6"/>
-          <circle cx="140" cy="8" r="1" fill="#94A3B8" opacity=".4"/>
-          <rect y="118" width="220" height="42" fill="#1E293B"/>
-          <rect x="25" y="55" width="60" height="68" rx="3" fill="#2D3748"/>
-          <polygon points="15,55 55,22 95,55" fill="#4338CA"/>
-          <rect x="43" y="90" width="24" height="33" fill="#4F46E5" rx="3"/>
-          <rect x="31" y="65" width="16" height="14" fill="#6D28D9" rx="2" opacity=".8"/>
-          <rect x="68" y="65" width="16" height="14" fill="#6D28D9" rx="2" opacity=".8"/>
-          <rect x="100" y="35" width="50" height="88" rx="3" fill="#1E293B"/>
-          <rect x="108" y="44" width="9" height="9" fill="#10B981" rx="2" opacity=".8"/>
-          <rect x="123" y="44" width="9" height="9" fill="#10B981" rx="2" opacity=".5"/>
-          <rect x="108" y="60" width="9" height="9" fill="#4F46E5" rx="2" opacity=".7"/>
-          <rect x="123" y="60" width="9" height="9" fill="#F59E0B" rx="2" opacity=".4"/>
-          <rect x="108" y="76" width="9" height="9" fill="#818CF8" rx="2" opacity=".5"/>
-          <rect x="123" y="76" width="9" height="9" fill="#10B981" rx="2" opacity=".4"/>
-          <rect x="115" y="100" width="20" height="23" fill="#4F46E5" rx="3"/>
-          <rect x="162" y="70" width="42" height="53" rx="3" fill="#0F172A"/>
-          <rect x="170" y="78" width="7" height="7" fill="#F59E0B" rx="1" opacity=".6"/>
-          <rect x="182" y="78" width="7" height="7" fill="#F59E0B" rx="1" opacity=".4"/>
-          <rect x="170" y="92" width="7" height="7" fill="#818CF8" rx="1" opacity=".5"/>
-          <rect x="182" y="92" width="7" height="7" fill="#818CF8" rx="1" opacity=".7"/>
-          <circle cx="125" cy="26" r="9" fill="#10B981" opacity=".9"/>
-          <line x1="125" y1="35" x2="125" y2="44" stroke="#10B981" stroke-width="2"/>
-          <circle cx="14" cy="108" r="10" fill="#065F46"/>
-          <rect x="12" y="115" width="4" height="8" fill="#1E293B"/>
-          <circle cx="206" cy="108" r="10" fill="#065F46"/>
-          <rect x="204" y="115" width="4" height="8" fill="#1E293B"/>
-        </svg>
-        <div class="hero-card-overlay-badges">
-          <span class="badge-gps">&#128205; GPS Verified</span>
-          <span class="badge-ai">&#9733; AI Audited</span>
+        <div class="hero-badge fade-up">
+          <span class="hero-badge-dot"></span>
+          Truth as a Service
         </div>
+
+        <h1 class="fade-up delay-1">
+          Is This Property
+          <span class="accent">Real?</span>
+        </h1>
+
+        <p class="hero-sub fade-up delay-2">
+          In Nigeria, 1 in 3 property listings is fake.
+          Est8Go is the trust infrastructure that
+          verifies the ones that aren't — GPS confirmed,
+          AI audited, document checked.
+        </p>
+
+        <div class="hero-pills fade-up delay-2">
+          <span class="hero-pill">
+            <span class="pill-dot"
+                  style="background:var(--em)"></span>
+            GPS Verified
+          </span>
+          <span class="hero-pill">
+            <span class="pill-dot"
+                  style="background:var(--indigo)"></span>
+            AI Audited
+          </span>
+          <span class="hero-pill">
+            <span class="pill-dot"
+                  style="background:var(--warn)"></span>
+            Docs Checked
+          </span>
+          <span class="hero-pill">
+            <span class="pill-dot"
+                  style="background:var(--em)"></span>
+            WhatsApp Native
+          </span>
+        </div>
+
+        <div class="hero-ctas fade-up delay-3">
+          <a class="btn btn-primary"
+             href="https://wa.me/234XXXXXXXXXX?text=Hi%2C%20I%20would%20like%20to%20request%20access%20to%20Est8Go.%20Agency%3A%20">
+            Request Access →
+          </a>
+          <a class="btn btn-ghost"
+             href="https://est8go-api.onrender.com/public/bravieshomz-limited"
+             target="_blank">
+            See Live Demo
+          </a>
+        </div>
+
+        <div class="hero-trust fade-up delay-4">
+          <span class="hero-trust-item">
+            <span class="hero-trust-check">✓</span>
+            Free to start
+          </span>
+          <span class="hero-trust-item">
+            <span class="hero-trust-check">✓</span>
+            No credit card
+          </span>
+          <span class="hero-trust-item">
+            <span class="hero-trust-check">✓</span>
+            Setup in 5 minutes
+          </span>
+        </div>
+
       </div>
 
-      <div class="hero-card-body">
-        <div class="hero-card-title">3-Bed Apartment, Maitama</div>
-        <div class="hero-card-location">Abuja &middot; Apartment &middot; For Sale</div>
-        <div class="hero-card-row">
-          <div class="hero-card-price">&#8358;45M</div>
-          <div class="trust-ring-mini">
-            <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
-              <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="4"/>
-              <circle cx="22" cy="22" r="18" fill="none" stroke="#10B981" stroke-width="4"
-                stroke-dasharray="98 115" stroke-dashoffset="28" stroke-linecap="round"
-                transform="rotate(-90 22 22)"/>
-              <text x="22" y="26" text-anchor="middle" fill="#10B981" font-size="11" font-weight="800" font-family="Syne,sans-serif">87</text>
-            </svg>
-            <div>
-              <div class="trust-ring-mini-score">87</div>
-              <div class="trust-ring-mini-label">Trust Score<br/><span style="color:#10B981">Emerald</span></div>
+      <!-- RIGHT: Desktop property card -->
+      <div class="hero-visual">
+
+        <!-- DESKTOP CARD -->
+        <div class="hero-desktop-card fade-right delay-2">
+          <div class="property-card-mockup">
+            <div class="pcm-image">
+              <!-- Property SVG illustration -->
+              <svg viewBox="0 0 460 220"
+                   xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="skyG"
+                                  x1="0" y1="0"
+                                  x2="0" y2="1">
+                    <stop offset="0%"
+                          stop-color="#0A0F2C"/>
+                    <stop offset="100%"
+                          stop-color="#1E293B"/>
+                  </linearGradient>
+                  <linearGradient id="roofG"
+                                  x1="0" y1="0"
+                                  x2="1" y2="1">
+                    <stop offset="0%"
+                          stop-color="#4338CA"/>
+                    <stop offset="100%"
+                          stop-color="#4F46E5"/>
+                  </linearGradient>
+                </defs>
+                <!-- Sky -->
+                <rect width="460" height="220"
+                      fill="url(#skyG)"/>
+                <!-- Stars -->
+                <circle cx="50"  cy="30" r="1.5"
+                        fill="white" opacity="0.4"/>
+                <circle cx="130" cy="20" r="1"
+                        fill="white" opacity="0.3"/>
+                <circle cx="280" cy="25" r="1.5"
+                        fill="white" opacity="0.5"/>
+                <circle cx="380" cy="35" r="1"
+                        fill="white" opacity="0.3"/>
+                <circle cx="420" cy="15" r="2"
+                        fill="white" opacity="0.4"/>
+                <!-- Ground -->
+                <rect x="0" y="170" width="460"
+                      height="50" fill="#0F172A"/>
+                <!-- Trees left -->
+                <ellipse cx="60" cy="155" rx="22"
+                         ry="28" fill="#064E3B"/>
+                <rect x="57" y="168" width="6"
+                      height="18" fill="#0F172A"/>
+                <ellipse cx="90" cy="162" rx="16"
+                         ry="20" fill="#065F46"/>
+                <!-- Main building -->
+                <rect x="130" y="90" width="200"
+                      height="85" fill="#1E2D40"/>
+                <!-- Roof -->
+                <polygon points="115,90 230,40 345,90"
+                         fill="url(#roofG)"/>
+                <!-- Roof detail -->
+                <polygon points="115,90 230,40 345,90"
+                         fill="none"
+                         stroke="rgba(255,255,255,0.1)"
+                         stroke-width="1"/>
+                <!-- Door -->
+                <rect x="205" y="130" width="50"
+                      height="45" fill="#4F46E5" rx="4"/>
+                <circle cx="248" cy="157" r="3"
+                        fill="rgba(255,255,255,0.4)"/>
+                <!-- Windows -->
+                <rect x="145" y="105" width="40"
+                      height="30" fill="#1a1f3e"
+                      rx="3"/>
+                <line x1="165" y1="105" x2="165"
+                      y2="135"
+                      stroke="rgba(255,255,255,0.15)"
+                      stroke-width="1"/>
+                <line x1="145" y1="120" x2="185"
+                      y2="120"
+                      stroke="rgba(255,255,255,0.15)"
+                      stroke-width="1"/>
+                <rect x="275" y="105" width="40"
+                      height="30" fill="#1a1f3e"
+                      rx="3"/>
+                <line x1="295" y1="105" x2="295"
+                      y2="135"
+                      stroke="rgba(255,255,255,0.15)"
+                      stroke-width="1"/>
+                <line x1="275" y1="120" x2="315"
+                      y2="120"
+                      stroke="rgba(255,255,255,0.15)"
+                      stroke-width="1"/>
+                <!-- Window glow -->
+                <rect x="145" y="105" width="40"
+                      height="30"
+                      fill="rgba(245,158,11,0.08)"
+                      rx="3"/>
+                <rect x="275" y="105" width="40"
+                      height="30"
+                      fill="rgba(245,158,11,0.08)"
+                      rx="3"/>
+                <!-- Trees right -->
+                <ellipse cx="390" cy="155" rx="22"
+                         ry="28" fill="#064E3B"/>
+                <rect x="387" y="168" width="6"
+                      height="18" fill="#0F172A"/>
+                <ellipse cx="415" cy="162" rx="14"
+                         ry="18" fill="#065F46"/>
+                <!-- GPS Pin -->
+                <circle cx="230" cy="55" r="10"
+                        fill="#10B981"/>
+                <circle cx="230" cy="55" r="6"
+                        fill="white"/>
+                <line x1="230" y1="65" x2="230"
+                      y2="80"
+                      stroke="#10B981"
+                      stroke-width="2.5"
+                      stroke-linecap="round"/>
+                <!-- GPS pulse rings -->
+                <circle cx="230" cy="55" r="16"
+                        fill="none"
+                        stroke="#10B981"
+                        stroke-width="1.5"
+                        opacity="0.4"
+                        class="gps-ring-1"/>
+                <circle cx="230" cy="55" r="24"
+                        fill="none"
+                        stroke="#10B981"
+                        stroke-width="1"
+                        opacity="0.2"
+                        class="gps-ring-2"/>
+              </svg>
+
+              <div class="pcm-badges">
+                <span class="pcm-badge pcm-badge-gps">
+                  📍 GPS Verified
+                </span>
+                <span class="pcm-badge pcm-badge-ai">
+                  ★ AI Audited
+                </span>
+              </div>
+            </div>
+
+            <div class="pcm-body">
+              <div class="pcm-title">
+                3-Bed Apartment — Maitama
+              </div>
+              <div class="pcm-location">
+                Abuja · Apartment · For Sale
+              </div>
+              <div class="pcm-row">
+                <div class="pcm-price">₦45M</div>
+                <div class="pcm-trust">
+                  <div class="pcm-ring">
+                    <svg width="52" height="52"
+                         viewBox="0 0 52 52">
+                      <circle cx="26" cy="26" r="20"
+                              fill="none"
+                              stroke="rgba(255,255,255,0.06)"
+                              stroke-width="5"/>
+                      <circle cx="26" cy="26" r="20"
+                              fill="none"
+                              stroke="#10B981"
+                              stroke-width="5"
+                              stroke-dasharray="109 126"
+                              stroke-dashoffset="32"
+                              stroke-linecap="round"
+                              id="heroRing"/>
+                    </svg>
+                    <div class="pcm-ring-num">87</div>
+                  </div>
+                  <div class="pcm-trust-info">
+                    Trust Score<br/>
+                    <span class="pcm-trust-grade">
+                      Emerald ✓
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button class="pcm-btn">
+                I'm Interested →
+              </button>
             </div>
           </div>
-        </div>
-        <button class="hero-card-btn">I'm Interested &rarr;</button>
-      </div>
 
-      <div class="float-badge float-badge-2" aria-hidden="true">&#128196; Doc Verified</div>
-    </div>
-  </div>
-</section>
-
-
-<!-- PROBLEM -->
-<section class="problem">
-  <div class="container">
-    <div class="section-label fade-up">The Problem</div>
-    <div class="problem-stat fade-up d1">&#8358;Billions</div>
-    <p class="problem-stat-sub fade-up d2">lost to property fraud every year in Nigeria</p>
-    <div class="problem-cards">
-      <div class="problem-card fade-up d1">
-        <div class="problem-icon">&#127962;</div>
-        <div>
-          <div class="problem-card-title">Fake Listings</div>
-          <div class="problem-card-body">Properties that don't exist — duplicated across platforms, misrepresented, or owned by someone else. Buyers pay deposits and never see the property.</div>
-        </div>
-      </div>
-      <div class="problem-card fade-up d2">
-        <div class="problem-icon">&#128247;</div>
-        <div>
-          <div class="problem-card-title">Stolen Photos</div>
-          <div class="problem-card-body">Scraped from Google Maps or other listings to make a distressed property look premium. The photos never match what you find on-site.</div>
-        </div>
-      </div>
-      <div class="problem-card fade-up d3">
-        <div class="problem-icon">&#128203;</div>
-        <div>
-          <div class="problem-card-title">Forged Documents</div>
-          <div class="problem-card-body">Fake C of O, altered Deeds of Assignment, survey plans for demolished buildings. The paper trail is worthless without independent verification.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- HOW IT WORKS -->
-<section class="how" id="how-it-works">
-  <div class="container">
-    <div class="section-header">
-      <div class="section-label fade-up">How Est8Go Works</div>
-      <h2 class="section-title fade-up d1">Four steps to a fully verified listing</h2>
-      <p class="section-sub fade-up d2">From raw listing to Emerald-grade trust in one seamless workflow. No technical expertise required.</p>
-    </div>
-    <div class="steps">
-      <div class="step fade-up d1">
-        <div class="step-left">
-          <div class="step-num" style="background:#4F46E5">1</div>
-          <div class="step-line"></div>
-        </div>
-        <div class="step-content">
-          <div class="step-content-inner">
-            <div class="step-icon">&#127968;</div>
-            <div class="step-title">List Your Property</div>
-            <div class="step-desc">Add your listing with title, price, photos, and description through your WhatsApp-connected dashboard in minutes.</div>
+          <!-- Floating badges -->
+          <div class="float-badge float-1">
+            📄 Doc Verified
+          </div>
+          <div class="float-badge float-2">
+            👥 3 Witnesses
+          </div>
+          <div class="float-badge float-3">
+            🏅 Emerald Grade
           </div>
         </div>
-      </div>
-      <div class="step fade-up d2">
-        <div class="step-left">
-          <div class="step-num" style="background:#4F46E5">2</div>
-          <div class="step-line"></div>
-        </div>
-        <div class="step-content">
-          <div class="step-content-inner">
-            <div class="step-icon">&#128205;</div>
-            <div class="step-title">GPS Verify On-Site</div>
-            <div class="step-desc">Capture GPS coordinates at the property. We verify your photos were taken at that exact location — not downloaded from the internet.</div>
+
+        <!-- MOBILE SERVICE SHOWCASE -->
+        <div class="hero-mobile-showcase">
+          <div class="showcase-label">
+            What Est8Go does
+          </div>
+
+          <div class="showcase-scroll"
+               id="showcaseScroll">
+
+            <!-- Card 1: WhatsApp Engine -->
+            <div class="showcase-card active-card">
+              <div class="showcase-card-icon"
+                   style="background:rgba(37,211,102,0.12)">
+                💬
+              </div>
+              <div class="showcase-anim">
+                <div class="chat-anim">
+                  <div class="chat-bubble buyer">
+                    I want land in Maitama 50M
+                  </div>
+                  <div class="chat-bubble kora">
+                    Found 2 verified matches ✓
+                  </div>
+                </div>
+              </div>
+              <div class="showcase-card-title">
+                WhatsApp Sales Engine
+              </div>
+              <div class="showcase-card-desc">
+                Kora qualifies leads and books
+                inspections 24/7 on WhatsApp.
+              </div>
+            </div>
+
+            <!-- Card 2: GPS -->
+            <div class="showcase-card">
+              <div class="showcase-card-icon"
+                   style="background:rgba(16,185,129,0.12)">
+                📍
+              </div>
+              <div class="showcase-anim">
+                <div class="gps-anim">
+                  <div class="gps-pin">📍</div>
+                  <div class="gps-pulse"></div>
+                </div>
+              </div>
+              <div class="showcase-card-title">
+                GPS Verification
+              </div>
+              <div class="showcase-card-desc">
+                Exact coordinates captured on-site.
+                Photos proven real, not stolen.
+              </div>
+            </div>
+
+            <!-- Card 3: Trust Score -->
+            <div class="showcase-card">
+              <div class="showcase-card-icon"
+                   style="background:rgba(79,70,229,0.12)">
+                🛡️
+              </div>
+              <div class="showcase-anim">
+                <div class="ring-anim-container">
+                  <svg class="ring-anim-svg"
+                       viewBox="0 0 70 70">
+                    <circle cx="35" cy="35" r="28"
+                            fill="none"
+                            stroke="rgba(255,255,255,0.06)"
+                            stroke-width="7"/>
+                    <circle cx="35" cy="35" r="28"
+                            fill="none"
+                            stroke="#10B981"
+                            stroke-width="7"
+                            stroke-dasharray="0 176"
+                            stroke-linecap="round"
+                            id="mobileRing"
+                            style="transition: stroke-dasharray 1.5s ease"/>
+                  </svg>
+                  <div class="ring-anim-num"
+                       id="ringNum">0</div>
+                </div>
+              </div>
+              <div class="showcase-card-title">
+                Trust Score System
+              </div>
+              <div class="showcase-card-desc">
+                100-point score. GPS + AI +
+                Documents + Witnesses.
+              </div>
+            </div>
+
+            <!-- Card 4: Certificate -->
+            <div class="showcase-card">
+              <div class="showcase-card-icon"
+                   style="background:rgba(245,158,11,0.12)">
+                🏅
+              </div>
+              <div class="showcase-anim">
+                <div class="cert-anim">
+                  <div class="cert-header">
+                    EST8GO TRUST CERTIFICATE
+                  </div>
+                  <div class="cert-score">87/100</div>
+                  <div class="cert-seal">
+                    ✓ Emerald Grade
+                  </div>
+                </div>
+              </div>
+              <div class="showcase-card-title">
+                Trust Certificate
+              </div>
+              <div class="showcase-card-desc">
+                Downloadable PDF proof for
+                diaspora buyers before wiring funds.
+              </div>
+            </div>
+
+            <!-- Card 5: Embed -->
+            <div class="showcase-card">
+              <div class="showcase-card-icon"
+                   style="background:rgba(99,102,241,0.12)">
+                🌐
+              </div>
+              <div class="showcase-anim"
+                   style="padding:8px">
+                <div style="background:#0D1117;
+                            border-radius:8px;
+                            padding:8px;
+                            font-family:monospace;
+                            font-size:9px;
+                            color:#79B8FF;
+                            width:100%">
+                  &lt;script<br/>
+                  &nbsp;data-tenant=<span
+                    style="color:#9ECBFF">
+                    "agency"
+                  </span><br/>
+                  &gt;&lt;/script&gt;
+                </div>
+              </div>
+              <div class="showcase-card-title">
+                Website Embed Widget
+              </div>
+              <div class="showcase-card-desc">
+                One script tag. Live verified
+                listings on any website.
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Dots -->
+          <div class="showcase-dots"
+               id="showcaseDots">
+            <div class="showcase-dot active"
+                 onclick="scrollToCard(0)"></div>
+            <div class="showcase-dot"
+                 onclick="scrollToCard(1)"></div>
+            <div class="showcase-dot"
+                 onclick="scrollToCard(2)"></div>
+            <div class="showcase-dot"
+                 onclick="scrollToCard(3)"></div>
+            <div class="showcase-dot"
+                 onclick="scrollToCard(4)"></div>
           </div>
         </div>
+
       </div>
-      <div class="step fade-up d3">
-        <div class="step-left">
-          <div class="step-num" style="background:#4F46E5">3</div>
-          <div class="step-line"></div>
-        </div>
-        <div class="step-content">
-          <div class="step-content-inner">
-            <div class="step-icon">&#128269;</div>
-            <div class="step-title">AI Audits Your Photos</div>
-            <div class="step-desc">Our computer vision system checks for stolen images, CGI renders, and confirms every photo shows a real, physical property.</div>
-          </div>
-        </div>
-      </div>
-      <div class="step step-last fade-up d4">
-        <div class="step-left">
-          <div class="step-num" style="background:#10B981">4</div>
-          <div class="step-line"></div>
-        </div>
-        <div class="step-content">
-          <div class="step-content-inner">
-            <div class="step-icon">&#10003;</div>
-            <div class="step-title">Buyers Trust Your Listing</div>
-            <div class="step-desc">Your listing earns a verified trust score. Serious investors and diaspora buyers prioritise listings they can independently verify.</div>
-          </div>
-        </div>
-      </div>
+      <!-- end hero-visual -->
+
     </div>
   </div>
 </section>
 
+<!-- STAGE 2 GOES HERE -->
+<!-- STAGE 3 GOES HERE -->
+<!-- STAGE 4 GOES HERE -->
 
-<!-- TRUST SCORE -->
-<section class="trust" id="trust-score">
-  <div class="container">
-    <div class="section-label fade-up">The Trust Architecture</div>
-    <h2 class="section-title fade-up d1">100 points.<br/>No guesswork.</h2>
-    <p class="section-sub fade-up d2">Every listing is scored across four independent pillars. Buyers see exactly how trustworthy a property is — and why.</p>
-
-    <div class="trust-ring-large fade-up" id="trustRingWrap">
-      <svg class="trust-ring-svg" viewBox="0 0 160 160" aria-hidden="true">
-        <circle cx="80" cy="80" r="68" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="12"/>
-        <circle cx="80" cy="80" r="68" fill="none" stroke="#10B981" stroke-width="12"
-          stroke-dasharray="0 427" stroke-linecap="round" id="trustRingArc"
-          style="transition:stroke-dasharray 1.5s cubic-bezier(.4,0,.2,1)"/>
-      </svg>
-      <div class="trust-ring-text">
-        <span class="trust-ring-number">87</span>
-        <span class="trust-ring-label">Trust Score</span>
-        <div class="trust-grade-badge">Emerald</div>
-      </div>
-    </div>
-
-    <div class="pillars fade-up" id="pillarsEl">
-      <div class="pillar">
-        <div class="pillar-icon">&#128205;</div>
-        <div class="pillar-info">
-          <div class="pillar-header"><span class="pillar-name">GPS Verification</span><span class="pillar-pts">30 pts</span></div>
-          <div class="pillar-bar-bg"><div class="pillar-bar-fill" data-width="100" style="background:#10B981"></div></div>
-        </div>
-      </div>
-      <div class="pillar">
-        <div class="pillar-icon">&#128269;</div>
-        <div class="pillar-info">
-          <div class="pillar-header"><span class="pillar-name">AI Photo Audit</span><span class="pillar-pts">20 pts</span></div>
-          <div class="pillar-bar-bg"><div class="pillar-bar-fill" data-width="67" style="background:#4F46E5"></div></div>
-        </div>
-      </div>
-      <div class="pillar">
-        <div class="pillar-icon">&#128196;</div>
-        <div class="pillar-info">
-          <div class="pillar-header"><span class="pillar-name">Document Verification</span><span class="pillar-pts">40 pts</span></div>
-          <div class="pillar-bar-bg"><div class="pillar-bar-fill" data-width="75" style="background:#F59E0B"></div></div>
-        </div>
-      </div>
-      <div class="pillar">
-        <div class="pillar-icon">&#128101;</div>
-        <div class="pillar-info">
-          <div class="pillar-header"><span class="pillar-name">Witness Confirmations</span><span class="pillar-pts">10 pts</span></div>
-          <div class="pillar-bar-bg"><div class="pillar-bar-fill" data-width="70" style="background:#4F46E5"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="grades fade-up">
-      <div class="grade-card">
-        <span class="grade-pill" style="background:rgba(16,185,129,.12);color:#10B981">Emerald</span>
-        <div class="grade-desc">GPS + AI + full document suite.</div>
-        <div class="grade-range">85–100 pts</div>
-      </div>
-      <div class="grade-card">
-        <span class="grade-pill" style="background:rgba(245,158,11,.12);color:#F59E0B">Gold</span>
-        <div class="grade-desc">GPS verified with key documents.</div>
-        <div class="grade-range">75–84 pts</div>
-      </div>
-      <div class="grade-card">
-        <span class="grade-pill" style="background:rgba(148,163,184,.12);color:#94A3B8">Silver</span>
-        <div class="grade-desc">GPS verified, partial docs.</div>
-        <div class="grade-range">50–74 pts</div>
-      </div>
-      <div class="grade-card">
-        <span class="grade-pill" style="background:rgba(205,127,50,.12);color:#CD7F32">Bronze</span>
-        <div class="grade-desc">Basic info verified.</div>
-        <div class="grade-range">0–49 pts</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- EMBED -->
-<section class="embed" id="embed">
-  <div class="container">
-    <div class="section-label fade-up">Embed Widget</div>
-    <h2 class="section-title fade-up d1">Add to your website<br/>in 60 seconds</h2>
-    <p class="section-sub fade-up d2">One script tag. Your verified listings appear live on any website — WordPress, Wix, Squarespace, or plain HTML.</p>
-
-    <div class="embed-steps fade-up">
-      <div class="embed-step">
-        <div class="embed-step-num">1</div>
-        <div>
-          <div class="embed-step-title">Sign up for Est8Go</div>
-          <div class="embed-step-desc">Verify your listings through your WhatsApp-connected dashboard.</div>
-        </div>
-      </div>
-      <div class="embed-step">
-        <div class="embed-step-num">2</div>
-        <div>
-          <div class="embed-step-title">Copy the snippet below</div>
-          <div class="embed-step-desc">Paste it anywhere on your website — property page, homepage, or sidebar.</div>
-        </div>
-      </div>
-      <div class="embed-step">
-        <div class="embed-step-num">3</div>
-        <div>
-          <div class="embed-step-title">Your listings appear live</div>
-          <div class="embed-step-desc">Auto-refreshed every 30 minutes with trust scores and WhatsApp buttons.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="code-block fade-up">
-      <div class="code-block-header">
-        <span class="code-lang">HTML</span>
-        <button class="copy-btn" id="copyBtn" onclick="copySnippet()">&#128203; Copy</button>
-      </div>
-      <code><span class="code-tag">&lt;script</span>
-  <span class="code-attr">src=</span><span class="code-val">"https://est8go-api.onrender.com/static/embed.js"</span>
-  <span class="code-attr">data-tenant=</span><span class="code-val">"your-agency-slug"</span>
-  <span class="code-attr">data-theme=</span><span class="code-val">"dark"</span>
-  <span class="code-attr">data-limit=</span><span class="code-val">"6"</span><span class="code-tag">&gt;&lt;/script&gt;</span></code>
-    </div>
-
-    <p style="font-size:12px;color:var(--muted);margin:-8px 0 20px">
-      Customise with <code style="background:var(--surface2);padding:1px 5px;border-radius:4px;font-size:11px;color:var(--text2)">data-columns</code>,
-      <code style="background:var(--surface2);padding:1px 5px;border-radius:4px;font-size:11px;color:var(--text2)">data-accent</code>,
-      <code style="background:var(--surface2);padding:1px 5px;border-radius:4px;font-size:11px;color:var(--text2)">data-radius</code> and more.
-      <a href="https://est8go-api.onrender.com/public/embed" target="_blank" rel="noopener"
-         style="color:var(--indigo);font-weight:600">Full docs &rarr;</a>
-    </p>
-
-    <div class="embed-live fade-up">
-      <div class="embed-live-header">
-        <div class="live-dot"></div>
-        <span class="live-label">Live — Bravieshomz Limited</span>
-      </div>
-      <div class="embed-live-body">
-        <script src="https://est8go-api.onrender.com/static/embed.js"
-          data-tenant="bravieshomz-limited"
-          data-theme="auto"
-          data-limit="3"
-          data-columns="1"
-          data-show-branding="false">
-        </script>
-      </div>
-    </div>
-    <p style="text-align:center;font-size:11px;color:var(--muted);margin-top:8px">Live listings from a real Est8Go-verified agency</p>
-  </div>
-</section>
-
-
-<!-- PRICING -->
-<section class="pricing" id="pricing">
-  <div class="container">
-    <div class="section-label fade-up">Pricing</div>
-    <h2 class="section-title fade-up d1">Start free.<br/>Scale as you grow.</h2>
-    <p class="section-sub fade-up d2">Every plan includes the full trust verification system. Upgrade when you need more listings, credits, or team access.</p>
-
-    <div class="pricing-cards fade-up">
-      <div class="pricing-card">
-        <div class="pricing-plan">Pilot</div>
-        <div class="pricing-price">Free</div>
-        <div class="pricing-desc">Forever. No card needed.</div>
-        <ul class="pricing-features">
-          <li>Up to 5 listings</li>
-          <li>GPS verification</li>
-          <li>10 welcome credits</li>
-          <li>WhatsApp sales engine</li>
-        </ul>
-        <a href="https://wa.me/234XXXXXXXXXX?text=Hi%2C%20I%20would%20like%20to%20request%20access%20to%20Est8Go%20for%20my%20real%20estate%20agency.%20Business%20name%3A%20"
-           target="_blank" rel="noopener" class="pricing-btn pricing-btn-ghost">Request Access</a>
-      </div>
-
-      <div class="pricing-card">
-        <div class="pricing-plan">Access</div>
-        <div class="pricing-price">&#8358;1,500<span>/mo</span></div>
-        <div class="pricing-desc">For individual agents</div>
-        <ul class="pricing-features">
-          <li>Up to 20 listings</li>
-          <li>AI photo audits</li>
-          <li>Document verification</li>
-          <li>Embed widget (basic)</li>
-        </ul>
-        <a href="https://wa.me/234XXXXXXXXXX?text=Hi%2C%20I%20would%20like%20to%20request%20access%20to%20Est8Go%20for%20my%20real%20estate%20agency.%20Business%20name%3A%20"
-           target="_blank" rel="noopener" class="pricing-btn pricing-btn-ghost">Request Access</a>
-      </div>
-
-      <div class="pricing-card featured">
-        <div class="pricing-popular">Most Popular</div>
-        <div class="pricing-plan">Core</div>
-        <div class="pricing-price">&#8358;2,500<span>/mo</span></div>
-        <div class="pricing-desc">For small agencies</div>
-        <ul class="pricing-features">
-          <li>Up to 50 listings</li>
-          <li>Full trust architecture</li>
-          <li>Reel generation</li>
-          <li>Recovery engine</li>
-          <li>2 staff accounts</li>
-        </ul>
-        <a href="https://wa.me/234XXXXXXXXXX?text=Hi%2C%20I%20would%20like%20to%20request%20access%20to%20Est8Go%20for%20my%20real%20estate%20agency.%20Business%20name%3A%20"
-           target="_blank" rel="noopener" class="pricing-btn pricing-btn-primary">Request Access</a>
-      </div>
-
-      <div class="pricing-card">
-        <div class="pricing-plan">Growth</div>
-        <div class="pricing-price">&#8358;6,000<span>/mo</span></div>
-        <div class="pricing-desc">For established agencies</div>
-        <ul class="pricing-features">
-          <li>Unlimited listings</li>
-          <li>Branded embed widget</li>
-          <li>Trust certificates</li>
-          <li>5 staff accounts</li>
-          <li>Priority support</li>
-        </ul>
-        <a href="https://wa.me/234XXXXXXXXXX?text=Hi%2C%20I%20would%20like%20to%20request%20access%20to%20Est8Go%20for%20my%20real%20estate%20agency.%20Business%20name%3A%20"
-           target="_blank" rel="noopener" class="pricing-btn pricing-btn-ghost">Request Access</a>
-      </div>
-
-      <!-- TODO: Replace 234XXXXXXXXXX with actual WhatsApp business number -->
-      <div class="pricing-card enterprise-card">
-        <div class="pricing-plan">Enterprise</div>
-        <div class="pricing-price">Custom</div>
-        <div class="pricing-desc">For large developers</div>
-        <ul class="pricing-features">
-          <li>Unlimited everything</li>
-          <li>White-label option</li>
-          <li>API access</li>
-          <li>Dedicated support</li>
-          <li>SLA guarantee</li>
-        </ul>
-        <a href="https://wa.me/234XXXXXXXXXX?text=Hi%2C%20I%20would%20like%20to%20request%20access%20to%20Est8Go%20for%20my%20real%20estate%20agency.%20Business%20name%3A%20"
-           target="_blank" rel="noopener" class="pricing-btn pricing-btn-ghost">Contact Us</a>
-      </div>
-    </div>
-
-    <div class="pricing-invite-note fade-up">
-      &#128274; Currently invite-only. We review each application personally to maintain platform quality.
-    </div>
-  </div>
-</section>
-
-
-<!-- SOCIAL PROOF -->
-<section class="proof" id="stats">
-  <div class="container">
-    <div class="section-label fade-up">Built on Results</div>
-    <h2 class="section-title fade-up d1">Trusted by real estate professionals across Nigeria</h2>
-
-    <div class="proof-stats fade-up" id="proofStatsEl">
-      <div class="proof-stat-card">
-        <div class="proof-stat-number" id="stat-listings">25<span class="plus">+</span></div>
-        <div class="proof-stat-label">Properties Verified</div>
-      </div>
-      <div class="proof-stat-card">
-        <div class="proof-stat-number" id="stat-agents">12<span class="plus">+</span></div>
-        <div class="proof-stat-label">Trusted Agents</div>
-      </div>
-      <div class="proof-stat-card full-width">
-        <div class="proof-stat-number" id="stat-buyers">340<span class="plus">+</span></div>
-        <div class="proof-stat-label">Diaspora Buyers Served</div>
-      </div>
-    </div>
-
-    <div class="proof-cards">
-      <div class="proof-card fade-up d1">
-        <div class="proof-card-icon">&#127757;</div>
-        <div>
-          <div class="proof-card-title">Built for the Nigerian Market</div>
-          <div class="proof-card-body">Designed around Abuja and Lagos property dynamics, with Pidgin-aware conversation support and local fraud patterns built into the trust model.</div>
-        </div>
-      </div>
-      <div class="proof-card fade-up d2">
-        <div class="proof-card-icon">&#128242;</div>
-        <div>
-          <div class="proof-card-title">WhatsApp Native</div>
-          <div class="proof-card-body">Your buyers are already on WhatsApp. Est8Go's sales engine meets them there — qualifying leads, booking inspections, no app download required.</div>
-        </div>
-      </div>
-      <div class="proof-card fade-up d3">
-        <div class="proof-card-icon">&#128737;</div>
-        <div>
-          <div class="proof-card-title">Diaspora-Ready</div>
-          <div class="proof-card-body">UK, US, and Canadian buyers need independent verified proof before wiring funds. Est8Go gives them GPS coordinates, AI audit reports, and document records.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- FINAL CTA -->
-<section class="final-cta" id="get-started">
-  <div class="container" style="position:relative;z-index:1">
-    <div class="section-label" style="color:var(--em);margin-bottom:16px;text-align:center">Get Started Today</div>
-    <h2 class="fade-up">Start verifying your<br/>listings today</h2>
-    <p class="fade-up d1">Currently invite-only. We review each application personally. Apply in 60 seconds via WhatsApp.</p>
-
-    <div class="fade-up d2">
-      <!-- TODO: Replace 234XXXXXXXXXX with actual WhatsApp business number -->
-      <a class="btn-wa"
-         href="https://wa.me/234XXXXXXXXXX?text=Hi%2C%20I%20would%20like%20to%20request%20access%20to%20Est8Go%20for%20my%20real%20estate%20agency.%20Business%20name%3A%20"
-         target="_blank" rel="noopener">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path d="M10 0C4.477 0 0 4.477 0 10c0 1.76.46 3.41 1.27 4.85L0 20l5.28-1.25A9.96 9.96 0 0010 20c5.523 0 10-4.477 10-10S15.523 0 10 0zm5.32 14.27c-.23.63-1.34 1.22-1.84 1.26-.5.04-.51.38-3.24-.73-2.73-1.11-4.37-3.93-4.5-4.11-.13-.18-1.07-1.46-1.07-2.79s.68-1.97.93-2.24c.25-.27.54-.33.72-.33.18 0 .36.002.52.01.17.008.39-.065.61.47.23.54.77 1.88.84 2.01.07.13.11.29.02.46-.09.17-.13.27-.26.42-.13.15-.27.33-.39.45-.13.13-.26.27-.11.52.15.25.66 1.09 1.41 1.77.97.87 1.78 1.14 2.03 1.27.25.13.4.11.55-.07.15-.18.63-.73.8-.98.17-.25.34-.21.57-.13.23.08 1.47.7 1.72.82.25.13.42.19.48.29.06.11.06.63-.17 1.26z"/>
-        </svg>
-        Request Access on WhatsApp
-      </a>
-      <a class="btn-secondary"
-         href="https://est8go-api.onrender.com/public/bravieshomz-limited"
-         target="_blank" rel="noopener">See Live Demo</a>
-    </div>
-
-    <div class="final-trust-row fade-up d3">
-      <span class="final-trust-item"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="10,3 5,8.5 2,5.5"/></svg> Free to start</span>
-      <span class="final-trust-item"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="10,3 5,8.5 2,5.5"/></svg> No credit card</span>
-      <span class="final-trust-item"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="10,3 5,8.5 2,5.5"/></svg> Setup in 5 minutes</span>
-      <span class="final-trust-item"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="10,3 5,8.5 2,5.5"/></svg> Cancel anytime</span>
-    </div>
-  </div>
-</section>
-
-
-<!-- FOOTER -->
-<footer>
-  <div class="container">
-    <div class="footer-inner">
-      <div>
-        <div class="footer-brand">
-          <div class="footer-brand-icon">E8</div>
-          <span class="footer-brand-name">Est8Go</span>
-        </div>
-        <div class="footer-copy">&#169; 2026 Est8Go Service Limited. All rights reserved.</div>
-      </div>
-      <div class="footer-links">
-        <a href="https://est8go-api.onrender.com/public/bravieshomz-limited" target="_blank" rel="noopener">Live Demo</a>
-        <a href="https://est8go-api.onrender.com/public/embed" target="_blank" rel="noopener">Embed Docs</a>
-        <a href="#pricing">Pricing</a>
-        <!-- TODO: Replace 234XXXXXXXXXX with actual WhatsApp business number -->
-        <a href="https://wa.me/234XXXXXXXXXX" target="_blank" rel="noopener">Contact</a>
-      </div>
-    </div>
-  </div>
-</footer>
-
+<!-- STICKY MOBILE BAR -->
+<div class="sticky-bar hidden" id="stickyBar">
+  <a class="btn btn-primary"
+     href="https://wa.me/234XXXXXXXXXX?text=Hi%2C%20I%20would%20like%20to%20request%20access%20to%20Est8Go.%20Agency%3A%20">
+    Request Access →
+  </a>
+  <a class="btn btn-ghost"
+     href="https://est8go-api.onrender.com/public/bravieshomz-limited"
+     target="_blank">
+    Live Demo
+  </a>
+</div>
 
 <script>
-  /* Theme */
-  function toggleTheme() {
-    var c = document.documentElement.getAttribute('data-theme');
-    var n = c === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', n);
-    localStorage.setItem('est8go-theme', n);
-    document.getElementById('themeBtn').textContent = n === 'dark' ? '🌙' : '☀️';
-  }
+// Theme
+function toggleTheme() {
+  const html = document.documentElement;
+  const cur = html.getAttribute('data-theme');
+  const next = cur === 'light' ? 'dark' : 'light';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('est8go-theme', next);
   document.getElementById('themeBtn').textContent =
-    document.documentElement.getAttribute('data-theme') === 'dark' ? '🌙' : '☀️';
+    next === 'light' ? '☀️' : '🌙';
+}
 
-  /* Fade-up observer */
-  if ('IntersectionObserver' in window) {
-    var io = new IntersectionObserver(function(entries) {
-      entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('visible'); });
-    }, { threshold: 0.1 });
-    document.querySelectorAll('.fade-up').forEach(function(el) { io.observe(el); });
-    /* Hero fires immediately */
-    document.querySelectorAll('.hero .fade-up').forEach(function(el) { el.classList.add('visible'); });
-  } else {
-    document.querySelectorAll('.fade-up').forEach(function(el) { el.classList.add('visible'); });
+document.addEventListener('DOMContentLoaded', () => {
+  const t = document.documentElement
+    .getAttribute('data-theme');
+  const btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent =
+    t === 'light' ? '☀️' : '🌙';
+
+  // Show "Live Demo" in nav on desktop
+  const demoBtn = document.getElementById('navDemoBtn');
+  if (window.innerWidth >= 768 && demoBtn) {
+    demoBtn.style.display = 'inline-flex';
   }
+});
 
-  /* Pillar bars */
-  var pillarsOk = false;
-  var pillarsEl = document.getElementById('pillarsEl');
-  if (pillarsEl && 'IntersectionObserver' in window) {
-    new IntersectionObserver(function(entries) {
-      entries.forEach(function(e) {
-        if (e.isIntersecting && !pillarsOk) {
-          pillarsOk = true;
-          document.querySelectorAll('.pillar-bar-fill').forEach(function(b) {
-            setTimeout(function() { b.style.width = b.getAttribute('data-width') + '%'; }, 200);
-          });
-        }
-      });
-    }, { threshold: 0.3 }).observe(pillarsEl);
+// Sticky bar
+const hero = document.querySelector('.hero');
+const stickyBar = document.getElementById('stickyBar');
+if (hero && stickyBar) {
+  const obs = new IntersectionObserver(
+    ([entry]) => {
+      if (!entry.isIntersecting) {
+        stickyBar.classList.remove('hidden');
+        stickyBar.classList.add('visible-bar');
+      } else {
+        stickyBar.classList.remove('visible-bar');
+        stickyBar.classList.add('hidden');
+      }
+    },
+    { threshold: 0 }
+  );
+  obs.observe(hero);
+}
+
+// Scroll animations
+const observer = new IntersectionObserver(
+  (entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+      }
+    });
+  },
+  { threshold: 0.12 }
+);
+
+document.querySelectorAll(
+  '.fade-up, .fade-left, .fade-right'
+).forEach(el => observer.observe(el));
+
+// Showcase scroll dots
+function scrollToCard(index) {
+  const scroll = document.getElementById(
+    'showcaseScroll'
+  );
+  if (!scroll) return;
+  const cards = scroll.querySelectorAll('.showcase-card');
+  if (cards[index]) {
+    cards[index].scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'start'
+    });
   }
+}
 
-  /* Trust ring */
-  var ringOk = false;
-  var ringWrap = document.getElementById('trustRingWrap');
-  if (ringWrap && 'IntersectionObserver' in window) {
-    new IntersectionObserver(function(entries) {
-      entries.forEach(function(e) {
-        if (e.isIntersecting && !ringOk) {
-          ringOk = true;
-          var arc = document.getElementById('trustRingArc');
-          if (arc) arc.style.strokeDasharray = (87 / 100 * 427) + ' 427';
-        }
-      });
-    }, { threshold: 0.3 }).observe(ringWrap);
-  }
+// Update dots on scroll
+const showcaseScroll = document.getElementById(
+  'showcaseScroll'
+);
+if (showcaseScroll) {
+  showcaseScroll.addEventListener('scroll', () => {
+    const cards = showcaseScroll.querySelectorAll(
+      '.showcase-card'
+    );
+    const dots = document.querySelectorAll('.showcase-dot');
+    const scrollLeft = showcaseScroll.scrollLeft;
+    const cardWidth = cards[0]?.offsetWidth + 12 || 252;
+    const activeIndex = Math.round(scrollLeft / cardWidth);
 
-  /* Counters */
-  var ctrOk = false;
-  var proofEl = document.getElementById('proofStatsEl');
-  if (proofEl && 'IntersectionObserver' in window) {
-    new IntersectionObserver(function(entries) {
-      entries.forEach(function(e) {
-        if (e.isIntersecting && !ctrOk) {
-          ctrOk = true;
-          [{id:'stat-listings',end:25},{id:'stat-agents',end:12},{id:'stat-buyers',end:340}].forEach(function(t) {
-            var el = document.getElementById(t.id);
-            if (!el) return;
-            var s = null;
-            (function tick(ts) {
-              if (!s) s = ts;
-              var p = Math.min((ts - s) / 1400, 1);
-              var v = Math.floor((1 - Math.pow(1 - p, 3)) * t.end);
-              el.innerHTML = v + '<span class="plus">+</span>';
-              if (p < 1) requestAnimationFrame(tick);
-              else el.innerHTML = t.end + '<span class="plus">+</span>';
-            })(performance.now());
-          });
-        }
-      });
-    }, { threshold: 0.3 }).observe(proofEl);
-  }
+    cards.forEach((c, i) => {
+      c.classList.toggle('active-card', i === activeIndex);
+    });
+    dots.forEach((d, i) => {
+      d.classList.toggle('active', i === activeIndex);
+    });
 
-  /* Copy snippet */
-  function copySnippet() {
-    var text = '<script src="https://est8go-api.onrender.com/static/embed.js"\n  data-tenant="your-agency-slug"\n  data-theme="dark"\n  data-limit="6"><\/script>';
-    var btn = document.getElementById('copyBtn');
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(function() {
-        btn.textContent = '✓ Copied!';
-        setTimeout(function() { btn.textContent = '📋 Copy'; }, 2200);
-      });
-    } else {
-      var ta = document.createElement('textarea');
-      ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
-      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-      btn.textContent = '✓ Copied!';
-      setTimeout(function() { btn.textContent = '📋 Copy'; }, 2200);
+    // Trigger ring animation when trust card visible
+    if (activeIndex === 2) {
+      animateMobileRing();
     }
-  }
+  });
+}
+
+// Mobile ring animation
+let ringAnimated = false;
+function animateMobileRing() {
+  if (ringAnimated) return;
+  ringAnimated = true;
+  const ring = document.getElementById('mobileRing');
+  const num = document.getElementById('ringNum');
+  if (!ring || !num) return;
+
+  // Animate ring
+  setTimeout(() => {
+    ring.style.strokeDasharray = '153 176'; // 87%
+  }, 100);
+
+  // Animate number
+  let count = 0;
+  const target = 87;
+  const interval = setInterval(() => {
+    count += 3;
+    if (count >= target) {
+      count = target;
+      clearInterval(interval);
+    }
+    if (num) num.textContent = count;
+  }, 20);
+}
+
+// Auto-advance showcase cards
+let showcaseIndex = 0;
+const showcaseInterval = setInterval(() => {
+  showcaseIndex = (showcaseIndex + 1) % 5;
+  scrollToCard(showcaseIndex);
+}, 4000);
+
+// Pause on touch
+if (showcaseScroll) {
+  showcaseScroll.addEventListener('touchstart', () => {
+    clearInterval(showcaseInterval);
+  }, { passive: true });
+}
+
+// Nav active links
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-link');
+
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    const sTop = s.offsetTop - 100;
+    if (window.scrollY >= sTop) current = s.id;
+  });
+  navLinks.forEach(link => {
+    link.classList.toggle(
+      'active',
+      link.getAttribute('href') === '#' + current
+    );
+  });
+}, { passive: true });
 </script>
+
 </body>
 </html>
