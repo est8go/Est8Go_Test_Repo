@@ -222,18 +222,27 @@ Stages 1–4 complete. Final corrections before deploy.
    - Right column aligns with header
 
 2. Replace 234XXXXXXXXXX with real WA number
-   throughout landing/index.html
-   (search: 234XXXXXXXXXX — appears ~8 times)
+   in landing/index.html
+   Search: XXXXXXXXXX (appears ~8 times)
 
-3. api.est8go.com DNS — add CNAME in Netlify DNS:
+3. api.est8go.com DNS — add CNAME in Netlify:
+   Domain management → DNS settings → Add record:
+   Type: CNAME
    Name: api
    Value: est8go-api.onrender.com
-   Then update BASE_URL on Render to https://api.est8go.com
+   Then update BASE_URL on Render to:
+   https://api.est8go.com
 
-4. Deploy updated landing page to Netlify
+4. Deploy landing page to Netlify after WA number updated
    (drag and drop landing/ folder to Netlify dashboard)
    - Test on mobile and desktop
    - Verify all animations and links work
+
+5. Speak to Bravieshomz management
+   for real listings approval
+
+6. Set admin phone numbers in Super Admin
+   → Staff & Phones tab
 
 ### 1. Est8Go Landing Page ✅ STAGES 1–3 COMPLETE
 URL: est8go.com (hosted on Namecheap or Netlify free)
