@@ -92,7 +92,11 @@
     body::before {
       content: '';
       position: fixed;
-      inset: 0;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      max-width: 100vw;
       background:
         radial-gradient(ellipse 80% 60% at 110% -10%,
           rgba(79, 70, 229, 0.12) 0%, transparent 60%),
@@ -103,6 +107,7 @@
       animation: meshMove 12s ease-in-out infinite alternate;
       pointer-events: none;
       z-index: 0;
+      overflow: hidden;
     }
 
     @keyframes meshMove {
@@ -439,7 +444,10 @@
         display: none !important;
       }
       .nav-theme {
-        margin-left: auto;
+        margin-left: 0;
+      }
+      .nav-inner {
+        gap: 12px;
       }
     }
 
@@ -921,6 +929,44 @@
       }
     }
 
+    /* Hide floating badges on mobile — they overflow viewport */
+    @media (max-width: 899px) {
+      .float-1,
+      .float-2,
+      .float-3 {
+        display: none !important;
+      }
+    }
+
+    /* Constrain all sections to viewport width */
+    .section,
+    .hero,
+    .marquee-bar,
+    .intro-section,
+    .seal-section,
+    .services-section,
+    .how-section,
+    .trust-section,
+    .embed-section,
+    .testimonials-section,
+    .final-cta-section,
+    .footer {
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
+    /* Fix hero h1 on mobile */
+    @media (max-width: 767px) {
+      .hero h1 {
+        font-size: 36px !important;
+        word-break: break-word;
+        overflow-wrap: break-word;
+      }
+      .hero h1 .accent {
+        font-size: 36px !important;
+      }
+    }
+
     /* MOBILE: Horizontal service showcase */
     .hero-mobile-showcase {
       display: block;
@@ -1205,6 +1251,22 @@
       background: var(--indigo);
     }
 
+    /* Showcase card peek on mobile */
+    @media (max-width: 899px) {
+      .showcase-scroll {
+        padding-left: 20px;
+        padding-right: 20px;
+        scroll-padding-left: 20px;
+        overflow-x: auto;
+        overflow-y: visible;
+      }
+      .showcase-card {
+        width: calc(75vw - 20px) !important;
+        min-width: 200px;
+        max-width: 260px;
+      }
+    }
+
     /* ════════════════════════════════
      STICKY MOBILE BOTTOM BAR
   ════════════════════════════════ */
@@ -1238,8 +1300,9 @@
       .sticky-bar .btn {
         flex: 1;
         font-size: 12px !important;
-        padding: 10px 12px !important;
+        padding: 10px 14px !important;
         border-radius: 10px !important;
+        white-space: nowrap;
       }
     }
 
@@ -1256,7 +1319,22 @@
     /* Add bottom padding on mobile for sticky bar */
     @media (max-width: 767px) {
       body {
-        padding-bottom: 70px;
+        padding-bottom: 68px;
+      }
+    }
+
+    /* Tighter section spacing on mobile */
+    @media (max-width: 767px) {
+      .section {
+        padding: 56px 0;
+      }
+      .intro-section,
+      .seal-section,
+      .services-section,
+      .how-section,
+      .trust-section,
+      .testimonials-section {
+        padding: 56px 0;
       }
     }
 
@@ -1481,8 +1559,9 @@
 
     @media (max-width: 767px) {
       .story-counter {
-        font-size: 36px !important;
-        letter-spacing: -1px !important;
+        font-size: 40px !important;
+        letter-spacing: -2px !important;
+        word-break: break-word;
       }
     }
 
@@ -1585,6 +1664,32 @@
     .warn-tag {
       background: rgba(245, 158, 11, 0.10);
       color: var(--warn);
+    }
+
+    /* Story card peek on mobile */
+    @media (max-width: 767px) {
+      .story-cards {
+        padding-left: 20px;
+        padding-right: 20px;
+        scroll-padding-left: 20px;
+        margin-left: -20px;
+        margin-right: -20px;
+        width: calc(100% + 40px);
+        overflow-x: auto;
+        overflow-y: visible;
+      }
+      .story-card {
+        width: calc(85vw - 20px) !important;
+        min-width: 260px;
+        max-width: 320px;
+      }
+    }
+
+    @media (min-width: 500px) and (max-width: 767px) {
+      .story-card {
+        width: calc(60vw) !important;
+        max-width: 340px;
+      }
     }
 
     /* Story dots */
@@ -2364,14 +2469,26 @@
 
     @media (max-width: 767px) {
       .embed-section {
-        padding: 48px 0 !important;
+        padding-top: 56px;
+        padding-bottom: 40px;
       }
       .pricing-section {
-        padding: 48px 0 !important;
+        padding-top: 40px !important;
+        padding-bottom: 56px;
+      }
+    }
+
+    @media (max-width: 899px) {
+      .embed-preview-wrap {
+        width: 100%;
+        max-width: 100%;
       }
       .embed-preview-body {
-        max-height: 500px;
-        overflow: hidden;
+        padding: 12px;
+      }
+      .embed-right {
+        width: 100%;
+        max-width: 100%;
       }
     }
 
@@ -2659,65 +2776,74 @@
       background: var(--surface);
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
-      overflow: visible !important;
+      overflow: visible;
+      padding: 80px 0;
+    }
+
+    @media (min-width: 768px) {
+      .pricing-section {
+        padding: 100px 0;
+      }
+    }
+
+    .pricing-section .container {
+      overflow: visible;
     }
 
     .pricing-header {
       margin-bottom: 40px;
+      overflow: visible;
     }
 
     .pricing-scroll-wrap {
       position: relative;
+      padding-top: 32px;
+      margin-top: -8px;
+      overflow: visible;
       margin-bottom: 20px;
-      padding-top: 28px;
-      overflow: visible !important;
     }
 
-    @media (max-width: 899px) {
-      .pricing-scroll-wrap {
-        padding-top: 28px;
-        overflow: visible !important;
-      }
-      .pricing-cards {
-        padding-top: 4px;
-        overflow-x: auto !important;
-        overflow-y: visible !important;
-      }
-      .pricing-card {
-        width: calc(85vw) !important;
-        min-width: 280px;
-        max-width: 340px;
-      }
-    }
-
-    /* Mobile: horizontal scroll */
+    /* Mobile: horizontal scroll with edge-to-edge peek */
     .pricing-cards {
       display: flex;
       gap: 14px;
       overflow-x: auto;
+      overflow-y: visible;
       scroll-snap-type: x mandatory;
       scrollbar-width: none;
-      padding-bottom: 8px;
       -webkit-overflow-scrolling: touch;
+      padding-left: 20px;
+      padding-right: 20px;
+      padding-bottom: 12px;
+      padding-top: 4px;
+      scroll-padding-left: 20px;
+      margin-left: -20px;
+      margin-right: -20px;
+      width: calc(100% + 40px);
     }
 
     .pricing-cards::-webkit-scrollbar {
       display: none;
     }
 
-    /* Desktop: grid */
+    /* Desktop: proper grid */
     @media (min-width: 900px) {
       .pricing-cards {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
         overflow: visible;
+        padding: 0;
+        margin: 0;
+        width: 100%;
         gap: 16px;
       }
     }
 
     .pricing-card {
       flex-shrink: 0;
-      width: 260px;
+      width: calc(85vw - 20px);
+      min-width: 260px;
+      max-width: 320px;
       scroll-snap-align: start;
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -2730,9 +2856,18 @@
       transition: all 0.2s;
     }
 
+    @media (min-width: 500px) and (max-width: 899px) {
+      .pricing-card {
+        width: calc(60vw);
+        max-width: 340px;
+      }
+    }
+
     @media (min-width: 900px) {
       .pricing-card {
         width: 100%;
+        min-width: unset;
+        max-width: unset;
         flex-shrink: unset;
       }
 
@@ -2767,6 +2902,9 @@
         linear-gradient(#fff 0 0) content-box,
         linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor;
+      mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
       mask-composite: exclude;
       background-size: 200% 200%;
       animation: borderRotate 3s linear infinite;
@@ -2785,7 +2923,7 @@
 
     .pricing-popular-badge {
       position: absolute;
-      top: -12px;
+      top: -14px;
       left: 50%;
       transform: translateX(-50%);
       background: var(--indigo);
@@ -2793,10 +2931,11 @@
       font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.08em;
-      padding: 4px 14px;
+      padding: 5px 16px;
       border-radius: 99px;
       white-space: nowrap;
       box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+      z-index: 10;
     }
 
     .pricing-plan-name {
@@ -2994,16 +3133,29 @@
 
     @media (max-width: 640px) {
       .proof-stats-row {
-        flex-direction: column;
-        gap: 16px;
-        padding: 24px 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: var(--r-xl);
+        overflow: hidden;
+        padding: 0;
+      }
+      .proof-stat-item {
+        background: var(--surface);
+        padding: 20px 16px;
+        text-align: center;
+      }
+      .proof-stat-item:last-child {
+        grid-column: 1 / -1;
+        border-top: 1px solid var(--border);
       }
       .proof-stat-divider {
-        width: 100%;
-        height: 1px;
+        display: none;
       }
       .proof-stat-big {
-        font-size: 36px;
+        font-size: 32px;
       }
     }
 
@@ -5323,20 +5475,16 @@
       '.fade-up, .fade-left, .fade-right'
     ).forEach(el => observer.observe(el));
 
-    // Showcase scroll dots
+    // Showcase scroll — container-relative only, never scrolls page
     function scrollToCard(index) {
-      const scroll = document.getElementById(
-        'showcaseScroll'
-      );
+      const scroll = document.getElementById('showcaseScroll');
       if (!scroll) return;
       const cards = scroll.querySelectorAll('.showcase-card');
-      if (cards[index]) {
-        cards[index].scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'start'
-        });
-      }
+      if (!cards[index]) return;
+      scroll.scrollTo({
+        left: cards[index].offsetLeft - scroll.offsetLeft,
+        behavior: 'smooth'
+      });
     }
 
     // Update dots on scroll
@@ -5394,17 +5542,38 @@
       }, 20);
     }
 
-    // Auto-advance showcase cards
+    // Auto-advance — only when showcase is visible, starts after 2.5s settle
     let showcaseIndex = 0;
-    const showcaseInterval = setInterval(() => {
-      showcaseIndex = (showcaseIndex + 1) % 5;
-      scrollToCard(showcaseIndex);
-    }, 4000);
+    let showcaseTimer = null;
 
-    // Pause on touch
+    function startShowcaseAuto() {
+      if (showcaseTimer) return;
+      showcaseTimer = setInterval(() => {
+        const scroll = document.getElementById('showcaseScroll');
+        if (!scroll) return;
+        const rect = scroll.getBoundingClientRect();
+        const inView = rect.top < window.innerHeight && rect.bottom > 0;
+        if (!inView) return;
+        showcaseIndex = (showcaseIndex + 1) % 5;
+        scrollToCard(showcaseIndex);
+      }, 4000);
+    }
+
+    function stopShowcaseAuto() {
+      if (showcaseTimer) {
+        clearInterval(showcaseTimer);
+        showcaseTimer = null;
+      }
+    }
+
+    window.addEventListener('load', () => {
+      setTimeout(startShowcaseAuto, 2500);
+    });
+
     if (showcaseScroll) {
       showcaseScroll.addEventListener('touchstart', () => {
-        clearInterval(showcaseInterval);
+        stopShowcaseAuto();
+        setTimeout(startShowcaseAuto, 8000);
       }, { passive: true });
     }
 
@@ -5501,13 +5670,11 @@
       const scroll = document.getElementById('storyCards');
       if (!scroll) return;
       const cards = scroll.querySelectorAll('.story-card');
-      if (cards[index]) {
-        cards[index].scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'start'
-        });
-      }
+      if (!cards[index]) return;
+      scroll.scrollTo({
+        left: cards[index].offsetLeft - scroll.offsetLeft,
+        behavior: 'smooth'
+      });
     }
 
     // Story card scroll dots
