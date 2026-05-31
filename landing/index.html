@@ -2528,6 +2528,8 @@
     @media (min-width: 900px) {
       .embed-right {
         width: 380px;
+        position: sticky;
+        top: 80px;
       }
     }
 
@@ -2578,10 +2580,11 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--r-lg);
-      padding: 20px 24px;
+      padding: 16px 20px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
+      margin-top: 16px;
     }
 
     @media (min-width: 640px) {
@@ -4684,6 +4687,22 @@
             </a>
           </div>
 
+          <!-- Platform compatibility -->
+          <div class="embed-platforms">
+            <div class="embed-platforms-label">
+              Works on every platform
+            </div>
+            <div class="embed-platform-list">
+              <span class="embed-platform">WordPress</span>
+              <span class="embed-platform">Wix</span>
+              <span class="embed-platform">Squarespace</span>
+              <span class="embed-platform">Webflow</span>
+              <span class="embed-platform">HTML</span>
+              <span class="embed-platform">React</span>
+              <span class="embed-platform">Vue</span>
+            </div>
+          </div>
+
         </div>
 
         <!-- Right: live preview -->
@@ -4707,22 +4726,6 @@
           </div>
         </div>
 
-      </div>
-
-      <!-- Platform compatibility -->
-      <div class="embed-platforms fade-up">
-        <div class="embed-platforms-label">
-          Works on every platform
-        </div>
-        <div class="embed-platform-list">
-          <span class="embed-platform">WordPress</span>
-          <span class="embed-platform">Wix</span>
-          <span class="embed-platform">Squarespace</span>
-          <span class="embed-platform">Webflow</span>
-          <span class="embed-platform">HTML</span>
-          <span class="embed-platform">React</span>
-          <span class="embed-platform">Vue</span>
-        </div>
       </div>
 
     </div>
