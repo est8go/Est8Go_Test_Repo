@@ -90,6 +90,18 @@ class UpdateStaffPhoneRequest(BaseModel):
     phone: str
 
 
+class UpdateTenantRequest(BaseModel):
+    name:                     Optional[str] = None
+    business_name:            Optional[str] = None
+    tenant_type:              Optional[str] = None
+    plan:                     Optional[str] = None
+    whatsapp_phone_number:    Optional[str] = None
+    whatsapp_phone_number_id: Optional[str] = None
+    areas_covered:            Optional[str] = None
+    tone:                     Optional[str] = None
+    slug:                     Optional[str] = None
+
+
 # ================================================================
 # PULSE — platform health snapshot
 # ================================================================
@@ -165,16 +177,21 @@ def list_tenants(
         users_count    = db.query(User).filter(User.tenant_id == t.id).count()
 
         result.append({
-            "id":            t.id,
-            "name":          t.name,
-            "business_name": t.business_name,
-            "tenant_type":   t.tenant_type,
-            "plan":          t.plan,
-            "is_active":     t.is_active,
-            "listings_count": listings_count,
-            "users_count":   users_count,
-            "health_score":  75,   # wire to health scoring engine when ready
-            "created_at":    str(t.created_at) if t.created_at else None,
+            "id":                       t.id,
+            "name":                     t.name,
+            "business_name":            t.business_name,
+            "tenant_type":              t.tenant_type,
+            "plan":                     t.plan,
+            "is_active":                t.is_active,
+            "listings_count":           listings_count,
+            "users_count":              users_count,
+            "health_score":             75,
+            "created_at":               str(t.created_at) if t.created_at else None,
+            "whatsapp_phone_number":    t.whatsapp_phone_number,
+            "whatsapp_phone_number_id": t.whatsapp_phone_number_id,
+            "areas_covered":            t.areas_covered,
+            "tone":                     t.tone,
+            "slug":                     t.slug,
         })
     return result
 
@@ -321,6 +338,145 @@ def create_tenant(
         "message": f"Tenant '{tenant.name}' created successfully.",
         "tenant_id": tenant.id,
         "admin_email": admin.email,
+    }
+
+
+# ================================================================
+# TENANTS — update (superuser only)
+# ================================================================
+
+@router.patch("/tenants/{tenant_id}")
+def update_tenant(
+    tenant_id: int,
+    payload: UpdateTenantRequest,
+    current_user: User = Depends(require_superuser),
+    db: Session = Depends(get_db),
+):
+    """Partial update of any tenant field. Superuser only."""
+    tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found.")
+
+    old_values = {}
+    new_values = {}
+
+    if payload.name is not None:
+        name = payload.name.strip()
+        if not name:
+            raise HTTPException(status_code=400, detail="name cannot be empty.")
+        dup = db.query(Tenant).filter(Tenant.name == name, Tenant.id != tenant_id).first()
+        if dup:
+            raise HTTPException(status_code=400, detail=f"A tenant with name '{name}' already exists.")
+        old_values["name"] = tenant.name
+        tenant.name = name
+        new_values["name"] = name
+
+    if payload.business_name is not None:
+        bname = payload.business_name.strip()
+        if not bname:
+            raise HTTPException(status_code=400, detail="business_name cannot be empty.")
+        dup = db.query(Tenant).filter(Tenant.business_name == bname, Tenant.id != tenant_id).first()
+        if dup:
+            raise HTTPException(status_code=400, detail=f"Business name '{bname}' is already taken.")
+        old_values["business_name"] = tenant.business_name
+        tenant.business_name = bname
+        new_values["business_name"] = bname
+
+    if payload.tenant_type is not None:
+        valid_types = ("agency", "freelance", "developer", "investor")
+        if payload.tenant_type not in valid_types:
+            raise HTTPException(status_code=400, detail=f"tenant_type must be one of: {', '.join(valid_types)}")
+        old_values["tenant_type"] = tenant.tenant_type
+        tenant.tenant_type = payload.tenant_type
+        new_values["tenant_type"] = payload.tenant_type
+
+    if payload.plan is not None:
+        valid_plans = ("pilot", "starter", "growth", "enterprise")
+        if payload.plan.lower() not in valid_plans:
+            raise HTTPException(status_code=400, detail=f"plan must be one of: {', '.join(valid_plans)}")
+        old_values["plan"] = tenant.plan
+        tenant.plan = payload.plan.lower()
+        new_values["plan"] = payload.plan.lower()
+
+    if payload.whatsapp_phone_number is not None:
+        wa = re.sub(r"[\s\-\(\)]", "", payload.whatsapp_phone_number.strip())
+        if wa.startswith("+"):
+            wa = wa[1:]
+        if not re.match(r"^\d{10,15}$", wa):
+            raise HTTPException(status_code=400, detail="whatsapp_phone_number must be E.164 format (10–15 digits, no +).")
+        old_values["whatsapp_phone_number"] = tenant.whatsapp_phone_number
+        tenant.whatsapp_phone_number = wa
+        new_values["whatsapp_phone_number"] = wa
+
+    if payload.whatsapp_phone_number_id is not None:
+        wa_id = payload.whatsapp_phone_number_id.strip()
+        if wa_id:
+            dup = db.query(Tenant).filter(
+                Tenant.whatsapp_phone_number_id == wa_id,
+                Tenant.id != tenant_id,
+            ).first()
+            if dup:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"WhatsApp Phone Number ID '{wa_id}' is already used by another tenant.",
+                )
+        old_values["whatsapp_phone_number_id"] = tenant.whatsapp_phone_number_id
+        tenant.whatsapp_phone_number_id = wa_id or None
+        new_values["whatsapp_phone_number_id"] = wa_id or None
+
+    if payload.areas_covered is not None:
+        old_values["areas_covered"] = tenant.areas_covered
+        tenant.areas_covered = payload.areas_covered.strip()
+        new_values["areas_covered"] = tenant.areas_covered
+
+    if payload.tone is not None:
+        old_values["tone"] = tenant.tone
+        tenant.tone = payload.tone.strip()
+        new_values["tone"] = tenant.tone
+
+    if payload.slug is not None:
+        slug = payload.slug.strip().lower()
+        if slug and not re.match(r"^[a-z0-9][a-z0-9\-]*[a-z0-9]$", slug):
+            raise HTTPException(
+                status_code=400,
+                detail="slug must be lowercase alphanumeric with hyphens only (e.g. my-agency).",
+            )
+        if slug:
+            dup = db.query(Tenant).filter(Tenant.slug == slug, Tenant.id != tenant_id).first()
+            if dup:
+                raise HTTPException(status_code=400, detail=f"Slug '{slug}' is already taken.")
+        old_values["slug"] = tenant.slug
+        tenant.slug = slug or None
+        new_values["slug"] = slug or None
+
+    if not new_values:
+        raise HTTPException(status_code=400, detail="No fields provided to update.")
+
+    db.commit()
+    db.refresh(tenant)
+
+    log_action(
+        db, actor=current_user, action="tenant_updated",
+        target_table="tenants", target_id=tenant.id,
+        old_value=old_values, new_value=new_values,
+    )
+
+    return {
+        "success": True,
+        "message": f"Tenant '{tenant.name}' updated.",
+        "tenant": {
+            "id":                       tenant.id,
+            "name":                     tenant.name,
+            "business_name":            tenant.business_name,
+            "tenant_type":              tenant.tenant_type,
+            "plan":                     tenant.plan,
+            "is_active":                tenant.is_active,
+            "whatsapp_phone_number":    tenant.whatsapp_phone_number,
+            "whatsapp_phone_number_id": tenant.whatsapp_phone_number_id,
+            "areas_covered":            tenant.areas_covered,
+            "tone":                     tenant.tone,
+            "slug":                     tenant.slug,
+        },
     }
 
 

@@ -922,6 +922,58 @@
   </div>
 </div>
 
+<!-- ══ MODAL: Edit Tenant ══ -->
+<div class="modal-overlay" id="editTenantModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Edit Tenant</div>
+      <button onclick="closeModal('editTenantModal')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px">✕</button>
+    </div>
+    <div style="padding:10px 20px 6px;background:rgba(79,70,229,0.08);border-bottom:1px solid var(--border);font-size:11px;color:var(--indigo);display:flex;align-items:center;gap:6px">
+      <span>ℹ</span><span>Only filled fields will be updated. Leave a field blank to keep its current value.</span>
+    </div>
+    <input type="hidden" id="et_id" />
+    <div class="field-group"><label class="field-label">Company Name</label><input type="text" id="et_name" class="field-input" placeholder="Leave blank to keep current" /></div>
+    <div class="field-group"><label class="field-label">Business Name</label><input type="text" id="et_business_name" class="field-input" placeholder="Leave blank to keep current" /></div>
+    <div class="field-group"><label class="field-label">Business Type</label>
+      <select id="et_type" class="field-select">
+        <option value="">— keep current —</option>
+        <option value="agency">Real Estate Agency</option>
+        <option value="freelance">Independent Realtor</option>
+        <option value="developer">Property Developer</option>
+        <option value="investor">Investor Group</option>
+      </select>
+    </div>
+    <div class="field-group"><label class="field-label">Subscription Plan</label>
+      <select id="et_plan" class="field-select">
+        <option value="">— keep current —</option>
+        <option value="pilot">Pilot (Free)</option>
+        <option value="starter">Starter</option>
+        <option value="growth">Growth</option>
+        <option value="enterprise">Enterprise</option>
+      </select>
+    </div>
+    <div class="field-group"><label class="field-label">WhatsApp Number (E.164 — e.g. 2348012345678)</label><input type="text" id="et_wa_number" class="field-input" placeholder="Leave blank to keep current" /></div>
+    <div class="field-group"><label class="field-label">WhatsApp Phone Number ID (Meta Platform ID)</label><input type="text" id="et_wa_id" class="field-input" placeholder="Leave blank to keep current" /></div>
+    <div class="field-group"><label class="field-label">Areas Covered</label><input type="text" id="et_areas" class="field-input" placeholder="e.g. Abuja, Lekki, Ikeja" /></div>
+    <div class="field-group"><label class="field-label">Bot Tone</label>
+      <select id="et_tone" class="field-select">
+        <option value="">— keep current —</option>
+        <option value="friendly">Friendly</option>
+        <option value="formal">Formal</option>
+        <option value="casual">Casual</option>
+        <option value="professional">Professional</option>
+      </select>
+    </div>
+    <div class="field-group"><label class="field-label">Slug (used in public URLs — e.g. my-agency)</label><input type="text" id="et_slug" class="field-input" placeholder="Leave blank to keep current" /></div>
+    <div style="padding:16px 20px 8px;display:flex;gap:10px">
+      <button class="btn-ghost" onclick="closeModal('editTenantModal')" style="flex:1">Cancel</button>
+      <button onclick="saveTenantEdit()" style="flex:2;background:var(--indigo);color:#fff;border:none;border-radius:var(--r-md,12px);padding:12px;font-size:14px;font-weight:700;cursor:pointer">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ MODAL: New Staff ══ -->
 <div class="modal-overlay" id="newStaffModal">
   <div class="modal-sheet">
@@ -1306,6 +1358,9 @@
       const waBadge = t.whatsapp_phone_number_id
         ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--em);display:inline-block;margin-right:4px"></span>'
         : '';
+      const editBtn = role === 'superuser'
+        ? `<button onclick="openEditTenant(${t.id})" style="font-size:9px;padding:4px 8px;background:var(--indigo);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700">Edit</button>`
+        : '';
       const suspendBtn = isActive && role === 'superuser'
         ? `<button onclick="suspendTenant(${t.id},'${sanitise(t.name)}')" class="btn-warn" style="font-size:9px;padding:4px 8px">Suspend</button>`
         : '';
@@ -1325,7 +1380,7 @@
             </div>
             <div class="health-bar"><div class="health-fill" style="width:${health}%"></div></div>
             <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-              ${suspendBtn}${reactivateBtn}${deleteBtn}
+              ${editBtn}${suspendBtn}${reactivateBtn}${deleteBtn}
             </div>
           </div>
           <div style="text-align:right;flex-shrink:0">${badgeHtml}</div>
@@ -1357,6 +1412,62 @@
       if (!res) return;
       if (res.ok) { toast('✓ Tenant created successfully'); closeModal('newTenantModal'); loadTenants(); }
       else { const d = await res.json(); toast(d.detail || 'Failed to create tenant', 'var(--risk)'); }
+    } catch (e) { toast('Connection error', 'var(--risk)'); }
+  }
+
+  function openEditTenant(tenantId) {
+    const t = allTenants.find(x => x.id === tenantId);
+    if (!t) { toast('Tenant not found', 'var(--risk)'); return; }
+    g('et_id').value            = t.id;
+    g('et_name').value          = t.name || '';
+    g('et_business_name').value = t.business_name || '';
+    g('et_type').value          = t.tenant_type || '';
+    g('et_plan').value          = t.plan || '';
+    g('et_wa_number').value     = t.whatsapp_phone_number || '';
+    g('et_wa_id').value         = t.whatsapp_phone_number_id || '';
+    g('et_areas').value         = t.areas_covered || '';
+    g('et_tone').value          = t.tone || '';
+    g('et_slug').value          = t.slug || '';
+    openModal('editTenantModal');
+  }
+
+  async function saveTenantEdit() {
+    const id = g('et_id').value;
+    if (!id) return;
+    const payload = {};
+    const name     = g('et_name').value.trim();
+    const bname    = g('et_business_name').value.trim();
+    const type     = g('et_type').value;
+    const plan     = g('et_plan').value;
+    const waNum    = g('et_wa_number').value.trim();
+    const waId     = g('et_wa_id').value.trim();
+    const areas    = g('et_areas').value.trim();
+    const tone     = g('et_tone').value;
+    const slug     = g('et_slug').value.trim();
+    if (name)   payload.name                     = name;
+    if (bname)  payload.business_name            = bname;
+    if (type)   payload.tenant_type              = type;
+    if (plan)   payload.plan                     = plan;
+    if (waNum)  payload.whatsapp_phone_number    = waNum;
+    if (waId)   payload.whatsapp_phone_number_id = waId;
+    if (areas)  payload.areas_covered            = areas;
+    if (tone)   payload.tone                     = tone;
+    if (slug)   payload.slug                     = slug;
+    if (!Object.keys(payload).length) { toast('No changes to save', 'var(--warn)'); return; }
+    try {
+      const res = await Auth.fetch(`/admin/tenants/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload)
+      });
+      if (!res) return;
+      if (res.ok) {
+        toast('✓ Tenant updated');
+        closeModal('editTenantModal');
+        loadTenants();
+      } else {
+        const d = await res.json();
+        toast(d.detail || 'Update failed', 'var(--risk)');
+      }
     } catch (e) { toast('Connection error', 'var(--risk)'); }
   }
 
