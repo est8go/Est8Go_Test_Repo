@@ -3,7 +3,9 @@
     "allow": [
       "Bash(git commit -m ' *)",
       "Bash(python -c ' *)",
-      "Bash(python migrate_tenant_slug.py)"
+      "Bash(python migrate_tenant_slug.py)",
+      "Bash(start \"c:/Users/Pricy/Documents/ai_multitenant_saas/landing/index.html\")",
+      "Bash(start \"c:\\\\Users\\\\Pricy\\\\Documents\\\\ai_multitenant_saas\\\\landing\\\\index.html\")"
     ]
   }
 }
