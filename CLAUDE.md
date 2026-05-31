@@ -210,26 +210,30 @@ Wallet: Split purchased vs bonus, deduct bonus first
 
 ## NEXT TASKS (in order)
 
-### Landing Page Stage 4 (Priority 1)
+### Landing Page — Pending Corrections (Priority 1)
 File: landing/index.html
-Stage 1, 2, 3 complete. Stage 4 pending.
+Stages 1–4 complete. Final corrections before deploy.
 
-Find comment: <!-- STAGE 4 GOES HERE -->
-Apply Stage 4 from Claude.ai conversation.
+#### PENDING CORRECTIONS (Landing Page)
 
-Stage 4 contains:
-- Pricing section (horizontal scroll mobile,
-  5-column grid desktop, animated border on Core)
-- Testimonials (3 cards + stats counter animation)
-- Final CTA section
-- Footer (4-column links)
-- All CSS and JS for above sections
+1. Embed section white space fix: ✅ DONE
+   - embed-platforms moved inside embed-left
+   - embed-right sticky top: 80px
+   - Right column aligns with header
 
-After Stage 4:
-- Deploy updated landing/index.html to Netlify
-  (drag and drop landing folder)
-- Test on mobile and desktop
-- Verify all animations work
+2. Replace 234XXXXXXXXXX with real WA number
+   throughout landing/index.html
+   (search: 234XXXXXXXXXX — appears ~8 times)
+
+3. api.est8go.com DNS — add CNAME in Netlify DNS:
+   Name: api
+   Value: est8go-api.onrender.com
+   Then update BASE_URL on Render to https://api.est8go.com
+
+4. Deploy updated landing page to Netlify
+   (drag and drop landing/ folder to Netlify dashboard)
+   - Test on mobile and desktop
+   - Verify all animations and links work
 
 ### 1. Est8Go Landing Page ✅ STAGES 1–3 COMPLETE
 URL: est8go.com (hosted on Namecheap or Netlify free)
