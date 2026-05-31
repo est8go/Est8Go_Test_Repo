@@ -2659,6 +2659,7 @@
       background: var(--surface);
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
+      overflow: visible !important;
     }
 
     .pricing-header {
@@ -2668,14 +2669,24 @@
     .pricing-scroll-wrap {
       position: relative;
       margin-bottom: 20px;
+      padding-top: 28px;
+      overflow: visible !important;
     }
 
     @media (max-width: 899px) {
       .pricing-scroll-wrap {
-        padding-top: 20px;
+        padding-top: 28px;
+        overflow: visible !important;
       }
       .pricing-cards {
-        padding-top: 8px;
+        padding-top: 4px;
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+      }
+      .pricing-card {
+        width: calc(85vw) !important;
+        min-width: 280px;
+        max-width: 340px;
       }
     }
 
@@ -4774,7 +4785,7 @@
             </div>
             <div class="embed-preview-body">
               <script src="https://est8go-api.onrender.com/static/embed.js" data-tenant="bravieshomz-limited"
-                data-theme="dark" data-limit="3" data-columns="1">
+                data-theme="dark" data-limit="2" data-columns="1">
                 </script>
             </div>
             <div class="embed-preview-footer">
