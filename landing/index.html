@@ -2342,10 +2342,6 @@
       background: var(--bg);
     }
 
-    .embed-header {
-      margin-bottom: 48px;
-    }
-
     .embed-layout {
       display: flex;
       flex-direction: column;
@@ -2375,13 +2371,15 @@
     /* Left */
     .embed-left {
       flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
     }
 
     .embed-steps {
       display: flex;
       flex-direction: column;
       gap: 20px;
-      margin-bottom: 28px;
     }
 
     .embed-step-item {
@@ -4590,24 +4588,24 @@
   <section class="section embed-section" id="embed">
     <div class="container">
 
-      <div class="embed-header fade-up">
-        <span class="section-label">Embed Widget</span>
-        <h2 class="section-title">
-          Add to your website<br />in 60 seconds
-        </h2>
-        <p class="section-sub">
-          One script tag. Your verified listings appear
-          live on any website; WordPress, Wix,
-          Squarespace, or plain HTML. Auto updates
-          every 30 minutes.
-        </p>
-      </div>
-
       <!-- Desktop: two column. Mobile: stacked -->
       <div class="embed-layout">
 
-        <!-- Left: code + steps -->
+        <!-- Left: header + code + steps -->
         <div class="embed-left fade-left delay-1">
+
+          <div class="embed-header">
+            <span class="section-label">Embed Widget</span>
+            <h2 class="section-title">
+              Add to your website<br />in 60 seconds
+            </h2>
+            <p class="section-sub">
+              One script tag. Your verified listings appear
+              live on any website; WordPress, Wix,
+              Squarespace, or plain HTML. Auto updates
+              every 30 minutes.
+            </p>
+          </div>
 
           <div class="embed-steps">
             <div class="embed-step-item">
