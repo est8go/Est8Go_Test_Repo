@@ -4697,12 +4697,12 @@
     async function loadTeam() {
       if (CFG._role !== 'admin') return;
       try {
-        const seatRes = await Auth.fetch('/seats/status');
+        const seatRes = await fetch('/seats/status', { headers: CFG.H });
         if (seatRes?.ok) {
           _seatStatus = await seatRes.json();
           renderSeatUsage(_seatStatus);
         }
-        const usersRes = await Auth.fetch('/users/');
+        const usersRes = await fetch('/users/', { headers: CFG.H });
         if (!usersRes?.ok) return;
         const users = await usersRes.json();
         renderStaffList(users);
@@ -4814,7 +4814,7 @@
     async function openAddStaffModal() {
       if (!_seatStatus) {
         try {
-          const seatRes = await Auth.fetch('/seats/status');
+          const seatRes = await fetch('/seats/status', { headers: CFG.H });
           if (seatRes?.ok) _seatStatus = await seatRes.json();
         } catch(e) {}
       }
@@ -4826,7 +4826,7 @@
       const warning = g('addStaffCreditWarning');
       if (atLimit) {
         try {
-          const balRes = await Auth.fetch('/credits/balance');
+          const balRes = await fetch('/credits/balance', { headers: CFG.H });
           if (balRes?.ok) {
             const bal = await balRes.json();
             g('addStaffCreditBalance').textContent = (bal.available || 0) + ' credits';
@@ -4861,9 +4861,9 @@
       btn.disabled    = true;
 
       try {
-        const res = await Auth.fetch('/users/', {
+        const res = await fetch('/users/', {
           method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { ...CFG.H, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email,
             password,
@@ -4893,7 +4893,7 @@
     async function deactivateStaffMember(userId, email) {
       if (!confirm(`Deactivate ${email}? They will lose access immediately.`)) return;
       try {
-        const res = await Auth.fetch(`/users/${userId}/deactivate`, { method: 'PATCH' });
+        const res = await fetch(`/users/${userId}/deactivate`, { method: 'PATCH', headers: CFG.H });
         if (res?.ok) {
           toast(`${email} deactivated`);
           loadTeam();
