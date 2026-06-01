@@ -86,34 +86,35 @@ def create_user(
 
     allowed, reason = check_can_add_staff(current_user.tenant_id, db)
 
+    needs_extra_seat = False
+
     if not allowed:
+        is_freelance = tenant.tenant_type == "freelance"
         base_limit = get_base_seat_limit(tenant.plan)
         is_enterprise = base_limit is None
-        is_freelance = tenant.tenant_type == "freelance"
 
-        if is_freelance or is_enterprise:
-            # Freelance: hard no. Enterprise: always allowed, so this won't fire.
+        if is_freelance:
             raise HTTPException(status_code=403, detail=reason)
 
-        # Check if tenant has enough credits to buy an extra seat
-        from app.credits.service import get_or_create_wallet
-        wallet = get_or_create_wallet(current_user.tenant_id, db)
-        available = (
-            wallet.purchased_balance + wallet.bonus_balance - wallet.reserved
-        )
-        if available < EXTRA_SEAT_COST:
-            raise HTTPException(
-                status_code=402,
-                detail=(
-                    f"{reason} "
-                    f"Extra seats cost {EXTRA_SEAT_COST} credits/month. "
-                    f"You have {available} credits available. "
-                    f"Top up your credits to add more staff."
-                ),
+        if not is_enterprise:
+            # Check if tenant has enough credits to buy an extra seat
+            from app.credits.service import get_or_create_wallet
+            wallet = get_or_create_wallet(current_user.tenant_id, db)
+            available = (
+                wallet.purchased_balance + wallet.bonus_balance - wallet.reserved
             )
-        needs_extra_seat = True
-    else:
-        needs_extra_seat = False
+            if available < EXTRA_SEAT_COST:
+                raise HTTPException(
+                    status_code=402,
+                    detail=(
+                        f"{reason} "
+                        f"Extra seats cost {EXTRA_SEAT_COST} credits/month. "
+                        f"You have {available} credits available. "
+                        f"Top up your credits to add more staff."
+                    ),
+                )
+            needs_extra_seat = True
+        # enterprise: unlimited seats — fall through, needs_extra_seat stays False
 
     # ── CREATE USER ──────────────────────────────────────────────
     user = User(

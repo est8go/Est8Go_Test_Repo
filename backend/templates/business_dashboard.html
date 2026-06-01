@@ -4861,6 +4861,7 @@
       btn.disabled    = true;
 
       try {
+        console.log('payload:', {email, password, role, phone});
         const res = await fetch('/users/', {
           method:  'POST',
           headers: { ...CFG.H, 'Content-Type': 'application/json' },
@@ -4877,10 +4878,17 @@
           toast('Team member added successfully');
           closeModal('addStaffModal');
           _seatStatus = null;
-          loadTeam();
+          await loadTeam();
         } else {
           const d = await res.json().catch(() => ({}));
-          toast(d.detail || 'Failed to add member', 'error');
+          const msg = res.status === 409
+            ? 'A user with this email already exists.'
+            : res.status === 402
+            ? 'Not enough credits. Top up to add extra seats.'
+            : res.status === 403
+            ? 'Seat limit reached. Upgrade your plan.'
+            : (d.detail || 'Failed to add member');
+          toast(msg, 'error');
         }
       } catch(e) {
         toast('Connection error', 'error');
