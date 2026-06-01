@@ -263,7 +263,7 @@ def create_tenant(
             )
 
     # ── STEP 5: Plan is one of allowed values ─────────────────────
-    allowed_plans = ["pilot", "starter", "growth", "enterprise"]
+    allowed_plans = ["pilot", "access", "growth", "business", "enterprise"]
     if payload.plan and payload.plan.lower() not in allowed_plans:
         raise HTTPException(
             status_code=400,
@@ -391,7 +391,7 @@ def update_tenant(
         new_values["tenant_type"] = payload.tenant_type
 
     if payload.plan is not None:
-        valid_plans = ("pilot", "starter", "growth", "enterprise")
+        valid_plans = ("pilot", "access", "growth", "business", "enterprise")
         if payload.plan.lower() not in valid_plans:
             raise HTTPException(status_code=400, detail=f"plan must be one of: {', '.join(valid_plans)}")
         old_values["plan"] = tenant.plan

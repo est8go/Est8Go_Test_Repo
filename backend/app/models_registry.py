@@ -19,7 +19,7 @@ from app.tenants.signup_models import TenantSignupLink, ReferralCode, ReferralCo
 # 4. CREDIT ECONOMY MODELS
 from app.credits.models import (
     CreditWallet, CreditLedger, CreditExpiry,
-    CreditBundle, CreditTransaction, MmefTracking,
+    CreditBundle, CreditTransaction, MmefTracking, SeatEntitlement,
 )
 
 # 5. HEALTH MONITOR + ISSUES TRACKER MODELS
@@ -56,6 +56,7 @@ def register_all_models():
             CreditBundle,
             CreditTransaction,
             MmefTracking,
+            SeatEntitlement,
             HealthCheck,
             PlatformIssue,
         ]

@@ -1328,8 +1328,9 @@
 
   // ── TENANTS ────────────────────────────────────────────────────
   let allTenants = [];
-  const TENANT_COLORS = ['#162860','#1a1040','#0d3040','#1a2e10','#401020'];
-  const TYPE_LABELS   = { agency:'Agency', freelance:'Freelance', developer:'Developer', investor:'Investor' };
+  const TENANT_COLORS  = ['#162860','#1a1040','#0d3040','#1a2e10','#401020'];
+  const TYPE_LABELS    = { agency:'Agency', freelance:'Freelance', developer:'Developer', investor:'Investor' };
+  const PLAN_BASE_SEATS = { pilot:1, access:1, growth:2, business:5, enterprise:null };
 
   async function loadTenants() {
     try {
@@ -1379,6 +1380,16 @@
               ${waBadge}${sanitise(TYPE_LABELS[t.tenant_type]||t.tenant_type)} · ${sanitise(t.plan)} · ${t.listings_count||0} listings · ${t.users_count||0} users
             </div>
             <div class="health-bar"><div class="health-fill" style="width:${health}%"></div></div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">
+              👥 ${t.users_count || 0} staff
+              ${t.plan !== 'enterprise'
+                ? `· <span style="color:${
+                    (t.users_count || 0) >= (PLAN_BASE_SEATS[t.plan] || 1)
+                      ? 'var(--warn)' : 'var(--em)'
+                  }">${PLAN_BASE_SEATS[t.plan] || 1} base seats</span>`
+                : '· <span style="color:var(--em)">Unlimited seats</span>'
+              }
+            </div>
             <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
               ${editBtn}${suspendBtn}${reactivateBtn}${deleteBtn}
             </div>

@@ -10,17 +10,18 @@ import enum
 
 
 class LedgerEvent(str, enum.Enum):
-    TOPUP      = "TOPUP"
-    RESERVE    = "RESERVE"
-    COMMIT     = "COMMIT"
-    REFUND     = "REFUND"
-    AWARD      = "AWARD"
-    WELCOME    = "WELCOME"
-    BONUS      = "BONUS"
-    EXPIRY     = "EXPIRY"
-    ADJUSTMENT = "ADJUSTMENT"
-    PENALTY    = "PENALTY"
-    MMEF_HOLD  = "MMEF_HOLD"
+    TOPUP        = "TOPUP"
+    RESERVE      = "RESERVE"
+    COMMIT       = "COMMIT"
+    REFUND       = "REFUND"
+    AWARD        = "AWARD"
+    WELCOME      = "WELCOME"
+    BONUS        = "BONUS"
+    EXPIRY       = "EXPIRY"
+    ADJUSTMENT   = "ADJUSTMENT"
+    PENALTY      = "PENALTY"
+    MMEF_HOLD    = "MMEF_HOLD"
+    SEAT_RENEWAL = "SEAT_RENEWAL"
 
 
 class CreditWallet(Base):
@@ -120,4 +121,36 @@ class MmefTracking(Base):
 
     __table_args__ = (
         UniqueConstraint("tenant_id", "month_year"),
+    )
+
+
+class SeatEntitlement(Base):
+    """
+    Tracks extra seats purchased beyond the plan base allowance.
+    One row per extra seat per tenant.
+    Base plan seats are never tracked here — only extras.
+    """
+    __tablename__ = "seat_entitlements"
+
+    id                = Column(Integer, primary_key=True)
+    tenant_id         = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"),
+                               nullable=False, index=True)
+    user_id           = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"),
+                               nullable=False, unique=True)
+    # Status lifecycle: active → grace → suspended → active (on renewal)
+    status            = Column(String(20), nullable=False, default="active")
+    # Monthly credit cost for this seat
+    credits_per_month = Column(Integer, nullable=False, default=800)
+    # When this seat's grace period expires (set on credit failure)
+    grace_until       = Column(DateTime, nullable=True)
+    # Last successful renewal date
+    last_renewed_at   = Column(DateTime, nullable=True)
+    # Month/year of last renewal e.g. "2026-05"
+    last_month_year   = Column(String(7), nullable=True)
+    created_at        = Column(DateTime, default=datetime.utcnow)
+    updated_at        = Column(DateTime, default=datetime.utcnow,
+                               onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "user_id", name="uq_seat_tenant_user"),
     )

@@ -31,11 +31,11 @@ ACTION_COSTS = {
 }
 
 TIER_DISCOUNTS = {
-    "ACCESS":     0.0,
-    "CORE":       0.10,
-    "GROWTH":     0.15,
-    "ENTERPRISE": 0.25,
     "PILOT":      1.0,
+    "ACCESS":     0.0,
+    "GROWTH":     0.10,
+    "BUSINESS":   0.15,
+    "ENTERPRISE": 0.25,
 }
 
 MMEF_THRESHOLDS = {

@@ -7,6 +7,13 @@ from app.database.db import get_db
 from app.users.models import User, TENANT_ROLES
 from app.core.security import hash_password
 from app.auth.deps import get_current_user, require_tenant_admin, require_superuser
+from app.tenants.models import Tenant
+from app.credits.seat_service import (
+    check_can_add_staff,
+    get_base_seat_limit,
+    purchase_extra_seat,
+    EXTRA_SEAT_COST,
+)
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -60,6 +67,7 @@ def create_user(
 ):
     """
     Create a new user inside the current tenant.
+    Enforces plan seat limits. Extra seats cost 800 credits/month.
     Only tenant admins and platform staff can do this.
     """
     if payload.role not in TENANT_ROLES:
@@ -68,15 +76,55 @@ def create_user(
             detail=f"Invalid role '{payload.role}'. Must be one of: {', '.join(TENANT_ROLES)}",
         )
 
+    # ── SEAT LIMIT ENFORCEMENT ───────────────────────────────────
+    tenant = db.query(Tenant).filter(
+        Tenant.id == current_user.tenant_id
+    ).first()
+
+    if not tenant:
+        raise HTTPException(400, "Tenant not found.")
+
+    allowed, reason = check_can_add_staff(current_user.tenant_id, db)
+
+    if not allowed:
+        base_limit = get_base_seat_limit(tenant.plan)
+        is_enterprise = base_limit is None
+        is_freelance = tenant.tenant_type == "freelance"
+
+        if is_freelance or is_enterprise:
+            # Freelance: hard no. Enterprise: always allowed, so this won't fire.
+            raise HTTPException(status_code=403, detail=reason)
+
+        # Check if tenant has enough credits to buy an extra seat
+        from app.credits.service import get_or_create_wallet
+        wallet = get_or_create_wallet(current_user.tenant_id, db)
+        available = (
+            wallet.purchased_balance + wallet.bonus_balance - wallet.reserved
+        )
+        if available < EXTRA_SEAT_COST:
+            raise HTTPException(
+                status_code=402,
+                detail=(
+                    f"{reason} "
+                    f"Extra seats cost {EXTRA_SEAT_COST} credits/month. "
+                    f"You have {available} credits available. "
+                    f"Top up your credits to add more staff."
+                ),
+            )
+        needs_extra_seat = True
+    else:
+        needs_extra_seat = False
+
+    # ── CREATE USER ──────────────────────────────────────────────
     user = User(
-        tenant_id=current_user.tenant_id,
-        email=payload.email,
-        hashed_password=hash_password(payload.password),
-        role=payload.role,
-        first_name=payload.first_name,
-        phone_number=payload.phone_number,
-        is_active=True,
-        is_platform_user=False,
+        tenant_id        = current_user.tenant_id,
+        email            = payload.email,
+        hashed_password  = hash_password(payload.password),
+        role             = payload.role,
+        first_name       = payload.first_name,
+        phone_number     = payload.phone_number,
+        is_active        = True,
+        is_platform_user = False,
     )
 
     db.add(user)
@@ -89,6 +137,22 @@ def create_user(
         )
 
     db.refresh(user)
+
+    # ── PURCHASE EXTRA SEAT IF NEEDED ────────────────────────────
+    if needs_extra_seat:
+        try:
+            purchase_extra_seat(
+                tenant_id    = current_user.tenant_id,
+                user_id      = user.id,
+                db           = db,
+                purchased_by = current_user.id,
+            )
+        except ValueError as e:
+            # Roll back user creation if seat purchase fails
+            db.delete(user)
+            db.commit()
+            raise HTTPException(status_code=402, detail=str(e))
+
     return user
 
 
