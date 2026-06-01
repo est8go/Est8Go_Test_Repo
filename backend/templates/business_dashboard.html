@@ -4845,20 +4845,24 @@
     }
 
     async function saveNewStaff() {
-      const btn      = g('ns_saveBtn');
+      const btn = g('ns_saveBtn');
+      if (btn.disabled) return;
+      btn.disabled    = true;
+      btn.textContent = 'Adding...';
       const name     = g('ns_name').value.trim();
       const email    = g('ns_email').value.trim();
       const password = g('ns_password').value.trim();
       const role     = g('ns_role').value;
       const phone    = g('ns_phone').value.trim();
 
-      if (!email) { toast('Email is required', 'error'); return; }
+      if (!email) {
+        btn.disabled = false; btn.textContent = 'Add Member';
+        toast('Email is required', 'error'); return;
+      }
       if (!password || password.length < 8) {
+        btn.disabled = false; btn.textContent = 'Add Member';
         toast('Password must be at least 8 characters', 'error'); return;
       }
-
-      btn.textContent = 'Adding...';
-      btn.disabled    = true;
 
       try {
         console.log('payload:', {email, password, role, phone});
