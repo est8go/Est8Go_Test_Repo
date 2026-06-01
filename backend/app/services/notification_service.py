@@ -56,65 +56,86 @@ async def alert_realtor_of_lead(
     db: Session, listing_id: int, user_phone: str, biz_name: str
 ):
     """
-    Finds the Realtor for a property and sends them a 'Hot Lead' alert.
+    Alert priority:
+    1. Assigned realtor's phone_number
+    2. Tenant admin's phone_number
+    3. Tenant's whatsapp_phone_number (fallback)
     """
     try:
-        # 1. Find the property
+        from app.tenants.models import Tenant as _Tenant
+        import re as _re
+
         listing = db.query(Listing).filter(Listing.id == listing_id).first()
         if not listing:
             logger.warning(f"⚠️ Alert failed: Listing {listing_id} not found.")
             return
 
-        # 2. Find the Primary Agent for this Tenant
-        agent = (
-            db.query(User)
-            .filter(
-                User.tenant_id == listing.tenant_id,
-                User.is_admin == True,
-                User.is_active == True,
-            )
-            .first()
-        )
+        alert_phone = None
+        alert_name = None
 
-        alert_phone = agent.phone_number if (agent and agent.phone_number) else None
+        # Priority 1: Assigned realtor
+        if listing.assigned_realtor_id:
+            realtor = db.query(User).filter(
+                User.id == listing.assigned_realtor_id,
+                User.is_active == True,
+            ).first()
+            if realtor and realtor.phone_number:
+                alert_phone = realtor.phone_number
+                alert_name = realtor.first_name or realtor.email.split('@')[0]
+
+        # Priority 2: Tenant admin
         if not alert_phone:
-            # Fallback: use tenant's registered WhatsApp number
-            from app.tenants.models import Tenant as _Tenant
-            import re as _re
-            _tenant = db.query(_Tenant).filter(
+            admin = db.query(User).filter(
+                User.tenant_id == listing.tenant_id,
+                User.role == "admin",
+                User.is_active == True,
+                User.phone_number.isnot(None),
+            ).first()
+            if admin and admin.phone_number:
+                alert_phone = admin.phone_number
+                alert_name = admin.first_name or admin.email.split('@')[0]
+
+        # Priority 3: Tenant WhatsApp number
+        if not alert_phone:
+            tenant = db.query(_Tenant).filter(
                 _Tenant.id == listing.tenant_id
             ).first()
-            _raw = getattr(_tenant, "whatsapp_phone_number", None) if _tenant else None
-            if _raw:
-                _digits = _re.sub(r"\D", "", _raw)
-                if _digits.startswith("0"):
-                    _digits = "234" + _digits[1:]
-                alert_phone = _digits or None
+            if tenant and tenant.whatsapp_phone_number:
+                digits = _re.sub(r"\D", "", tenant.whatsapp_phone_number)
+                if digits.startswith("0"):
+                    digits = "234" + digits[1:]
+                alert_phone = digits or None
+
         if not alert_phone:
             logger.warning(
-                f"⚠️ No phone for realtor alert: tenant={listing.tenant_id}"
+                f"⚠️ No alert phone found: listing={listing_id} tenant={listing.tenant_id}"
             )
             return
 
-        # 3. Format the High-Intent Alert
+        # Normalize phone — strip leading 0, ensure 234 prefix
+        digits = _re.sub(r"\D", "", alert_phone)
+        if digits.startswith("0"):
+            digits = "234" + digits[1:]
+        alert_phone = digits
+
         alert_text = (
-            f"🚨 *HOT LEAD ALERT: {biz_name}* 🚨\n\n"
-            f"A client is interested in:\n"
+            f"🚨 *HOT LEAD ALERT* 🚨\n\n"
+            f"Hi {alert_name}, a buyer is interested in:\n"
             f"🏠 *{listing.title}*\n"
+            f"📍 {listing.location}\n"
             f"💰 ₦{listing.price:,}\n\n"
-            f"📱 *Client Phone*: +{user_phone}\n"
-            f"Please reach out to them immediately! 🤝"
+            f"📱 *Buyer's Phone*: +{user_phone}\n\n"
+            f"Reach out immediately! 🤝"
         )
 
-        # 4. Push the alert to the Agent's WhatsApp
         await send_meta_text_message(alert_phone, alert_text)
         logger.info(
-            f"🚀 Lead Alert for {biz_name} pushed to Agent {agent.phone_number}"
+            f"✅ Lead alert sent to {alert_phone} for listing {listing_id}"
         )
         return True
 
     except Exception as e:
-        logger.error(f"❌ Error in Realtor Alert service: {e}", exc_info=True)
+        logger.error(f"❌ alert_realtor_of_lead error: {e}", exc_info=True)
         return False
 
 

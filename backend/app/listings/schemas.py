@@ -60,6 +60,11 @@ class ListingOut(ListingBase):
     # Visual Layer (The Carousel)
     images: List[ListingImageOut] = []
 
+    # Realtor Assignment
+    assigned_realtor_id:    Optional[int] = None
+    assigned_realtor_name:  Optional[str] = None
+    assigned_realtor_phone: Optional[str] = None
+
     class Config:
         from_attributes = True
 
@@ -73,5 +78,8 @@ class ListingUpdate(BaseModel):
     location: Optional[str] = None
     price: Optional[int] = None
     property_type: Optional[str] = None
-    # ADD THIS LINE: This allows the Admin to change the status
     status: Optional[str] = None
+
+
+class AssignRealtorRequest(BaseModel):
+    realtor_id: Optional[int] = None  # None = unassign

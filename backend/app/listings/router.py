@@ -23,6 +23,7 @@ from app.listings.schemas import (
     ListingUpdate,
     ListingOut,
     ListingImageOut,
+    AssignRealtorRequest,
 )
 
 # Trust Moat Logic
@@ -223,9 +224,20 @@ def get_my_listings(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Returns all listings for the authenticated tenant."""
+    """Returns all listings for the authenticated tenant, enriched with realtor info."""
     tenant_id = get_tenant_id_from_user(current_user, x_tenant_id)
-    return db.query(Listing).filter(Listing.tenant_id == tenant_id).all()
+    listings = db.query(Listing).filter(Listing.tenant_id == tenant_id).all()
+
+    result = []
+    for l in listings:
+        d = ListingOut.model_validate(l)
+        if l.assigned_realtor_id:
+            r = db.query(User).filter(User.id == l.assigned_realtor_id).first()
+            if r:
+                d.assigned_realtor_name = r.first_name or r.email.split('@')[0]
+                d.assigned_realtor_phone = r.phone_number
+        result.append(d)
+    return result
 
 
 @router.post("/", response_model=ListingOut)
@@ -284,6 +296,63 @@ def update_listing(
     db.commit()
     db.refresh(listing)
     return listing
+
+
+@router.patch("/{listing_id}/assign")
+def assign_realtor_to_listing(
+    listing_id: int,
+    payload: AssignRealtorRequest,
+    x_tenant_id: Optional[int] = Header(None, alias="X-Tenant-Id"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Assign or unassign a realtor to a listing.
+    Tenant admin only. Realtor must belong to same tenant.
+    """
+    if current_user.role not in ("admin", "superuser", "super_staff"):
+        raise HTTPException(403, "Admin access required to assign listings.")
+
+    tenant_id = get_tenant_id_from_user(current_user, x_tenant_id)
+
+    listing = db.query(Listing).filter(
+        Listing.id == listing_id,
+        Listing.tenant_id == tenant_id,
+    ).first()
+    if not listing:
+        raise HTTPException(404, "Listing not found.")
+
+    if payload.realtor_id is not None:
+        realtor = db.query(User).filter(
+            User.id == payload.realtor_id,
+            User.tenant_id == tenant_id,
+            User.is_active == True,
+            User.role.in_(["realtor", "admin", "staff"]),
+        ).first()
+        if not realtor:
+            raise HTTPException(404, "Realtor not found in your team.")
+        listing.assigned_realtor_id = payload.realtor_id
+    else:
+        listing.assigned_realtor_id = None
+
+    db.commit()
+    db.refresh(listing)
+
+    realtor_name = None
+    if listing.assigned_realtor_id:
+        r = db.query(User).filter(User.id == listing.assigned_realtor_id).first()
+        realtor_name = (r.first_name or r.email) if r else None
+
+    return {
+        "success": True,
+        "listing_id": listing_id,
+        "assigned_realtor_id": listing.assigned_realtor_id,
+        "assigned_realtor_name": realtor_name,
+        "message": (
+            f"Listing assigned to {realtor_name}"
+            if realtor_name else "Listing unassigned"
+        ),
+    }
 
 
 @router.get("/admin/system-stats", tags=["Super Admin"])

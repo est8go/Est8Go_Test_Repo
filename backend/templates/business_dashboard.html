@@ -3851,6 +3851,12 @@
                 <div class="prop-actions">
                   <button class="btn btn-ghost btn-sm" onclick="loadReelOptions(${l.id})">🎬 Reel</button>
                   <button class="btn btn-em btn-sm" onclick="viewTrustDash(${l.id})">🛡️ Trust</button>
+                  ${CFG._role === 'admin'
+                    ? `<button class="btn btn-ghost btn-sm"
+                         onclick="openAssignModal(${l.id},${l.assigned_realtor_id || 'null'},'${sanitise(l.title)}')">
+                         👤 ${l.assigned_realtor_name ? sanitise(l.assigned_realtor_name) : 'Assign'}
+                       </button>`
+                    : ''}
                 </div>
               </div>
             </div>`;
@@ -4930,6 +4936,74 @@
       }
     }
 
+    // ══════════════════════════════════════════════════════════
+    // LISTING ASSIGNMENT
+    // ══════════════════════════════════════════════════════════
+
+    let _assignListingId = null;
+
+    async function openAssignModal(listingId, currentRealtorId, title) {
+      _assignListingId = listingId;
+      g('assignListingTitle').textContent = title;
+
+      try {
+        const r = await fetch('/users/', { headers: CFG.H });
+        if (r.ok) {
+          const users = await r.json();
+          const realtors = users.filter(u =>
+            !u.is_platform_user && u.is_active &&
+            ['realtor', 'admin', 'staff'].includes(u.role)
+          );
+          g('assignRealtorSelect').innerHTML =
+            '<option value="">— Unassigned —</option>' +
+            realtors.map(u => `
+              <option value="${u.id}"
+                ${u.id === currentRealtorId ? 'selected' : ''}>
+                ${sanitise(u.first_name || u.email.split('@')[0])}
+                (${sanitise(u.role)})
+                ${u.phone_number ? '📱' : '⚠️'}
+              </option>
+            `).join('');
+        }
+      } catch(e) {}
+
+      openModal('assignModal');
+    }
+
+    async function saveAssignment() {
+      const btn = g('assignSaveBtn');
+      if (btn.disabled) return;
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      const realtorId = g('assignRealtorSelect').value;
+
+      try {
+        const res = await fetch(`/listings/${_assignListingId}/assign`, {
+          method: 'PATCH',
+          headers: { ...CFG.H, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            realtor_id: realtorId ? parseInt(realtorId, 10) : null,
+          }),
+        });
+
+        if (res?.ok) {
+          const d = await res.json();
+          toast(`✓ ${d.message}`);
+          closeModal('assignModal');
+          loadListings();
+        } else {
+          const d = await res.json().catch(() => ({}));
+          toast(d.detail || 'Assignment failed', 'error');
+        }
+      } catch(e) {
+        toast('Connection error', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Assignment';
+      }
+    }
+
     let _fabOpen = false;
     let _fabActions = [];
 
@@ -5047,6 +5121,35 @@
                 onclick="closeModal('addStaffModal')">Cancel</button>
         <button class="btn btn-ind btn-md" style="flex:2"
                 id="ns_saveBtn" onclick="saveNewStaff()">Add Member</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL: Assign Realtor ══ -->
+  <div class="modal-backdrop" id="assignModal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <div class="modal-title">Assign Realtor</div>
+        <button onclick="closeModal('assignModal')"
+                style="background:none;border:none;color:var(--muted);
+                       cursor:pointer;font-size:20px">✕</button>
+      </div>
+      <div id="assignListingTitle"
+           style="margin:0 20px 4px;padding:8px 14px;
+                  background:var(--surface2);border-radius:10px;
+                  font-size:11px;color:var(--muted)"></div>
+      <div class="field-group">
+        <label class="field-label">Select Realtor</label>
+        <select id="assignRealtorSelect" class="field-select">
+          <option value="">— Unassigned —</option>
+        </select>
+      </div>
+      <div style="padding:20px 20px 8px;display:flex;gap:10px">
+        <button class="btn btn-ghost btn-md" style="flex:1"
+                onclick="closeModal('assignModal')">Cancel</button>
+        <button class="btn btn-ind btn-md" style="flex:2"
+                id="assignSaveBtn" onclick="saveAssignment()">Save Assignment</button>
       </div>
     </div>
   </div>

@@ -65,11 +65,22 @@ class Listing(Base):
         ForeignKey("users.id", use_alter=True, name="fk_listing_user"),
         nullable=True,
     )
+    assigned_realtor_id = Column(
+        Integer,
+        ForeignKey("users.id", use_alter=True,
+                   name="fk_listing_assigned_realtor"),
+        nullable=True,
+    )
 
     # --- RELATIONSHIPS ---
     tenant = relationship("Tenant", back_populates="listings")
     images = relationship(
         "ListingImage", back_populates="listing", cascade="all, delete-orphan"
+    )
+    assigned_realtor = relationship(
+        "User",
+        foreign_keys=[assigned_realtor_id],
+        primaryjoin="Listing.assigned_realtor_id == User.id",
     )
 
     # --- CORE CONTENT ---
