@@ -3895,6 +3895,7 @@
     async function loadTeamList() {
       const list = g('teamList');
       if (!list) return;
+      if (!CFG._tid) return;
       try {
         const r = await fetch('/users/', { headers: CFG.H });
         if (!r.ok) return;
@@ -4696,6 +4697,7 @@
 
     async function loadTeam() {
       if (CFG._role !== 'admin') return;
+      if (!CFG._tid) return;
       try {
         const seatRes = await fetch('/seats/status', { headers: CFG.H });
         if (seatRes?.ok) {
