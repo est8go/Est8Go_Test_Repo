@@ -16,3 +16,6 @@ WHERE tenant_id = 1
   AND role != 'admin';
 
 -- Wallet is already correct (1090 credits) — no credit adjustment needed
+
+-- Remove stale test account across all tenants
+DELETE FROM users WHERE email = 'elixirplate@gmail.com';
