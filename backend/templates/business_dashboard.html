@@ -3268,6 +3268,15 @@
 
         const user = await res.json();
 
+        // ── Platform user guard ───────────────────────────────
+        // Superusers and platform staff have no tenant.
+        // The business dashboard is strictly for tenant users.
+        // Redirect platform users to their correct portal.
+        if (user.is_platform_user || !user.tenant_id) {
+          window.location.replace('/public/super-admin-portal');
+          return false;
+        }
+
         // ── Set tenant context ────────────────────────────────
         CFG._tid = user.tenant_id;
         CFG._tenantType = user.tenant_type || 'agency';
