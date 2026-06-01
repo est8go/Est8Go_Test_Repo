@@ -2730,6 +2730,59 @@
       </button>
     </div>
 
+    <!-- ══════════════════════════════════════
+         TEAM TAB — admin only
+    ══════════════════════════════════════ -->
+    <div id="teamTab" class="tab" style="padding-top:4px">
+
+      <!-- Seat usage bar -->
+      <div id="seatUsageCard" style="background:var(--surface);border:1px solid var(--border);
+           border-radius:var(--r-lg);padding:20px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;
+                      text-transform:uppercase;color:var(--muted)">Seat Usage</div>
+          <div id="seatPlanBadge" style="font-size:9px;font-weight:700;
+               background:var(--indigo-dim);color:var(--indigo);
+               padding:3px 10px;border-radius:99px;text-transform:uppercase"></div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:10px">
+          <span id="seatUsedCount" style="font-size:28px;font-weight:800;
+                font-family:var(--font-head);color:var(--text)">—</span>
+          <span id="seatTotalCount" style="font-size:14px;color:var(--muted)">/ — seats</span>
+        </div>
+        <div style="height:6px;background:var(--surface2);border-radius:99px;overflow:hidden">
+          <div id="seatProgressBar" style="height:100%;border-radius:99px;
+               background:var(--indigo);transition:width 0.4s ease;width:0%"></div>
+        </div>
+        <div id="seatStatusMsg" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+      </div>
+
+      <!-- Add Staff button — admin only -->
+      <button id="addStaffBtn" class="btn btn-ind btn-md btn-full"
+              style="margin-bottom:14px" onclick="openAddStaffModal()">
+        + Add Team Member
+      </button>
+
+      <!-- Extra seat cost notice — shown when at limit -->
+      <div id="extraSeatNotice" style="display:none;background:var(--warn-dim);
+           border:1px solid var(--warn);border-radius:var(--r-lg);
+           padding:14px 16px;margin-bottom:14px;font-size:12px;color:var(--warn);line-height:1.6">
+        <strong>Extra Seat Required</strong><br>
+        Your plan's base seats are full. Adding this member will cost
+        <strong>800 credits/month</strong> from your Est8Go wallet.
+      </div>
+
+      <!-- Staff list -->
+      <div class="sep">Team Members</div>
+      <div id="staffList" style="display:flex;flex-direction:column;gap:10px">
+        <div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px">
+          <div style="font-size:32px;margin-bottom:8px">👥</div>
+          Loading team...
+        </div>
+      </div>
+
+    </div>
+
   </div><!-- /scrollArea -->
 
   <!-- ══════════════════════════════════════
@@ -3025,6 +3078,12 @@
           <span>Est8 Credits</span>
           <svg class="drawer-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </div>
+        <div class="drawer-item" id="teamDrawerItem"
+             onclick="switchTab('team');closeMenuDrawer()" style="display:none">
+          <div class="drawer-icon" style="background:var(--indigo-dim)">👥</div>
+          <span>Team</span>
+          <svg class="drawer-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </div>
         <div class="drawer-item" onclick="switchTab('trust');closeMenuDrawer()">
           <div class="drawer-icon" style="background:var(--indigo-dim)">🛡️</div>
           <span>Trust Center</span>
@@ -3285,15 +3344,20 @@
           btn.style.display = 'none';
         }
       });
+      // Show Team tab in drawer for admins only
+      if (role === 'admin') {
+        const teamItem = g('teamDrawerItem');
+        if (teamItem) teamItem.style.display = 'flex';
+      }
     }
 
     /* ── TAB SWITCHER ────────────────────────── */
-    const MENU_ONLY_TABS = ['trust', 'studio', 'network', 'analytics', 'credits', 'settings'];
+    const MENU_ONLY_TABS = ['trust', 'studio', 'network', 'analytics', 'credits', 'settings', 'team'];
 
     function switchTab(tab) {
       if (tab === 'menu') { openMenuDrawer(); return; }
       ST.tab = tab;
-      const allTabs = ['home', 'properties', 'pipeline', 'operations', 'trust', 'studio', 'network', 'analytics', 'credits', 'settings'];
+      const allTabs = ['home', 'properties', 'pipeline', 'operations', 'trust', 'studio', 'network', 'analytics', 'credits', 'settings', 'team'];
       allTabs.forEach(t => {
         g(t + 'Tab')?.classList.remove('active');
         const btnId = 'btn' + t.charAt(0).toUpperCase() + t.slice(1);
@@ -3318,6 +3382,7 @@
       if (tab === 'analytics') loadAnalytics();
       if (tab === 'credits') loadCreditsTab();
       if (tab === 'settings') loadSettingsTab();
+      if (tab === 'team') loadTeam();
     }
 
     /* ── HOME ────────────────────────────────── */
@@ -4623,6 +4688,224 @@
       ],
     };
 
+    // ══════════════════════════════════════════════════════════
+    // TEAM MANAGEMENT
+    // ══════════════════════════════════════════════════════════
+
+    let _seatStatus = null;
+
+    async function loadTeam() {
+      if (CFG._role !== 'admin') return;
+      try {
+        const seatRes = await Auth.fetch('/seats/status');
+        if (seatRes?.ok) {
+          _seatStatus = await seatRes.json();
+          renderSeatUsage(_seatStatus);
+        }
+        const usersRes = await Auth.fetch('/users/');
+        if (!usersRes?.ok) return;
+        const users = await usersRes.json();
+        renderStaffList(users);
+      } catch (e) {
+        console.error('loadTeam error:', e);
+      }
+    }
+
+    function renderSeatUsage(s) {
+      const used  = s.current_count || 0;
+      const total = s.total_allowed;
+      const plan  = (s.plan || 'pilot').toUpperCase();
+
+      g('seatPlanBadge').textContent  = plan;
+      g('seatUsedCount').textContent  = used;
+      g('seatTotalCount').textContent = total === null
+        ? '/ ∞ seats' : `/ ${total} seats`;
+
+      const pct = total === null ? 0 : Math.min(100, Math.round(used / total * 100));
+      const bar = g('seatProgressBar');
+      bar.style.width = pct + '%';
+      bar.style.background = pct >= 100
+        ? 'var(--risk)' : pct >= 80
+        ? 'var(--warn)' : 'var(--indigo)';
+
+      const msg = g('seatStatusMsg');
+      if (s.is_freelance) {
+        msg.textContent = 'Solo account — staff seats not available.';
+        const addBtn = g('addStaffBtn');
+        if (addBtn) addBtn.style.display = 'none';
+      } else if (total === null) {
+        msg.textContent = 'Enterprise plan — unlimited seats.';
+      } else {
+        const remaining = total - used;
+        if (remaining <= 0) {
+          msg.innerHTML = `All base seats used. Extra seats available at
+            <strong style="color:var(--warn)">800 credits/month</strong>.`;
+          const notice = g('extraSeatNotice');
+          if (notice) notice.style.display = 'block';
+        } else {
+          msg.textContent = `${remaining} seat${remaining !== 1 ? 's' : ''} remaining on your plan.`;
+          const notice = g('extraSeatNotice');
+          if (notice) notice.style.display = 'none';
+        }
+      }
+    }
+
+    function renderStaffList(users) {
+      const list = g('staffList');
+      if (!users || users.length === 0) {
+        list.innerHTML = `
+          <div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px">
+            <div style="font-size:32px;margin-bottom:8px">👥</div>
+            No team members yet.<br>
+            <button class="btn btn-ind btn-sm" style="margin-top:12px"
+                    onclick="openAddStaffModal()">Add First Member</button>
+          </div>`;
+        return;
+      }
+      list.innerHTML = users.map(u => `
+        <div style="background:var(--surface);border:1px solid var(--border);
+                    border-radius:var(--r-lg);padding:16px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:36px;height:36px;border-radius:50%;
+                          background:var(--indigo-dim);display:flex;
+                          align-items:center;justify-content:center;
+                          font-size:14px;font-weight:700;color:var(--indigo)">
+                ${sanitise((u.first_name || u.email).slice(0,2).toUpperCase())}
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text)">
+                  ${sanitise(u.first_name || u.email.split('@')[0])}
+                </div>
+                <div style="font-size:11px;color:var(--muted)">${sanitise(u.email)}</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+              <span style="font-size:9px;font-weight:700;text-transform:uppercase;
+                           background:var(--surface2);color:var(--muted);
+                           padding:2px 8px;border-radius:99px">
+                ${sanitise(u.role)}
+              </span>
+              <span style="font-size:9px;color:${u.is_active ? 'var(--em)' : 'var(--risk)'}">
+                ${u.is_active ? '● Active' : '● Inactive'}
+              </span>
+            </div>
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:var(--muted);
+                      display:flex;justify-content:space-between;align-items:center">
+            <span>
+              ${u.phone_number
+                ? '📱 ' + sanitise(u.phone_number)
+                : '⚠️ No phone — lead alerts disabled'}
+            </span>
+            ${u.is_active && u.role !== 'admin'
+              ? `<button onclick="deactivateStaffMember(${u.id},'${sanitise(u.email)}')"
+                   style="background:none;border:none;color:var(--risk);
+                          font-size:11px;cursor:pointer;font-weight:600;
+                          min-height:44px;padding:0 4px">
+                   Deactivate
+                 </button>`
+              : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function openAddStaffModal() {
+      if (!_seatStatus) {
+        try {
+          const seatRes = await Auth.fetch('/seats/status');
+          if (seatRes?.ok) _seatStatus = await seatRes.json();
+        } catch(e) {}
+      }
+
+      const atLimit = _seatStatus &&
+                      _seatStatus.total_allowed !== null &&
+                      _seatStatus.current_count >= _seatStatus.total_allowed;
+
+      const warning = g('addStaffCreditWarning');
+      if (atLimit) {
+        try {
+          const balRes = await Auth.fetch('/credits/balance');
+          if (balRes?.ok) {
+            const bal = await balRes.json();
+            g('addStaffCreditBalance').textContent = (bal.available || 0) + ' credits';
+          }
+        } catch(e) {}
+        if (warning) warning.style.display = 'block';
+      } else {
+        if (warning) warning.style.display = 'none';
+      }
+
+      ['ns_name','ns_email','ns_password','ns_phone'].forEach(id => {
+        const el = g(id); if (el) el.value = '';
+      });
+      const roleEl = g('ns_role'); if (roleEl) roleEl.value = 'realtor';
+      openModal('addStaffModal');
+    }
+
+    async function saveNewStaff() {
+      const btn      = g('ns_saveBtn');
+      const name     = g('ns_name').value.trim();
+      const email    = g('ns_email').value.trim();
+      const password = g('ns_password').value.trim();
+      const role     = g('ns_role').value;
+      const phone    = g('ns_phone').value.trim();
+
+      if (!email) { toast('Email is required', 'error'); return; }
+      if (!password || password.length < 8) {
+        toast('Password must be at least 8 characters', 'error'); return;
+      }
+
+      btn.textContent = 'Adding...';
+      btn.disabled    = true;
+
+      try {
+        const res = await Auth.fetch('/users/', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            password,
+            role,
+            first_name:   name || null,
+            phone_number: phone || null,
+          }),
+        });
+
+        if (res?.ok) {
+          toast('Team member added successfully');
+          closeModal('addStaffModal');
+          _seatStatus = null;
+          loadTeam();
+        } else {
+          const d = await res.json();
+          toast(d.detail || 'Failed to add member', 'error');
+        }
+      } catch(e) {
+        toast('Connection error', 'error');
+      } finally {
+        btn.textContent = 'Add Member';
+        btn.disabled    = false;
+      }
+    }
+
+    async function deactivateStaffMember(userId, email) {
+      if (!confirm(`Deactivate ${email}? They will lose access immediately.`)) return;
+      try {
+        const res = await Auth.fetch(`/users/${userId}/deactivate`, { method: 'PATCH' });
+        if (res?.ok) {
+          toast(`${email} deactivated`);
+          loadTeam();
+        } else {
+          const d = await res.json();
+          toast(d.detail || 'Failed to deactivate', 'error');
+        }
+      } catch(e) {
+        toast('Connection error', 'error');
+      }
+    }
+
     let _fabOpen = false;
     let _fabActions = [];
 
@@ -4679,6 +4962,70 @@
       if (action) action.action();
     }
   </script>
+
+  <!-- ══ MODAL: Add Staff ══ -->
+  <div class="modal-backdrop" id="addStaffModal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <div class="modal-title">Add Team Member</div>
+        <button onclick="closeModal('addStaffModal')"
+                style="background:none;border:none;color:var(--muted);
+                       cursor:pointer;font-size:20px">✕</button>
+      </div>
+
+      <div id="addStaffCreditWarning" style="display:none;
+           margin:0 20px 4px;padding:10px 14px;
+           background:var(--warn-dim);border:1px solid var(--warn);
+           border-radius:12px;font-size:11px;color:var(--warn);line-height:1.5">
+        Your base seats are full.<br>
+        Adding this member will cost <strong>800 credits/month</strong>.
+        You have <span id="addStaffCreditBalance">—</span> credits available.
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">First Name</label>
+        <input type="text" id="ns_name" class="field" placeholder="e.g. Amara" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Email Address</label>
+        <input type="email" id="ns_email" class="field"
+               placeholder="amara@bravieshomz.com" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Password</label>
+        <input type="password" id="ns_password" class="field"
+               placeholder="Minimum 8 characters" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Role</label>
+        <select id="ns_role" class="field">
+          <option value="realtor">Realtor</option>
+          <option value="admin">Admin</option>
+          <option value="staff">Staff</option>
+          <option value="support">Support</option>
+          <option value="marketing">Marketing</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">
+          WhatsApp Number
+          <span style="color:var(--muted);font-size:9px">
+            (for lead alerts — E.164 e.g. 2348012345678)
+          </span>
+        </label>
+        <input type="tel" id="ns_phone" class="field"
+               placeholder="2348012345678 (optional)" />
+      </div>
+
+      <div style="padding:20px 20px 8px;display:flex;gap:10px">
+        <button class="btn btn-ghost btn-md" style="flex:1"
+                onclick="closeModal('addStaffModal')">Cancel</button>
+        <button class="btn btn-ind btn-md" style="flex:2"
+                id="ns_saveBtn" onclick="saveNewStaff()">Add Member</button>
+      </div>
+    </div>
+  </div>
 
 </body>
 

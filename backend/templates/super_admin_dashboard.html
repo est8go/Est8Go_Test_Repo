@@ -446,8 +446,29 @@
         </div>
       </div>
 
-      <!-- LEAD ALERT PHONE NUMBERS -->
+      <!-- ADD STAFF TO TENANT -->
       <div style="margin:16px 16px 0">
+        <div style="background:var(--surface2);border:1px solid var(--border);
+                    border-radius:14px;padding:16px;margin-bottom:14px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:0.3em;
+                      text-transform:uppercase;color:var(--muted);margin-bottom:12px">
+            Add Staff to Tenant
+          </div>
+          <select id="sa_tenantSelect" class="field-select"
+                  style="margin-bottom:10px;width:100%">
+            <option value="">Select tenant...</option>
+          </select>
+          <button onclick="openSuperAddStaffModal()"
+                  style="width:100%;padding:10px;font-size:12px;font-weight:700;
+                         background:var(--em);color:#fff;border:none;
+                         border-radius:10px;cursor:pointer">
+            + Add Staff Member
+          </button>
+        </div>
+      </div>
+
+      <!-- LEAD ALERT PHONE NUMBERS -->
+      <div style="margin:0 16px 0">
         <div style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Lead Alert Numbers</div>
         <div style="background:var(--warn-dim);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:12px;color:var(--warn)">
           ⚠️ Staff without phone numbers will not receive hot lead alerts when buyers show interest.
@@ -1338,6 +1359,15 @@
       if (!res) return;
       allTenants = await res.json();
       renderTenants(allTenants);
+      // Populate super admin staff tenant selector
+      const sel = g('sa_tenantSelect');
+      if (sel) {
+        sel.innerHTML = '<option value="">Select tenant...</option>' +
+          allTenants
+            .filter(t => t.is_active)
+            .map(t => `<option value="${t.id}">${sanitise(t.business_name || t.name)}</option>`)
+            .join('');
+      }
     } catch (e) {}
   }
 
@@ -2869,6 +2899,134 @@
     const healthTab = g('healthTab');
     if (healthTab && healthTab.classList.contains('active')) loadHealthStatus();
   }, 60000);
+
+  // ── SUPER ADMIN: Add Staff to Tenant ────────────────────────
+
+  function openSuperAddStaffModal() {
+    const sel = g('sa_tenantSelect');
+    const tenantId = sel?.value;
+    if (!tenantId) { toast('Select a tenant first', 'var(--risk)'); return; }
+
+    const tenantName = sel.options[sel.selectedIndex].text;
+    const label = g('saStaffTenantName');
+    if (label) label.textContent = 'Adding staff to: ' + tenantName;
+
+    ['sa_ns_name','sa_ns_email','sa_ns_password','sa_ns_phone']
+      .forEach(id => { const el = g(id); if (el) el.value = ''; });
+    const roleEl = g('sa_ns_role'); if (roleEl) roleEl.value = 'realtor';
+
+    openModal('saAddStaffModal');
+  }
+
+  async function saveSuperAddStaff() {
+    const tenantId = g('sa_tenantSelect')?.value;
+    if (!tenantId) { toast('No tenant selected', 'var(--risk)'); return; }
+
+    const btn      = g('sa_ns_saveBtn');
+    const name     = g('sa_ns_name').value.trim();
+    const email    = g('sa_ns_email').value.trim();
+    const password = g('sa_ns_password').value.trim();
+    const role     = g('sa_ns_role').value;
+    const phone    = g('sa_ns_phone').value.trim();
+
+    if (!email)  { toast('Email required', 'var(--risk)'); return; }
+    if (!password || password.length < 8) {
+      toast('Password must be 8+ characters', 'var(--risk)'); return;
+    }
+
+    btn.textContent = 'Adding...';
+    btn.disabled    = true;
+
+    try {
+      const res = await Auth.fetch(`/admin/tenants/${tenantId}/staff`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          role,
+          first_name:   name || null,
+          phone_number: phone || null,
+        }),
+      });
+
+      if (res?.ok) {
+        toast('Staff member added');
+        closeModal('saAddStaffModal');
+        loadTenantStaff();
+        loadTenants();
+      } else {
+        const d = await res.json();
+        toast(d.detail || 'Failed to add staff', 'var(--risk)');
+      }
+    } catch(e) {
+      toast('Connection error', 'var(--risk)');
+    } finally {
+      btn.textContent = 'Add Staff';
+      btn.disabled    = false;
+    }
+  }
 </script>
+
+<!-- ══ MODAL: Super Admin — Add Staff to Tenant ══ -->
+<div class="modal-overlay" id="saAddStaffModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Add Staff to Tenant</div>
+      <button onclick="closeModal('saAddStaffModal')"
+              style="background:none;border:none;color:var(--muted);
+                     cursor:pointer;font-size:20px">✕</button>
+    </div>
+    <div id="saStaffTenantName"
+         style="margin:4px 20px 0;padding:8px 14px;
+                background:var(--indigo-dim);border-radius:10px;
+                font-size:11px;color:var(--indigo);font-weight:600">
+    </div>
+    <div class="field-group">
+      <label class="field-label">First Name</label>
+      <input type="text" id="sa_ns_name" class="field-input"
+             placeholder="e.g. Amara" />
+    </div>
+    <div class="field-group">
+      <label class="field-label">Email Address</label>
+      <input type="email" id="sa_ns_email" class="field-input"
+             placeholder="amara@company.com" />
+    </div>
+    <div class="field-group">
+      <label class="field-label">Password</label>
+      <input type="password" id="sa_ns_password" class="field-input"
+             placeholder="Minimum 8 characters" />
+    </div>
+    <div class="field-group">
+      <label class="field-label">Role</label>
+      <select id="sa_ns_role" class="field-select">
+        <option value="realtor">Realtor</option>
+        <option value="admin">Admin</option>
+        <option value="staff">Staff</option>
+        <option value="support">Support</option>
+        <option value="marketing">Marketing</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label class="field-label">WhatsApp Number (optional)</label>
+      <input type="tel" id="sa_ns_phone" class="field-input"
+             placeholder="2348012345678" />
+    </div>
+    <div style="padding:16px 20px 8px;display:flex;gap:10px">
+      <button onclick="closeModal('saAddStaffModal')"
+              style="flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);
+                     border-radius:var(--r-md,12px);padding:12px;font-size:14px;font-weight:700;cursor:pointer">
+        Cancel
+      </button>
+      <button id="sa_ns_saveBtn" onclick="saveSuperAddStaff()"
+              style="flex:2;background:var(--em);color:#fff;border:none;
+                     border-radius:var(--r-md,12px);padding:12px;font-size:14px;font-weight:700;cursor:pointer">
+        Add Staff
+      </button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

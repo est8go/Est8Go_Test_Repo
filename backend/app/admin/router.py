@@ -102,6 +102,14 @@ class UpdateTenantRequest(BaseModel):
     slug:                     Optional[str] = None
 
 
+class SuperAddStaffRequest(BaseModel):
+    email:        str
+    password:     str
+    role:         str = "realtor"
+    first_name:   Optional[str] = None
+    phone_number: Optional[str] = None
+
+
 # ================================================================
 # PULSE — platform health snapshot
 # ================================================================
@@ -477,6 +485,109 @@ def update_tenant(
             "tone":                     tenant.tone,
             "slug":                     tenant.slug,
         },
+    }
+
+
+# ================================================================
+# TENANTS — add staff to any tenant (superuser only)
+# ================================================================
+
+@router.post("/tenants/{tenant_id}/staff")
+def super_add_staff(
+    tenant_id: int,
+    payload: SuperAddStaffRequest,
+    current_user: User = Depends(require_superuser),
+    db: Session = Depends(get_db),
+):
+    """
+    Superuser adds a staff member to any tenant.
+    Enforces seat limits same as tenant self-service.
+    Bypasses JWT tenant scope.
+    """
+    from app.core.security import hash_password
+    from app.credits.seat_service import (
+        check_can_add_staff,
+        get_base_seat_limit,
+        purchase_extra_seat,
+        EXTRA_SEAT_COST,
+    )
+    from app.credits.service import get_or_create_wallet
+
+    tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+    if not tenant:
+        raise HTTPException(404, "Tenant not found.")
+
+    valid_roles = ("admin", "realtor", "staff", "support", "marketing")
+    if payload.role not in valid_roles:
+        raise HTTPException(400, f"Invalid role '{payload.role}'.")
+
+    # Enforce seat limits
+    allowed, reason = check_can_add_staff(tenant_id, db)
+    needs_extra_seat = False
+
+    if not allowed:
+        if tenant.tenant_type == "freelance":
+            raise HTTPException(403, reason)
+
+        wallet = get_or_create_wallet(tenant_id, db)
+        available = wallet.purchased_balance + wallet.bonus_balance - wallet.reserved
+        if available < EXTRA_SEAT_COST:
+            raise HTTPException(
+                402,
+                f"{reason} Extra seats cost {EXTRA_SEAT_COST} credits/month. "
+                f"Tenant has {available} credits available.",
+            )
+        needs_extra_seat = True
+
+    user = User(
+        tenant_id        = tenant_id,
+        email            = payload.email,
+        hashed_password  = hash_password(payload.password),
+        role             = payload.role,
+        first_name       = payload.first_name,
+        phone_number     = payload.phone_number,
+        is_active        = True,
+        is_platform_user = False,
+    )
+    db.add(user)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(409, "A user with this email already exists.")
+
+    db.refresh(user)
+
+    if needs_extra_seat:
+        try:
+            purchase_extra_seat(
+                tenant_id    = tenant_id,
+                user_id      = user.id,
+                db           = db,
+                purchased_by = current_user.id,
+            )
+        except ValueError as e:
+            db.delete(user)
+            db.commit()
+            raise HTTPException(402, str(e))
+
+    log_action(
+        db, actor=current_user, action="staff_added",
+        target_table="users", target_id=user.id,
+        new_value={
+            "tenant_id": tenant_id,
+            "email":     user.email,
+            "role":      user.role,
+        },
+    )
+
+    return {
+        "success":   True,
+        "message":   f"Staff member {user.email} added to {tenant.name}.",
+        "user_id":   user.id,
+        "email":     user.email,
+        "role":      user.role,
+        "tenant_id": tenant_id,
     }
 
 
