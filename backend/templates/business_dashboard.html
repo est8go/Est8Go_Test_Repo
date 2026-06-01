@@ -4890,10 +4890,11 @@
         });
 
         if (res?.ok) {
-          toast('Team member added successfully');
+          toast('✓ Team member added successfully');
           closeModal('addStaffModal');
           _seatStatus = null;
           await loadTeam();
+          loadCreditBalance();
         } else {
           const d = await res.json().catch(() => ({}));
           const msg = res.status === 409
