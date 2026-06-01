@@ -1,7 +1,12 @@
+import traceback
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+
+logger = logging.getLogger(__name__)
 
 from app.database.db import get_db
 from app.users.models import User, TENANT_ROLES
@@ -76,85 +81,93 @@ def create_user(
             detail=f"Invalid role '{payload.role}'. Must be one of: {', '.join(TENANT_ROLES)}",
         )
 
-    # ── SEAT LIMIT ENFORCEMENT ───────────────────────────────────
-    tenant = db.query(Tenant).filter(
-        Tenant.id == current_user.tenant_id
-    ).first()
-
-    if not tenant:
-        raise HTTPException(400, "Tenant not found.")
-
-    allowed, reason = check_can_add_staff(current_user.tenant_id, db)
-
-    needs_extra_seat = False
-
-    if not allowed:
-        is_freelance = tenant.tenant_type == "freelance"
-        base_limit = get_base_seat_limit(tenant.plan)
-        is_enterprise = base_limit is None
-
-        if is_freelance:
-            raise HTTPException(status_code=403, detail=reason)
-
-        if not is_enterprise:
-            # Check if tenant has enough credits to buy an extra seat
-            from app.credits.service import get_or_create_wallet
-            wallet = get_or_create_wallet(current_user.tenant_id, db)
-            available = (
-                wallet.purchased_balance + wallet.bonus_balance - wallet.reserved
-            )
-            if available < EXTRA_SEAT_COST:
-                raise HTTPException(
-                    status_code=402,
-                    detail=(
-                        f"{reason} "
-                        f"Extra seats cost {EXTRA_SEAT_COST} credits/month. "
-                        f"You have {available} credits available. "
-                        f"Top up your credits to add more staff."
-                    ),
-                )
-            needs_extra_seat = True
-        # enterprise: unlimited seats — fall through, needs_extra_seat stays False
-
-    # ── CREATE USER ──────────────────────────────────────────────
-    user = User(
-        tenant_id        = current_user.tenant_id,
-        email            = payload.email,
-        hashed_password  = hash_password(payload.password),
-        role             = payload.role,
-        first_name       = payload.first_name,
-        phone_number     = payload.phone_number,
-        is_active        = True,
-        is_platform_user = False,
-    )
-
-    db.add(user)
     try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(
-            status_code=409, detail="A user with this email already exists."
+        # ── SEAT LIMIT ENFORCEMENT ───────────────────────────────────
+        tenant = db.query(Tenant).filter(
+            Tenant.id == current_user.tenant_id
+        ).first()
+
+        if not tenant:
+            raise HTTPException(400, "Tenant not found.")
+
+        allowed, reason = check_can_add_staff(current_user.tenant_id, db)
+
+        needs_extra_seat = False
+
+        if not allowed:
+            is_freelance = tenant.tenant_type == "freelance"
+            base_limit = get_base_seat_limit(tenant.plan)
+            is_enterprise = base_limit is None
+
+            if is_freelance:
+                raise HTTPException(status_code=403, detail=reason)
+
+            if not is_enterprise:
+                # Check if tenant has enough credits to buy an extra seat
+                from app.credits.service import get_or_create_wallet
+                wallet = get_or_create_wallet(current_user.tenant_id, db)
+                available = (
+                    wallet.purchased_balance + wallet.bonus_balance - wallet.reserved
+                )
+                if available < EXTRA_SEAT_COST:
+                    raise HTTPException(
+                        status_code=402,
+                        detail=(
+                            f"{reason} "
+                            f"Extra seats cost {EXTRA_SEAT_COST} credits/month. "
+                            f"You have {available} credits available. "
+                            f"Top up your credits to add more staff."
+                        ),
+                    )
+                needs_extra_seat = True
+            # enterprise: unlimited seats — fall through, needs_extra_seat stays False
+
+        # ── CREATE USER ──────────────────────────────────────────────
+        user = User(
+            tenant_id        = current_user.tenant_id,
+            email            = payload.email,
+            hashed_password  = hash_password(payload.password),
+            role             = payload.role,
+            first_name       = payload.first_name,
+            phone_number     = payload.phone_number,
+            is_active        = True,
+            is_platform_user = False,
         )
 
-    db.refresh(user)
-
-    # ── PURCHASE EXTRA SEAT IF NEEDED ────────────────────────────
-    if needs_extra_seat:
+        db.add(user)
         try:
-            purchase_extra_seat(
-                tenant_id    = current_user.tenant_id,
-                user_id      = user.id,
-                db           = db,
-                purchased_by = current_user.id,
-            )
-        except ValueError as e:
-            # Roll back user creation if seat purchase fails
-            db.delete(user)
             db.commit()
-            raise HTTPException(status_code=402, detail=str(e))
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(
+                status_code=409, detail="A user with this email already exists."
+            )
 
-    return user
+        db.refresh(user)
+
+        # ── PURCHASE EXTRA SEAT IF NEEDED ────────────────────────────
+        if needs_extra_seat:
+            try:
+                purchase_extra_seat(
+                    tenant_id    = current_user.tenant_id,
+                    user_id      = user.id,
+                    db           = db,
+                    purchased_by = current_user.id,
+                )
+            except ValueError as e:
+                # Roll back user creation if seat purchase fails
+                db.delete(user)
+                db.commit()
+                raise HTTPException(status_code=402, detail=str(e))
+
+        return user
+
+    except HTTPException:
+        raise  # re-raise HTTP exceptions as-is
+    except Exception as e:
+        logger.error(f"create_user unexpected error: {e}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(500, f"Internal error: {str(e)}")
 
 
 # ================================================================
