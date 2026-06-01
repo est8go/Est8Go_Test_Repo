@@ -48,6 +48,7 @@ class UserResponse(BaseModel):
     email: str
     role: str
     first_name: str | None
+    phone_number: str | None = None
     tenant_id: int | None
     is_active: bool
     is_platform_user: bool
