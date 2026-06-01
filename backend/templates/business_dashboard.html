@@ -4879,7 +4879,7 @@
           _seatStatus = null;
           loadTeam();
         } else {
-          const d = await res.json();
+          const d = await res.json().catch(() => ({}));
           toast(d.detail || 'Failed to add member', 'error');
         }
       } catch(e) {
@@ -4893,7 +4893,7 @@
     async function deactivateStaffMember(userId, email) {
       if (!confirm(`Deactivate ${email}? They will lose access immediately.`)) return;
       try {
-        const res = await fetch(`/users/${userId}/deactivate`, { method: 'PATCH', headers: CFG.H });
+        const res = await fetch(`/users/${parseInt(userId, 10)}/deactivate`, { method: 'PATCH', headers: CFG.H });
         if (res?.ok) {
           toast(`${email} deactivated`);
           loadTeam();
