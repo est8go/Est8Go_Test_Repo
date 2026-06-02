@@ -61,6 +61,9 @@ button{cursor:pointer;font-family:inherit}
 .fh-btn:hover,.fh-btn:active{background:rgba(15,23,42,.75)}
 .fh-right{display:flex;gap:8px}
 html[data-theme="light"] .fh-btn{background:rgba(248,250,252,.88);border:1px solid rgba(15,23,42,.14);color:#0F172A}
+.fh-chat-btn{width:auto;padding:0 14px;border-radius:20px;background:#25D366;border-color:#25D366;font-size:13px;font-weight:700;gap:4px;text-decoration:none}
+.fh-chat-btn:hover,.fh-chat-btn:active{background:#1ebe5d}
+html[data-theme="light"] .fh-chat-btn{background:#25D366;border-color:#25D366;color:#fff}
 
 /* ── Carousel ── */
 .carousel-outer{position:relative;width:100%;height:310px;overflow:hidden;background:var(--surface2)}
@@ -206,9 +209,12 @@ html[data-theme="light"] .action-bar{background:#fff}
     </button>
     <div class="fh-right">
       <button class="fh-btn" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle theme">🌙</button>
-      <button class="fh-btn header-chat-btn" onclick="shareProperty()" aria-label="Share property">
+      <button class="fh-btn" onclick="shareProperty()" aria-label="Share property">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       </button>
+      {% if wa_number %}
+      <a href="https://wa.me/{{ wa_number }}" target="_blank" rel="noopener noreferrer" class="fh-btn fh-chat-btn header-chat-btn" aria-label="Chat on WhatsApp">💬 Chat</a>
+      {% endif %}
     </div>
   </div>
 
