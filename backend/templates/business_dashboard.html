@@ -43,6 +43,7 @@
       --r-lg: 20px;
       --r-pill: 999px;
       --nav-h: 64px;
+      --header-h: 60px;
     }
 
     html[data-theme="light"] {
@@ -2243,6 +2244,9 @@
   <!-- propSearchBar — shown only on properties tab, sibling of scrollArea -->
   <div id="propSearchBar"
        style="display:none;
+              position:sticky;
+              top:var(--header-h);
+              z-index:50;
               background:var(--bg);
               border-bottom:1px solid var(--border);
               padding:10px 16px">
@@ -2542,7 +2546,7 @@
            style="padding:6px 16px 10px;font-size:11px;
                   color:var(--muted);display:flex;
                   align-items:center;gap:12px;
-                  flex-wrap:wrap">
+                  flex-wrap:nowrap">
         <span id="propInfoTotal"></span>
         <span id="propInfoGPS"
               style="color:var(--em)"></span>
@@ -4074,9 +4078,9 @@
         const el = g(id);
         if (el && val) el.textContent = val;
       };
-      s('propInfoGPS',        stats.gps_verified   + ' GPS verified');
-      s('propInfoDocs',       stats.with_documents + ' with docs');
-      s('propInfoUnassigned', stats.unassigned     + ' unassigned');
+      s('propInfoGPS',        stats.gps_verified   + ' GPS');
+      s('propInfoDocs',       stats.with_documents + ' Docs');
+      s('propInfoUnassigned', stats.unassigned     + ' Unassigned');
     }
 
     function renderPropListings(listings, total) {
