@@ -2,9 +2,10 @@ import os
 import logging
 from typing import Optional, List
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, Header, Form, File, UploadFile, HTTPException
+from fastapi import APIRouter, Depends, Header, Form, File, UploadFile, HTTPException, Query
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from supabase import create_client, Client
 
 logger = logging.getLogger(__name__)
@@ -218,26 +219,93 @@ async def monitor_platform_trust(
 # ---------------------------------------------------------
 
 
-@router.get("/", response_model=List[ListingOut])
+@router.get("/")
 def get_my_listings(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=50),
+    search: str = Query(None),
+    property_type: str = Query(None),
+    sort_by: str = Query("trust_score"),
+    sort_dir: str = Query("desc"),
     x_tenant_id: Optional[int] = Header(None, alias="X-Tenant-Id"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Returns all listings for the authenticated tenant, enriched with realtor info."""
+    """Returns paginated verified listings with stats for the authenticated tenant."""
     tenant_id = get_tenant_id_from_user(current_user, x_tenant_id)
-    listings = db.query(Listing).filter(Listing.tenant_id == tenant_id).all()
 
+    # Base query — verified listings only
+    base_q = db.query(Listing).filter(
+        Listing.tenant_id == tenant_id,
+        Listing.status == "verified",
+    )
+
+    # Search
+    if search:
+        term = f"%{search}%"
+        base_q = base_q.filter(
+            or_(Listing.title.ilike(term), Listing.location.ilike(term))
+        )
+
+    # Property type filter
+    if property_type:
+        base_q = base_q.filter(Listing.property_type == property_type)
+
+    # Sorting — whitelist to prevent injection
+    _SORT_FIELDS = {"trust_score", "price", "created_at"}
+    sort_field = sort_by if sort_by in _SORT_FIELDS else "trust_score"
+    sort_col = getattr(Listing, sort_field, Listing.trust_score)
+    base_q = base_q.order_by(
+        sort_col.asc() if sort_dir == "asc" else sort_col.desc()
+    )
+
+    # Count before pagination
+    total = base_q.count()
+
+    # Paginate
+    offset = (page - 1) * limit
+    rows = base_q.offset(offset).limit(limit).all()
+
+    # Aggregate stats — always over all verified listings (ignores search/type)
+    all_q = db.query(Listing).filter(
+        Listing.tenant_id == tenant_id,
+        Listing.status == "verified",
+    )
+    total_all  = all_q.count()
+    gps_count  = all_q.filter(Listing.gps_verified_at.isnot(None)).count()
+    docs_count = all_q.filter(Listing.document_score > 0).count()
+    unassigned = all_q.filter(Listing.assigned_realtor_id.is_(None)).count()
+
+    # Enrich with realtor info
     result = []
-    for l in listings:
-        d = ListingOut.model_validate(l)
-        if l.assigned_realtor_id:
-            r = db.query(User).filter(User.id == l.assigned_realtor_id).first()
-            if r:
-                d.assigned_realtor_name = r.first_name or r.email.split('@')[0]
-                d.assigned_realtor_phone = r.phone_number
-        result.append(d)
-    return result
+    for listing in rows:
+        out = ListingOut.model_validate(listing)
+        if listing.assigned_realtor_id:
+            realtor = db.query(User).filter(
+                User.id == listing.assigned_realtor_id
+            ).first()
+            if realtor:
+                out.assigned_realtor_name = (
+                    realtor.first_name or realtor.email.split("@")[0]
+                )
+                out.assigned_realtor_phone = realtor.phone_number
+        result.append(out)
+
+    pages = max(1, (total + limit - 1) // limit)
+
+    return {
+        "listings": result,
+        "total": total,
+        "page": page,
+        "pages": pages,
+        "limit": limit,
+        "stats": {
+            "total_all":      total_all,
+            "gps_verified":   gps_count,
+            "with_documents": docs_count,
+            "unassigned":     unassigned,
+        },
+    }
 
 
 @router.post("/", response_model=ListingOut)

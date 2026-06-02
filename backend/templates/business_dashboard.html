@@ -1075,6 +1075,52 @@
       margin-top: 12px;
     }
 
+    /* ── Properties tab v2 ─────────────────── */
+    .prop-stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 16px 0}
+    .prop-stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 10px;text-align:center}
+    .prop-stat-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;line-height:1}
+    .prop-stat-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-top:4px}
+    .prop-filter-bar{padding:10px 16px 8px;display:flex;flex-direction:column;gap:8px;position:sticky;top:0;z-index:50;background:var(--bg)}
+    .prop-search-wrap{position:relative}
+    .prop-search-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 34px 9px 12px;font-size:13px;color:var(--text);font-family:inherit;outline:none;transition:border-color .15s}
+    .prop-search-input:focus{border-color:var(--indigo)}
+    .prop-search-input::placeholder{color:var(--muted)}
+    .prop-search-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:var(--surface2);border:1px solid var(--border);border-radius:6px;width:22px;height:22px;display:none;align-items:center;justify-content:center;font-size:11px;color:var(--muted);cursor:pointer}
+    .prop-filter-row{display:flex;gap:8px}
+    .prop-filter-select{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:12px;color:var(--text);font-family:inherit;outline:none;cursor:pointer}
+    .prop-filter-select:focus{border-color:var(--indigo)}
+    .prop-v2-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px}
+    @media(min-width:768px){.prop-v2-grid{gap:16px}}
+    .prop-v2-img{width:100%;aspect-ratio:16/9;overflow:hidden;background:var(--surface2);position:relative;display:flex;align-items:center;justify-content:center}
+    .prop-v2-img img{width:100%;height:100%;object-fit:cover;display:block}
+    .prop-trust-badge-v2{position:absolute;top:6px;right:6px;background:rgba(15,23,42,.88);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:4px 8px;display:flex;align-items:center;gap:4px}
+    .prop-trust-score-v2{font-family:'Syne',sans-serif;font-size:13px;font-weight:800}
+    .prop-trust-grade-v2{font-size:9px;font-weight:700;opacity:.9}
+    .prop-gps-tag{position:absolute;bottom:6px;left:6px;background:rgba(16,185,129,.9);border-radius:6px;padding:3px 7px;font-size:9px;font-weight:700;color:#fff}
+    .prop-type-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+    .prop-type-pill{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--indigo);background:rgba(79,70,229,.12);border:1px solid rgba(79,70,229,.15);padding:2px 7px;border-radius:99px}
+    .prop-verified-dot{font-size:9px;font-weight:600;color:var(--em);display:flex;align-items:center;gap:3px}
+    .prop-v2-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;line-height:1.3;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.4em}
+    .prop-v2-location{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:3px;margin-bottom:6px}
+    .prop-v2-price{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--em);margin-bottom:6px}
+    .prop-realtor-row{font-size:10px;color:var(--muted);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .prop-realtor-unassigned{color:var(--warn)}
+    .prop-v2-actions{display:flex;gap:5px}
+    .prop-v2-actions .btn{flex:1;font-size:10px;padding:7px 4px}
+    .prop-pag-bar{padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px}
+    .prop-pag-nums{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+    .pag-btn{min-width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);font-size:12px;font-weight:600;color:var(--text);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .1s;padding:0 8px;font-family:inherit}
+    .pag-btn:hover{background:var(--border2)}
+    .pag-btn.active{background:var(--indigo);border-color:var(--indigo);color:#fff}
+    .pag-btn:disabled{opacity:.4;cursor:default;pointer-events:none}
+    .pag-dots{min-width:24px;height:32px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)}
+    .prop-showing{font-size:11px;color:var(--muted);padding:0 16px;margin-bottom:4px}
+    .prop-skeleton{border-radius:16px;overflow:hidden;background:var(--surface);border:1px solid var(--border)}
+    .prop-skel-img{width:100%;aspect-ratio:16/9;background:var(--surface2)}
+    .prop-skel-body{padding:10px}
+    .prop-skel-line{height:9px;border-radius:4px;background:var(--surface2);margin-bottom:7px;animation:skelPulse 1.4s ease-in-out infinite}
+    @keyframes skelPulse{0%,100%{opacity:.5}50%{opacity:.85}}
+
     /* ═══════════════════════════════════════════
        TEAM ROWS (Agency)
     ═══════════════════════════════════════════ */
@@ -2441,15 +2487,55 @@
 
     <!-- ─────────────── PROPERTIES TAB ─────────────── -->
     <div id="propertiesTab" class="tab" style="padding-top:4px">
-      <div class="sep">Properties</div>
-      <div id="vaultList">
-        <div class="empty">
-          <div class="empty-icon">🏗️</div>
-          <div class="empty-title">Your listings live here</div>
-          <div class="empty-body">Add your first verified property to start receiving buyer interest and trust scoring.</div>
-          <button class="btn btn-em btn-sm empty-cta" onclick="openModal('uploadModal')">Add First Listing</button>
+      <!-- Stats bar -->
+      <div id="propStatsBar" class="prop-stats-bar">
+        <div class="prop-stat-card">
+          <div class="prop-stat-num" id="pstatTotal" style="color:var(--text)">—</div>
+          <div class="prop-stat-lbl">Total</div>
+        </div>
+        <div class="prop-stat-card">
+          <div class="prop-stat-num" id="pstatGps" style="color:var(--em)">—</div>
+          <div class="prop-stat-lbl">GPS Verified</div>
+        </div>
+        <div class="prop-stat-card">
+          <div class="prop-stat-num" id="pstatDocs" style="color:var(--indigo)">—</div>
+          <div class="prop-stat-lbl">With Docs</div>
+        </div>
+        <div class="prop-stat-card">
+          <div class="prop-stat-num" id="pstatUnassigned" style="color:var(--warn)">—</div>
+          <div class="prop-stat-lbl">Unassigned</div>
         </div>
       </div>
+      <!-- Filter bar -->
+      <div class="prop-filter-bar">
+        <div class="prop-search-wrap">
+          <input type="text" id="propSearch" class="prop-search-input"
+                 placeholder="Search title or location..." autocomplete="off"
+                 oninput="handlePropSearch(this.value)" />
+          <button class="prop-search-clear" id="propSearchClear"
+                  onclick="clearPropSearch()" style="display:none">✕</button>
+        </div>
+        <div class="prop-filter-row">
+          <select id="propTypeFilter" class="prop-filter-select"
+                  onchange="_propState.type=this.value;_propState.page=1;loadListings()">
+            <option value="">All Types</option>
+            <option value="house">House</option>
+            <option value="apartment">Apartment</option>
+            <option value="land">Land</option>
+            <option value="commercial">Commercial</option>
+          </select>
+          <select id="propSortFilter" class="prop-filter-select"
+                  onchange="(function(v){var p=v.split(',');_propState.sort_by=p[0];_propState.sort_dir=p[1];_propState.page=1;loadListings();})(this.value)">
+            <option value="trust_score,desc">Highest Trust</option>
+            <option value="price,desc">Price: High to Low</option>
+            <option value="price,asc">Price: Low to High</option>
+            <option value="created_at,desc">Newest First</option>
+          </select>
+        </div>
+      </div>
+      <div class="prop-showing" id="propShowing"></div>
+      <div class="prop-v2-grid" id="propGrid"></div>
+      <div class="prop-pag-bar" id="propPagination" style="display:none"></div>
     </div>
 
     <!-- ─────────────── STUDIO TAB ─────────────── -->
@@ -3382,7 +3468,7 @@
       if (g('scrollArea')) g('scrollArea').scrollTop = 0;
       updateFAB(tab);
       if (tab === 'home') loadHome();
-      if (tab === 'properties') loadListings();
+      if (tab === 'properties') { _propState.page = 1; loadListings(); }
       if (tab === 'pipeline') loadPipeline();
       if (tab === 'operations') loadOperations();
       if (tab === 'trust') loadTrust();
@@ -3452,9 +3538,10 @@
       const zone = g('alertsZone');
       // Pull verification alerts from listings
       try {
-        const r = await fetch(CFG.API.listings, { headers: CFG.H });
+        const r = await fetch('/listings/?limit=50', { headers: CFG.H });
         if (!r.ok) return;
-        const listings = await r.json();
+        const _ldata = await r.json();
+        const listings = _ldata.listings || [];
         const now = new Date();
         const unverified = listings.filter(l => !l.trust_grade || l.trust_grade === 'ungraded' || l.trust_grade === 'flagged');
         const expired = listings.filter(l => l.gps_expires_at && new Date(l.gps_expires_at) < now);
@@ -3723,9 +3810,10 @@
 
     async function loadTrust() {
       try {
-        const r = await fetch(CFG.API.listings, { headers: CFG.H });
+        const r = await fetch('/listings/?limit=50', { headers: CFG.H });
         if (!r.ok) return;
-        const listings = await r.json();
+        const _ltdata = await r.json();
+        const listings = _ltdata.listings || [];
         if (!listings.length) return;
 
         window._trustListings = listings;
@@ -3811,57 +3899,178 @@
     }
 
     /* ── VAULT ───────────────────────────────── */
+    /* ── PROPERTIES STATE + HELPERS ─────────── */
+    let _propState = {
+      page: 1, limit: 20, search: '', type: '',
+      sort_by: 'trust_score', sort_dir: 'desc', total: 0, pages: 0,
+    };
+    let _propSearchTimer = null;
+    const _GRADE_COLORS = {
+      emerald:'#10B981', gold:'#F59E0B', silver:'#94A3B8',
+      bronze:'#CD7F32', ungraded:'#64748B',
+    };
+
+    function renderPropStats(stats) {
+      if (!stats) return;
+      const s = (id, v) => { const e = g(id); if (e) e.textContent = (v ?? '—'); };
+      s('pstatTotal',      stats.total_all);
+      s('pstatGps',        stats.gps_verified);
+      s('pstatDocs',       stats.with_documents);
+      s('pstatUnassigned', stats.unassigned);
+    }
+
+    function renderListings(listings, total, page, limit) {
+      const grid = g('propGrid');
+      const showing = g('propShowing');
+      if (!grid) return;
+      if (!listings.length) {
+        const hasSearch = !!_propState.search;
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 16px">
+          <div style="font-size:40px;margin-bottom:12px">🏠</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:6px">No verified listings found</div>
+          <div class="text-xs text-muted" style="margin-bottom:12px">${hasSearch ? 'Try a different search term' : 'Verified listings will appear here'}</div>
+          ${hasSearch
+            ? `<button class="btn btn-ghost btn-sm" onclick="clearPropSearch()">Clear search</button>`
+            : `<button class="btn btn-em btn-sm" onclick="openModal('uploadModal')">Add Listing →</button>`}
+        </div>`;
+        if (showing) showing.textContent = '';
+        return;
+      }
+      const start = (page - 1) * limit + 1;
+      const end   = Math.min(page * limit, total);
+      if (showing) showing.textContent = `Showing ${start}–${end} of ${total} listings`;
+
+      grid.innerHTML = listings.map(l => {
+        const ts    = l.trust_score || 0;
+        const grade = l.trust_grade || 'ungraded';
+        const gc    = _GRADE_COLORS[grade] || '#64748B';
+        const imgUrl = l.images?.[0]?.url || '';
+        const p = l.price || 0;
+        const priceFmt = p >= 1e9 ? '₦' + (p/1e9).toFixed(1) + 'B'
+                       : p >= 1e6 ? '₦' + Math.floor(p/1e6) + 'M'
+                       : p > 0    ? formatMoney(p)
+                                  : 'Price on Request';
+        const realtorRow = l.assigned_realtor_name
+          ? `<div class="prop-realtor-row">👤 ${sanitise(l.assigned_realtor_name)}${l.assigned_realtor_phone ? ' 📱' : ' ⚠️'}</div>`
+          : `<div class="prop-realtor-row prop-realtor-unassigned">⚠️ Unassigned</div>`;
+        const assignBtn = CFG._role === 'admin'
+          ? `<button class="btn btn-ghost btn-sm" onclick="openAssignModal(${l.id},${l.assigned_realtor_id||'null'},'${sanitise(l.title)}')">Assign</button>`
+          : '';
+        return `<div class="prop-card" style="margin-bottom:0">
+          <div class="prop-v2-img">
+            ${imgUrl ? `<img src="${imgUrl}" alt="${sanitise(l.title)}" loading="lazy" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+            <div style="display:${imgUrl?'none':'flex'};width:100%;height:100%;align-items:center;justify-content:center;font-size:28px;color:var(--muted)">🏠</div>
+            <div class="prop-trust-badge-v2">
+              <span class="prop-trust-score-v2" style="color:${gc}">${ts}</span>
+              <span class="prop-trust-grade-v2" style="color:${gc}">${grade}</span>
+            </div>
+            ${l.gps_verified_at ? `<div class="prop-gps-tag">📍 GPS</div>` : ''}
+          </div>
+          <div class="prop-body">
+            <div class="prop-type-row">
+              ${l.property_type ? `<span class="prop-type-pill">${sanitise(l.property_type)}</span>` : '<span></span>'}
+              <span class="prop-verified-dot">● verified</span>
+            </div>
+            <div class="prop-v2-title">${sanitise(l.title)||'Untitled'}</div>
+            <div class="prop-v2-location">📍 ${sanitise(l.location)||'—'}</div>
+            <div class="prop-v2-price">${priceFmt}</div>
+            ${realtorRow}
+            <div class="prop-v2-actions">
+              <button class="btn btn-em btn-sm" onclick="viewTrustDash(${l.id})">Trust</button>
+              ${assignBtn}
+              <button class="btn btn-ghost btn-sm" onclick="loadReelOptions(${l.id})">Reel</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderPagination(page, pages) {
+      const bar = g('propPagination');
+      if (!bar) return;
+      if (pages <= 1) { bar.style.display = 'none'; return; }
+      bar.style.display = 'flex';
+      const nums = new Set([1, pages]);
+      for (let i = Math.max(2, page-2); i <= Math.min(pages-1, page+2); i++) nums.add(i);
+      const sorted = [...nums].sort((a,b) => a-b);
+      let html = '<div class="prop-pag-nums">';
+      html += `<button class="pag-btn" onclick="goToPage(${page-1})" ${page===1?'disabled':''}>← Prev</button>`;
+      let prev = 0;
+      sorted.forEach(n => {
+        if (prev && n-prev > 1) html += '<span class="pag-dots">…</span>';
+        html += `<button class="pag-btn${n===page?' active':''}" onclick="goToPage(${n})">${n}</button>`;
+        prev = n;
+      });
+      html += `<button class="pag-btn" onclick="goToPage(${page+1})" ${page===pages?'disabled':''}>Next →</button>`;
+      html += '</div>';
+      bar.innerHTML = html;
+    }
+
+    function goToPage(p) {
+      if (p < 1 || p > _propState.pages) return;
+      _propState.page = p;
+      loadListings();
+      if (g('scrollArea')) g('scrollArea').scrollTop = 0;
+    }
+
+    function handlePropSearch(val) {
+      clearTimeout(_propSearchTimer);
+      const clr = g('propSearchClear');
+      if (clr) clr.style.display = val ? 'flex' : 'none';
+      _propSearchTimer = setTimeout(() => {
+        _propState.search = val;
+        _propState.page   = 1;
+        loadListings();
+      }, 400);
+    }
+
+    function clearPropSearch() {
+      const inp = g('propSearch');
+      if (inp) inp.value = '';
+      const clr = g('propSearchClear');
+      if (clr) clr.style.display = 'none';
+      _propState.search = '';
+      _propState.page   = 1;
+      loadListings();
+    }
+
     async function loadListings() {
-      const list = g('vaultList');
+      const grid = g('propGrid');
+      if (!grid) return;
+      // Skeleton loading
+      grid.innerHTML = Array(6).fill(0).map(() => `
+        <div class="prop-skeleton">
+          <div class="prop-skel-img"></div>
+          <div class="prop-skel-body">
+            <div class="prop-skel-line" style="width:60%"></div>
+            <div class="prop-skel-line" style="width:90%"></div>
+            <div class="prop-skel-line" style="width:40%"></div>
+          </div>
+        </div>`).join('');
+      const pag = g('propPagination');
+      if (pag) pag.style.display = 'none';
       try {
-        const r = await fetch(CFG.API.listings, { headers: CFG.H });
-        if (!r.ok) return;
-        const listings = await r.json();
-        ST.listings = listings;
-        if (!listings.length) {
-          list.innerHTML = `<div class="empty"><div class="empty-icon">🏠</div><div class="empty-title">Your Vault is Empty</div><div class="empty-body">Your listings become the operational foundation of your business. Add your first GPS-verified property to begin receiving buyer interest and trust scoring.</div><button class="btn btn-em btn-sm empty-cta" onclick="openModal('uploadModal')">Add First Listing →</button></div>`;
-          return;
-        }
-        list.innerHTML = listings.map(l => {
-          const ts = l.trust_score || 0;
-          const gradeColor = ts >= 75 ? 'rgba(16,185,129,0.9)' : ts >= 50 ? 'rgba(251,191,36,0.9)' : 'rgba(239,68,68,0.9)';
-          const imgUrl = l.images?.[0]?.url || l.image_url || '';
-          return `
-            <div class="prop-card">
-              <div class="prop-img" style="overflow:hidden;border-radius:inherit">
-                ${imgUrl
-                  ? `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"
-                       onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />`
-                  : ''}
-                <div style="display:${imgUrl ? 'none' : 'flex'};width:100%;height:100%;
-                  align-items:center;justify-content:center;font-size:32px;
-                  background:var(--surface2)">🏠</div>
-                <div class="prop-trust-overlay" style="background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.1)">
-                  ${l.trust_grade || 'Ungraded'} · ${ts}pts
-                </div>
-              </div>
-              <div class="prop-body">
-                <div class="prop-title">${sanitise(l.title) || 'Untitled Property'}</div>
-                <div class="prop-meta">
-                  <span>📍 ${sanitise(l.location) || '—'}</span>
-                  <span>🏷️ ${sanitise(l.property_type) || '—'}</span>
-                  <span style="color:${l.status === 'verified' ? 'var(--em)' : 'var(--warn)'}">● ${l.status || 'pending'}</span>
-                </div>
-                <div class="prop-price">${formatMoney(l.price || 0)}</div>
-                <div class="prop-actions">
-                  <button class="btn btn-ghost btn-sm" onclick="loadReelOptions(${l.id})">🎬 Reel</button>
-                  <button class="btn btn-em btn-sm" onclick="viewTrustDash(${l.id})">🛡️ Trust</button>
-                  ${CFG._role === 'admin'
-                    ? `<button class="btn btn-ghost btn-sm"
-                         onclick="openAssignModal(${l.id},${l.assigned_realtor_id || 'null'},'${sanitise(l.title)}')">
-                         👤 ${l.assigned_realtor_name ? sanitise(l.assigned_realtor_name) : 'Assign'}
-                       </button>`
-                    : ''}
-                </div>
-              </div>
-            </div>`;
-        }).join('');
-      } catch (e) { toast('Failed to load vault', 'error'); }
+        const params = new URLSearchParams({
+          page:     _propState.page,
+          limit:    _propState.limit,
+          sort_by:  _propState.sort_by,
+          sort_dir: _propState.sort_dir,
+        });
+        if (_propState.search) params.set('search', _propState.search);
+        if (_propState.type)   params.set('property_type', _propState.type);
+        const r = await fetch(`/listings/?${params}`, { headers: CFG.H });
+        if (!r.ok) { toast('Failed to load listings', 'error'); grid.innerHTML = ''; return; }
+        const data = await r.json();
+        _propState.total = data.total;
+        _propState.pages = data.pages;
+        ST.listings = data.listings || [];
+        renderPropStats(data.stats);
+        renderListings(data.listings || [], data.total, data.page, data.limit);
+        renderPagination(data.page, data.pages);
+      } catch (e) {
+        toast('Failed to load listings', 'error');
+        grid.innerHTML = '';
+      }
     }
 
     /* ── STUDIO ──────────────────────────────── */
@@ -3869,7 +4078,7 @@
       if (!ST.listings.length) {
         try {
           const r = await fetch(CFG.API.listings, { headers: CFG.H });
-          if (r.ok) ST.listings = await r.json();
+          if (r.ok) { const _lsd = await r.json(); ST.listings = _lsd.listings || []; }
         } catch (_) { }
       }
       const reelList = g('reelList');
