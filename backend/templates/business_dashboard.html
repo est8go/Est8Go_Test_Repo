@@ -2193,6 +2193,7 @@
       </div>
     </div>
 
+    <div id="homeOnlyHeader">
     <!-- ── Row 2: Business Identity Bar + Wallet Pill ── -->
     <div class="biz-bar" style="display:flex;align-items:center;
          justify-content:space-between;gap:12px;padding:12px 16px">
@@ -2235,7 +2236,80 @@
         </div>
       </div>
     </div>
+    </div><!-- /homeOnlyHeader -->
 
+  </div>
+
+  <!-- propSearchBar — shown only on properties tab, sibling of scrollArea -->
+  <div id="propSearchBar"
+       style="display:none;
+              background:var(--bg);
+              border-bottom:1px solid var(--border);
+              padding:10px 16px">
+    <div style="position:relative;margin-bottom:8px">
+      <svg style="position:absolute;left:12px;top:50%;
+                  transform:translateY(-50%);
+                  color:var(--muted);pointer-events:none"
+           width="14" height="14" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round"
+           stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" id="propSearch"
+             placeholder="Search title or location..."
+             oninput="debouncePropSearch(this.value)"
+             autocomplete="off"
+             style="width:100%;
+                    background:var(--surface2);
+                    border:1px solid var(--border);
+                    border-radius:10px;
+                    padding:9px 36px;
+                    font-size:13px;color:var(--text);
+                    font-family:inherit;outline:none;
+                    transition:border-color .15s"/>
+      <button id="propSearchClear"
+              onclick="clearPropSearch()"
+              style="display:none;position:absolute;
+                     right:10px;top:50%;
+                     transform:translateY(-50%);
+                     background:var(--surface2);
+                     border:none;border-radius:6px;
+                     width:20px;height:20px;
+                     color:var(--muted);cursor:pointer;
+                     font-size:11px;align-items:center;
+                     justify-content:center">✕</button>
+    </div>
+    <div style="display:flex;gap:8px">
+      <select id="propTypeFilter"
+              onchange="onPropFilterChange()"
+              style="flex:1;background:var(--surface2);
+                     border:1px solid var(--border);
+                     border-radius:10px;padding:8px 12px;
+                     font-size:12px;font-weight:600;
+                     color:var(--text);font-family:inherit;
+                     outline:none;cursor:pointer">
+        <option value="">All Types</option>
+        <option value="house">House</option>
+        <option value="apartment">Apartment</option>
+        <option value="land">Land</option>
+        <option value="commercial">Commercial</option>
+      </select>
+      <select id="propSortFilter"
+              onchange="onPropFilterChange()"
+              style="flex:1;background:var(--surface2);
+                     border:1px solid var(--border);
+                     border-radius:10px;padding:8px 12px;
+                     font-size:12px;font-weight:600;
+                     color:var(--text);font-family:inherit;
+                     outline:none;cursor:pointer">
+        <option value="trust_score,desc">Highest Trust</option>
+        <option value="price,desc">Price: High → Low</option>
+        <option value="price,asc">Price: Low → High</option>
+        <option value="created_at,desc">Newest First</option>
+      </select>
+    </div>
   </div>
 
   <!-- ══════════════════════════════════════
@@ -2462,80 +2536,6 @@
     <!-- ─────────────── PROPERTIES TAB ─────────────── -->
     <div id="propertiesTab" class="tab"
          style="padding-top:0">
-
-      <!-- STATIC: Search bar — JS never touches this -->
-      <div id="propSearchBar"
-           style="position:sticky;top:0;z-index:50;
-                  background:var(--bg);
-                  border-bottom:1px solid var(--border);
-                  padding:10px 16px;
-                  transition:transform 0.3s ease,
-                              opacity 0.3s ease">
-        <div style="position:relative;margin-bottom:8px">
-          <svg style="position:absolute;left:12px;top:50%;
-                      transform:translateY(-50%);
-                      color:var(--muted);pointer-events:none"
-               width="14" height="14" viewBox="0 0 24 24"
-               fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round"
-               stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input type="text" id="propSearch"
-                 placeholder="Search title or location..."
-                 oninput="debouncePropSearch(this.value)"
-                 autocomplete="off"
-                 style="width:100%;
-                        background:var(--surface2);
-                        border:1px solid var(--border);
-                        border-radius:10px;
-                        padding:9px 36px;
-                        font-size:13px;color:var(--text);
-                        font-family:inherit;outline:none;
-                        transition:border-color .15s"/>
-          <button id="propSearchClear"
-                  onclick="clearPropSearch()"
-                  style="display:none;position:absolute;
-                         right:10px;top:50%;
-                         transform:translateY(-50%);
-                         background:var(--surface2);
-                         border:none;border-radius:6px;
-                         width:20px;height:20px;
-                         color:var(--muted);cursor:pointer;
-                         font-size:11px;align-items:center;
-                         justify-content:center">✕</button>
-        </div>
-        <div style="display:flex;gap:8px">
-          <select id="propTypeFilter"
-                  onchange="onPropFilterChange()"
-                  style="flex:1;background:var(--surface2);
-                         border:1px solid var(--border);
-                         border-radius:10px;padding:8px 12px;
-                         font-size:12px;font-weight:600;
-                         color:var(--text);font-family:inherit;
-                         outline:none;cursor:pointer">
-            <option value="">All Types</option>
-            <option value="house">House</option>
-            <option value="apartment">Apartment</option>
-            <option value="land">Land</option>
-            <option value="commercial">Commercial</option>
-          </select>
-          <select id="propSortFilter"
-                  onchange="onPropFilterChange()"
-                  style="flex:1;background:var(--surface2);
-                         border:1px solid var(--border);
-                         border-radius:10px;padding:8px 12px;
-                         font-size:12px;font-weight:600;
-                         color:var(--text);font-family:inherit;
-                         outline:none;cursor:pointer">
-            <option value="trust_score,desc">Highest Trust</option>
-            <option value="price,desc">Price: High → Low</option>
-            <option value="price,asc">Price: Low → High</option>
-            <option value="created_at,desc">Newest First</option>
-          </select>
-        </div>
-      </div>
 
       <!-- STATIC: Info line shell — JS updates text only -->
       <div id="propInfoLine"
@@ -3505,7 +3505,19 @@
       if (g('scrollArea')) g('scrollArea').scrollTop = 0;
       updateFAB(tab);
       if (tab === 'home') loadHome();
-      if (tab === 'properties') { _propState.page = 1; loadListings(); }
+      if (tab === 'properties') {
+        _propState.page = 1;
+        loadListings();
+        const sb = g('propSearchBar');
+        if (sb) sb.style.display = 'block';
+        const ho = g('homeOnlyHeader');
+        if (ho) ho.style.display = 'none';
+      } else {
+        const sb = g('propSearchBar');
+        if (sb) sb.style.display = 'none';
+        const ho = g('homeOnlyHeader');
+        if (ho) ho.style.display = '';
+      }
       if (tab === 'pipeline') loadPipeline();
       if (tab === 'operations') loadOperations();
       if (tab === 'trust') loadTrust();
@@ -3516,28 +3528,6 @@
       if (tab === 'settings') loadSettingsTab();
       if (tab === 'team') loadTeam();
     }
-
-    /* ── SMART SCROLL FOR SEARCH BAR ─────────── */
-    (function() {
-      let lastScroll = 0;
-      window.addEventListener('scroll', function() {
-        const tab = g('propertiesTab');
-        if (!tab || !tab.classList.contains('active')) return;
-        const bar = g('propSearchBar');
-        if (!bar) return;
-        const cur = window.scrollY;
-        if (cur > lastScroll && cur > 80) {
-          bar.style.transform = 'translateY(-100%)';
-          bar.style.opacity = '0';
-          bar.style.pointerEvents = 'none';
-        } else {
-          bar.style.transform = 'translateY(0)';
-          bar.style.opacity = '1';
-          bar.style.pointerEvents = 'auto';
-        }
-        lastScroll = cur <= 0 ? 0 : cur;
-      }, { passive: true });
-    })();
 
     /* ── HOME ────────────────────────────────── */
     async function loadHome() {
