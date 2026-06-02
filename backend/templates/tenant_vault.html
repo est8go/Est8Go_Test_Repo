@@ -79,6 +79,10 @@ button{cursor:pointer;font-family:inherit}
   text-decoration:none;
 }
 
+@media (max-width: 768px) {
+  .header-chat-btn { display: none !important; }
+}
+
 /* ── Hero banner ── */
 .vault-hero{
   background:var(--surface2);
@@ -234,7 +238,7 @@ html[data-theme="light"] .vault-hero{
     <div class="header-actions">
       <button class="theme-btn" onclick="toggleVaultTheme()" id="vaultThemeBtn">🌙</button>
       {% if wa_number %}
-      <a class="wa-header-btn" href="https://wa.me/{{ wa_number }}" target="_blank" rel="noopener noreferrer">💬 Chat</a>
+      <a class="wa-header-btn header-chat-btn" href="https://wa.me/{{ wa_number }}" target="_blank" rel="noopener noreferrer">💬 Chat</a>
       {% endif %}
     </div>
   </div>
