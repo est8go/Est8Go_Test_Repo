@@ -2460,59 +2460,75 @@
     </div>
 
     <!-- ─────────────── PROPERTIES TAB ─────────────── -->
-    <div id="propertiesTab" class="tab" style="padding-top:0">
+    <div id="propertiesTab" class="tab"
+         style="padding-top:0">
 
-      <!-- Search + Filter bar -->
-      <div id="propSearchBar" style="position:sticky;top:0;z-index:50;
-        background:var(--bg);border-bottom:1px solid var(--border);
-        padding:10px 16px;
-        transition:transform 0.3s ease,opacity 0.3s ease">
+      <!-- STATIC: Search bar — JS never touches this -->
+      <div id="propSearchBar"
+           style="position:sticky;top:0;z-index:50;
+                  background:var(--bg);
+                  border-bottom:1px solid var(--border);
+                  padding:10px 16px;
+                  transition:transform 0.3s ease,
+                              opacity 0.3s ease">
         <div style="position:relative;margin-bottom:8px">
           <svg style="position:absolute;left:12px;top:50%;
-            transform:translateY(-50%);color:var(--muted);
-            pointer-events:none" width="14" height="14"
-            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
+                      transform:translateY(-50%);
+                      color:var(--muted);pointer-events:none"
+               width="14" height="14" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round"
+               stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"/>
             <line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
           <input type="text" id="propSearch"
-            placeholder="Search title or location..."
-            oninput="debouncePropSearch(this.value)"
-            autocomplete="off"
-            style="width:100%;background:var(--surface2);
-              border:1px solid var(--border);border-radius:10px;
-              padding:9px 36px;font-size:13px;color:var(--text);
-              font-family:inherit;outline:none;
-              transition:border-color .15s"/>
-          <button id="propSearchClear" onclick="clearPropSearch()"
-            style="display:none;position:absolute;right:10px;
-              top:50%;transform:translateY(-50%);
-              background:var(--surface2);border:none;
-              border-radius:6px;width:20px;height:20px;
-              color:var(--muted);cursor:pointer;font-size:11px;
-              align-items:center;justify-content:center">✕</button>
+                 placeholder="Search title or location..."
+                 oninput="debouncePropSearch(this.value)"
+                 autocomplete="off"
+                 style="width:100%;
+                        background:var(--surface2);
+                        border:1px solid var(--border);
+                        border-radius:10px;
+                        padding:9px 36px;
+                        font-size:13px;color:var(--text);
+                        font-family:inherit;outline:none;
+                        transition:border-color .15s"/>
+          <button id="propSearchClear"
+                  onclick="clearPropSearch()"
+                  style="display:none;position:absolute;
+                         right:10px;top:50%;
+                         transform:translateY(-50%);
+                         background:var(--surface2);
+                         border:none;border-radius:6px;
+                         width:20px;height:20px;
+                         color:var(--muted);cursor:pointer;
+                         font-size:11px;align-items:center;
+                         justify-content:center">✕</button>
         </div>
         <div style="display:flex;gap:8px">
-          <select id="propTypeFilter" onchange="onPropFilterChange()"
-            style="flex:1;background:var(--surface2);
-              border:1px solid var(--border);border-radius:10px;
-              padding:8px 12px;font-size:12px;font-weight:600;
-              color:var(--text);font-family:inherit;outline:none;
-              cursor:pointer">
+          <select id="propTypeFilter"
+                  onchange="onPropFilterChange()"
+                  style="flex:1;background:var(--surface2);
+                         border:1px solid var(--border);
+                         border-radius:10px;padding:8px 12px;
+                         font-size:12px;font-weight:600;
+                         color:var(--text);font-family:inherit;
+                         outline:none;cursor:pointer">
             <option value="">All Types</option>
             <option value="house">House</option>
             <option value="apartment">Apartment</option>
             <option value="land">Land</option>
             <option value="commercial">Commercial</option>
           </select>
-          <select id="propSortFilter" onchange="onPropFilterChange()"
-            style="flex:1;background:var(--surface2);
-              border:1px solid var(--border);border-radius:10px;
-              padding:8px 12px;font-size:12px;font-weight:600;
-              color:var(--text);font-family:inherit;outline:none;
-              cursor:pointer">
+          <select id="propSortFilter"
+                  onchange="onPropFilterChange()"
+                  style="flex:1;background:var(--surface2);
+                         border:1px solid var(--border);
+                         border-radius:10px;padding:8px 12px;
+                         font-size:12px;font-weight:600;
+                         color:var(--text);font-family:inherit;
+                         outline:none;cursor:pointer">
             <option value="trust_score,desc">Highest Trust</option>
             <option value="price,desc">Price: High → Low</option>
             <option value="price,asc">Price: Low → High</option>
@@ -2521,29 +2537,33 @@
         </div>
       </div>
 
-      <div id="propInfoLine" style="
-        padding:6px 16px 10px;
-        font-size:11px;
-        color:var(--muted);
-        display:flex;
-        align-items:center;
-        gap:12px;
-        flex-wrap:wrap">
+      <!-- STATIC: Info line shell — JS updates text only -->
+      <div id="propInfoLine"
+           style="padding:6px 16px 10px;font-size:11px;
+                  color:var(--muted);display:flex;
+                  align-items:center;gap:12px;
+                  flex-wrap:wrap">
         <span id="propInfoTotal"></span>
-        <span id="propInfoGPS" style="color:var(--em)"></span>
-        <span id="propInfoDocs" style="color:var(--indigo)"></span>
-        <span id="propInfoUnassigned" style="color:var(--warn)"></span>
+        <span id="propInfoGPS"
+              style="color:var(--em)"></span>
+        <span id="propInfoDocs"
+              style="color:var(--indigo)"></span>
+        <span id="propInfoUnassigned"
+              style="color:var(--warn)"></span>
       </div>
 
-      <!-- Grid -->
-      <div id="propGrid" style="display:grid;
-        grid-template-columns:1fr 1fr;gap:10px;
-        padding:0 16px 16px;transition:opacity 0.2s"></div>
+      <!-- DYNAMIC: JS replaces innerHTML only -->
+      <div id="propGrid"
+           style="display:grid;
+                  grid-template-columns:1fr 1fr;
+                  gap:10px;padding:0 16px 16px;
+                  transition:opacity 0.2s"></div>
 
-      <!-- Pagination -->
-      <div id="propPagination" style="padding:16px;
-        display:flex;justify-content:center;
-        gap:6px;flex-wrap:wrap"></div>
+      <!-- DYNAMIC: JS replaces innerHTML only -->
+      <div id="propPagination"
+           style="padding:16px;display:flex;
+                  justify-content:center;
+                  gap:6px;flex-wrap:wrap"></div>
 
     </div>
 
