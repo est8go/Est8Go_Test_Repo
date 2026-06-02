@@ -20,6 +20,7 @@ from fastapi import FastAPI, Request  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 from fastapi.responses import JSONResponse  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from starlette.middleware.trustedhost import TrustedHostMiddleware  # noqa: E402
 
 # ── 4. ALL ROUTERS ────────────────────────────────────────────
 from app.auth.router import router as auth_router  # noqa: E402
@@ -61,6 +62,11 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["*"],
 )
 
 # ── 8. AUTO-AUDIT MIDDLEWARE ──────────────────────────────────
