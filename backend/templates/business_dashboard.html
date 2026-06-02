@@ -5567,7 +5567,7 @@
       ];
       const addTenantTexts = () => {
         const biz  = CFG._bizName || localStorage.getItem('biz_name') || '';
-        const plan = CFG._plan    || localStorage.getItem('tenant_plan') || '';
+        const plan = g('planBadge')?.textContent?.trim() || '';
         if (!biz || biz === 'Loading...') return false;
         texts.push(sanitise(biz));
         if (plan) texts.push(sanitise(biz) + ' · ' + sanitise(plan).toUpperCase());
