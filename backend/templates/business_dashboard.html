@@ -2145,6 +2145,7 @@
     }
 
     /* ── Property Card v3 ───────────────────────── */
+    #propSearchBar { margin-top: var(--header-h, 60px) }
     .pc { background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:transform .2s,box-shadow .2s }
     .pc:hover { transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.25) }
     .pc-img { position:relative;aspect-ratio:4/3;background:var(--surface2);overflow:hidden }
@@ -2164,6 +2165,21 @@
     .pc-realtor { margin-bottom:8px;font-size:11px }
     .pc-actions { display:flex;gap:6px;align-items:center }
     .pc-more { display:none;margin-top:6px;gap:6px }
+
+    /* ── Mobile property card — image first ───── */
+    @media (max-width: 640px) {
+      .pc-img          { aspect-ratio: 1/1 }        /* square = more image */
+      .pc-body         { padding: 7px }
+      .pc-title        { font-size: 10px; min-height: 2.2em; margin-bottom: 2px }
+      .pc-location     { font-size: 9px }
+      .pc-price        { font-size: 11px }
+      .pc-realtor      { font-size: 9px; margin-bottom: 5px }
+      .pc-trust-score  { font-size: 10px }
+      .pc-trust-grade  { font-size: 7px }
+      .pc-actions .btn { font-size: 9px; padding: 5px 4px }
+      .pc-more   .btn  { font-size: 9px; padding: 5px 4px }
+      .prop-dots-btn   { font-size: 11px; padding: 5px 8px }
+    }
   </style>
 </head>
 
@@ -2592,6 +2608,7 @@
            style="display:grid;
                   grid-template-columns:1fr 1fr;
                   gap:10px;padding:0 16px 16px;
+                  align-items:start;
                   transition:opacity 0.2s"></div>
 
       <!-- DYNAMIC: JS replaces innerHTML only -->
@@ -3540,7 +3557,7 @@
       if (g('scrollArea')) g('scrollArea').scrollTop = 0;
       updateFAB(tab);
       if (tab === 'home') loadHome();
-      if (tab === 'properties') { _propState.page = 1; loadListings(); const sb = g('propSearchBar'); if(sb){ sb.style.display='block'; const hdr=g('appHeader'); sb.style.marginTop = hdr ? hdr.offsetHeight+'px' : '60px'; } const ho = g('homeOnlyHeader'); if(ho) ho.style.display='none'; } else { const sb = g('propSearchBar'); if(sb) sb.style.display='none'; const ho = g('homeOnlyHeader'); if(ho) ho.style.display=''; }
+      if (tab === 'properties') { _propState.page = 1; loadListings(); const sb = g('propSearchBar'); if(sb) sb.style.display='block'; const ho = g('homeOnlyHeader'); if(ho) ho.style.display='none'; } else { const sb = g('propSearchBar'); if(sb) sb.style.display='none'; const ho = g('homeOnlyHeader'); if(ho) ho.style.display=''; }
       if (tab === 'pipeline') loadPipeline();
       if (tab === 'operations') loadOperations();
       if (tab === 'trust') loadTrust();
@@ -5124,7 +5141,7 @@
       const header = g('appHeader');
       const scroll = g('scrollArea');
       if (!header || !scroll) return;
-      const syncPad = () => { scroll.style.paddingTop = header.offsetHeight + 'px'; };
+      const syncPad = () => { const h = header.offsetHeight + 'px'; scroll.style.paddingTop = h; document.documentElement.style.setProperty('--header-h', h); };
       syncPad();
       new ResizeObserver(syncPad).observe(header);
       let lastY = 0;
