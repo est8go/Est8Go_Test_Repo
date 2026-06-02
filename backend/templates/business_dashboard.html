@@ -43,7 +43,6 @@
       --r-lg: 20px;
       --r-pill: 999px;
       --nav-h: 64px;
-      --header-h: 60px;
     }
 
     html[data-theme="light"] {
@@ -611,21 +610,6 @@
 
     #scrollArea::-webkit-scrollbar {
       display: none;
-    }
-
-    /* Properties tab — edge to edge cards */
-    #propertiesTab #propGrid {
-      padding-left: 8px !important;
-      padding-right: 8px !important;
-      gap: 8px !important;
-    }
-    #propSearchBar {
-      padding-left: 8px !important;
-      padding-right: 8px !important;
-    }
-    #propInfoLine {
-      padding-left: 8px !important;
-      padding-right: 8px !important;
     }
 
     /* ═══════════════════════════════════════════
@@ -2149,18 +2133,37 @@
       opacity:1;
     }
 
-    /* Mobile: hide Trust+Reel, show dots */
+    /* Property card mobile responsive */
     @media (max-width: 640px) {
       .prop-trust-btn { display: none !important; }
       .prop-reel-btn  { display: none !important; }
       .prop-dots-btn  { display: flex !important; }
     }
-
-    /* Desktop: hide dots */
     @media (min-width: 641px) {
-      .prop-dots-btn       { display: none !important; }
-      .prop-more-actions   { display: none !important; }
+      .prop-dots-btn     { display: none !important; }
+      .prop-more-actions { display: none !important; }
     }
+
+    /* ── Property Card v3 ───────────────────────── */
+    .pc { background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:transform .2s,box-shadow .2s }
+    .pc:hover { transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.25) }
+    .pc-img { position:relative;aspect-ratio:4/3;background:var(--surface2);overflow:hidden }
+    .pc-img img { width:100%;height:100%;object-fit:cover }
+    .pc-trust { position:absolute;top:6px;right:6px;background:rgba(10,15,30,0.88);backdrop-filter:blur(4px);border-radius:7px;padding:3px 7px;display:flex;align-items:center;gap:3px;border:1px solid rgba(255,255,255,0.08) }
+    .pc-trust-score { font-family:'Syne',sans-serif;font-size:12px;font-weight:800 }
+    .pc-trust-grade { font-size:8px;font-weight:700;text-transform:capitalize }
+    .pc-overlay { position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(10,15,30,0.85) 0%,rgba(10,15,30,0.3) 60%,transparent 100%);padding:20px 8px 8px;display:flex;align-items:center;gap:6px }
+    .pc-type { font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#fff;background:rgba(79,70,229,0.85);padding:2px 8px;border-radius:99px }
+    .pc-verified { font-size:9px;font-weight:700;color:#fff;display:flex;align-items:center;gap:3px }
+    .pc-verified-dot { width:5px;height:5px;border-radius:50%;background:#10B981;display:inline-block }
+    .pc-body { padding:10px }
+    .pc-title { font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.4em }
+    .pc-meta { display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:4px }
+    .pc-location { font-size:10px;color:var(--muted);display:flex;align-items:center;gap:3px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap }
+    .pc-price { font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--em);white-space:nowrap;flex-shrink:0 }
+    .pc-realtor { margin-bottom:8px;font-size:11px }
+    .pc-actions { display:flex;gap:6px;align-items:center }
+    .pc-more { display:none;margin-top:6px;gap:6px }
   </style>
 </head>
 
@@ -2221,8 +2224,8 @@
         </div>
       </div>
     </div>
+  <div id="homeOnlyHeader">
 
-    <div id="homeOnlyHeader">
     <!-- ── Row 2: Business Identity Bar + Wallet Pill ── -->
     <div class="biz-bar" style="display:flex;align-items:center;
          justify-content:space-between;gap:12px;padding:12px 16px">
@@ -2263,90 +2266,89 @@
           <div class="im-label" style="color:rgba(129,140,248,0.8)">🛡️ Trust</div>
           <div class="im-val ind" id="imTrust">—</div>
         </div>
+  </div><!-- /homeOnlyHeader -->
       </div>
     </div>
-    </div><!-- /homeOnlyHeader -->
 
-  </div>
-
-  <!-- propSearchBar — shown only on properties tab, sibling of scrollArea -->
-  <div id="propSearchBar"
-       style="display:none;
-              position:sticky;
-              top:var(--header-h);
-              z-index:50;
-              background:var(--bg);
-              border-bottom:1px solid var(--border);
-              padding:10px 16px">
-    <div style="position:relative;margin-bottom:8px">
-      <svg style="position:absolute;left:12px;top:50%;
-                  transform:translateY(-50%);
-                  color:var(--muted);pointer-events:none"
-           width="14" height="14" viewBox="0 0 24 24"
-           fill="none" stroke="currentColor"
-           stroke-width="2" stroke-linecap="round"
-           stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <input type="text" id="propSearch"
-             placeholder="Search title or location..."
-             oninput="debouncePropSearch(this.value)"
-             autocomplete="off"
-             style="width:100%;
-                    background:var(--surface2);
-                    border:1px solid var(--border);
-                    border-radius:10px;
-                    padding:9px 36px;
-                    font-size:13px;color:var(--text);
-                    font-family:inherit;outline:none;
-                    transition:border-color .15s"/>
-      <button id="propSearchClear"
-              onclick="clearPropSearch()"
-              style="display:none;position:absolute;
-                     right:10px;top:50%;
-                     transform:translateY(-50%);
-                     background:var(--surface2);
-                     border:none;border-radius:6px;
-                     width:20px;height:20px;
-                     color:var(--muted);cursor:pointer;
-                     font-size:11px;align-items:center;
-                     justify-content:center">✕</button>
-    </div>
-    <div style="display:flex;gap:8px">
-      <select id="propTypeFilter"
-              onchange="onPropFilterChange()"
-              style="flex:1;background:var(--surface2);
-                     border:1px solid var(--border);
-                     border-radius:10px;padding:8px 12px;
-                     font-size:12px;font-weight:600;
-                     color:var(--text);font-family:inherit;
-                     outline:none;cursor:pointer">
-        <option value="">All Types</option>
-        <option value="house">House</option>
-        <option value="apartment">Apartment</option>
-        <option value="land">Land</option>
-        <option value="commercial">Commercial</option>
-      </select>
-      <select id="propSortFilter"
-              onchange="onPropFilterChange()"
-              style="flex:1;background:var(--surface2);
-                     border:1px solid var(--border);
-                     border-radius:10px;padding:8px 12px;
-                     font-size:12px;font-weight:600;
-                     color:var(--text);font-family:inherit;
-                     outline:none;cursor:pointer">
-        <option value="trust_score,desc">Highest Trust</option>
-        <option value="price,desc">Price: High → Low</option>
-        <option value="price,asc">Price: Low → High</option>
-        <option value="created_at,desc">Newest First</option>
-      </select>
-    </div>
   </div>
 
   <!-- ══════════════════════════════════════
        SCROLL AREA
   ══════════════════════════════════════ -->
+      <!-- STATIC: Search bar — JS never touches this -->
+      <div id="propSearchBar"
+           style="position:relative;z-index:50;
+                  background:var(--bg);
+                  border-bottom:1px solid var(--border);
+                  padding:10px 16px;
+                  transition:transform 0.3s ease,
+                              opacity 0.3s ease">
+        <div style="position:relative;margin-bottom:8px">
+          <svg style="position:absolute;left:12px;top:50%;
+                      transform:translateY(-50%);
+                      color:var(--muted);pointer-events:none"
+               width="14" height="14" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round"
+               stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="propSearch"
+                 placeholder="Search title or location..."
+                 oninput="debouncePropSearch(this.value)"
+                 autocomplete="off"
+                 style="width:100%;
+                        background:var(--surface2);
+                        border:1px solid var(--border);
+                        border-radius:10px;
+                        padding:9px 36px;
+                        font-size:13px;color:var(--text);
+                        font-family:inherit;outline:none;
+                        transition:border-color .15s"/>
+          <button id="propSearchClear"
+                  onclick="clearPropSearch()"
+                  style="display:none;position:absolute;
+                         right:10px;top:50%;
+                transform:translateY(-50%);
+                         background:var(--surface2);
+                         border:none;border-radius:6px;
+                         width:20px;height:20px;
+                color:var(--muted);cursor:pointer;
+                         font-size:11px;align-items:center;
+                         justify-content:center">✕</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <select id="propTypeFilter"
+                  onchange="onPropFilterChange()"
+                  style="flex:1;background:var(--surface2);
+                         border:1px solid var(--border);
+                         border-radius:10px;padding:8px 12px;
+                         font-size:12px;font-weight:600;
+                color:var(--text);font-family:inherit;
+                         outline:none;cursor:pointer">
+            <option value="">All Types</option>
+            <option value="house">House</option>
+            <option value="apartment">Apartment</option>
+            <option value="land">Land</option>
+            <option value="commercial">Commercial</option>
+          </select>
+          <select id="propSortFilter"
+                  onchange="onPropFilterChange()"
+                  style="flex:1;background:var(--surface2);
+                         border:1px solid var(--border);
+                         border-radius:10px;padding:8px 12px;
+                         font-size:12px;font-weight:600;
+                color:var(--text);font-family:inherit;
+                         outline:none;cursor:pointer">
+            <option value="trust_score,desc">Highest Trust</option>
+            <option value="price,desc">Price: High → Low</option>
+            <option value="price,asc">Price: Low → High</option>
+            <option value="created_at,desc">Newest First</option>
+          </select>
+        </div>
+      </div>
+
   <div id="scrollArea">
 
     <!-- ─────────────── HOME TAB ─────────────── -->
@@ -2573,8 +2575,9 @@
       <div id="propInfoLine"
            style="padding:6px 16px 10px;font-size:11px;
                   color:var(--muted);display:flex;
-                  align-items:center;gap:12px;
-                  flex-wrap:nowrap">
+                  align-items:center;gap:10px;
+                  flex-wrap:nowrap;overflow:hidden;
+                  white-space:nowrap">
         <span id="propInfoTotal"></span>
         <span id="propInfoGPS"
               style="color:var(--em)"></span>
@@ -3537,19 +3540,7 @@
       if (g('scrollArea')) g('scrollArea').scrollTop = 0;
       updateFAB(tab);
       if (tab === 'home') loadHome();
-      if (tab === 'properties') {
-        _propState.page = 1;
-        loadListings();
-        const sb = g('propSearchBar');
-        if (sb) sb.style.display = 'block';
-        const ho = g('homeOnlyHeader');
-        if (ho) ho.style.display = 'none';
-      } else {
-        const sb = g('propSearchBar');
-        if (sb) sb.style.display = 'none';
-        const ho = g('homeOnlyHeader');
-        if (ho) ho.style.display = '';
-      }
+      if (tab === 'properties') { _propState.page = 1; loadListings(); const sb = g('propSearchBar'); if(sb){ sb.style.display='block'; const hdr=g('appHeader'); sb.style.marginTop = hdr ? hdr.offsetHeight+'px' : '60px'; } const ho = g('homeOnlyHeader'); if(ho) ho.style.display='none'; } else { const sb = g('propSearchBar'); if(sb) sb.style.display='none'; const ho = g('homeOnlyHeader'); if(ho) ho.style.display=''; }
       if (tab === 'pipeline') loadPipeline();
       if (tab === 'operations') loadOperations();
       if (tab === 'trust') loadTrust();
@@ -3560,6 +3551,7 @@
       if (tab === 'settings') loadSettingsTab();
       if (tab === 'team') loadTeam();
     }
+
 
     /* ── HOME ────────────────────────────────── */
     async function loadHome() {
@@ -4162,170 +4154,89 @@
                👤 ${sanitise(l.assigned_realtor_name)}
                ${l.assigned_realtor_phone ? ' 📱' : ' ⚠️'}
              </span>`
-          : `<span style="font-size:11px;color:var(--warn)">
-               ⚠️ Unassigned
-             </span>`;
+          : `<span style="font-size:11px;color:var(--warn)">⚠️ Unassigned</span>`;
 
         return `
-          <div style="background:var(--surface);
-            border:1px solid var(--border);
-            border-radius:14px;overflow:hidden;
-            transition:transform .2s,box-shadow .2s"
-            onmouseenter="this.style.transform='translateY(-2px)';
-              this.style.boxShadow='0 6px 20px rgba(0,0,0,0.25)'"
-            onmouseleave="this.style.transform='';
-              this.style.boxShadow=''">
-
-            <!-- IMAGE — 4:3 ratio, fills width -->
-            <div style="position:relative;aspect-ratio:4/3;
-              background:var(--surface2);overflow:hidden">
-              ${img ? `
-                <img src="${img}" alt="${sanitise(l.title)}"
-                  loading="lazy"
-                  class="prop-img-fade"
-                  onload="this.classList.add('loaded')"
-                  onerror="this.parentElement.innerHTML='<div style=\\"width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px\\">🏠</div>'"
-                  style="width:100%;height:100%;
-                    object-fit:cover"/>`
-                : `<div style="width:100%;height:100%;
-                    display:flex;align-items:center;
-                    justify-content:center;font-size:32px">
-                    🏠</div>`
+          <div data-prop-card="${l.id}" class="pc">
+            <div class="pc-img">
+              ${img
+                ? `<img src="${img}" alt="${sanitise(l.title)}"
+                    loading="lazy" class="prop-img-fade"
+                    onload="this.classList.add('loaded')"
+                    onerror="this.style.display='none'"/>`
+                : `<div style="width:100%;height:100%;display:flex;
+                    align-items:center;justify-content:center;
+                    font-size:32px">🏠</div>`
               }
-
-              <!-- Trust badge — top right, compact -->
-              <div style="position:absolute;top:6px;right:6px;
-                background:rgba(10,15,30,0.88);
-                backdrop-filter:blur(4px);
-                border-radius:7px;padding:3px 7px;
-                display:flex;align-items:center;gap:3px;
-                border:1px solid rgba(255,255,255,0.08)">
-                <span style="font-family:'Syne',sans-serif;
-                  font-size:12px;font-weight:800;
-                  color:${color}">${l.trust_score||0}</span>
-                <span style="font-size:8px;font-weight:700;
-                  text-transform:capitalize;color:${color}">
-                  ${l.trust_grade||'ungraded'}</span>
+              <div class="pc-trust">
+                <span class="pc-trust-score" style="color:${color}">${l.trust_score||0}</span>
+                <span class="pc-trust-grade" style="color:${color}">${l.trust_grade||'ungraded'}</span>
               </div>
-
-              <!-- Bottom overlay: type pill + verified -->
-              <div style="position:absolute;bottom:0;
-                left:0;right:0;
-                background:linear-gradient(to top,
-                  rgba(10,15,30,0.85) 0%,
-                  rgba(10,15,30,0.4) 60%,
-                  transparent 100%);
-                padding:20px 8px 8px;
-                display:flex;align-items:center;gap:6px">
-                ${l.property_type ? `
-                  <span style="font-size:9px;font-weight:700;
-                    text-transform:uppercase;letter-spacing:.06em;
-                    color:#fff;background:rgba(79,70,229,0.85);
-                    padding:2px 8px;border-radius:99px">
-                    ${sanitise(l.property_type)}
-                  </span>` : ''}
-                <span style="font-size:9px;font-weight:700;
-                  color:#fff;display:flex;align-items:center;
-                  gap:3px">
-                  <span style="width:5px;height:5px;
-                    border-radius:50%;background:#10B981;
-                    display:inline-block"></span>
-                  verified
+              <div class="pc-overlay">
+                ${l.property_type ? `<span class="pc-type">${sanitise(l.property_type)}</span>` : ''}
+                <span class="pc-verified">
+                  <span class="pc-verified-dot"></span>verified
                 </span>
               </div>
             </div>
-
-            <!-- CARD BODY -->
-            <div style="padding:10px">
-              <!-- Title -->
-              <div style="font-family:'Syne',sans-serif;
-                font-size:12px;font-weight:700;
-                color:var(--text);line-height:1.3;
-                margin-bottom:4px;
-                display:-webkit-box;-webkit-line-clamp:2;
-                -webkit-box-orient:vertical;overflow:hidden;
-                min-height:2.4em">
-                ${sanitise(l.title)||'Untitled'}
-              </div>
-
-              <!-- Location + Price on same line -->
-              <div style="display:flex;align-items:center;
-                justify-content:space-between;
-                margin-bottom:6px;gap:4px">
-                <div style="font-size:10px;color:var(--muted);
-                  display:flex;align-items:center;gap:3px;
-                  min-width:0;overflow:hidden;
-                  text-overflow:ellipsis;white-space:nowrap">
-                  <svg width="9" height="9" viewBox="0 0 24 24"
-                    fill="none" stroke="currentColor"
-                    stroke-width="2.5" stroke-linecap="round"
-                    stroke-linejoin="round" style="flex-shrink:0">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13
-                      a9 9 0 0118 0z"/>
+            <div class="pc-body">
+              <div class="pc-title">${sanitise(l.title)||'Untitled'}</div>
+              <div class="pc-meta">
+                <div class="pc-location">
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round"
+                    style="flex-shrink:0">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
                     <circle cx="12" cy="10" r="3"/>
                   </svg>
                   ${sanitise(l.location)||'—'}
                 </div>
-                <div style="font-family:'Syne',sans-serif;
-                  font-size:14px;font-weight:800;
-                  color:var(--em);white-space:nowrap;
-                  flex-shrink:0">
-                  ${price}
-                </div>
+                <div class="pc-price">${price}</div>
               </div>
-
-              <!-- Realtor -->
-              <div style="margin-bottom:8px">${realtor}</div>
-
-              <!-- Actions -->
-              <div style="display:flex;gap:6px;align-items:center">
-
+              <div class="pc-realtor">${realtor}</div>
+              <div class="pc-actions">
                 <button class="btn btn-em btn-sm prop-trust-btn"
-                  onclick="viewTrustDash(${l.id})"
-                  style="font-size:11px;padding:7px 8px;flex:1">
+                  onclick="viewTrustDash(${l.id})">
                   🛡️ Trust
                 </button>
                 <button class="btn btn-ghost btn-sm"
-                  onclick="openAssignModal(${l.id},
-                    ${l.assigned_realtor_id||'null'},
-                    '${sanitise(l.title)}')"
-                  style="font-size:11px;padding:7px 8px;flex:1">
+                  onclick="openAssignModal(${l.id},${l.assigned_realtor_id||'null'},'${sanitise(l.title)}')">
                   👤 Assign
                 </button>
                 <button class="btn btn-ghost btn-sm prop-reel-btn"
-                  onclick="loadReelOptions(${l.id})"
-                  style="font-size:11px;padding:7px 8px;flex:1">
+                  onclick="loadReelOptions(${l.id})">
                   🎬 Reel
                 </button>
-
-                <!-- Mobile only: dots button -->
                 <button class="prop-dots-btn btn btn-ghost btn-sm"
-                  onclick="togglePropMore(this,${l.id})"
-                  style="font-size:14px;padding:7px 10px;
-                    display:none">
+                  onclick="togglePropMore(this,${l.id})">
                   ⋯
                 </button>
-
               </div>
-
-              <!-- More actions (hidden, revealed by dots) -->
-              <div class="prop-more-actions"
-                style="display:none;margin-top:6px;gap:6px">
+              <div class="pc-more prop-more-actions">
                 <button class="btn btn-em btn-sm"
-                  onclick="viewTrustDash(${l.id})"
-                  style="font-size:11px;padding:7px 8px;flex:1">
+                  onclick="viewTrustDash(${l.id})">
                   🛡️ Trust
                 </button>
                 <button class="btn btn-ghost btn-sm"
-                  onclick="loadReelOptions(${l.id})"
-                  style="font-size:11px;padding:7px 8px;flex:1">
+                  onclick="loadReelOptions(${l.id})">
                   🎬 Reel
                 </button>
               </div>
-
             </div>
           </div>`;
       }).join('');
+    }
+
+
+    function togglePropMore(btn, listingId) {
+      const card = btn.closest('[data-prop-card]');
+      if (!card) return;
+      const more = card.querySelector('.prop-more-actions');
+      if (!more) return;
+      const isOpen = more.style.display === 'flex';
+      more.style.display = isOpen ? 'none' : 'flex';
+      btn.textContent = isOpen ? '⋯' : '✕';
     }
 
     function renderPropPagination(pages) {
@@ -4363,16 +4274,6 @@
       });
       html += btn('Next →', cur+1, false, cur===pages);
       bar.innerHTML = html;
-    }
-
-    function togglePropMore(btn, listingId) {
-      const card = btn.closest('div[style*="border-radius:14px"]');
-      if (!card) return;
-      const more = card.querySelector('.prop-more-actions');
-      if (!more) return;
-      const isOpen = more.style.display === 'flex';
-      more.style.display = isOpen ? 'none' : 'flex';
-      btn.textContent = isOpen ? '⋯' : '✕';
     }
 
     function goToPropPage(page) {
