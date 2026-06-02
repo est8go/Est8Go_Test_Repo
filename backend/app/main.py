@@ -54,7 +54,13 @@ app = FastAPI(
     version="3.0.0",
 )
 
-# ── 7. CORS ───────────────────────────────────────────────────
+# ── 7. TRUSTED HOST (must be before CORS) ─────────────────────
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["*"],
+)
+
+# ── 7b. CORS ──────────────────────────────────────────────────
 # Tighten allowed_origins before going to production
 app.add_middleware(
     CORSMiddleware,
@@ -62,11 +68,6 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-)
-
-app.add_middleware(
-    TrustedHostMiddleware,
-    allowed_hosts=["*"],
 )
 
 # ── 8. AUTO-AUDIT MIDDLEWARE ──────────────────────────────────
