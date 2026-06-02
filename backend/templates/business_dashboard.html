@@ -2119,6 +2119,19 @@
       line-height: 1.4;
     }
     .speed-card.selected .speed-label { color: var(--indigo); }
+
+    @keyframes pulse {
+      0%,100%{opacity:1} 50%{opacity:0.4}
+    }
+    .prop-skeleton {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .prop-img-fade {
+      opacity:0;transition:opacity 0.4s ease;
+    }
+    .prop-img-fade.loaded {
+      opacity:1;
+    }
   </style>
 </head>
 
@@ -2135,7 +2148,7 @@
       <div>
         <!-- Wordmark -->
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
-          <div class="wordmark">Est<span>8</span>Go</div>
+          <div class="wordmark" id="brandRotator">Est<span>8</span>Go</div>
           <div class="cc-pill">Command Center</div>
         </div>
         <!-- Live + tenant identity -->
@@ -2147,19 +2160,23 @@
         </div>
       </div>
 
-      <!-- Right: theme toggle + health pill + avatar -->
+      <!-- Right: avatar -->
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-        <button id="themeToggle" onclick="toggleTheme()" title="Toggle theme" style="width:36px;height:36px;border-radius:10px;background:var(--surface2);border:1px solid var(--border2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s">🌙</button>
-        <div class="health-pill stable" id="healthPill">
-          <span class="health-dot"></span>
-          <span id="healthText">Trust Stable</span>
-        </div>
         <div style="position:relative">
           <div id="userAvatar" onclick="toggleUserMenu()">BA</div>
           <div id="userMenu" style="display:none;position:absolute;top:46px;right:0;background:var(--surface2);border:1px solid var(--border2);border-radius:14px;min-width:190px;box-shadow:0 8px 32px rgba(0,0,0,0.45);z-index:300;overflow:hidden">
             <div style="padding:14px 16px 10px;border-bottom:1px solid var(--border)">
               <div id="menuUserName" style="font-weight:700;font-size:13px"></div>
               <div id="menuUserEmail" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
+            </div>
+            <div class="user-menu-item" onclick="toggleTheme()">
+              <span id="menuThemeIcon">🌙</span>
+              <span id="menuThemeLabel">Dark Mode</span>
+            </div>
+            <div style="height:1px;background:var(--border);margin:4px 0"></div>
+            <div class="user-menu-item" onclick="switchTab('credits');closeMenu()">
+              <span>💳</span>
+              <span>Credits: <strong id="menuCreditBalance" style="color:var(--em)">—</strong></span>
             </div>
             <div class="user-menu-item" onclick="toast('Profile editor coming soon','info');closeMenu()">
               <span>👤</span><span>Edit Profile</span>
@@ -2193,50 +2210,7 @@
         </div>
       </div>
 
-      <!-- Right: wallet pill -->
-      <div id="walletPill"
-        onclick="switchTab('credits')"
-        style="display:flex;flex-direction:column;align-items:center;
-               justify-content:center;gap:2px;
-               flex-shrink:0;cursor:pointer;
-               border-radius:16px;padding:8px 14px;
-               border:1px solid;transition:all 0.2s;
-               min-width:72px;
-               background:rgba(16,185,129,0.08);
-               border-color:rgba(16,185,129,0.2)">
 
-        <svg id="walletIcon" width="22" height="22"
-             viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="1.8"
-             style="color:#10B981">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M21 12V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-5m0 0h-4a2 2 0 000 4h4m0-4v4"/>
-        </svg>
-
-        <div style="display:flex;align-items:baseline;gap:3px">
-          <span id="creditBalance"
-            style="font-family:'Syne',sans-serif;font-size:18px;
-                   font-weight:800;line-height:1;color:#10B981">—</span>
-          <span id="bonusTag"
-            style="font-size:8px;font-weight:700;
-                   color:#10B981;display:none">
-            +<span id="bonusAmt">0</span>
-          </span>
-        </div>
-
-        <div style="font-size:8px;font-weight:700;
-                    letter-spacing:0.12em;text-transform:uppercase;
-                    color:var(--muted);line-height:1;margin-top:1px">
-          Credits
-        </div>
-
-        <div id="walletTopupDot"
-          style="display:none;width:5px;height:5px;
-                 border-radius:50%;background:var(--warn);
-                 margin-top:2px;
-                 box-shadow:0 0 5px rgba(245,158,11,0.6)">
-        </div>
-      </div>
 
     </div>
 
@@ -2486,56 +2460,119 @@
     </div>
 
     <!-- ─────────────── PROPERTIES TAB ─────────────── -->
-    <div id="propertiesTab" class="tab" style="padding-top:4px">
+    <div id="propertiesTab" class="tab" style="padding-top:0">
+
       <!-- Stats bar -->
-      <div id="propStatsBar" class="prop-stats-bar">
-        <div class="prop-stat-card">
-          <div class="prop-stat-num" id="pstatTotal" style="color:var(--text)">—</div>
-          <div class="prop-stat-lbl">Total</div>
+      <div id="propStatsBar" style="display:grid;
+        grid-template-columns:repeat(4,1fr);gap:8px;
+        padding:12px 16px;border-bottom:1px solid var(--border)">
+        <div style="background:var(--surface);border:1px solid
+          var(--border);border-radius:12px;padding:10px;text-align:center">
+          <div id="statTotal" style="font-family:'Syne',sans-serif;
+            font-size:20px;font-weight:800;color:var(--text)">—</div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:.08em;
+            text-transform:uppercase;color:var(--muted);margin-top:2px">
+            Total</div>
         </div>
-        <div class="prop-stat-card">
-          <div class="prop-stat-num" id="pstatGps" style="color:var(--em)">—</div>
-          <div class="prop-stat-lbl">GPS Verified</div>
+        <div style="background:var(--surface);border:1px solid
+          var(--border);border-radius:12px;padding:10px;text-align:center">
+          <div id="statGPS" style="font-family:'Syne',sans-serif;
+            font-size:20px;font-weight:800;color:var(--em)">—</div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:.08em;
+            text-transform:uppercase;color:var(--muted);margin-top:2px">
+            GPS</div>
         </div>
-        <div class="prop-stat-card">
-          <div class="prop-stat-num" id="pstatDocs" style="color:var(--indigo)">—</div>
-          <div class="prop-stat-lbl">With Docs</div>
+        <div style="background:var(--surface);border:1px solid
+          var(--border);border-radius:12px;padding:10px;text-align:center">
+          <div id="statDocs" style="font-family:'Syne',sans-serif;
+            font-size:20px;font-weight:800;color:var(--indigo)">—</div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:.08em;
+            text-transform:uppercase;color:var(--muted);margin-top:2px">
+            Docs</div>
         </div>
-        <div class="prop-stat-card">
-          <div class="prop-stat-num" id="pstatUnassigned" style="color:var(--warn)">—</div>
-          <div class="prop-stat-lbl">Unassigned</div>
+        <div style="background:var(--surface);border:1px solid
+          var(--border);border-radius:12px;padding:10px;text-align:center">
+          <div id="statUnassigned" style="font-family:'Syne',sans-serif;
+            font-size:20px;font-weight:800;color:var(--warn)">—</div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:.08em;
+            text-transform:uppercase;color:var(--muted);margin-top:2px">
+            Unassigned</div>
         </div>
       </div>
-      <!-- Filter bar -->
-      <div class="prop-filter-bar">
-        <div class="prop-search-wrap">
-          <input type="text" id="propSearch" class="prop-search-input"
-                 placeholder="Search title or location..." autocomplete="off"
-                 oninput="handlePropSearch(this.value)" />
-          <button class="prop-search-clear" id="propSearchClear"
-                  onclick="clearPropSearch()" style="display:none">✕</button>
+
+      <!-- Search + Filter bar -->
+      <div id="propSearchBar" style="position:sticky;top:0;z-index:50;
+        background:var(--bg);border-bottom:1px solid var(--border);
+        padding:10px 16px;
+        transition:transform 0.3s ease,opacity 0.3s ease">
+        <div style="position:relative;margin-bottom:8px">
+          <svg style="position:absolute;left:12px;top:50%;
+            transform:translateY(-50%);color:var(--muted);
+            pointer-events:none" width="14" height="14"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="propSearch"
+            placeholder="Search title or location..."
+            oninput="debouncePropSearch(this.value)"
+            autocomplete="off"
+            style="width:100%;background:var(--surface2);
+              border:1px solid var(--border);border-radius:10px;
+              padding:9px 36px;font-size:13px;color:var(--text);
+              font-family:inherit;outline:none;
+              transition:border-color .15s"/>
+          <button id="propSearchClear" onclick="clearPropSearch()"
+            style="display:none;position:absolute;right:10px;
+              top:50%;transform:translateY(-50%);
+              background:var(--surface2);border:none;
+              border-radius:6px;width:20px;height:20px;
+              color:var(--muted);cursor:pointer;font-size:11px;
+              align-items:center;justify-content:center">✕</button>
         </div>
-        <div class="prop-filter-row">
-          <select id="propTypeFilter" class="prop-filter-select"
-                  onchange="_propState.type=this.value;_propState.page=1;loadListings()">
+        <div style="display:flex;gap:8px">
+          <select id="propTypeFilter" onchange="onPropFilterChange()"
+            style="flex:1;background:var(--surface2);
+              border:1px solid var(--border);border-radius:10px;
+              padding:8px 12px;font-size:12px;font-weight:600;
+              color:var(--text);font-family:inherit;outline:none;
+              cursor:pointer">
             <option value="">All Types</option>
             <option value="house">House</option>
             <option value="apartment">Apartment</option>
             <option value="land">Land</option>
             <option value="commercial">Commercial</option>
           </select>
-          <select id="propSortFilter" class="prop-filter-select"
-                  onchange="(function(v){var p=v.split(',');_propState.sort_by=p[0];_propState.sort_dir=p[1];_propState.page=1;loadListings();})(this.value)">
+          <select id="propSortFilter" onchange="onPropFilterChange()"
+            style="flex:1;background:var(--surface2);
+              border:1px solid var(--border);border-radius:10px;
+              padding:8px 12px;font-size:12px;font-weight:600;
+              color:var(--text);font-family:inherit;outline:none;
+              cursor:pointer">
             <option value="trust_score,desc">Highest Trust</option>
-            <option value="price,desc">Price: High to Low</option>
-            <option value="price,asc">Price: Low to High</option>
+            <option value="price,desc">Price: High → Low</option>
+            <option value="price,asc">Price: Low → High</option>
             <option value="created_at,desc">Newest First</option>
           </select>
         </div>
       </div>
-      <div class="prop-showing" id="propShowing"></div>
-      <div class="prop-v2-grid" id="propGrid"></div>
-      <div class="prop-pag-bar" id="propPagination" style="display:none"></div>
+
+      <!-- Count bar -->
+      <div id="propCountBar" style="padding:10px 16px;
+        font-size:11px;color:var(--muted)">Loading listings...</div>
+
+      <!-- Grid -->
+      <div id="propGrid" style="display:grid;
+        grid-template-columns:1fr 1fr;gap:10px;
+        padding:0 16px 16px;transition:opacity 0.2s"></div>
+
+      <!-- Pagination -->
+      <div id="propPagination" style="padding:16px;
+        display:flex;justify-content:center;
+        gap:6px;flex-wrap:wrap"></div>
+
     </div>
 
     <!-- ─────────────── STUDIO TAB ─────────────── -->
@@ -3302,7 +3339,7 @@
 
     /* ── INIT ────────────────────────────────── */
     window.addEventListener('DOMContentLoaded', async () => {
-      (function(){const t=document.documentElement.getAttribute('data-theme')||'dark';const b=document.getElementById('themeToggle');if(b)b.textContent=t==='dark'?'🌙':'☀️';})();
+      (function(){const t=document.documentElement.getAttribute('data-theme')||'dark';const icon=document.getElementById('menuThemeIcon');const label=document.getElementById('menuThemeLabel');if(icon)icon.textContent=t==='dark'?'🌙':'☀️';if(label)label.textContent=t==='dark'?'Dark Mode':'Light Mode';})();
       updateStatCardTheme();
       const ok = await resolveCurrentUser();
       if (!ok) return;
@@ -3311,6 +3348,7 @@
       updateFAB('home');
       switchTab('home');
       loadCreditBalance();
+      startBrandRotator();
       ST.timer = setInterval(() => {
         if (ST.tab === 'pipeline' || ST.tab === 'home') loadPipeline();
       }, CFG.REFRESH);
@@ -3387,6 +3425,9 @@
         if (menuUserEmail) menuUserEmail.textContent = user.email || '';
 
         localStorage.setItem('biz_name', bizName);
+        CFG._bizName = bizName;
+        CFG._plan = user.tenant_plan || 'pilot';
+        localStorage.setItem('tenant_plan', CFG._plan);
 
         const bizNameEl = g('bizName');
         if (bizNameEl) bizNameEl.textContent = bizName;
@@ -3451,6 +3492,9 @@
 
     function switchTab(tab) {
       if (tab === 'menu') { openMenuDrawer(); return; }
+      if (tab !== 'properties') {
+        clearInterval(_propRefreshTimer);
+      }
       ST.tab = tab;
       const allTabs = ['home', 'properties', 'pipeline', 'operations', 'trust', 'studio', 'network', 'analytics', 'credits', 'settings', 'team'];
       allTabs.forEach(t => {
@@ -3479,6 +3523,28 @@
       if (tab === 'settings') loadSettingsTab();
       if (tab === 'team') loadTeam();
     }
+
+    /* ── SMART SCROLL FOR SEARCH BAR ─────────── */
+    (function() {
+      let lastScroll = 0;
+      window.addEventListener('scroll', function() {
+        const tab = g('propertiesTab');
+        if (!tab || !tab.classList.contains('active')) return;
+        const bar = g('propSearchBar');
+        if (!bar) return;
+        const cur = window.scrollY;
+        if (cur > lastScroll && cur > 80) {
+          bar.style.transform = 'translateY(-100%)';
+          bar.style.opacity = '0';
+          bar.style.pointerEvents = 'none';
+        } else {
+          bar.style.transform = 'translateY(0)';
+          bar.style.opacity = '1';
+          bar.style.pointerEvents = 'auto';
+        }
+        lastScroll = cur <= 0 ? 0 : cur;
+      }, { passive: true });
+    })();
 
     /* ── HOME ────────────────────────────────── */
     async function loadHome() {
@@ -3901,125 +3967,368 @@
     /* ── VAULT ───────────────────────────────── */
     /* ── PROPERTIES STATE + HELPERS ─────────── */
     let _propState = {
-      page: 1, limit: 20, search: '', type: '',
-      sort_by: 'trust_score', sort_dir: 'desc', total: 0, pages: 0,
+      page:1, limit:20,
+      search:'', type:'',
+      sort_by:'trust_score', sort_dir:'desc',
+      total:0, pages:0,
+      lastFetch: 0,
     };
     let _propSearchTimer = null;
-    const _GRADE_COLORS = {
-      emerald:'#10B981', gold:'#F59E0B', silver:'#94A3B8',
-      bronze:'#CD7F32', ungraded:'#64748B',
-    };
+    let _propRefreshTimer = null;
 
-    function renderPropStats(stats) {
-      if (!stats) return;
-      const s = (id, v) => { const e = g(id); if (e) e.textContent = (v ?? '—'); };
-      s('pstatTotal',      stats.total_all);
-      s('pstatGps',        stats.gps_verified);
-      s('pstatDocs',       stats.with_documents);
-      s('pstatUnassigned', stats.unassigned);
+    async function loadListings(silent = false) {
+      const grid = g('propGrid');
+      if (!grid || !CFG._tid) return;
+
+      if (!silent && ST.listings && ST.listings.length) {
+        renderPropListings(ST.listings, _propState.total || ST.listings.length);
+        grid.style.opacity = '0.6';
+      } else if (!silent) {
+        grid.innerHTML = Array(4).fill(`
+          <div class="prop-skeleton" style="background:var(--surface);
+            border:1px solid var(--border);border-radius:16px;
+            overflow:hidden">
+            <div style="aspect-ratio:16/9;background:var(--surface2)">
+            </div>
+            <div style="padding:12px">
+              <div style="height:12px;background:var(--surface2);
+                border-radius:6px;margin-bottom:8px;width:80%"></div>
+              <div style="height:10px;background:var(--surface2);
+                border-radius:6px;width:50%"></div>
+            </div>
+          </div>`).join('');
+      }
+
+      try {
+        const params = new URLSearchParams({
+          page: _propState.page,
+          limit: _propState.limit,
+          sort_by: _propState.sort_by,
+          sort_dir: _propState.sort_dir,
+        });
+        if (_propState.search) params.set('search', _propState.search);
+        if (_propState.type)   params.set('property_type', _propState.type);
+
+        const r = await fetch(`/listings/?${params}`, { headers: CFG.H });
+
+        if (!r.ok) {
+          if (ST.listings && ST.listings.length) {
+            grid.style.opacity = '1';
+            renderPropListings(ST.listings, ST.listings.length);
+            toast('Could not refresh listings — showing cached data', 'warn');
+          } else {
+            grid.innerHTML = `
+              <div style="grid-column:1/-1;text-align:center;padding:48px 20px">
+                <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+                <div style="font-size:14px;font-weight:700;
+                  margin-bottom:12px">Could not load listings</div>
+                <button class="btn btn-ghost btn-sm"
+                  onclick="loadListings()">Try Again</button>
+              </div>`;
+          }
+          return;
+        }
+
+        const data = await r.json();
+
+        const listings = Array.isArray(data)
+          ? data
+          : (data.listings || []);
+        const total = Array.isArray(data)
+          ? listings.length
+          : (data.total || listings.length);
+        const pages = Array.isArray(data)
+          ? 1
+          : (data.pages || 1);
+        const stats = Array.isArray(data) ? null : data.stats;
+
+        _propState.total = total;
+        _propState.pages = pages;
+        _propState.lastFetch = Date.now();
+        ST.listings = listings;
+
+        grid.style.opacity = '1';
+        if (stats) renderPropStats(stats, total);
+        else {
+          const gps  = listings.filter(l => l.gps_verified_at).length;
+          const docs  = listings.filter(l =>
+            l.cof_uploaded || l.deed_uploaded || l.survey_uploaded
+          ).length;
+          const unassigned = listings.filter(
+            l => !l.assigned_realtor_id
+          ).length;
+          renderPropStats({
+            gps_verified: gps,
+            with_documents: docs,
+            unassigned,
+          }, total);
+        }
+
+        renderPropListings(listings, total);
+        renderPropPagination(pages);
+
+        clearInterval(_propRefreshTimer);
+        _propRefreshTimer = setInterval(() => {
+          if (document.getElementById('propertiesTab')
+              ?.classList.contains('active')) {
+            loadListings(true);
+          }
+        }, 60000);
+
+      } catch(e) {
+        grid.style.opacity = '1';
+        if (ST.listings && ST.listings.length) {
+          renderPropListings(ST.listings, ST.listings.length);
+          toast('Showing cached listings', 'warn');
+        } else {
+          toast('Failed to load listings', 'error');
+        }
+      }
     }
 
-    function renderListings(listings, total, page, limit) {
+    function renderPropStats(stats, total) {
+      const s = (id, val) => {
+        const el = g(id);
+        if (el) el.textContent = val ?? '—';
+      };
+      s('statTotal',      total);
+      s('statGPS',        stats.gps_verified   ?? '—');
+      s('statDocs',       stats.with_documents ?? '—');
+      s('statUnassigned', stats.unassigned     ?? '—');
+    }
+
+    function renderPropListings(listings, total) {
       const grid = g('propGrid');
-      const showing = g('propShowing');
+      const countBar = g('propCountBar');
       if (!grid) return;
+
+      if (countBar) {
+        const start = (_propState.page-1)*_propState.limit + 1;
+        const end   = Math.min(_propState.page*_propState.limit, total);
+        countBar.textContent = total > 0
+          ? `Showing ${start}–${end} of ${total} listings`
+          : 'No verified listings found';
+      }
+
       if (!listings.length) {
-        const hasSearch = !!_propState.search;
-        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 16px">
-          <div style="font-size:40px;margin-bottom:12px">🏠</div>
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:6px">No verified listings found</div>
-          <div class="text-xs text-muted" style="margin-bottom:12px">${hasSearch ? 'Try a different search term' : 'Verified listings will appear here'}</div>
-          ${hasSearch
-            ? `<button class="btn btn-ghost btn-sm" onclick="clearPropSearch()">Clear search</button>`
-            : `<button class="btn btn-em btn-sm" onclick="openModal('uploadModal')">Add Listing →</button>`}
-        </div>`;
-        if (showing) showing.textContent = '';
+        grid.innerHTML = `
+          <div style="grid-column:1/-1;text-align:center;
+            padding:48px 20px">
+            <div style="font-size:40px;margin-bottom:12px">🏠</div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;
+              font-weight:700;margin-bottom:6px">
+              No verified listings found</div>
+            <div style="font-size:12px;color:var(--muted)">
+              ${_propState.search
+                ? 'Try a different search term'
+                : 'Add your first verified property to begin'}
+            </div>
+            ${_propState.search
+              ? `<button class="btn btn-ghost btn-sm"
+                  style="margin-top:12px"
+                  onclick="clearPropSearch()">Clear Search</button>`
+              : `<button class="btn btn-em btn-sm"
+                  style="margin-top:12px"
+                  onclick="openModal('uploadModal')">
+                  Add First Listing →</button>`
+            }
+          </div>`;
         return;
       }
-      const start = (page - 1) * limit + 1;
-      const end   = Math.min(page * limit, total);
-      if (showing) showing.textContent = `Showing ${start}–${end} of ${total} listings`;
+
+      const gc = {
+        emerald:'#10B981', gold:'#F59E0B',
+        silver:'#94A3B8', bronze:'#CD7F32',
+        ungraded:'#64748B'
+      };
 
       grid.innerHTML = listings.map(l => {
-        const ts    = l.trust_score || 0;
-        const grade = l.trust_grade || 'ungraded';
-        const gc    = _GRADE_COLORS[grade] || '#64748B';
-        const imgUrl = l.images?.[0]?.url || '';
-        const p = l.price || 0;
-        const priceFmt = p >= 1e9 ? '₦' + (p/1e9).toFixed(1) + 'B'
-                       : p >= 1e6 ? '₦' + Math.floor(p/1e6) + 'M'
-                       : p > 0    ? formatMoney(p)
-                                  : 'Price on Request';
-        const realtorRow = l.assigned_realtor_name
-          ? `<div class="prop-realtor-row">👤 ${sanitise(l.assigned_realtor_name)}${l.assigned_realtor_phone ? ' 📱' : ' ⚠️'}</div>`
-          : `<div class="prop-realtor-row prop-realtor-unassigned">⚠️ Unassigned</div>`;
-        const assignBtn = CFG._role === 'admin'
-          ? `<button class="btn btn-ghost btn-sm" onclick="openAssignModal(${l.id},${l.assigned_realtor_id||'null'},'${sanitise(l.title)}')">Assign</button>`
-          : '';
-        return `<div class="prop-card" style="margin-bottom:0">
-          <div class="prop-v2-img">
-            ${imgUrl ? `<img src="${imgUrl}" alt="${sanitise(l.title)}" loading="lazy" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
-            <div style="display:${imgUrl?'none':'flex'};width:100%;height:100%;align-items:center;justify-content:center;font-size:28px;color:var(--muted)">🏠</div>
-            <div class="prop-trust-badge-v2">
-              <span class="prop-trust-score-v2" style="color:${gc}">${ts}</span>
-              <span class="prop-trust-grade-v2" style="color:${gc}">${grade}</span>
+        const color   = gc[l.trust_grade] || '#64748B';
+        const img     = l.images?.[0]?.url || '';
+        const price   = formatMoney(l.price || 0);
+        const realtor = l.assigned_realtor_name
+          ? `<span style="font-size:11px;color:var(--muted)">
+               👤 ${sanitise(l.assigned_realtor_name)}
+               ${l.assigned_realtor_phone ? ' 📱' : ' ⚠️'}
+             </span>`
+          : `<span style="font-size:11px;color:var(--warn)">
+               ⚠️ Unassigned
+             </span>`;
+
+        return `
+          <div style="background:var(--surface);
+            border:1px solid var(--border);
+            border-radius:16px;overflow:hidden;
+            transition:transform .2s,box-shadow .2s;
+            cursor:pointer"
+            onmouseenter="this.style.transform='translateY(-3px)';
+              this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'"
+            onmouseleave="this.style.transform='';
+              this.style.boxShadow=''">
+
+            <div style="position:relative;aspect-ratio:16/9;
+              background:var(--surface2);overflow:hidden">
+              ${img ? `
+                <img src="${img}" alt="${sanitise(l.title)}"
+                  loading="lazy"
+                  class="prop-img-fade"
+                  onload="this.classList.add('loaded')"
+                  onerror="this.style.display='none'"
+                  style="width:100%;height:100%;
+                    object-fit:cover"/>`
+                : `<div style="width:100%;height:100%;display:flex;
+                    align-items:center;justify-content:center;
+                    font-size:32px">🏠</div>`
+              }
+              <div style="position:absolute;top:8px;right:8px;
+                background:rgba(10,15,30,0.85);
+                border-radius:8px;padding:4px 8px;
+                display:flex;align-items:center;gap:4px;
+                border:1px solid rgba(255,255,255,0.08)">
+                <span style="font-family:'Syne',sans-serif;
+                  font-size:14px;font-weight:800;
+                  color:${color}">${l.trust_score||0}</span>
+                <span style="font-size:9px;font-weight:700;
+                  text-transform:capitalize;color:${color}">
+                  ${l.trust_grade||'ungraded'}</span>
+              </div>
+              ${l.gps_verified_at ? `
+                <div style="position:absolute;bottom:8px;left:8px;
+                  background:rgba(16,185,129,0.9);
+                  border-radius:6px;padding:3px 8px;
+                  font-size:9px;font-weight:700;color:#fff">
+                  📍 GPS
+                </div>` : ''}
             </div>
-            ${l.gps_verified_at ? `<div class="prop-gps-tag">📍 GPS</div>` : ''}
-          </div>
-          <div class="prop-body">
-            <div class="prop-type-row">
-              ${l.property_type ? `<span class="prop-type-pill">${sanitise(l.property_type)}</span>` : '<span></span>'}
-              <span class="prop-verified-dot">● verified</span>
+
+            <div style="padding:12px">
+              <div style="display:flex;align-items:center;
+                justify-content:space-between;margin-bottom:6px">
+                ${l.property_type ? `
+                  <span style="font-size:9px;font-weight:700;
+                    text-transform:uppercase;letter-spacing:.06em;
+                    color:var(--indigo);
+                    background:rgba(79,70,229,0.12);
+                    padding:2px 8px;border-radius:99px;
+                    border:1px solid rgba(79,70,229,0.15)">
+                    ${sanitise(l.property_type)}
+                  </span>`
+                  : '<span></span>'
+                }
+                <span style="font-size:10px;font-weight:600;
+                  color:var(--em);display:flex;
+                  align-items:center;gap:3px">
+                  <span style="width:5px;height:5px;
+                    border-radius:50%;background:var(--em);
+                    display:inline-block"></span>
+                  verified
+                </span>
+              </div>
+              <div style="font-family:'Syne',sans-serif;
+                font-size:13px;font-weight:700;
+                color:var(--text);line-height:1.3;
+                margin-bottom:4px;
+                display:-webkit-box;-webkit-line-clamp:2;
+                -webkit-box-orient:vertical;overflow:hidden;
+                min-height:2.6em">
+                ${sanitise(l.title)||'Untitled'}
+              </div>
+              <div style="font-size:11px;color:var(--muted);
+                margin-bottom:6px;display:flex;
+                align-items:center;gap:4px">
+                <svg width="10" height="10" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor"
+                  stroke-width="2.5" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13
+                    a9 9 0 0118 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                ${sanitise(l.location)||'—'}
+              </div>
+              <div style="font-family:'Syne',sans-serif;
+                font-size:18px;font-weight:800;
+                color:var(--em);margin-bottom:8px">
+                ${price}
+              </div>
+              <div style="margin-bottom:10px">${realtor}</div>
+              <div style="display:grid;
+                grid-template-columns:1fr 1fr 1fr;gap:6px">
+                <button class="btn btn-em btn-sm"
+                  onclick="viewTrustDash(${l.id})"
+                  style="font-size:11px;padding:7px 4px">
+                  🛡️ Trust
+                </button>
+                <button class="btn btn-ghost btn-sm"
+                  onclick="openAssignModal(${l.id},
+                    ${l.assigned_realtor_id||'null'},
+                    '${sanitise(l.title)}')"
+                  style="font-size:11px;padding:7px 4px">
+                  👤 Assign
+                </button>
+                <button class="btn btn-ghost btn-sm"
+                  onclick="loadReelOptions(${l.id})"
+                  style="font-size:11px;padding:7px 4px">
+                  🎬 Reel
+                </button>
+              </div>
             </div>
-            <div class="prop-v2-title">${sanitise(l.title)||'Untitled'}</div>
-            <div class="prop-v2-location">📍 ${sanitise(l.location)||'—'}</div>
-            <div class="prop-v2-price">${priceFmt}</div>
-            ${realtorRow}
-            <div class="prop-v2-actions">
-              <button class="btn btn-em btn-sm" onclick="viewTrustDash(${l.id})">Trust</button>
-              ${assignBtn}
-              <button class="btn btn-ghost btn-sm" onclick="loadReelOptions(${l.id})">Reel</button>
-            </div>
-          </div>
-        </div>`;
+          </div>`;
       }).join('');
     }
 
-    function renderPagination(page, pages) {
+    function renderPropPagination(pages) {
       const bar = g('propPagination');
-      if (!bar) return;
-      if (pages <= 1) { bar.style.display = 'none'; return; }
-      bar.style.display = 'flex';
+      if (!bar || pages <= 1) {
+        if (bar) bar.innerHTML = '';
+        return;
+      }
+      const cur = _propState.page;
+      const btn = (label, page, active, disabled) => `
+        <button onclick="${disabled ? '' : `goToPropPage(${page})`}"
+          style="padding:7px 12px;border-radius:8px;font-size:12px;
+            font-weight:700;border:1px solid ${active
+              ? 'var(--indigo)' : 'var(--border)'};
+            background:${active ? 'var(--indigo)' : 'var(--surface)'};
+            color:${disabled ? 'var(--muted)'
+              : active ? '#fff' : 'var(--text)'};
+            cursor:${disabled ? 'not-allowed' : 'pointer'}">
+          ${label}
+        </button>`;
+
       const nums = new Set([1, pages]);
-      for (let i = Math.max(2, page-2); i <= Math.min(pages-1, page+2); i++) nums.add(i);
-      const sorted = [...nums].sort((a,b) => a-b);
-      let html = '<div class="prop-pag-nums">';
-      html += `<button class="pag-btn" onclick="goToPage(${page-1})" ${page===1?'disabled':''}>← Prev</button>`;
+      for (let i = Math.max(2,cur-2);
+           i <= Math.min(pages-1,cur+2); i++) nums.add(i);
+      const sorted = Array.from(nums).sort((a,b)=>a-b);
+
+      let html = btn('← Prev', cur-1, false, cur===1);
       let prev = 0;
-      sorted.forEach(n => {
-        if (prev && n-prev > 1) html += '<span class="pag-dots">…</span>';
-        html += `<button class="pag-btn${n===page?' active':''}" onclick="goToPage(${n})">${n}</button>`;
-        prev = n;
+      sorted.forEach(p => {
+        if (p - prev > 1) html +=
+          `<span style="padding:7px 4px;color:var(--muted);
+            font-size:12px">…</span>`;
+        html += btn(p, p, p===cur, false);
+        prev = p;
       });
-      html += `<button class="pag-btn" onclick="goToPage(${page+1})" ${page===pages?'disabled':''}>Next →</button>`;
-      html += '</div>';
+      html += btn('Next →', cur+1, false, cur===pages);
       bar.innerHTML = html;
     }
 
-    function goToPage(p) {
-      if (p < 1 || p > _propState.pages) return;
-      _propState.page = p;
-      loadListings();
+    function goToPropPage(page) {
+      if (page < 1 || page > _propState.pages) return;
+      _propState.page = page;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       if (g('scrollArea')) g('scrollArea').scrollTop = 0;
+      loadListings();
     }
 
-    function handlePropSearch(val) {
+    function debouncePropSearch(val) {
+      const clear = g('propSearchClear');
+      if (clear) clear.style.display = val ? 'flex' : 'none';
       clearTimeout(_propSearchTimer);
-      const clr = g('propSearchClear');
-      if (clr) clr.style.display = val ? 'flex' : 'none';
       _propSearchTimer = setTimeout(() => {
         _propState.search = val;
-        _propState.page   = 1;
+        _propState.page = 1;
         loadListings();
       }, 400);
     }
@@ -4027,50 +4336,24 @@
     function clearPropSearch() {
       const inp = g('propSearch');
       if (inp) inp.value = '';
-      const clr = g('propSearchClear');
-      if (clr) clr.style.display = 'none';
+      const clear = g('propSearchClear');
+      if (clear) clear.style.display = 'none';
       _propState.search = '';
-      _propState.page   = 1;
+      _propState.page = 1;
       loadListings();
     }
 
-    async function loadListings() {
-      const grid = g('propGrid');
-      if (!grid) return;
-      // Skeleton loading
-      grid.innerHTML = Array(6).fill(0).map(() => `
-        <div class="prop-skeleton">
-          <div class="prop-skel-img"></div>
-          <div class="prop-skel-body">
-            <div class="prop-skel-line" style="width:60%"></div>
-            <div class="prop-skel-line" style="width:90%"></div>
-            <div class="prop-skel-line" style="width:40%"></div>
-          </div>
-        </div>`).join('');
-      const pag = g('propPagination');
-      if (pag) pag.style.display = 'none';
-      try {
-        const params = new URLSearchParams({
-          page:     _propState.page,
-          limit:    _propState.limit,
-          sort_by:  _propState.sort_by,
-          sort_dir: _propState.sort_dir,
-        });
-        if (_propState.search) params.set('search', _propState.search);
-        if (_propState.type)   params.set('property_type', _propState.type);
-        const r = await fetch(`/listings/?${params}`, { headers: CFG.H });
-        if (!r.ok) { toast('Failed to load listings', 'error'); grid.innerHTML = ''; return; }
-        const data = await r.json();
-        _propState.total = data.total;
-        _propState.pages = data.pages;
-        ST.listings = data.listings || [];
-        renderPropStats(data.stats);
-        renderListings(data.listings || [], data.total, data.page, data.limit);
-        renderPagination(data.page, data.pages);
-      } catch (e) {
-        toast('Failed to load listings', 'error');
-        grid.innerHTML = '';
+    function onPropFilterChange() {
+      const type = g('propTypeFilter');
+      const sort = g('propSortFilter');
+      if (type) _propState.type = type.value;
+      if (sort) {
+        const [sb,sd] = (sort.value||'trust_score,desc').split(',');
+        _propState.sort_by  = sb;
+        _propState.sort_dir = sd;
       }
+      _propState.page = 1;
+      loadListings();
     }
 
     /* ── STUDIO ──────────────────────────────── */
@@ -4263,6 +4546,8 @@
         const available = data.available ?? 0;
 
         if (bal) bal.textContent = available;
+        const menuBal = g('menuCreditBalance');
+        if (menuBal) menuBal.textContent = available;
 
         if (data.bonus > 0 && bonTag && bonAmt) {
           bonAmt.textContent   = data.bonus;
@@ -4796,6 +5081,10 @@
       localStorage.setItem('est8go-theme', next);
       const btn = document.getElementById('themeToggle');
       if (btn) btn.textContent = next === 'dark' ? '🌙' : '☀️';
+      const icon = g('menuThemeIcon');
+      const label = g('menuThemeLabel');
+      if (icon) icon.textContent = next === 'dark' ? '🌙' : '☀️';
+      if (label) label.textContent = next === 'dark' ? 'Dark Mode' : 'Light Mode';
       const meta = document.querySelector('meta[name="theme-color"]');
       if (meta) meta.setAttribute('content', next === 'dark' ? '#0F172A' : '#F8FAFC');
       updateStatCardTheme();
@@ -5267,6 +5556,37 @@
       closeFAB();
       const action = _fabActions[i];
       if (action) action.action();
+    }
+
+    /* ── BRAND ROTATOR ───────────────────────── */
+    function startBrandRotator() {
+      const el = g('brandRotator');
+      if (!el) return;
+      const texts = [
+        'Est<span>8</span>Go',
+      ];
+      const addTenantTexts = () => {
+        const biz  = CFG._bizName || localStorage.getItem('biz_name') || '';
+        const plan = CFG._plan    || localStorage.getItem('tenant_plan') || '';
+        if (!biz || biz === 'Loading...') return false;
+        texts.push(sanitise(biz));
+        if (plan) texts.push(sanitise(biz) + ' · ' + sanitise(plan).toUpperCase());
+        texts.push('Est<span>8</span>Go');
+        return true;
+      };
+      let index = 0;
+      let ready = false;
+      const rotate = () => {
+        if (!ready) { ready = addTenantTexts(); if (!ready) return; }
+        el.style.transition = 'opacity 0.5s ease';
+        el.style.opacity = '0';
+        setTimeout(() => {
+          index = (index + 1) % texts.length;
+          el.innerHTML = texts[index];
+          el.style.opacity = '1';
+        }, 500);
+      };
+      setTimeout(() => { setInterval(rotate, 3000); }, 3000);
     }
   </script>
 
