@@ -96,8 +96,6 @@ def get_session_state(convo: Conversation) -> str:
 
     # Handle timezone-aware datetimes
     if hasattr(last_active, "tzinfo") and last_active.tzinfo:
-        from datetime import timezone
-
         now = datetime.now(timezone.utc)
 
     delta = now - last_active
