@@ -17,44 +17,52 @@ import re
 WELCOME_VARIANTS = [
     (
         "Hello {name}! 👋\n\n"
-        "Welcome to *Est8Go* — Nigeria's property trust infrastructure.\n\n"
-        "I'm Kora, your personal property guide. Before you spend a single naira, "
-        "I make sure what you're buying is exactly what you're being shown. "
-        "No surprises. No losses. Just verified deals. 🛡️\n\n"
+        "Welcome to *Est8Go* — Nigeria's property "
+        "trust infrastructure.\n\n"
+        "I'm Kora. My job is simple: before you "
+        "spend a single naira on property, I make "
+        "sure what you're buying is exactly what "
+        "you're being shown.\n\n"
+        "GPS confirmed. AI audited. Documents "
+        "checked. No surprises. 🛡️\n\n"
         "How can I help you today?\n\n"
-        "1️⃣ I want to find a verified property\n"
-        "2️⃣ I need a trusted agency near me\n"
-        "3️⃣ How does your verification actually work?\n"
-        "4️⃣ I want my agency on Est8Go\n"
-        "5️⃣ I want to report a suspicious listing\n\n"
-        "Just reply with a number — or tell me what's on your mind. 👇"
+        "1️⃣ Find a verified property\n"
+        "2️⃣ Find a trusted agency near me\n"
+        "3️⃣ How does verification work?\n"
+        "4️⃣ Get my agency on Est8Go\n"
+        "5️⃣ Report a suspicious listing\n\n"
+        "Reply with a number or tell me "
+        "what's on your mind."
     ),
     (
-        "Hi {name}! Great to connect. 🤝\n\n"
-        "You've reached *Est8Go* — where every property listing is GPS-verified, "
-        "AI-audited, and document-checked before it ever reaches you.\n\n"
-        "In a market where 1 in 3 listings is fake, we built the infrastructure "
-        "that tells you the truth. 🔍\n\n"
-        "What brings you here today?\n\n"
+        "Hi {name}, good to have you here. 🤝\n\n"
+        "You've reached *Est8Go* — where every "
+        "listing is verified before it reaches you.\n\n"
+        "In a market where 1 in 3 listings is fake, "
+        "we built the infrastructure that tells "
+        "you the truth.\n\n"
+        "What can I help you with?\n\n"
         "1️⃣ Find a verified property\n"
         "2️⃣ Find a verified agency near you\n"
         "3️⃣ Understand how verification works\n"
         "4️⃣ Get your agency on the platform\n"
         "5️⃣ Report a suspicious listing\n\n"
-        "Reply 1–5 or simply tell me what you need. I'm listening. 👂"
+        "Reply 1–5 or simply tell me what you need."
     ),
     (
         "Welcome, {name}! 🏡\n\n"
-        "You've reached *Est8Go* — Nigeria's most trusted property verification platform.\n\n"
-        "Whether you're buying land, searching for an apartment, or looking for a "
-        "realtor you can actually trust — you're in the right place.\n\n"
-        "Here's how I can help you right now:\n\n"
+        "You've reached *Est8Go* — Nigeria's most "
+        "trusted property verification platform.\n\n"
+        "Whether you're buying land, searching for "
+        "an apartment, or looking for an agent you "
+        "can actually trust — you're in the "
+        "right place.\n\n"
         "1️⃣ Find a verified property\n"
         "2️⃣ Find a verified agency near you\n"
         "3️⃣ How our verification works\n"
         "4️⃣ Join Est8Go as an agency\n"
         "5️⃣ Report a suspicious listing\n\n"
-        "What would you like to do? 👇"
+        "What would you like to do?"
     ),
 ]
 
@@ -99,35 +107,36 @@ def get_reprompt(name: str) -> str:
 
 OPTION_1_VARIANTS = [
     (
-        "Perfect, {name}! You've come to the right place. 🎯\n\n"
-        "Let me ask you three quick questions and I'll match you with "
-        "the most relevant verified listings:\n\n"
-        "*1. What type of property?*\n"
+        "Perfect, {name}. Let's find you "
+        "something verified. 🎯\n\n"
+        "Three quick questions:\n\n"
+        "*Property type?*\n"
         "Land · House · Apartment\n\n"
-        "*2. Which city or area?*\n"
-        "Abuja, Lagos, Port Harcourt...\n\n"
-        "*3. What's your budget range?*\n"
-        "e.g. ₦50M, ₦20M–₦80M\n\n"
-        "Start with the property type and we'll go from there. 🏠"
+        "*Which city or area?*\n"
+        "Abuja · Lagos · Port Harcourt...\n\n"
+        "*Budget range?*\n"
+        "e.g. ₦50M or ₦20M–₦80M\n\n"
+        "Start with the property type. 🏠"
     ),
     (
-        "Excellent choice, {name}. 💪\n\n"
-        "Every property I'll show you has been physically visited by our team, "
-        "GPS-coordinates confirmed, and documents checked. No stories.\n\n"
-        "To find the perfect match quickly — tell me:\n\n"
-        "• *What type?* Land, House, or Apartment?\n"
-        "• *Which area?* Be as specific as possible\n"
-        "• *Your budget?* Even a rough range helps\n\n"
-        "Go ahead — what are you looking for? 👇"
+        "Good choice, {name}. 💪\n\n"
+        "Every property I show you has been "
+        "physically visited, GPS-confirmed, "
+        "and document-checked. No stories.\n\n"
+        "Tell me:\n\n"
+        "• *Type?* Land, House, or Apartment\n"
+        "• *Area?* Be as specific as you can\n"
+        "• *Budget?* Even a rough range helps\n\n"
+        "What are you looking for? 👇"
     ),
     (
-        "Great, {name}! Let's find you something verified and worth every naira. 🏡\n\n"
+        "Let's find you something worth "
+        "every naira, {name}. 🏡\n\n"
         "I need just three things:\n\n"
-        "🏠 *Property type* — Land, House or Apartment?\n"
-        "📍 *Location* — Which city or neighbourhood?\n"
+        "🏠 *Type* — Land, House or Apartment?\n"
+        "📍 *Location* — Which area?\n"
         "💰 *Budget* — What's your range?\n\n"
-        "The more specific you are, the better I can match you. "
-        "Start wherever feels comfortable. 👇"
+        "Start wherever feels comfortable."
     ),
 ]
 
@@ -142,21 +151,27 @@ def get_option_1(name: str) -> str:
 
 SEARCH_REDIRECT_VARIANTS = [
     (
-        "Got it, {name}! 🎯\n\n"
-        "I'm connecting you with a verified Est8Go partner agency "
-        "that specialises in exactly that.\n\n"
-        "In the meantime, you can browse live verified listings right now:\n"
-        "🔗 *est8go.com*\n\n"
-        "A verified agent will reach out to you shortly. "
-        "We don't play with people's money here. 💪"
+        "Got it, {name}. 🎯\n\n"
+        "I'm connecting you with a verified "
+        "Est8Go partner agency that specialises "
+        "in exactly that.\n\n"
+        "Browse live verified listings now:\n"
+        "👉 *est8go.com*\n\n"
+        "Every listing shows its full "
+        "trust audit trail — GPS, AI, "
+        "documents, witnesses.\n\n"
+        "A verified agent will reach out shortly."
     ),
     (
-        "Understood, {name}. Let me get the right people on this for you. 🤝\n\n"
-        "I'm flagging your requirements to our verified agency network now.\n\n"
-        "You can also view current verified listings at:\n"
-        "🔗 *est8go.com*\n\n"
-        "Every listing there has a Trust Score — the higher the score, "
-        "the safer the investment. Expect a call from a verified agent soon. ✅"
+        "Understood, {name}. "
+        "Let me get the right people on this. 🤝\n\n"
+        "I'm flagging your requirements to our "
+        "verified agency network now.\n\n"
+        "You can also view current listings at:\n"
+        "👉 *est8go.com*\n\n"
+        "The higher the Trust Score on a listing, "
+        "the safer the investment. "
+        "Expect a call from a verified agent soon."
     ),
 ]
 
@@ -171,22 +186,30 @@ def get_search_redirect(name: str) -> str:
 
 OPTION_2_VARIANTS = [
     (
-        "Smart move, {name}. Choosing the *right agent* is half the battle. 🤝\n\n"
-        "Est8Go only partners with agencies that have passed our verification "
-        "standards — no fly-by-night operators, no property fraudsters.\n\n"
-        "Which city are you searching in?\n\n"
-        "We currently have verified partners in:\n"
-        "📍 Abuja · Lagos · Port Harcourt · Enugu · Ibadan\n\n"
-        "Tell me your city and I'll connect you directly. 🎯"
+        "Smart thinking, {name}. "
+        "The right agent changes everything. 🤝\n\n"
+        "Est8Go only works with agencies that have "
+        "passed our verification standards — "
+        "background checked, document verified, "
+        "and property quality audited.\n\n"
+        "Which city are you looking in?\n\n"
+        "We have verified partners in:\n"
+        "📍 Abuja · Lagos · Port Harcourt "
+        "· Enugu · Ibadan\n\n"
+        "Tell me your city and I'll connect "
+        "you directly."
     ),
     (
-        "Absolutely, {name}. The agent you work with determines everything. 🎯\n\n"
-        "Our verified agencies have gone through background checks, "
-        "document verification, and property quality audits before "
-        "earning the Est8Go seal.\n\n"
-        "Where are you based or looking to buy?\n\n"
-        "📍 *Abuja · Lagos · Port Harcourt · Enugu · Ibadan and more*\n\n"
-        "Share your city and I'll make the introduction. 🤝"
+        "The agent you choose determines "
+        "everything, {name}. 💯\n\n"
+        "Our verified agencies carry the "
+        "Est8Go seal — which means they've "
+        "been audited, not just registered.\n\n"
+        "Where are you looking to buy?\n\n"
+        "📍 *Abuja · Lagos · Port Harcourt "
+        "· Enugu · Ibadan and more*\n\n"
+        "Share your city and I'll make "
+        "the introduction."
     ),
 ]
 
@@ -219,51 +242,51 @@ def get_agency_found(name: str, location: str) -> str:
 
 OPTION_3_VARIANTS = [
     (
-        "Great question, {name}. This is what makes Est8Go different "
-        "from every other platform out there. 🛡️\n\n"
-        "Here's exactly what happens before a listing goes live:\n\n"
-        "📍 *Step 1 — GPS Verification*\n"
-        "Our field team visits the physical location. Photos taken on-site, "
-        "GPS coordinates locked. We confirm the property actually exists "
-        "where it says it does.\n\n"
-        "🤖 *Step 2 — AI Vision Audit*\n"
-        "Our AI cross-checks every photo against satellite imagery and "
-        "Street View to detect fake listings, recycled photos, and "
-        "misrepresented properties.\n\n"
-        "📄 *Step 3 — Document Verification*\n"
-        "C of O, Survey Plan, Deed of Assignment — all reviewed and "
-        "authenticated before the listing goes live.\n\n"
-        "👥 *Step 4 — Witness Confirmation*\n"
-        "Neighbours and community members independently confirm "
+        "Great question, {name}. "
+        "This is what makes Est8Go different. 🛡️\n\n"
+        "Before any listing goes live, "
+        "it goes through four checks:\n\n"
+        "📍 *GPS Verification*\n"
+        "We visit the physical location. "
+        "Coordinates locked. Property confirmed.\n\n"
+        "🤖 *AI Vision Audit*\n"
+        "Every photo checked for fakes, "
+        "recycled images, and misrepresentation.\n\n"
+        "📄 *Document Verification*\n"
+        "C of O, Survey Plan, Deed of Assignment "
+        "— all authenticated.\n\n"
+        "👥 *Witness Confirmation*\n"
+        "Community members independently confirm "
         "the ownership claim.\n\n"
-        "The result? A *Trust Score from 0–100* on every listing.\n\n"
-        "🥉 40–59 = Bronze\n"
-        "🥈 60–74 = Silver\n"
-        "🥇 75–89 = Gold\n"
-        "💎 90–100 = Emerald\n\n"
-        "No other platform in Nigeria does this. "
-        "We built it because ₦1.6 trillion is lost to property fraud "
-        "every year in this country. That ends here. 💪\n\n"
-        "Ready to find a verified property? Reply *1* 🏠"
+        "The result: a *Trust Score 0–100* "
+        "on every listing.\n\n"
+        "🥉 Bronze · 🥈 Silver · 🥇 Gold "
+        "· 💎 Emerald\n\n"
+        "No other platform in Nigeria does this.\n\n"
+        "Ready to find a verified property? "
+        "Reply *1* 🏠"
     ),
     (
-        "I love this question, {name} — because the answer is what "
-        "makes us completely different. 🛡️\n\n"
-        "In Nigeria, 1 in 3 property listings is fake, duplicated, "
-        "or misrepresented. Est8Go was built to change that.\n\n"
-        "Every listing goes through *4 layers of verification:*\n\n"
-        "1️⃣ *Physical GPS Visit* — Our team goes to the location. Period.\n\n"
-        "2️⃣ *AI Vision Audit* — AI compares listing photos to satellite "
+        "I love this question, {name} — "
+        "because the answer is what makes us "
+        "completely different. 🛡️\n\n"
+        "Every listing goes through "
+        "*4 layers of verification:*\n\n"
+        "1️⃣ *Physical GPS Visit*\n"
+        "Our team goes to the location. Period.\n\n"
+        "2️⃣ *AI Vision Audit*\n"
+        "AI compares listing photos to satellite "
         "imagery to catch fakes.\n\n"
-        "3️⃣ *Document Authentication* — Title documents verified by "
-        "our legal team.\n\n"
-        "4️⃣ *Community Witness Check* — We ask neighbours. Ownership "
-        "claims are confirmed on the ground.\n\n"
-        "Each verified property gets a *Trust Score* — the higher it "
-        "is, the safer your investment.\n\n"
-        "You can see it all live at *est8go.com* — every listing shows "
-        "its verification audit trail in full transparency.\n\n"
-        "Want to find a verified property now? Reply *1* 🏠"
+        "3️⃣ *Document Authentication*\n"
+        "Title documents verified and on record.\n\n"
+        "4️⃣ *Community Witness Check*\n"
+        "Ownership confirmed on the ground.\n\n"
+        "Each property gets a *Trust Score* — "
+        "the higher the score, "
+        "the safer your investment.\n\n"
+        "See it live at *est8go.com*\n\n"
+        "Want to find a verified property? "
+        "Reply *1* 🏠"
     ),
 ]
 
@@ -278,43 +301,40 @@ def get_option_3(name: str) -> str:
 
 OPTION_4_VARIANTS = [
     (
-        "Now we're talking, {name}! 🚀\n\n"
-        "The agencies on Est8Go are closing deals faster because buyers "
-        "already *trust* their listings before picking up the phone.\n\n"
-        "When your listings carry the Est8Go verification badge, the "
-        "conversation changes — buyers stop negotiating from fear "
-        "and start transacting from confidence. That's the difference.\n\n"
-        "*What you get as a partner agency:*\n\n"
-        "✅ GPS-verified listing badges that buyers respect\n"
-        "✅ AI-powered WhatsApp bot that qualifies leads 24/7\n"
-        "✅ Trust scores that win buyer confidence instantly\n"
-        "✅ Your own verified property vault at est8go.com\n"
-        "✅ Automated lead capture — even while you sleep\n"
+        "Now we're talking, {name}. 🚀\n\n"
+        "The agencies on Est8Go close deals faster "
+        "because buyers already *trust* their "
+        "listings before they even call.\n\n"
+        "When your listings carry the Est8Go badge, "
+        "buyers stop negotiating from fear and "
+        "start transacting from confidence.\n\n"
+        "*What you get as a partner:*\n\n"
+        "✅ GPS-verified listing badges\n"
+        "✅ Kora AI bot — 24/7 lead qualification\n"
+        "✅ Trust scores that win buyer confidence\n"
+        "✅ Your own verified property vault\n"
         "✅ Full pipeline management dashboard\n\n"
-        "To get started, email us:\n"
-        "📧 *est8go@gmail.com*\n"
-        "Subject: *Agency Access Request*\n\n"
-        "Include your agency name, city, and number of active listings. "
-        "We'll have you onboarded within 24 hours. ⚡\n\n"
-        "Any questions before you reach out? I'm right here. 👇"
+        "To request access, send us a WhatsApp:\n"
+        "👉 *wa.me/2348057834774*\n\n"
+        "Tell us your agency name and city. "
+        "We'll have you onboarded within 24 hours."
     ),
     (
-        "Excellent, {name} — this is one of the best business decisions "
-        "you'll make this year. 🎯\n\n"
-        "Here's the reality: buyers are tired of being defrauded. "
-        "When they see an Est8Go verified listing, they don't ask "
-        "*'is this real?'* — they ask *'how do I buy it?'*\n\n"
-        "That's the kind of buyer you want. And that's exactly who "
-        "our platform sends to your listings. 🎯\n\n"
+        "Excellent, {name} — this could be "
+        "one of the best decisions you make "
+        "for your agency this year. 💯\n\n"
+        "Here's the reality: buyers are tired "
+        "of being defrauded. When they see an "
+        "Est8Go verified listing, they don't ask "
+        "*'is this real?'* — they ask "
+        "*'how do I buy it?'* 🎯\n\n"
         "*Est8Go partner agencies get:*\n\n"
-        "🛡️ Verified listing badges — instant buyer trust\n"
-        "🤖 Kora AI bot — 24/7 lead qualification on WhatsApp\n"
-        "📊 Full dashboard — listings, leads, pipeline, analytics\n"
-        "📈 Trust scores — the highest converting tool in your arsenal\n"
-        "🔗 Your own verified vault — shareable URL for marketing\n\n"
-        "Getting started is simple:\n"
-        "📧 Email: *est8go@gmail.com*\n"
-        "Subject: *Agency Access Request*\n\n"
+        "🛡️ Verified badges — instant buyer trust\n"
+        "🤖 Kora AI — 24/7 WhatsApp lead capture\n"
+        "📊 Dashboard — listings, leads, analytics\n"
+        "🌐 Verified vault — shareable for marketing\n\n"
+        "Request access via WhatsApp:\n"
+        "👉 *wa.me/2348057834774*\n\n"
         "Tell us your agency name and city. "
         "We'll take it from there. 🤝"
     ),
@@ -331,32 +351,39 @@ def get_option_4(name: str) -> str:
 
 OPTION_5_VARIANTS = [
     (
-        "Thank you for this, {name}. Seriously. 🙏\n\n"
-        "Every report you make protects someone else from losing "
-        "their life savings. We take every report personally.\n\n"
-        "Please share the following:\n\n"
-        "1. *The property details* — address, listing link, or "
-        "agent's name/number\n"
-        "2. *What seems wrong* — what raised your suspicion?\n"
-        "3. *Any evidence* — screenshots, documents, anything helps\n\n"
-        "Our trust team investigates within *24 hours*. "
-        "Fraudulent listings are removed immediately and reported "
-        "to relevant authorities.\n\n"
+        "Thank you for this, {name}. 🙏\n\n"
+        "Every report protects someone from "
+        "losing their life savings. "
+        "We take every one personally.\n\n"
+        "Please share:\n\n"
+        "1. *Property details* — address, "
+        "listing link, or agent name/number\n"
+        "2. *What's suspicious* — what raised "
+        "your concern?\n"
+        "3. *Any evidence* — screenshots, "
+        "documents, anything helps\n\n"
+        "We investigate within *24 hours*. "
+        "Fraudulent listings are removed "
+        "immediately.\n\n"
         "Your identity is 100% confidential. 🔒\n\n"
         "Go ahead — share what you know. 👇"
     ),
     (
-        "You did the right thing reaching out, {name}. 💪\n\n"
-        "Property fraud is destroying families in this country. "
-        "Est8Go was built specifically to fight it — and reports "
+        "You did the right thing, {name}. 💪\n\n"
+        "Property fraud is destroying families "
+        "in this country. Est8Go was built "
+        "specifically to fight it — and reports "
         "like yours are how we win.\n\n"
         "Please tell me:\n\n"
-        "🔍 *What listing or agent?* (address, link, name, or number)\n"
-        "🚨 *What's suspicious?* (fake photos, wrong location, "
-        "document issues, double selling)\n"
-        "📸 *Any evidence?* (screenshots welcome)\n\n"
+        "📌 *What listing or agent?*\n"
+        "Address, link, name, or number\n\n"
+        "🚨 *What's suspicious?*\n"
+        "Fake photos, wrong location, "
+        "document issues, double selling\n\n"
+        "📸 *Any evidence?*\n"
+        "Screenshots welcome\n\n"
         "We treat every report with urgency. "
-        "Your identity stays completely confidential. 🔒\n\n"
+        "Your identity stays confidential. 🔒\n\n"
         "What can you share with me? 👇"
     ),
 ]
@@ -393,25 +420,27 @@ def get_report_confirm(name: str, ref: str) -> str:
 
 FALLBACK_VARIANTS = [
     (
-        "I want to make sure I give you the right help, {name}. 👇\n\n"
-        "Here's what I can do for you right now:\n\n"
-        "1️⃣ *Find a verified property* — GPS-checked, AI-audited\n"
-        "2️⃣ *Find a trusted agency* — verified partners only\n"
-        "3️⃣ *How verification works* — the full story\n"
-        "4️⃣ *Join as an agency* — grow with us\n"
-        "5️⃣ *Report suspicious listing* — protect the community\n\n"
-        "Which one can I help you with? 👇"
+        "Let me make sure I help you properly, "
+        "{name}. 😊\n\n"
+        "Here's what I can do for you:\n\n"
+        "1️⃣ *Find a verified property*\n"
+        "2️⃣ *Find a trusted agency near you*\n"
+        "3️⃣ *How verification works*\n"
+        "4️⃣ *Join Est8Go as an agency*\n"
+        "5️⃣ *Report a suspicious listing*\n\n"
+        "Which one can I help you with?"
     ),
     (
-        "Happy to help, {name}! Let me make sure I understand "
+        "Happy to help, {name}. "
+        "Let me make sure I understand "
         "what you need. 🤝\n\n"
         "1️⃣ Find a verified property\n"
         "2️⃣ Find a verified agency near you\n"
         "3️⃣ How our verification works\n"
         "4️⃣ Join Est8Go as an agency\n"
         "5️⃣ Report a suspicious listing\n\n"
-        "Reply with a number or tell me more about "
-        "what you're looking for. I'm here. 👂"
+        "Reply with a number or tell me "
+        "what you're looking for."
     ),
 ]
 
@@ -495,25 +524,31 @@ def get_platform_care_response(
         "buy", "purchase", "rent", "land", "house", "apartment",
         "duplex", "property", "flat", "plot", "looking", "need",
         "find", "search", "want", "building", "bungalow", "mansion",
-        "penthouse", "terrace", "detached"
+        "penthouse", "terrace", "detached",
+        "oga", "madam", "i want", "i dey", "dey find", "i need",
+        "e dey", "na",
     }
     agency_keywords = {
         "agency", "realtor", "agent", "firm", "company",
-        "broker", "consultant"
+        "broker", "consultant",
+        "person", "guy", "who fit", "who get",
     }
     verify_keywords = {
         "verify", "verification", "trust", "score", "how",
         "works", "gps", "document", "legit", "real", "fake",
-        "safe", "scam", "fraud", "check"
+        "safe", "scam", "fraud", "check",
+        "e real", "e legit", "dem dey", "true true", "original",
     }
     join_keywords = {
         "join", "register", "signup", "sign up", "access",
         "onboard", "partner", "start", "agency", "list",
-        "my listings", "business"
+        "my listings", "business",
+        "make i", "how to enter", "i wan join", "i want join", "add me",
     }
     report_keywords = {
         "report", "fake", "fraud", "scam", "suspicious",
-        "dubious", "false", "stolen", "cheat"
+        "dubious", "false", "stolen", "cheat",
+        "dem dey lie", "na scam", "e fake", "dem cheat", "419",
     }
 
     if words & property_keywords:
