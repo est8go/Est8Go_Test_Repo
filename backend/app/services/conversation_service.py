@@ -69,6 +69,12 @@ from app.services.tenant_resolver import (
     extract_platform_id_from_webhook,
 )
 
+# Platform Care
+from app.conversations.platform_care import (
+    get_welcome,
+    get_platform_care_response,
+)
+
 # In-memory deduplication set
 _processed_messages: set = set()
 logger = logging.getLogger(__name__)
@@ -434,6 +440,47 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
 
 
 # ================================================================
+# PLATFORM CARE HANDLER (Est8Go customer-facing flow)
+# ================================================================
+
+
+async def _handle_platform_care(
+    db, tenant_id, sender_id,
+    whatsapp_name, first_name, text_body, convo
+):
+    if not convo:
+        res = start_conversation_service(
+            "whatsapp", sender_id, whatsapp_name,
+            tenant_id, db
+        )
+        convo = db.get(Conversation, res["conversation_id"])
+
+    convo_data = json.loads(convo.data_json or "{}")
+
+    text_lower = text_body.strip().lower()
+    is_greeting = (
+        any(w in text_lower.split()
+            for w in ["hi", "hello", "hey", "start",
+                      "menu", "help", "helo", "hy"])
+        and len(text_body.strip().split()) <= 4
+    ) or not convo_data.get("platform_state")
+
+    if is_greeting:
+        await send_meta_message(sender_id, get_welcome(first_name))
+        convo_data["platform_state"] = "menu"
+    else:
+        response, convo_data = get_platform_care_response(
+            text_body, first_name, convo_data
+        )
+        await send_meta_message(sender_id, response)
+
+    convo.data_json = json.dumps(convo_data)
+    convo.state = "ACTIVE"
+    convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    db.commit()
+
+
+# ================================================================
 # META WEBHOOK BRIDGE — THE MASTER ORCHESTRATOR
 # ================================================================
 
@@ -518,6 +565,14 @@ async def handle_incoming_message(data: dict, db: Session):
             .order_by(Conversation.updated_at.desc())
             .first()
         )
+
+        # ── PLATFORM TENANT (Est8Go customer care) ──────────────
+        if getattr(tenant, "tenant_type", "") == "platform":
+            await _handle_platform_care(
+                db, tenant_id, sender_id,
+                whatsapp_name, first_name, text_body, convo
+            )
+            return
 
         # --- 4. HUMAN-IN-THE-LOOP CHECK ---
         if convo and hasattr(convo, "is_bot_active") and not convo.is_bot_active:
