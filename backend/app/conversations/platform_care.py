@@ -612,10 +612,12 @@ def get_platform_care_response(
             _db = next(get_db())
             _db.execute(sql_text("""
                 INSERT INTO platform_issues
-                (issue_type, description, tenant_id, status)
-                VALUES (:type, :desc, 12, 'open')
+                (title, description, severity,
+                 affected_area, tenant_id, status)
+                VALUES (:title, :desc, 'low',
+                        'agency_application', 12, 'open')
             """), {
-                "type": "agency_application",
+                "title": f"Agency Application — {agency}",
                 "desc": _json.dumps({
                     "agency": agency,
                     "city": city,
