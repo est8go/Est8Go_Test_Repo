@@ -2282,7 +2282,7 @@
       color: #fff;
     }
 
-    /* Property card v3 */
+    /* ── Property Card v4 ─────────────────────── */
     .pc3 {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -2298,25 +2298,23 @@
       box-shadow: 0 6px 20px rgba(0,0,0,0.25);
     }
 
-    .pc3:active {
-      transform: scale(0.985);
-    }
+    .pc3:active { transform: scale(0.985); }
 
-    /* Trust grade left border colours */
     .pc3[data-grade="emerald"] { border-left-color: #10B981; }
     .pc3[data-grade="gold"]    { border-left-color: #F59E0B; }
     .pc3[data-grade="silver"]  { border-left-color: #94A3B8; }
     .pc3[data-grade="bronze"]  { border-left-color: #CD7F32; }
     .pc3[data-grade="ungraded"]{ border-left-color: #475569; }
 
+    /* Image zones */
     .pc3-img {
       position: relative;
-      aspect-ratio: 4/3;
       background: var(--surface2);
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
+      aspect-ratio: 1/1;
     }
 
     .pc3-img img {
@@ -2325,18 +2323,24 @@
       object-fit: cover;
       opacity: 0;
       transition: opacity 0.35s ease;
+      display: block;
     }
 
-    .pc3-img img.loaded {
-      opacity: 1;
+    .pc3-img img.loaded { opacity: 1; }
+
+    /* Single col + tablet/desktop: 16/9 */
+    .prop-grid-single .pc3-img { aspect-ratio: 16/9; }
+
+    @media (min-width: 768px) {
+      .pc3-img { aspect-ratio: 16/9; }
     }
 
-    /* Trust badge top-right */
+    /* Trust badge */
     .pc3-trust {
       position: absolute;
       top: 6px;
       right: 6px;
-      background: rgba(10, 15, 30, 0.88);
+      background: rgba(10,15,30,0.88);
       backdrop-filter: blur(4px);
       border-radius: 7px;
       padding: 3px 7px;
@@ -2358,7 +2362,7 @@
       text-transform: capitalize;
     }
 
-    /* Bottom overlay on image */
+    /* Bottom overlay */
     .pc3-overlay {
       position: absolute;
       bottom: 0;
@@ -2405,47 +2409,46 @@
     }
 
     /* Card body */
-    .pc3-body {
-      padding: 10px;
-    }
+    .pc3-body { padding: 8px; }
 
     .pc3-title {
       font-family: 'Syne', sans-serif;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       color: var(--text);
       line-height: 1.3;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      min-height: 2.4em;
+      min-height: 2.2em;
     }
 
     .pc3-meta {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
       gap: 4px;
     }
 
     .pc3-location {
-      font-size: 10px;
+      font-size: 9px;
       color: var(--muted);
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      flex: 1;
     }
 
     .pc3-price {
       font-family: 'Syne', sans-serif;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 800;
       color: var(--em);
       white-space: nowrap;
@@ -2453,19 +2456,34 @@
     }
 
     .pc3-realtor {
-      font-size: 10px;
+      font-size: 9px;
       color: var(--muted);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .pc3-realtor.unassigned {
+    .pc3-realtor.unassigned { color: var(--warn); }
+
+    /* Unassigned banner strip */
+    .pc3-unassigned-banner {
+      display: none;
+      width: 100%;
+      padding: 6px 8px;
+      background: rgba(245,158,11,0.12);
+      border-top: 1px solid rgba(245,158,11,0.25);
+      font-size: 9px;
+      font-weight: 700;
       color: var(--warn);
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
     }
 
-    /* Action bar */
+    .pc3-unassigned-banner.visible { display: flex; }
+
+    /* Action bar — 2-col mobile: 2 buttons only */
     .pc3-actions {
       display: flex;
       gap: 4px;
@@ -2477,43 +2495,67 @@
       padding: 6px 3px;
       border-radius: 8px;
       white-space: nowrap;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    /* Single column overrides */
-    .prop-grid-single .pc3-img {
-      aspect-ratio: 16/9;
-    }
+    /* Share hidden on 2-col mobile */
+    .pc3-share-btn { display: none; }
 
+    /* Single col — richer layout */
+    .prop-grid-single .pc3-body { padding: 12px; }
     .prop-grid-single .pc3-title {
       font-size: 14px;
+      min-height: 2.4em;
+      margin-bottom: 6px;
     }
-
-    .prop-grid-single .pc3-price {
-      font-size: 16px;
+    .prop-grid-single .pc3-price { font-size: 16px; }
+    .prop-grid-single .pc3-location { font-size: 10px; }
+    .prop-grid-single .pc3-realtor {
+      font-size: 10px;
+      margin-bottom: 8px;
     }
-
     .prop-grid-single .pc3-actions .btn {
       font-size: 11px;
       padding: 8px 6px;
     }
+    .prop-grid-single .pc3-share-btn { display: flex; }
 
-    .prop-grid-single .pc3-body {
-      padding: 12px;
+    /* Tablet and desktop */
+    @media (min-width: 768px) {
+      .pc3-body { padding: 12px; }
+      .pc3-title { font-size: 13px; min-height: 2.4em; }
+      .pc3-price { font-size: 14px; }
+      .pc3-location { font-size: 10px; }
+      .pc3-realtor { font-size: 10px; margin-bottom: 8px; }
+      .pc3-actions .btn { font-size: 10px; padding: 7px 5px; }
+      .pc3-share-btn { display: flex !important; }
+    }
+
+    @media (min-width: 1200px) {
+      .pc3-title { font-size: 14px; }
+      .pc3-price { font-size: 15px; }
+      .pc3-actions .btn { font-size: 11px; padding: 8px 8px; }
     }
 
     /* Mobile tighten */
     @media (max-width: 640px) {
-      .prop-stat-grid {
-        padding: 10px 10px 0;
-      }
-
-      .prop-grid-v3 {
-        padding: 10px 10px 16px;
-        gap: 8px;
-      }
+      .prop-stat-grid { padding: 10px 10px 0; }
+      .prop-grid-v3   { padding: 10px 10px 16px; gap: 8px; }
     }
 
-    /* Active filter chip in info line */
+    /* Filter fade transition */
+    .prop-grid-v3 {
+      transition: opacity 0.15s ease;
+    }
+
+    .prop-grid-v3.filtering {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    /* Active filter chip */
     .prop-active-filter-chip {
       display: inline-flex;
       align-items: center;
@@ -2526,6 +2568,68 @@
       font-size: 10px;
       font-weight: 700;
       cursor: pointer;
+    }
+
+    /* Share bottom sheet */
+    .share-sheet {
+      position: fixed;
+      inset: 0;
+      z-index: 900;
+      background: rgba(0,0,0,0.55);
+      display: flex;
+      align-items: flex-end;
+      animation: fadeIn 0.18s ease;
+    }
+
+    .share-sheet-inner {
+      width: 100%;
+      background: var(--surface);
+      border-radius: 22px 22px 0 0;
+      border-top: 2px solid var(--indigo);
+      padding: 0 0 32px;
+      animation: slideUp 0.25s cubic-bezier(.2,.8,.2,1);
+    }
+
+    .share-sheet-handle {
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border2);
+      margin: 12px auto 0;
+    }
+
+    .share-sheet-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 14px 20px 10px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+
+    .share-sheet-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .share-sheet-item:active { background: var(--surface2); }
+
+    .share-sheet-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
     }
   </style>
 </head>
@@ -4545,23 +4649,23 @@
       const grid = g('propGrid');
       if (!grid) return;
 
-      // Cache all listings for client-side stat filtering
       if (_propStatFilter === 'all') {
         _propAllListings = listings;
       }
 
-      // Update total count
       const infoTotal = g('propInfoTotal');
       if (infoTotal) {
-        infoTotal.textContent = total + ' listing' +
-          (total !== 1 ? 's' : '');
+        infoTotal.textContent = total +
+          ' listing' + (total !== 1 ? 's' : '');
       }
 
       if (!listings.length) {
         grid.innerHTML = `
           <div style="grid-column:1/-1;text-align:center;
             padding:48px 20px">
-            <div style="font-size:40px;margin-bottom:12px">🏠</div>
+            <div style="font-size:40px;margin-bottom:12px">
+              🏠
+            </div>
             <div style="font-family:'Syne',sans-serif;
               font-size:16px;font-weight:700;margin-bottom:6px">
               No listings found
@@ -4601,10 +4705,11 @@
       };
 
       grid.innerHTML = listings.map(l => {
-        const grade  = (l.trust_grade || 'ungraded').toLowerCase();
-        const color  = gc[grade] || '#64748B';
-        const img    = l.images?.[0]?.url || '';
-        const price  = formatMoney(l.price || 0);
+        const grade = (l.trust_grade || 'ungraded').toLowerCase();
+        const color = gc[grade] || '#64748B';
+        const img   = l.images?.[0]?.url || '';
+        const price = formatMoney(l.price || 0);
+        const isUnassigned = !l.assigned_realtor_id;
 
         const realtorHtml = l.assigned_realtor_name
           ? `<div class="pc3-realtor">
@@ -4614,12 +4719,23 @@
                ⚠️ Unassigned
              </div>`;
 
+        const unassignedBanner = isUnassigned
+          ? `<div class="pc3-unassigned-banner visible"
+               onclick="openAssignModal(
+                 ${l.id},null,
+                 '${sanitise(l.title)
+                   .replace(/'/g,"\\'")}')">
+               <span>⚠️</span>
+               <span>Tap to assign a realtor</span>
+               <span style="margin-left:auto;
+                 font-size:8px;opacity:0.7">→</span>
+             </div>`
+          : '';
+
         return `
           <div class="pc3"
                data-grade="${sanitise(grade)}"
                data-prop-card="${l.id}">
-
-            <!-- Image zone -->
             <div class="pc3-img">
               ${img
                 ? `<img src="${img}"
@@ -4629,7 +4745,6 @@
                        onerror="this.style.display='none'"/>`
                 : `<div style="font-size:32px">🏠</div>`
               }
-              <!-- Trust badge -->
               <div class="pc3-trust">
                 <span class="pc3-trust-score"
                       style="color:${color}">
@@ -4640,22 +4755,18 @@
                   ${sanitise(grade)}
                 </span>
               </div>
-              <!-- Bottom overlay -->
               <div class="pc3-overlay">
                 ${l.property_type
                   ? `<span class="pc3-type">
                        ${sanitise(l.property_type)}
                      </span>`
-                  : ''
-                }
+                  : ''}
                 <span class="pc3-verified">
                   <span class="pc3-verified-dot"></span>
                   verified
                 </span>
               </div>
             </div>
-
-            <!-- Body zone -->
             <div class="pc3-body">
               <div class="pc3-title">
                 ${sanitise(l.title) || 'Untitled'}
@@ -4678,13 +4789,13 @@
                 <div class="pc3-price">${price}</div>
               </div>
               ${realtorHtml}
-              <!-- Action bar -->
               <div class="pc3-actions">
                 <button class="btn btn-ghost btn-sm"
                   onclick="openAssignModal(
                     ${l.id},
                     ${l.assigned_realtor_id || 'null'},
-                    '${sanitise(l.title).replace(/'/g,"\\'")}')">
+                    '${sanitise(l.title)
+                      .replace(/'/g,"\\'")}')">
                   👤 Assign
                 </button>
                 <button class="btn btn-ghost btn-sm"
@@ -4693,12 +4804,16 @@
                     '_blank')">
                   👁 View
                 </button>
-                <button class="btn btn-ghost btn-sm"
-                  onclick="shareListing(${l.id})">
+                <button class="btn btn-ghost btn-sm pc3-share-btn"
+                  onclick="openShareSheet(
+                    ${l.id},
+                    '${sanitise(l.title)
+                      .replace(/'/g,"\\'")}')">
                   🔗 Share
                 </button>
               </div>
             </div>
+            ${unassignedBanner}
           </div>`;
       }).join('');
     }
@@ -6022,46 +6137,56 @@
 
     function setPropStatFilter(filter) {
       _propStatFilter = filter;
+      const grid = g('propGrid');
 
-      // Update card visual states
-      ['all','gps','docs','unassigned'].forEach(f => {
-        const card = g('stat' + f.charAt(0).toUpperCase() + f.slice(1));
-        if (!card) return;
-        card.classList.remove(
-          'active-filter','em-filter','warn-filter'
+      // Fade out
+      if (grid) grid.classList.add('filtering');
+
+      setTimeout(() => {
+        ['all','gps','docs','unassigned'].forEach(f => {
+          const card = g(
+            'stat' + f.charAt(0).toUpperCase() + f.slice(1)
+          );
+          if (!card) return;
+          card.classList.remove(
+            'active-filter','em-filter','warn-filter'
+          );
+          if (f === filter) {
+            if (f === 'gps')
+              card.classList.add('em-filter');
+            else if (f === 'unassigned')
+              card.classList.add('warn-filter');
+            else
+              card.classList.add('active-filter');
+          }
+        });
+
+        const chip = g('propActiveFilterChip');
+        if (chip) {
+          if (filter === 'all') {
+            chip.innerHTML = '';
+          } else {
+            const labels = {
+              gps:        '📍 GPS verified',
+              docs:       '📄 Has documents',
+              unassigned: '⚠️ Unassigned',
+            };
+            chip.innerHTML = `
+              <span class="prop-active-filter-chip"
+                    onclick="setPropStatFilter('all')">
+                ${labels[filter]} ✕
+              </span>`;
+          }
+        }
+
+        const filtered = _filterListingsByStatFilter(
+          _propAllListings, filter
         );
-        if (f === filter) {
-          if (f === 'gps')        card.classList.add('em-filter');
-          else if (f === 'unassigned') card.classList.add('warn-filter');
-          else                    card.classList.add('active-filter');
-        }
-      });
+        renderPropListings(filtered, filtered.length);
 
-      // Update active filter chip
-      const chip = g('propActiveFilterChip');
-      if (chip) {
-        if (filter === 'all') {
-          chip.innerHTML = '';
-        } else {
-          const labels = {
-            gps: '📍 GPS verified',
-            docs: '📄 Has documents',
-            unassigned: '⚠️ Unassigned',
-          };
-          chip.innerHTML = `
-            <span class="prop-active-filter-chip"
-                  onclick="setPropStatFilter('all')">
-              ${labels[filter]} ✕
-            </span>`;
-        }
-      }
-
-      // Filter cached listings client-side (no API call)
-      const filtered = _filterListingsByStatFilter(
-        _propAllListings, filter
-      );
-      renderPropListings(filtered, filtered.length);
-      renderPropPagination(1);
+        // Fade in
+        if (grid) grid.classList.remove('filtering');
+      }, 150);
     }
 
     function _filterListingsByStatFilter(listings, filter) {
@@ -6107,6 +6232,116 @@
         toast('Copy failed — ' + text, 'info');
       }
       document.body.removeChild(ta);
+    }
+
+    /* ── SHARE SHEET ─────────────────────────── */
+    let _shareSheet = null;
+
+    function openShareSheet(listingId, title) {
+      const url =
+        `https://api.est8go.com/public/property/${listingId}`;
+      const text =
+        `Check out this verified property on Est8Go:\n` +
+        `${title}\n${url}`;
+
+      closeShareSheet();
+
+      const sheet = document.createElement('div');
+      sheet.className = 'share-sheet';
+      sheet.id = 'shareSheet';
+      sheet.innerHTML = `
+        <div class="share-sheet-inner">
+          <div class="share-sheet-handle"></div>
+          <div class="share-sheet-title">
+            Share Property
+          </div>
+          <div class="share-sheet-item"
+               onclick="shareViaWhatsApp(
+                 '${encodeURIComponent(text)}')">
+            <div class="share-sheet-icon"
+                 style="background:rgba(37,211,102,0.12)">
+              📱
+            </div>
+            <span>Share on WhatsApp</span>
+          </div>
+          <div class="share-sheet-item"
+               onclick="copyShareLink('${url}')">
+            <div class="share-sheet-icon"
+                 style="background:var(--indigo-dim)">
+              📋
+            </div>
+            <span>Copy link</span>
+          </div>
+          ${navigator.share
+            ? `<div class="share-sheet-item"
+                    onclick="nativeShare(
+                      '${encodeURIComponent(title)}',
+                      '${url}')">
+                <div class="share-sheet-icon"
+                     style="background:var(--surface2)">
+                  📤
+                </div>
+                <span>More options</span>
+              </div>`
+            : ''}
+          <div class="share-sheet-item"
+               onclick="closeShareSheet()"
+               style="color:var(--muted)">
+            <div class="share-sheet-icon"
+                 style="background:var(--surface2)">
+              ✕
+            </div>
+            <span>Cancel</span>
+          </div>
+        </div>`;
+
+      sheet.addEventListener('click', e => {
+        if (e.target === sheet) closeShareSheet();
+      });
+
+      document.body.appendChild(sheet);
+      _shareSheet = sheet;
+    }
+
+    function closeShareSheet() {
+      if (_shareSheet) {
+        _shareSheet.remove();
+        _shareSheet = null;
+      }
+      const existing = g('shareSheet');
+      if (existing) existing.remove();
+    }
+
+    function shareViaWhatsApp(encodedText) {
+      closeShareSheet();
+      window.open(
+        `https://wa.me/?text=${encodedText}`,
+        '_blank'
+      );
+    }
+
+    function copyShareLink(url) {
+      closeShareSheet();
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url)
+          .then(() => toast('✅ Link copied — share with buyers'))
+          .catch(() => _fallbackCopy(url));
+      } else {
+        _fallbackCopy(url);
+      }
+    }
+
+    async function nativeShare(encodedTitle, url) {
+      closeShareSheet();
+      try {
+        await navigator.share({
+          title: decodeURIComponent(encodedTitle),
+          text: 'Check out this verified property on Est8Go',
+          url,
+        });
+      } catch (_) {
+        // User cancelled or not supported
+      }
     }
 
   </script>
