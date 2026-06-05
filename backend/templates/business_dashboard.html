@@ -2295,7 +2295,7 @@
       overflow: hidden;
       transition: transform 0.18s, box-shadow 0.18s;
       position: relative;
-      border-left: 3px solid transparent;
+      border-left: none;
     }
 
     .pc3:hover {
@@ -2304,12 +2304,6 @@
     }
 
     .pc3:active { transform: scale(0.985); }
-
-    .pc3[data-grade="emerald"] { border-left-color: #10B981; }
-    .pc3[data-grade="gold"]    { border-left-color: #F59E0B; }
-    .pc3[data-grade="silver"]  { border-left-color: #94A3B8; }
-    .pc3[data-grade="bronze"]  { border-left-color: #CD7F32; }
-    .pc3[data-grade="ungraded"]{ border-left-color: #475569; }
 
     /* Image zones */
     .pc3-img {
@@ -2552,7 +2546,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      padding: 21px 10px 9px;
+      padding: 8px 10px 0;
       align-items: start;
       transition: opacity 0.15s ease;
       box-sizing: border-box;
@@ -2572,7 +2566,7 @@
       .prop-grid-v3 {
         grid-template-columns: 1fr 1fr 1fr;
         gap: 14px;
-        padding: 14px 16px 20px;
+        padding: 8px 16px 0;
       }
     }
 
@@ -2580,12 +2574,12 @@
       .prop-grid-v3 {
         grid-template-columns: 1fr 1fr 1fr 1fr;
         gap: 16px;
-        padding: 16px 20px 20px;
+        padding: 8px 20px 0;
       }
     }
 
     #propPagination {
-      padding: 10px 10px 8px;
+      padding: 8px 10px calc(var(--nav-h) + 8px);
       display: flex;
       justify-content: center;
       gap: 6px;
