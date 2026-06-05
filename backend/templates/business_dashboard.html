@@ -2521,12 +2521,37 @@
     /* Mobile tighten */
     @media (max-width: 640px) {
       .prop-stat-grid { padding: 10px 10px 0; }
-      .prop-grid-v3   { padding: 10px 10px 16px; gap: 8px; }
     }
 
-    /* Filter fade transition */
     .prop-grid-v3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 8px 10px 80px;
+      align-items: start;
       transition: opacity 0.15s ease;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .prop-grid-v3.prop-grid-single {
+      grid-template-columns: 1fr !important;
+    }
+
+    @media (min-width: 768px) {
+      .prop-grid-v3 {
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 14px;
+        padding: 12px 16px 80px;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .prop-grid-v3 {
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 18px;
+        padding: 16px 20px 80px;
+      }
     }
 
     .prop-grid-v3.filtering {
@@ -3368,8 +3393,6 @@
         <span id="propInfoTotal"></span>
       </div>
       <div id="propGrid"
-           style="transition:opacity 0.2s;
-                  align-items:start"
            class="prop-grid-v3"></div>
       <div id="propPagination"
            style="padding:16px;display:flex;
@@ -4345,12 +4368,15 @@
           }
         }
 
-        // Measure toolbar height and pad scrollArea
+        // Measure after two frames to ensure
+        // toolbar is fully rendered and painted
         requestAnimationFrame(() => {
-          if (toolbar && sa) {
-            sa.style.paddingTop =
-              toolbar.offsetHeight + 'px';
-          }
+          requestAnimationFrame(() => {
+            if (toolbar && sa) {
+              const h = toolbar.getBoundingClientRect().height;
+              sa.style.paddingTop = Math.ceil(h) + 'px';
+            }
+          });
         });
 
         // Hide old search bar if still present
@@ -6035,8 +6061,8 @@
           const toolbar = g('propToolbar');
           const sa = g('scrollArea');
           if (toolbar && sa) {
-            sa.style.paddingTop =
-              toolbar.offsetHeight + 'px';
+            const h = toolbar.getBoundingClientRect().height;
+            if (h > 0) sa.style.paddingTop = Math.ceil(h) + 'px';
           }
           return;
         }
@@ -6454,8 +6480,15 @@
       localStorage.setItem('prop-columns', n);
       const grid = g('propGrid');
       if (!grid) return;
-      grid.style.gridTemplateColumns = n === 1 ? '1fr' : '1fr 1fr';
-      grid.classList.toggle('prop-grid-single', n === 1);
+
+      if (n === 1) {
+        grid.classList.add('prop-grid-single');
+        grid.style.gridTemplateColumns = '1fr';
+      } else {
+        grid.classList.remove('prop-grid-single');
+        grid.style.gridTemplateColumns = '';
+      }
+
       const btn1 = g('colBtn1');
       const btn2 = g('colBtn2');
       if (btn1) btn1.classList.toggle('active', n === 1);
