@@ -2187,15 +2187,17 @@
     .prop-stat-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      padding: 10px 10px 0;
+      gap: 6px;
+      padding: 6px 10px 4px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
     }
 
     .prop-stat-card-v3 {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 8px;
+      border-radius: 10px;
+      padding: 8px 6px;
       text-align: center;
       cursor: pointer;
       transition: all 0.15s;
@@ -2211,17 +2213,9 @@
       background: var(--indigo-dim);
     }
 
-    .prop-stat-card-v3.active-filter .prop-stat-num-v3 {
-      color: var(--indigo);
-    }
-
     .prop-stat-card-v3.warn-filter {
       border-color: var(--warn);
       background: var(--warn-dim);
-    }
-
-    .prop-stat-card-v3.warn-filter .prop-stat-num-v3 {
-      color: var(--warn);
     }
 
     .prop-stat-card-v3.em-filter {
@@ -2229,13 +2223,9 @@
       background: var(--em-dim);
     }
 
-    .prop-stat-card-v3.em-filter .prop-stat-num-v3 {
-      color: var(--em);
-    }
-
     .prop-stat-num-v3 {
       font-family: 'Syne', sans-serif;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 800;
       line-height: 1;
       color: var(--text);
@@ -2245,9 +2235,9 @@
       font-size: 8px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
       color: var(--muted);
-      margin-top: 4px;
+      margin-top: 3px;
       white-space: nowrap;
     }
 
@@ -2466,22 +2456,11 @@
 
     .pc3-realtor.unassigned { color: var(--warn); }
 
-    /* Unassigned banner strip */
-    .pc3-unassigned-banner {
-      display: none;
-      width: 100%;
-      padding: 6px 8px;
-      background: rgba(245,158,11,0.12);
-      border-top: 1px solid rgba(245,158,11,0.25);
-      font-size: 9px;
-      font-weight: 700;
-      color: var(--warn);
-      align-items: center;
-      gap: 5px;
-      cursor: pointer;
-    }
+    .pc3-unassigned-banner { display: none !important; }
 
-    .pc3-unassigned-banner.visible { display: flex; }
+    .pc3[data-unassigned="true"] {
+      border-left-color: #F59E0B !important;
+    }
 
     /* Action bar — 2-col mobile: 2 buttons only */
     .pc3-actions {
@@ -2568,6 +2547,16 @@
       font-size: 10px;
       font-weight: 700;
       cursor: pointer;
+    }
+
+    /* Properties tab — full screen, no header gap */
+    body.props-active #scrollArea {
+      padding-top: 0 !important;
+    }
+
+    body.props-active #appHeader {
+      transform: translateY(-100%) !important;
+      pointer-events: none;
     }
 
     /* Share bottom sheet */
@@ -3085,10 +3074,12 @@
       </div>
 
       <!-- Active filter chip + count line -->
-      <div style="padding:8px 10px 4px;display:flex;
-                  align-items:center;gap:8px;flex-wrap:wrap">
+      <div style="padding:4px 10px 0;display:flex;
+                  align-items:center;gap:6px;
+                  min-height:0;overflow:hidden">
         <span id="propInfoTotal"
-              style="font-size:11px;color:var(--muted)"></span>
+              style="font-size:10px;color:var(--muted);
+                     opacity:0.7"></span>
         <span id="propActiveFilterChip"></span>
       </div>
 
@@ -4052,11 +4043,19 @@
         _propStatFilter = 'all';
         loadListings();
         initColToggle();
+        // Hide header instantly — give full screen to listings
+        document.body.classList.add('props-active');
+        const header = g('appHeader');
+        if (header) header.classList.add('header-hidden');
         const sb = g('propSearchBar');
         if (sb) sb.style.display = 'block';
         const ho = g('homeOnlyHeader');
         if (ho) ho.style.display = 'none';
       } else {
+        // Restore header when leaving properties tab
+        document.body.classList.remove('props-active');
+        const header = g('appHeader');
+        if (header) header.classList.remove('header-hidden');
         const sb = g('propSearchBar');
         if (sb) sb.style.display = 'none';
         const ho = g('homeOnlyHeader');
@@ -4715,27 +4714,15 @@
           ? `<div class="pc3-realtor">
                👤 ${sanitise(l.assigned_realtor_name)}
              </div>`
-          : `<div class="pc3-realtor unassigned">
-               ⚠️ Unassigned
-             </div>`;
-
-        const unassignedBanner = isUnassigned
-          ? `<div class="pc3-unassigned-banner visible"
-               onclick="openAssignModal(
-                 ${l.id},null,
-                 '${sanitise(l.title)
-                   .replace(/'/g,"\\'")}')">
-               <span>⚠️</span>
-               <span>Tap to assign a realtor</span>
-               <span style="margin-left:auto;
-                 font-size:8px;opacity:0.7">→</span>
-             </div>`
           : '';
+
+        const unassignedBanner = '';
 
         return `
           <div class="pc3"
                data-grade="${sanitise(grade)}"
-               data-prop-card="${l.id}">
+               data-prop-card="${l.id}"
+               data-unassigned="${isUnassigned ? 'true' : 'false'}">
             <div class="pc3-img">
               ${img
                 ? `<img src="${img}"
@@ -5714,7 +5701,16 @@
       const header = g('appHeader');
       const scroll = g('scrollArea');
       if (!header || !scroll) return;
-      const syncPad = () => { const h = header.offsetHeight + 'px'; scroll.style.paddingTop = h; document.documentElement.style.setProperty('--header-h', h); };
+      const syncPad = () => {
+        if (ST.tab === 'properties') {
+          scroll.style.paddingTop = '0';
+          return;
+        }
+        const h = header.offsetHeight + 'px';
+        scroll.style.paddingTop = h;
+        document.documentElement.style
+          .setProperty('--header-h', h);
+      };
       syncPad();
       new ResizeObserver(syncPad).observe(header);
       let lastY = 0;
@@ -6167,14 +6163,17 @@
             chip.innerHTML = '';
           } else {
             const labels = {
-              gps:        '📍 GPS verified',
-              docs:       '📄 Has documents',
-              unassigned: '⚠️ Unassigned',
+              gps:        '📍 GPS only',
+              docs:       '📄 Docs only',
+              unassigned: '⚠️ Unassigned only',
             };
             chip.innerHTML = `
               <span class="prop-active-filter-chip"
-                    onclick="setPropStatFilter('all')">
-                ${labels[filter]} ✕
+                    onclick="setPropStatFilter('all')"
+                    style="font-size:10px">
+                ${labels[filter]}
+                <span style="opacity:0.6;
+                  margin-left:4px">✕ clear</span>
               </span>`;
           }
         }
