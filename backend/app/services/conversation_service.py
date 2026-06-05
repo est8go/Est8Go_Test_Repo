@@ -417,6 +417,13 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
 
     # Unknown intent — escalate to GPT
     updated_data = extract_preferences(text_clean, current_data)
+    # Track consecutive GPT misses — if GPT also extracts nothing,
+    # increment miss counter. At 2 consecutive misses, force guided reset.
+    if not updated_data or updated_data == current_data:
+        miss_count = current_data.get("gpt_miss_count", 0) + 1
+        updated_data["gpt_miss_count"] = miss_count
+    else:
+        updated_data["gpt_miss_count"] = 0
     # Preserve internal tracking keys GPT strips out
     for key in (
         "last_viewed_id",
@@ -879,6 +886,23 @@ async def handle_incoming_message(data: dict, db: Session):
                 await send_meta_message(sender_id, _cmp_text)
             return
 
+        # --- 8c.5 GPT MISS HANDLER ---
+        _miss_count = prefs.get("gpt_miss_count", 0)
+        if _miss_count >= 2:
+            prefs["gpt_miss_count"] = 0
+            convo.data_json = json.dumps(prefs)
+            db.commit()
+            await send_meta_message(
+                sender_id,
+                f"Let me make this easy, {first_name}. 😊\n\n"
+                f"Just answer these two quick questions:\n\n"
+                f"1️⃣ *Which area?*\n"
+                f"   e.g. Lekki, Guzape, GRA, Maitama\n\n"
+                f"2️⃣ *What is your budget?*\n"
+                f"   e.g. 50M, 80M, 120M",
+            )
+            return
+
         # --- 8d. LOST BUYER HANDLER ---
         if intent == "lost_buyer":
             _data = json.loads(convo.data_json or "{}")
@@ -958,6 +982,26 @@ async def handle_incoming_message(data: dict, db: Session):
                 total = search_result.get("total_count", 0)
                 source = search_result.get("source", "none")
 
+                # Auto-expand: if no results, silently search nearby areas
+                if not matches:
+                    location_lower = (prefs.get("location") or "").lower().strip()
+                    from app.services.chatbot.message_builder import NEARBY_AREAS
+                    nearby_areas = NEARBY_AREAS.get(location_lower, [])
+                    for nearby_loc in nearby_areas[:3]:
+                        expanded_prefs = {**prefs, "location": nearby_loc}
+                        try:
+                            expanded_result = execute_premium_search(db, tenant_id, expanded_prefs)
+                            expanded_matches = expanded_result.get("data", [])
+                            if expanded_matches:
+                                matches = expanded_matches
+                                total = expanded_result.get("total_count", 0)
+                                source = expanded_result.get("source", "none")
+                                prefs["_expanded_from"] = prefs.get("location", "")
+                                prefs["_expanded_to"] = nearby_loc
+                                break
+                        except Exception:
+                            continue
+
                 if matches:
                     if source == "referral":
                         summary = build_referral_summary(matches[0], biz_name)
@@ -965,6 +1009,17 @@ async def handle_incoming_message(data: dict, db: Session):
                         summary = build_property_summary(
                             matches[0], matches, total, first_name
                         )
+                    # Prepend expansion note if we searched a nearby area
+                    if prefs.get("_expanded_from") and prefs.get("_expanded_to"):
+                        expansion_note = (
+                            f"No verified listings found in "
+                            f"*{prefs['_expanded_from'].title()}* right now — "
+                            f"but I found verified options in nearby "
+                            f"*{prefs['_expanded_to'].title()}*:\n\n"
+                        )
+                        summary = expansion_note + summary
+                        prefs.pop("_expanded_from", None)
+                        prefs.pop("_expanded_to", None)
 
                     # Send image+summary as one card, or fall back to text only
                     try:
@@ -1118,6 +1173,25 @@ async def handle_incoming_message(data: dict, db: Session):
                         matches = search_result.get("data", [])
                         total = search_result.get("total_count", 0)
                         source = search_result.get("source", "none")
+                        # Auto-expand: if no results, silently search nearby areas
+                        if not matches:
+                            location_lower = (prefs.get("location") or "").lower().strip()
+                            from app.services.chatbot.message_builder import NEARBY_AREAS
+                            nearby_areas = NEARBY_AREAS.get(location_lower, [])
+                            for nearby_loc in nearby_areas[:3]:
+                                expanded_prefs = {**prefs, "location": nearby_loc}
+                                try:
+                                    expanded_result = execute_premium_search(db, tenant_id, expanded_prefs)
+                                    expanded_matches = expanded_result.get("data", [])
+                                    if expanded_matches:
+                                        matches = expanded_matches
+                                        total = expanded_result.get("total_count", 0)
+                                        source = expanded_result.get("source", "none")
+                                        prefs["_expanded_from"] = prefs.get("location", "")
+                                        prefs["_expanded_to"] = nearby_loc
+                                        break
+                                except Exception:
+                                    continue
                         if matches:
                             if source == "referral":
                                 summary = build_referral_summary(matches[0], biz_name)
@@ -1125,6 +1199,17 @@ async def handle_incoming_message(data: dict, db: Session):
                                 summary = build_property_summary(
                                     matches[0], matches, total, first_name
                                 )
+                            # Prepend expansion note if we searched a nearby area
+                            if prefs.get("_expanded_from") and prefs.get("_expanded_to"):
+                                expansion_note = (
+                                    f"No verified listings found in "
+                                    f"*{prefs['_expanded_from'].title()}* right now — "
+                                    f"but I found verified options in nearby "
+                                    f"*{prefs['_expanded_to'].title()}*:\n\n"
+                                )
+                                summary = expansion_note + summary
+                                prefs.pop("_expanded_from", None)
+                                prefs.pop("_expanded_to", None)
                             # Send image+summary as one card, or fall back to text only
                             try:
                                 from app.listings.models import ListingImage

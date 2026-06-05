@@ -18,6 +18,7 @@ Fixes in v2.0:
 
 import re
 from dataclasses import dataclass
+from difflib import get_close_matches
 from typing import Optional
 
 # ================================================================
@@ -491,12 +492,40 @@ def extract_budget_from_text(text: str) -> Optional[int]:
     Extracts budget from Nigerian RE messages.
     Handles:
         - "50m", "50 million" → 50,000,000
-        - "5m to 1b" → takes UPPER bound 1,000,000,000
-        - "5m - 50m"  → takes UPPER bound 50,000,000
-        - "₦50,000,000" → 50,000,000
-        - Plain large numbers
+        - "5m to 1b" → takes UPPER bound
+        - "not more than 60m", "max 40m", "up to 80m" → ceiling
+        - "fifteen million", "thirty m" → word numbers
+        - "1.5b" → 1,500,000,000
+        - Plain large numbers (7+ digits)
+        - "I have 15" (bare number, millions implied when < 1000)
     """
     text = text.lower().replace(",", "").replace("₦", "").replace("naira", "").strip()
+
+    # Word number map (Nigerian RE common ranges)
+    WORD_MILLIONS = {
+        "ten": 10, "eleven": 11, "twelve": 12, "thirteen": 13,
+        "fourteen": 14, "fifteen": 15, "sixteen": 16, "seventeen": 17,
+        "eighteen": 18, "nineteen": 19, "twenty": 20, "twenty five": 25,
+        "thirty": 30, "thirty five": 35, "forty": 40, "forty five": 45,
+        "fifty": 50, "sixty": 60, "seventy": 70, "eighty": 80,
+        "ninety": 90, "hundred": 100, "one fifty": 150, "two hundred": 200,
+    }
+
+    # Ceiling phrases — extract the number after the phrase
+    CEILING_PHRASES = [
+        "not more than", "no more than", "maximum of", "maximum",
+        "max of", "max", "at most", "up to", "within", "below",
+        "less than", "under", "budget of", "my budget is",
+        "i have", "i've got", "i got",
+    ]
+
+    # Check ceiling phrases first (most specific)
+    for phrase in sorted(CEILING_PHRASES, key=len, reverse=True):
+        if phrase in text:
+            remainder = text[text.index(phrase) + len(phrase):].strip()
+            val = extract_budget_from_text(remainder)
+            if val:
+                return val
 
     # Pattern: range like "5m to 1b" or "5m - 50m" → take upper bound
     range_pattern = r"(\d+\.?\d*)\s*(?:m\b|million)?\s*(?:to|-)\s*(\d+\.?\d*)\s*(?:b\b|billion|m\b|million)"
@@ -504,15 +533,13 @@ def extract_budget_from_text(text: str) -> Optional[int]:
     if range_match:
         val1 = float(range_match.group(1))
         val2 = float(range_match.group(2))
-        # Determine units
-        after_val2 = text[range_match.end(2) :]
+        after_val2 = text[range_match.end(2):]
         if "b" in after_val2[:8] or "billion" in after_val2[:12]:
-            upper = int(val2 * 1_000_000_000)
+            return int(val2 * 1_000_000_000)
         else:
-            upper = int(val2 * 1_000_000)
-        return upper
+            return int(val2 * 1_000_000)
 
-    # Pattern: number + k (thousands) e.g. "100k" → 100,000
+    # Pattern: number + k (thousands)
     k_match = re.search(r"(\d+\.?\d*)\s*k\b", text)
     if k_match:
         return int(float(k_match.group(1)) * 1_000)
@@ -523,23 +550,40 @@ def extract_budget_from_text(text: str) -> Optional[int]:
     if "quarter million" in text:
         return 250_000
 
-    # Pattern: number + billion
+    # Pattern: number + billion (including decimals like 1.5b)
     billion_pattern = r"(\d+\.?\d*)\s*(?:b\b|billion)"
     b_match = re.search(billion_pattern, text)
     if b_match:
         return int(float(b_match.group(1)) * 1_000_000_000)
 
-    # Pattern: number + million/m
+    # Pattern: number + million/m (including decimals like 1.5m)
     million_pattern = r"(\d+\.?\d*)\s*(?:m\b|million)"
     m_match = re.search(million_pattern, text)
     if m_match:
         return int(float(m_match.group(1)) * 1_000_000)
+
+    # Word number check (e.g. "fifteen million", "thirty m")
+    for phrase in sorted(WORD_MILLIONS.keys(), key=len, reverse=True):
+        if phrase in text:
+            multiplier = 1_000_000
+            remainder_after = text[text.index(phrase) + len(phrase):].strip()
+            if remainder_after.startswith("b") or "billion" in remainder_after[:8]:
+                multiplier = 1_000_000_000
+            return int(WORD_MILLIONS[phrase] * multiplier)
 
     # Plain large number (7+ digits)
     plain_pattern = r"\b(\d{7,})\b"
     plain_match = re.search(plain_pattern, text)
     if plain_match:
         return int(plain_match.group(1))
+
+    # Bare small number — implies millions if between 1 and 999
+    # e.g. "I have 15" → 15M, "budget is 80" → 80M
+    bare_match = re.search(r"\b(\d{1,3})\b", text)
+    if bare_match:
+        val = int(bare_match.group(1))
+        if 1 <= val <= 999:
+            return val * 1_000_000
 
     return None
 
@@ -572,6 +616,38 @@ def extract_location_from_text(
                     return loc
             elif loc in text_lower:
                 return loc
+
+    # Layer 3: Fuzzy fallback — catches misspellings
+    fuzzy = fuzzy_location_match(text, dynamic_locations or [])
+    if fuzzy:
+        return fuzzy
+
+    return None
+
+
+def fuzzy_location_match(text: str, known_locations: list) -> str | None:
+    """
+    Catches misspellings like 'Guzap', 'Guzapee', 'Leki', 'Maitatma'.
+    Uses Python stdlib difflib — zero cost.
+    cutoff=0.82 balances precision vs recall for Nigerian place names.
+    """
+    words = text.lower().split()
+    all_locations = list(set(known_locations + LOCATION_WORDS))
+
+    # Try each word individually
+    for word in words:
+        if len(word) < 3:
+            continue
+        match = get_close_matches(word, all_locations, n=1, cutoff=0.82)
+        if match:
+            return match[0]
+
+    # Try two-word combinations (e.g. "victoria iland")
+    for i in range(len(words) - 1):
+        phrase = words[i] + " " + words[i + 1]
+        match = get_close_matches(phrase, all_locations, n=1, cutoff=0.85)
+        if match:
+            return match[0]
 
     return None
 
