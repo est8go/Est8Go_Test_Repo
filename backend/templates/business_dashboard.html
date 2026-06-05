@@ -2145,7 +2145,7 @@
     }
 
     /* ── Property Card v3 ───────────────────────── */
-    #propSearchBar { margin-top: var(--header-h, 60px) }
+    #propSearchBar { margin-top: 0; }
     .pc { background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:transform .2s,box-shadow .2s }
     .pc:hover { transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.25) }
     .pc-img { position:relative;aspect-ratio:4/3;background:var(--surface2);overflow:hidden }
@@ -2731,6 +2731,8 @@
   <!-- ══════════════════════════════════════
        SCROLL AREA
   ══════════════════════════════════════ -->
+  <div id="scrollArea">
+
       <!-- STATIC: Search bar — JS never touches this -->
       <div id="propSearchBar"
            style="position:relative;z-index:50;
@@ -2827,8 +2829,6 @@
           </div>
         </div>
       </div>
-
-  <div id="scrollArea">
 
     <!-- ─────────────── HOME TAB ─────────────── -->
     <div id="homeTab" class="tab active" style="padding-top:4px">
