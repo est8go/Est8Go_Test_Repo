@@ -2620,6 +2620,203 @@
       font-size: 22px;
       flex-shrink: 0;
     }
+
+    /* ── Properties Fixed Toolbar ─────────────────── */
+    #propToolbar {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 110;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-direction: column;
+    }
+
+    #propToolbar.visible {
+      display: flex;
+    }
+
+    .prop-toolbar-brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px 6px;
+      gap: 10px;
+    }
+
+    .prop-toolbar-biz {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .prop-toolbar-biz span {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .prop-toolbar-search {
+      padding: 0 14px 6px;
+      position: relative;
+    }
+
+    .prop-toolbar-search input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 32px 8px 34px;
+      font-size: 13px;
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .prop-toolbar-search input:focus {
+      border-color: var(--indigo);
+    }
+
+    .prop-toolbar-search input::placeholder {
+      color: var(--muted);
+    }
+
+    .prop-toolbar-search-icon {
+      position: absolute;
+      left: 26px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .prop-toolbar-search-clear {
+      position: absolute;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+      display: none;
+      padding: 4px;
+    }
+
+    .prop-toolbar-filters {
+      display: flex;
+      gap: 6px;
+      padding: 0 14px 6px;
+      align-items: center;
+    }
+
+    .prop-toolbar-select {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+      min-width: 0;
+    }
+
+    .prop-toolbar-select:focus {
+      border-color: var(--indigo);
+    }
+
+    .prop-toolbar-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      padding: 0 14px 8px;
+    }
+
+    .prop-toolbar-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 4px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .prop-toolbar-stat:active {
+      transform: scale(0.96);
+    }
+
+    .prop-toolbar-stat.active-filter {
+      border-color: var(--indigo);
+      background: var(--indigo-dim);
+    }
+
+    .prop-toolbar-stat.warn-filter {
+      border-color: var(--warn);
+      background: var(--warn-dim);
+    }
+
+    .prop-toolbar-stat.em-filter {
+      border-color: var(--em);
+      background: var(--em-dim);
+    }
+
+    .prop-toolbar-stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .prop-toolbar-stat-lbl {
+      font-size: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-top: 2px;
+      white-space: nowrap;
+    }
+
+    .prop-toolbar-chip-row {
+      padding: 0 14px 6px;
+      min-height: 0;
+      display: none;
+    }
+
+    .prop-toolbar-chip-row.visible {
+      display: flex;
+    }
+
+    @media (min-width: 768px) {
+      .prop-toolbar-filters { gap: 8px; }
+      .prop-toolbar-stats {
+        gap: 8px;
+        padding: 0 14px 10px;
+      }
+      .prop-toolbar-stat-num { font-size: 18px; }
+    }
+
   </style>
 </head>
 
@@ -2726,6 +2923,118 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PROPERTIES FIXED TOOLBAR
+  ══════════════════════════════════════ -->
+  <div id="propToolbar">
+    <!-- Row 1: Company name + column toggle -->
+    <div class="prop-toolbar-brand">
+      <div class="prop-toolbar-biz" id="propToolbarBiz">
+        Loading...
+        <span id="propToolbarType">Agency</span>
+      </div>
+      <div class="prop-col-toggle">
+        <button class="prop-col-btn" id="colBtn2"
+                onclick="setPropColumns(2)"
+                title="2 columns">
+          <svg width="14" height="14" viewBox="0 0 14 14"
+               fill="currentColor">
+            <rect x="0" y="0" width="6" height="6" rx="1"/>
+            <rect x="8" y="0" width="6" height="6" rx="1"/>
+            <rect x="0" y="8" width="6" height="6" rx="1"/>
+            <rect x="8" y="8" width="6" height="6" rx="1"/>
+          </svg>
+        </button>
+        <button class="prop-col-btn" id="colBtn1"
+                onclick="setPropColumns(1)"
+                title="1 column">
+          <svg width="14" height="14" viewBox="0 0 14 14"
+               fill="currentColor">
+            <rect x="0" y="0" width="14" height="6" rx="1"/>
+            <rect x="0" y="8" width="14" height="6" rx="1"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <!-- Row 2: Search -->
+    <div class="prop-toolbar-search">
+      <svg class="prop-toolbar-search-icon"
+           width="14" height="14" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round"
+           stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text"
+             id="propSearch2"
+             placeholder="Search title or location..."
+             oninput="debouncePropSearch(this.value);
+               syncSearchClear(this.value)"
+             autocomplete="off"/>
+      <button class="prop-toolbar-search-clear"
+              id="propSearch2Clear"
+              onclick="clearPropSearch();
+                this.style.display='none';
+                document.getElementById('propSearch2').value=''">
+        ✕
+      </button>
+    </div>
+    <!-- Row 3: Type filter + sort -->
+    <div class="prop-toolbar-filters">
+      <select id="propTypeFilter2"
+              class="prop-toolbar-select"
+              onchange="onPropFilterChange2()">
+        <option value="">All Types</option>
+        <option value="house">House</option>
+        <option value="apartment">Apartment</option>
+        <option value="land">Land</option>
+        <option value="commercial">Commercial</option>
+      </select>
+      <select id="propSortFilter2"
+              class="prop-toolbar-select"
+              onchange="onPropFilterChange2()">
+        <option value="trust_score,desc">Highest Trust</option>
+        <option value="price,desc">Price: High → Low</option>
+        <option value="price,asc">Price: Low → High</option>
+        <option value="created_at,desc">Newest First</option>
+      </select>
+    </div>
+    <!-- Row 4: Stat filter cards -->
+    <div class="prop-toolbar-stats">
+      <div class="prop-toolbar-stat" id="tstatAll"
+           onclick="setPropStatFilter('all')">
+        <div class="prop-toolbar-stat-num"
+             id="tstatAllNum">—</div>
+        <div class="prop-toolbar-stat-lbl">All</div>
+      </div>
+      <div class="prop-toolbar-stat" id="tstatGPS"
+           onclick="setPropStatFilter('gps')">
+        <div class="prop-toolbar-stat-num"
+             id="tstatGPSNum">—</div>
+        <div class="prop-toolbar-stat-lbl">GPS ✓</div>
+      </div>
+      <div class="prop-toolbar-stat" id="tstatDocs"
+           onclick="setPropStatFilter('docs')">
+        <div class="prop-toolbar-stat-num"
+             id="tstatDocsNum">—</div>
+        <div class="prop-toolbar-stat-lbl">Docs</div>
+      </div>
+      <div class="prop-toolbar-stat" id="tstatUnassigned"
+           onclick="setPropStatFilter('unassigned')">
+        <div class="prop-toolbar-stat-num"
+             id="tstatUnassignedNum">—</div>
+        <div class="prop-toolbar-stat-lbl">Unassigned</div>
+      </div>
+    </div>
+    <!-- Filter chip row -->
+    <div class="prop-toolbar-chip-row"
+         id="propToolbarChipRow">
+      <span id="propActiveFilterChip2"
+            style="font-size:10px"></span>
+    </div>
   </div>
 
   <!-- ══════════════════════════════════════
@@ -3047,57 +3356,25 @@
     </div>
 
     <!-- ─────────────── PROPERTIES TAB ─────────────── -->
-    <div id="propertiesTab" class="tab" style="padding-top:0">
-
-      <!-- Stats filter cards -->
-      <div class="prop-stat-grid" id="propStatGrid">
-        <div class="prop-stat-card-v3" id="statAll"
-             onclick="setPropStatFilter('all')">
-          <div class="prop-stat-num-v3" id="statAllNum">—</div>
-          <div class="prop-stat-lbl-v3">All</div>
-        </div>
-        <div class="prop-stat-card-v3" id="statGPS"
-             onclick="setPropStatFilter('gps')">
-          <div class="prop-stat-num-v3" id="statGPSNum">—</div>
-          <div class="prop-stat-lbl-v3">GPS ✓</div>
-        </div>
-        <div class="prop-stat-card-v3" id="statDocs"
-             onclick="setPropStatFilter('docs')">
-          <div class="prop-stat-num-v3" id="statDocsNum">—</div>
-          <div class="prop-stat-lbl-v3">Docs</div>
-        </div>
-        <div class="prop-stat-card-v3" id="statUnassigned"
-             onclick="setPropStatFilter('unassigned')">
-          <div class="prop-stat-num-v3" id="statUnassignedNum">—</div>
-          <div class="prop-stat-lbl-v3">Unassigned</div>
-        </div>
-      </div>
-
-      <!-- Active filter chip + count line -->
-      <div style="padding:4px 10px 0;display:flex;
-                  align-items:center;gap:6px;
-                  min-height:0;overflow:hidden">
-        <span id="propInfoTotal"
-              style="font-size:10px;color:var(--muted);
-                     opacity:0.7"></span>
+    <div id="propertiesTab" class="tab"
+         style="padding-top:0">
+      <!-- Hidden compat stat cards (kept for JS compat) -->
+      <div style="display:none">
+        <div id="statAll"><div id="statAllNum"></div></div>
+        <div id="statGPS"><div id="statGPSNum"></div></div>
+        <div id="statDocs"><div id="statDocsNum"></div></div>
+        <div id="statUnassigned"><div id="statUnassignedNum"></div></div>
         <span id="propActiveFilterChip"></span>
+        <span id="propInfoTotal"></span>
       </div>
-
-      <!-- Grid + pagination -->
       <div id="propGrid"
-           style="display:grid;
-                  grid-template-columns:1fr 1fr;
-                  gap:8px;
-                  padding:0 10px 16px;
-                  align-items:start;
-                  transition:opacity 0.2s"
+           style="transition:opacity 0.2s;
+                  align-items:start"
            class="prop-grid-v3"></div>
-
       <div id="propPagination"
            style="padding:16px;display:flex;
                   justify-content:center;
                   gap:6px;flex-wrap:wrap"></div>
-
     </div>
 
     <!-- ─────────────── STUDIO TAB ─────────────── -->
@@ -4043,25 +4320,69 @@
         _propStatFilter = 'all';
         loadListings();
         initColToggle();
-        // Hide header instantly — give full screen to listings
-        document.body.classList.add('props-active');
-        const header = g('appHeader');
-        if (header) header.classList.add('header-hidden');
-        const sa = g('scrollArea');
-        if (sa) sa.style.paddingTop = '0';
-        const sb = g('propSearchBar');
-        if (sb) sb.style.display = 'block';
-        const ho = g('homeOnlyHeader');
-        if (ho) ho.style.display = 'none';
-      } else {
-        // Restore header when leaving properties tab
-        document.body.classList.remove('props-active');
-        const header = g('appHeader');
-        if (header) header.classList.remove('header-hidden');
+
+        // Show properties toolbar, hide app header
+        const toolbar = g('propToolbar');
+        const header  = g('appHeader');
+        const sa      = g('scrollArea');
+        const ho      = g('homeOnlyHeader');
+
+        if (toolbar) toolbar.classList.add('visible');
+        if (header)  header.classList.add('header-hidden');
+        if (ho)      ho.style.display = 'none';
+
+        // Set company name in toolbar
+        const bizEl = g('propToolbarBiz');
+        if (bizEl) {
+          const biz = CFG._bizName ||
+            localStorage.getItem('biz_name') || 'Properties';
+          const typeSpan = bizEl.querySelector('span') ||
+            g('propToolbarType');
+          bizEl.childNodes[0].textContent = biz;
+          if (typeSpan) {
+            typeSpan.textContent =
+              CFG._tenantType === 'agency' ? 'Agency' : 'Realtor';
+          }
+        }
+
+        // Measure toolbar height and pad scrollArea
+        requestAnimationFrame(() => {
+          if (toolbar && sa) {
+            sa.style.paddingTop =
+              toolbar.offsetHeight + 'px';
+          }
+        });
+
+        // Hide old search bar if still present
         const sb = g('propSearchBar');
         if (sb) sb.style.display = 'none';
-        const ho = g('homeOnlyHeader');
-        if (ho) ho.style.display = '';
+
+        document.body.classList.add('props-active');
+
+      } else {
+        // Restore app header, hide properties toolbar
+        const toolbar = g('propToolbar');
+        const header  = g('appHeader');
+        const sa      = g('scrollArea');
+        const ho      = g('homeOnlyHeader');
+
+        if (toolbar) toolbar.classList.remove('visible');
+        if (header)  header.classList.remove('header-hidden');
+        if (ho)      ho.style.display = '';
+
+        document.body.classList.remove('props-active');
+
+        // Restore scrollArea padding to header height
+        requestAnimationFrame(() => {
+          if (header && sa) {
+            sa.style.paddingTop =
+              header.offsetHeight + 'px';
+          }
+        });
+
+        // Hide old search bar
+        const sb = g('propSearchBar');
+        if (sb) sb.style.display = 'none';
       }
       if (tab === 'pipeline') loadPipeline();
       if (tab === 'operations') loadOperations();
@@ -4616,7 +4937,6 @@
     }
 
     function renderPropStats(stats, total) {
-      // Cache for filter use
       _propStatsCache = {
         total,
         gps:        stats.gps_verified   || 0,
@@ -4624,26 +4944,33 @@
         unassigned: stats.unassigned     || 0,
       };
 
-      // Update stat card numbers
       const sn = (id, val) => {
         const el = g(id);
         if (el) el.textContent = val;
       };
+
+      // Old stat cards (kept for compat)
       sn('statAllNum',        total);
       sn('statGPSNum',        _propStatsCache.gps);
       sn('statDocsNum',       _propStatsCache.docs);
       sn('statUnassignedNum', _propStatsCache.unassigned);
 
-      // Highlight unassigned card if count > 0
-      const unCard = g('statUnassigned');
-      if (unCard && _propStatsCache.unassigned > 0
-          && _propStatFilter !== 'unassigned') {
-        unCard.style.borderColor = 'rgba(245,158,11,0.4)';
-      }
+      // New toolbar stat cards
+      sn('tstatAllNum',        total);
+      sn('tstatGPSNum',        _propStatsCache.gps);
+      sn('tstatDocsNum',       _propStatsCache.docs);
+      sn('tstatUnassignedNum', _propStatsCache.unassigned);
 
-      // Keep legacy info line elements in sync
-      // (propInfoGPS, propInfoDocs, propInfoUnassigned no longer
-      // visible but kept for backwards compat)
+      // Highlight unassigned if count > 0
+      const unCard  = g('statUnassigned');
+      const tunCard = g('tstatUnassigned');
+      if (_propStatsCache.unassigned > 0
+          && _propStatFilter !== 'unassigned') {
+        if (unCard)
+          unCard.style.borderColor = 'rgba(245,158,11,0.4)';
+        if (tunCard)
+          tunCard.style.borderColor = 'rgba(245,158,11,0.4)';
+      }
     }
 
     function renderPropListings(listings, total) {
@@ -5705,16 +6032,27 @@
       if (!header || !scroll) return;
       const syncPad = () => {
         if (ST.tab === 'properties') {
-          scroll.style.paddingTop = '0';
+          const toolbar = g('propToolbar');
+          const sa = g('scrollArea');
+          if (toolbar && sa) {
+            sa.style.paddingTop =
+              toolbar.offsetHeight + 'px';
+          }
           return;
         }
-        const h = header.offsetHeight + 'px';
-        scroll.style.paddingTop = h;
+        const h = header.offsetHeight;
         document.documentElement.style
-          .setProperty('--header-h', h);
+          .setProperty('--header-h', h + 'px');
+        scroll.style.paddingTop = h + 'px';
       };
       syncPad();
       new ResizeObserver(syncPad).observe(header);
+      const toolbar = g('propToolbar');
+      if (toolbar) {
+        new ResizeObserver(() => {
+          if (ST.tab === 'properties') syncPad();
+        }).observe(toolbar);
+      }
       let lastY = 0;
       scroll.addEventListener('scroll', () => {
         const y = scroll.scrollTop;
@@ -6136,48 +6474,64 @@
     function setPropStatFilter(filter) {
       _propStatFilter = filter;
       const grid = g('propGrid');
-
-      // Fade out
       if (grid) grid.classList.add('filtering');
 
       setTimeout(() => {
-        ['all','gps','docs','unassigned'].forEach(f => {
-          const card = g(
-            'stat' + f.charAt(0).toUpperCase() + f.slice(1)
-          );
-          if (!card) return;
-          card.classList.remove(
-            'active-filter','em-filter','warn-filter'
-          );
-          if (f === filter) {
-            if (f === 'gps')
-              card.classList.add('em-filter');
-            else if (f === 'unassigned')
-              card.classList.add('warn-filter');
-            else
-              card.classList.add('active-filter');
-          }
+        // Update both old and new toolbar stat card styles
+        const prefixes = ['stat', 'tstat'];
+        prefixes.forEach(prefix => {
+          ['all','gps','docs','unassigned'].forEach(f => {
+            const card = g(
+              prefix +
+              f.charAt(0).toUpperCase() + f.slice(1)
+            );
+            if (!card) return;
+            card.classList.remove(
+              'active-filter','em-filter','warn-filter'
+            );
+            if (f === filter) {
+              if (f === 'gps')
+                card.classList.add('em-filter');
+              else if (f === 'unassigned')
+                card.classList.add('warn-filter');
+              else
+                card.classList.add('active-filter');
+            }
+          });
         });
 
-        const chip = g('propActiveFilterChip');
-        if (chip) {
+        // Update both filter chip slots
+        const labels = {
+          gps:        '📍 GPS only',
+          docs:       '📄 Docs only',
+          unassigned: '⚠️ Unassigned only',
+        };
+
+        ['propActiveFilterChip',
+         'propActiveFilterChip2'].forEach(chipId => {
+          const chip = g(chipId);
+          if (!chip) return;
           if (filter === 'all') {
             chip.innerHTML = '';
           } else {
-            const labels = {
-              gps:        '📍 GPS only',
-              docs:       '📄 Docs only',
-              unassigned: '⚠️ Unassigned only',
-            };
             chip.innerHTML = `
               <span class="prop-active-filter-chip"
                     onclick="setPropStatFilter('all')"
                     style="font-size:10px">
                 ${labels[filter]}
-                <span style="opacity:0.6;
-                  margin-left:4px">✕ clear</span>
+                <span style="opacity:0.6;margin-left:4px">
+                  ✕ clear
+                </span>
               </span>`;
           }
+        });
+
+        // Show/hide chip row
+        const chipRow = g('propToolbarChipRow');
+        if (chipRow) {
+          chipRow.classList.toggle(
+            'visible', filter !== 'all'
+          );
         }
 
         const filtered = _filterListingsByStatFilter(
@@ -6185,7 +6539,6 @@
         );
         renderPropListings(filtered, filtered.length);
 
-        // Fade in
         if (grid) grid.classList.remove('filtering');
       }, 150);
     }
@@ -6343,6 +6696,25 @@
       } catch (_) {
         // User cancelled or not supported
       }
+    }
+
+    function onPropFilterChange2() {
+      const type = g('propTypeFilter2');
+      const sort = g('propSortFilter2');
+      if (type) _propState.type = type.value;
+      if (sort) {
+        const [sb, sd] =
+          (sort.value || 'trust_score,desc').split(',');
+        _propState.sort_by  = sb;
+        _propState.sort_dir = sd;
+      }
+      _propState.page = 1;
+      loadListings();
+    }
+
+    function syncSearchClear(val) {
+      const btn = g('propSearch2Clear');
+      if (btn) btn.style.display = val ? 'flex' : 'none';
     }
 
   </script>
