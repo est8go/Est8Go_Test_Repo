@@ -2287,6 +2287,12 @@
       color: #fff;
     }
 
+    @media (max-width: 767px) {
+      #colBtn1 {
+        display: flex !important;
+      }
+    }
+
     /* ── Property Card v4 ─────────────────────── */
     .pc3 {
       background: var(--surface);
@@ -3003,7 +3009,8 @@
         </button>
         <button class="prop-col-btn" id="colBtn1"
                 onclick="setPropColumns(1)"
-                title="1 column">
+                title="1 column"
+                style="display:none">
           <svg width="14" height="14" viewBox="0 0 14 14"
                fill="currentColor">
             <rect x="0" y="0" width="14" height="6" rx="1"/>
@@ -3177,7 +3184,8 @@
             </button>
             <button class="prop-col-btn" id="colBtn1"
                     onclick="setPropColumns(1)"
-                    title="1 column">
+                    title="1 column"
+                    style="display:none">
               <svg width="14" height="14" viewBox="0 0 14 14"
                    fill="currentColor">
                 <rect x="0" y="0" width="14" height="6" rx="1"/>
@@ -6467,7 +6475,7 @@
       const grid = g('propGrid');
       if (!grid) return;
 
-      if (n === 1) {
+      if (n === 1 && window.innerWidth < 768) {
         grid.classList.add('prop-grid-single');
         grid.style.gridTemplateColumns = '1fr';
       } else {
