@@ -4047,6 +4047,8 @@
         document.body.classList.add('props-active');
         const header = g('appHeader');
         if (header) header.classList.add('header-hidden');
+        const sa = g('scrollArea');
+        if (sa) sa.style.paddingTop = '0';
         const sb = g('propSearchBar');
         if (sb) sb.style.display = 'block';
         const ho = g('homeOnlyHeader');
@@ -4654,8 +4656,8 @@
 
       const infoTotal = g('propInfoTotal');
       if (infoTotal) {
-        infoTotal.textContent = total +
-          ' listing' + (total !== 1 ? 's' : '');
+        infoTotal.textContent = '';
+        infoTotal.style.display = 'none';
       }
 
       if (!listings.length) {
