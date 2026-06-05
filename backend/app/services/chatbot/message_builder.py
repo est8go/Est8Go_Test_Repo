@@ -168,6 +168,60 @@ def build_no_results_message(
     )
 
 
+def build_comparison_message(listings: list, first_name: str) -> str:
+    """
+    Structured side-by-side comparison for WhatsApp.
+    Picks best option by trust score, then price.
+    """
+    if not listings:
+        return f"No properties to compare yet, {first_name}. Run a search first."
+
+    lines = [f"🔍 *Side-by-Side Comparison for {first_name}:*\n"]
+
+    for i, l in enumerate(listings, 1):
+        price = f"₦{int(l.price) / 1_000_000:.0f}M" if l.price else "POA"
+        location = (l.location or "").title()
+        score = l.trust_score or 0
+        grade = _trust_grade(score)
+        ptype = (l.property_type or "Property").title()
+
+        # Verification badges
+        badges = []
+        if l.latitude or l.gps_location_match:
+            badges.append("GPS ✅")
+        if l.cof_uploaded or l.deed_uploaded or l.survey_uploaded:
+            badges.append("Docs ✅")
+        if l.ai_verified_real:
+            badges.append("Smart Verified ✅")
+        badge_str = " · ".join(badges) if badges else "Pending Verification"
+
+        lines.append(
+            f"*Option {i} — {l.title}*\n"
+            f"📍 {location}  |  💰 {price}  |  🛡️ {score}/100 ({grade})\n"
+            f"🏠 {ptype}  ·  {badge_str}"
+        )
+
+    # Best pick: highest trust, then lowest price
+    best = max(listings, key=lambda x: (x.trust_score or 0, -(x.price or 999_999_999)))
+    best_idx = listings.index(best) + 1
+    best_price = best.price or 0
+    all_same_trust = len(set(l.trust_score or 0 for l in listings)) == 1
+    reason = (
+        "lowest price among equal-trust options"
+        if all_same_trust
+        else "highest trust score — most verified by Est8Go"
+    )
+
+    sep = "─" * 28
+    lines.append(
+        f"\n{sep}\n"
+        f"💡 *Best pick:* Option {best_idx} — {reason}.\n\n"
+        f"Reply *{best_idx}* to view full details and book a site visit. 📅"
+    )
+
+    return "\n".join(lines)
+
+
 def build_referral_summary(prop, original_biz_name: str) -> str:
     """The Complete Broker Handshake: Includes Location and Direct Link."""
     direct_link = f"https://est8go-api.onrender.com/public/property/{prop.id}"

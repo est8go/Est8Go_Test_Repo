@@ -56,6 +56,7 @@ from app.conversations.objection_engine import (
 from app.services.chatbot.search_service import execute_premium_search
 from app.services.chatbot.message_builder import (
     build_property_summary,
+    build_comparison_message,
     build_no_results_message,
     build_referral_summary,
     build_inspection_confirmation,
@@ -78,6 +79,64 @@ from app.conversations.platform_care import (
 # In-memory deduplication set
 _processed_messages: set = set()
 logger = logging.getLogger(__name__)
+
+
+def _get_negotiation_note(listing, db: Session) -> str:
+    """
+    Returns a negotiation hint string (or empty string) for a listing.
+    Two signals: days on market + price vs area average.
+    """
+    from sqlalchemy import func
+
+    notes = []
+
+    # Signal 1: Days on market
+    try:
+        if listing.created_at:
+            days = (datetime.utcnow() - listing.created_at).days
+            if days > 90:
+                notes.append(
+                    f"⏰ *Listed for {days} days* — the seller may be open to negotiation."
+                )
+            elif days > 45:
+                notes.append(
+                    f"⏰ On market for {days} days — worth discussing price with the agent."
+                )
+    except Exception:
+        pass
+
+    # Signal 2: Price vs area average
+    try:
+        if listing.price and listing.location and listing.property_type:
+            loc_fragment = (listing.location or "").split(",")[0].strip()
+            avg_result = (
+                db.query(func.avg(Listing.price))
+                .filter(
+                    Listing.property_type.ilike(f"%{listing.property_type}%"),
+                    Listing.location.ilike(f"%{loc_fragment}%"),
+                    Listing.status == "verified",
+                    Listing.id != listing.id,
+                )
+                .scalar()
+            )
+            if avg_result:
+                avg_price = int(avg_result)
+                diff_pct = ((listing.price - avg_price) / avg_price) * 100
+                avg_m = avg_price / 1_000_000
+                if diff_pct > 15:
+                    notes.append(
+                        f"💡 *Market insight:* Priced {diff_pct:.0f}% above area average "
+                        f"(₦{avg_m:.0f}M). There may be room to negotiate."
+                    )
+                elif diff_pct < -10:
+                    notes.append(
+                        f"✅ *Below area average* (₦{avg_m:.0f}M) — this is good value "
+                        f"for a verified property here."
+                    )
+    except Exception:
+        pass
+
+    return "\n".join(notes)
 
 
 # ================================================================
@@ -864,25 +923,9 @@ async def handle_incoming_message(data: dict, db: Session):
                     .filter(Listing.id.in_(_match_ids))
                     .all()
                 )
-                _cmp_text = (
-                    f"Here is a comparison of your "
-                    f"{len(_cmp_listings)} matched properties:\n\n"
-                )
-                for _i, _l in enumerate(_cmp_listings, 1):
-                    _p = _l.price or 0
-                    _price_m = (
-                        f"₦{_p/1_000_000:.0f}M"
-                        if _p >= 1_000_000
-                        else f"₦{_p:,}"
-                    )
-                    _grade = (_l.trust_grade or "ungraded").title()
-                    _cmp_text += (
-                        f"*Option {_i}: {_l.title}*\n"
-                        f"📍 {(_l.location or '').title()}\n"
-                        f"💰 {_price_m}\n"
-                        f"🛡️ {_l.trust_score or 0}/100 ({_grade})\n\n"
-                    )
-                _cmp_text += "Which would you like to explore further?"
+                # Sort by trust desc so options 1-N are already ranked
+                _cmp_listings.sort(key=lambda x: (x.trust_score or 0), reverse=True)
+                _cmp_text = build_comparison_message(_cmp_listings, first_name)
                 await send_meta_message(sender_id, _cmp_text)
             return
 
@@ -1020,6 +1063,11 @@ async def handle_incoming_message(data: dict, db: Session):
                         summary = expansion_note + summary
                         prefs.pop("_expanded_from", None)
                         prefs.pop("_expanded_to", None)
+
+                    # Append negotiation context (days on market + price position)
+                    _neg_note = _get_negotiation_note(matches[0], db)
+                    if _neg_note:
+                        summary += f"\n\n{_neg_note}"
 
                     # Send image+summary as one card, or fall back to text only
                     try:
@@ -1210,6 +1258,10 @@ async def handle_incoming_message(data: dict, db: Session):
                                 summary = expansion_note + summary
                                 prefs.pop("_expanded_from", None)
                                 prefs.pop("_expanded_to", None)
+                            # Append negotiation context
+                            _neg_note2 = _get_negotiation_note(matches[0], db)
+                            if _neg_note2:
+                                summary += f"\n\n{_neg_note2}"
                             # Send image+summary as one card, or fall back to text only
                             try:
                                 from app.listings.models import ListingImage
