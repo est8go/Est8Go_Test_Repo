@@ -2683,10 +2683,10 @@
       flex-shrink: 0;
     }
 
-    /* ── Properties Fixed Toolbar ─────────────────── */
+    /* ── Properties Sticky Toolbar ─────────────────── */
     #propToolbar {
       display: none;
-      position: fixed;
+      position: sticky;
       top: 0;
       left: 0;
       right: 0;
@@ -2694,6 +2694,7 @@
       background: var(--bg);
       border-bottom: 1px solid var(--border);
       flex-direction: column;
+      width: 100%;
     }
 
     #propToolbar.visible {
@@ -2988,9 +2989,10 @@
   </div>
 
   <!-- ══════════════════════════════════════
-       PROPERTIES FIXED TOOLBAR
+       SCROLL AREA
   ══════════════════════════════════════ -->
-  <div id="propToolbar">
+  <div id="scrollArea">
+    <div id="propToolbar">
     <!-- Row 1: Company name + column toggle -->
     <div class="prop-toolbar-brand">
       <div class="prop-toolbar-biz" id="propToolbarBiz">
@@ -3098,11 +3100,6 @@
             style="font-size:10px"></span>
     </div>
   </div>
-
-  <!-- ══════════════════════════════════════
-       SCROLL AREA
-  ══════════════════════════════════════ -->
-  <div id="scrollArea">
 
       <!-- STATIC: Search bar — JS never touches this -->
       <div id="propSearchBar"
@@ -4375,19 +4372,6 @@
         _propState.page = 1;
         _propStatFilter = 'all';
         loadListings();
-        initColToggle();
-
-        // Show properties toolbar, hide app header
-        const toolbar = g('propToolbar');
-        const header  = g('appHeader');
-        const sa      = g('scrollArea');
-        const ho      = g('homeOnlyHeader');
-
-        if (toolbar) toolbar.classList.add('visible');
-        if (header)  header.classList.add('header-hidden');
-        if (ho)      ho.style.display = 'none';
-
-        // Set company name in toolbar
         const bizEl = g('propToolbarBiz');
         if (bizEl) {
           const biz = CFG._bizName ||
@@ -4400,46 +4384,35 @@
               CFG._tenantType === 'agency' ? 'Agency' : 'Realtor';
           }
         }
-
-        setTimeout(() => {
-          const tb = g('propToolbar');
-          const sa = g('scrollArea');
-          if (tb && sa) {
-            const h = tb.getBoundingClientRect().height;
-            sa.style.paddingTop = (h + 10) + 'px';
-          }
-        }, 80);
-
-        // Hide old search bar if still present
-        const sb = g('propSearchBar');
-        if (sb) sb.style.display = 'none';
-
+        initColToggle();
         document.body.classList.add('props-active');
-
-      } else {
-        // Restore app header, hide properties toolbar
+        const header = g('appHeader');
+        if (header) header.classList.add('header-hidden');
         const toolbar = g('propToolbar');
-        const header  = g('appHeader');
-        const sa      = g('scrollArea');
-        const ho      = g('homeOnlyHeader');
-
-        if (toolbar) toolbar.classList.remove('visible');
-        if (header)  header.classList.remove('header-hidden');
-        if (ho)      ho.style.display = '';
-
-        document.body.classList.remove('props-active');
-
-        // Restore scrollArea padding to header height
-        requestAnimationFrame(() => {
-          if (header && sa) {
-            sa.style.paddingTop =
-              header.offsetHeight + 'px';
-          }
-        });
-
-        // Hide old search bar
+        if (toolbar) toolbar.classList.add('visible');
         const sb = g('propSearchBar');
         if (sb) sb.style.display = 'none';
+        const ho = g('homeOnlyHeader');
+        if (ho) ho.style.display = 'none';
+        // Scroll to top so sticky toolbar is visible
+        const sa = g('scrollArea');
+        if (sa) sa.scrollTop = 0;
+      } else {
+        document.body.classList.remove('props-active');
+        const toolbar = g('propToolbar');
+        if (toolbar) toolbar.classList.remove('visible');
+        const header = g('appHeader');
+        if (header) {
+          header.classList.remove('header-hidden');
+          const sa = g('scrollArea');
+          if (sa) {
+            sa.style.paddingTop = header.offsetHeight + 'px';
+          }
+        }
+        const sb = g('propSearchBar');
+        if (sb) sb.style.display = 'none';
+        const ho = g('homeOnlyHeader');
+        if (ho) ho.style.display = '';
       }
       if (tab === 'pipeline') loadPipeline();
       if (tab === 'operations') loadOperations();
@@ -6088,15 +6061,7 @@
       const scroll = g('scrollArea');
       if (!header || !scroll) return;
       const syncPad = () => {
-        if (ST.tab === 'properties') {
-          const tb = g('propToolbar');
-          const sa = g('scrollArea');
-          if (tb && sa) {
-            const h = tb.getBoundingClientRect().height;
-            if (h > 0) sa.style.paddingTop = (h + 10) + 'px';
-          }
-          return;
-        }
+        if (ST.tab === 'properties') return;
         const h = header.offsetHeight;
         document.documentElement.style
           .setProperty('--header-h', h + 'px');
