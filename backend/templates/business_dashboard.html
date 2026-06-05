@@ -602,7 +602,7 @@
       overflow-x: hidden;
       position: relative;
       z-index: 10;
-      padding: 0 14px;
+      padding: 0;
       -webkit-overflow-scrolling: touch;
       padding-bottom: calc(var(--nav-h) + 20px);
       background: var(--bg);
@@ -634,6 +634,21 @@
         opacity: 1;
         transform: translateY(0);
       }
+    }
+
+    /* All tabs except properties get horizontal padding */
+    #homeTab,
+    #pipelineTab,
+    #operationsTab,
+    #trustTab,
+    #studioTab,
+    #networkTab,
+    #analyticsTab,
+    #creditsTab,
+    #settingsTab,
+    #teamTab {
+      padding-left: 14px;
+      padding-right: 14px;
     }
 
     /* ═══════════════════════════════════════════
@@ -2304,11 +2319,14 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      aspect-ratio: 1/1;
-      min-height: 120px;
+      width: 100%;
+      aspect-ratio: 1 / 1;
     }
 
     .pc3-img img {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -2317,18 +2335,22 @@
       display: block;
     }
 
-    .pc3-img img.loaded { opacity: 1; }
+    .pc3-img img.loaded {
+      opacity: 1;
+    }
 
-    /* Single col + tablet/desktop: 16/9 */
-    .prop-grid-single .pc3-img { aspect-ratio: 16/9; }
+    .pc3-img > div {
+      font-size: 32px;
+      z-index: 1;
+    }
+
+    .prop-grid-single .pc3-img {
+      aspect-ratio: 16 / 9;
+    }
 
     @media (min-width: 768px) {
       .pc3-img {
-        aspect-ratio: 16/9 !important;
-        min-height: 160px;
-      }
-      .pc3-img > div {
-        font-size: 40px;
+        aspect-ratio: 16 / 9;
       }
     }
 
@@ -2567,7 +2589,7 @@
     }
 
     #propPagination {
-      padding: 12px 16px 16px;
+      padding: 10px 10px 16px;
       display: flex;
       justify-content: center;
       gap: 6px;
@@ -3396,8 +3418,7 @@
     </div>
 
     <!-- ─────────────── PROPERTIES TAB ─────────────── -->
-    <div id="propertiesTab" class="tab"
-         style="padding-top:0">
+    <div id="propertiesTab" class="tab">
       <!-- Hidden compat stat cards (kept for JS compat) -->
       <div style="display:none">
         <div id="statAll"><div id="statAllNum"></div></div>
@@ -4380,18 +4401,20 @@
           }
         }
 
-        // Measure after two frames to ensure
-        // toolbar is fully rendered and painted
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            if (toolbar && sa) {
-              const h = toolbar.getBoundingClientRect().height;
-              sa.style.paddingTop = Math.ceil(h) + 'px';
-              // Also scroll to top so first card is visible
-              sa.scrollTop = 0;
-            }
-          });
-        });
+        // Set paddingTop after toolbar renders
+        const _setPad = () => {
+          const tb = g('propToolbar');
+          const sa = g('scrollArea');
+          if (!tb || !sa) return;
+          const h = tb.getBoundingClientRect().height;
+          if (h > 0) {
+            sa.style.paddingTop = h + 'px';
+          } else {
+            // Toolbar not rendered yet, retry
+            requestAnimationFrame(_setPad);
+          }
+        };
+        requestAnimationFrame(_setPad);
 
         // Hide old search bar if still present
         const sb = g('propSearchBar');
@@ -6072,13 +6095,11 @@
       if (!header || !scroll) return;
       const syncPad = () => {
         if (ST.tab === 'properties') {
-          const toolbar = g('propToolbar');
+          const tb = g('propToolbar');
           const sa = g('scrollArea');
-          if (toolbar && sa) {
-            const h = toolbar.getBoundingClientRect().height;
-            if (h > 0) {
-              sa.style.paddingTop = Math.ceil(h) + 'px';
-            }
+          if (tb && sa) {
+            const h = tb.getBoundingClientRect().height;
+            if (h > 0) sa.style.paddingTop = h + 'px';
           }
           return;
         }
