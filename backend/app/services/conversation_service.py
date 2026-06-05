@@ -879,6 +879,39 @@ async def handle_incoming_message(data: dict, db: Session):
                 await send_meta_message(sender_id, _cmp_text)
             return
 
+        # --- 8d. LOST BUYER HANDLER ---
+        if intent == "lost_buyer":
+            _data = json.loads(convo.data_json or "{}")
+            _loc = (_data.get("location") or "").title()
+            _ptype = (_data.get("property_type") or "property").title()
+            _has_budget = bool(_data.get("budget") or _data.get("budget_max"))
+
+            if _loc and not _has_budget:
+                _guidance = (
+                    f"No problem, {first_name}! Let me help you narrow it down. 😊\n\n"
+                    f"You're looking for a *{_ptype}* in *{_loc}*.\n\n"
+                    f"What is your budget? "
+                    f"(e.g. '30M', '50M to 80M', '₦45,000,000')"
+                )
+            elif _has_budget and not _loc:
+                _guidance = (
+                    f"Of course, {first_name}! 😊\n\n"
+                    f"Which area would you like to search? "
+                    f"We cover Abuja, Lagos, Port Harcourt and more.\n\n"
+                    f"Just tell me the city or specific area."
+                )
+            else:
+                _guidance = (
+                    f"Here's what you can do, {first_name}:\n\n"
+                    f"1️⃣ *Try a nearby area* — e.g. Asokoro, Apo, Maitama\n"
+                    f"2️⃣ *Adjust your budget* — tell me a new range\n"
+                    f"3️⃣ *Change property type* — Land, House or Apartment\n"
+                    f"4️⃣ *Start fresh* — say *New Search*\n\n"
+                    f"What works best for you?"
+                )
+            await send_meta_message(sender_id, _guidance)
+            return
+
         # --- 9. OBJECTION HANDLER ---
         if intent == "objection":
             objection_key = pipe.get("objection_key", "objection_stalling")
@@ -989,8 +1022,10 @@ async def handle_incoming_message(data: dict, db: Session):
                             prefs.get("budget_max") or prefs.get("budget"),
                         ),
                     )
-                    # Keep state active so buyer can refine search
+                    prefs.pop("location", None)
+                    convo.data_json = json.dumps(prefs)
                     convo.state = "ACTIVE"
+                    convo.funnel_stage = "verification"
                     convo.last_active_at = datetime.now(timezone.utc).replace(
                         tzinfo=None
                     )
@@ -1126,6 +1161,14 @@ async def handle_incoming_message(data: dict, db: Session):
                                     prefs.get("budget_max") or prefs.get("budget"),
                                 ),
                             )
+                            prefs.pop("location", None)
+                            convo.data_json = json.dumps(prefs)
+                            convo.state = "ACTIVE"
+                            convo.funnel_stage = "verification"
+                            convo.last_active_at = datetime.now(timezone.utc).replace(
+                                tzinfo=None
+                            )
+                            db.commit()
                     except Exception as e:
                         logger.error(f"Search from completed_flag failed: {e}")
                         await send_meta_message(

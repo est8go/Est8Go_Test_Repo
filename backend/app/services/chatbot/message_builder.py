@@ -2,25 +2,58 @@
 # Responsible for high-converting property summaries and referral handshakes.
 
 NEARBY_AREAS = {
-    "maitama":         ["asokoro", "wuse", "garki"],
-    "asokoro":         ["maitama", "garki", "wuse"],
-    "gwarinpa":        ["kubwa", "lugbe", "lokogoma"],
-    "kubwa":           ["gwarinpa", "lugbe", "gwagwalada"],
-    "lugbe":           ["kubwa", "gwarinpa", "lokogoma"],
-    "lekki":           ["ajah", "victoria island", "ikoyi"],
-    "ajah":            ["lekki", "sangotedo", "abraham adesanya"],
-    "ikeja":           ["maryland", "ojodu", "magodo"],
+    "maitama": ["asokoro", "wuse 2", "katampe"],
+    "asokoro": ["maitama", "garki", "wuse"],
+    "gwarinpa": ["kubwa", "lugbe", "lokogoma"],
+    "kubwa": ["gwarinpa", "lugbe", "gwagwalada"],
+    "lugbe": ["kubwa", "gwarinpa", "lokogoma"],
+    "garki": ["maitama", "wuse", "asokoro"],
+    "wuse": ["garki", "maitama", "jabi"],
+    "wuse 2": ["wuse", "maitama", "jabi"],
+    "jabi": ["wuse", "maitama", "lifecamp"],
+    "lifecamp": ["jabi", "gwarinpa", "katampe"],
+    "katampe": ["maitama", "lifecamp", "jabi"],
+    "apo": ["garki", "asokoro", "guzape"],
+    "guzape": ["asokoro", "apo", "maitama"],
+    "lokogoma": ["gwarinpa", "lugbe", "kubwa"],
+    "galadimawa": ["apo", "lokogoma", "gwarinpa"],
+    "dawaki": ["gwarinpa", "kubwa", "lokogoma"],
+    "dutse": ["kubwa", "gwagwalada", "lugbe"],
+    "nbora": ["lokogoma", "gwarinpa", "lugbe"],
+    "gwagwalada": ["kubwa", "lugbe", "dutse"],
+    "lekki": ["ajah", "victoria island", "ikoyi"],
+    "ajah": ["lekki", "sangotedo", "badore"],
+    "ikeja": ["maryland", "ojodu", "magodo"],
     "victoria island": ["ikoyi", "lekki", "oniru"],
-    "ikoyi":           ["victoria island", "lekki", "obalende"],
-    "surulere":        ["yaba", "gbagada", "magodo"],
-    "yaba":            ["surulere", "gbagada", "maryland"],
-    "garki":           ["maitama", "wuse", "asokoro"],
-    "wuse":            ["garki", "maitama", "jabi"],
-    "jabi":            ["wuse", "maitama", "lifecamp"],
-    "gbagada":         ["yaba", "surulere", "maryland"],
-    "magodo":          ["ojodu", "ikeja", "gbagada"],
-    "ojodu":           ["magodo", "ikeja", "berger"],
-    "lokogoma":        ["gwarinpa", "lugbe", "kubwa"],
+    "ikoyi": ["victoria island", "lekki", "obalende"],
+    "surulere": ["yaba", "gbagada", "magodo"],
+    "yaba": ["surulere", "gbagada", "maryland"],
+    "gbagada": ["yaba", "surulere", "maryland"],
+    "magodo": ["ojodu", "ikeja", "gbagada"],
+    "ojodu": ["magodo", "ikeja", "berger"],
+    "sangotedo": ["ajah", "lekki", "badore"],
+    "badore": ["ajah", "sangotedo", "lekki"],
+    "maryland": ["ikeja", "gbagada", "yaba"],
+    "port harcourt": ["rumuola", "gra ph", "trans amadi"],
+    "gra ph": ["port harcourt", "rumuola", "old gra"],
+    "rumuola": ["port harcourt", "gra ph", "rumuigbo"],
+}
+
+AREA_TO_CITY = {
+    "maitama": "Abuja", "asokoro": "Abuja", "gwarinpa": "Abuja",
+    "kubwa": "Abuja", "lugbe": "Abuja", "garki": "Abuja",
+    "wuse": "Abuja", "wuse 2": "Abuja", "jabi": "Abuja",
+    "lifecamp": "Abuja", "katampe": "Abuja", "apo": "Abuja",
+    "guzape": "Abuja", "lokogoma": "Abuja", "galadimawa": "Abuja",
+    "dawaki": "Abuja", "dutse": "Abuja", "nbora": "Abuja",
+    "gwagwalada": "Abuja",
+    "lekki": "Lagos", "ajah": "Lagos", "ikeja": "Lagos",
+    "victoria island": "Lagos", "ikoyi": "Lagos", "surulere": "Lagos",
+    "yaba": "Lagos", "gbagada": "Lagos", "magodo": "Lagos",
+    "ojodu": "Lagos", "sangotedo": "Lagos", "badore": "Lagos",
+    "maryland": "Lagos",
+    "port harcourt": "Port Harcourt", "gra ph": "Port Harcourt",
+    "rumuola": "Port Harcourt",
 }
 
 
@@ -76,43 +109,62 @@ def build_no_results_message(
     location: str, property_type: str, budget=None
 ) -> str:
     loc = location.title() if location else "that area"
-    ptype = property_type.title() if property_type else "property"
+    ptype = property_type.title() if property_type else "Property"
+    location_lower = (location or "").lower().strip()
 
     budget_note = ""
     if budget:
         try:
             budget_int = int(budget)
-            if budget_int < 10_000_000:
+            is_house = (property_type or "").lower() in ("house", "duplex", "bungalow")
+            is_apartment = (property_type or "").lower() in ("apartment", "flat", "studio")
+            if is_house and budget_int < 30_000_000:
                 budget_note = (
-                    f"\n\nNote: Your budget of "
-                    f"₦{budget_int / 1_000_000:.0f}M may be below "
-                    f"market rate for verified properties in "
-                    f"{loc}. Would you like to explore a "
-                    f"higher budget or a different area?"
+                    f"\n\n💡 *Budget note:* ₦{budget_int / 1_000_000:.0f}M "
+                    f"may be below current market rate for a verified "
+                    f"{ptype} in {loc}. "
+                    f"Most verified houses here start from ₦30M. "
+                    f"Would you like to adjust your budget or explore a more affordable area?"
+                )
+            elif is_apartment and budget_int < 10_000_000:
+                budget_note = (
+                    f"\n\n💡 *Budget note:* ₦{budget_int / 1_000_000:.0f}M "
+                    f"may be tight for a verified apartment in {loc}. "
+                    f"Would you like to explore nearby areas or adjust your budget?"
                 )
         except (ValueError, TypeError):
             pass
 
-    location_lower = (location or "").lower().strip()
     nearby = NEARBY_AREAS.get(location_lower, [])
+    city = AREA_TO_CITY.get(location_lower, "")
+
     nearby_text = ""
     if nearby:
-        nearby_formatted = ", ".join(a.title() for a in nearby[:3])
+        nearby_formatted = " · ".join(a.title() for a in nearby[:3])
         nearby_text = (
-            f"\n\nNearby areas with active listings:\n"
+            f"\n\n📍 *Nearby areas with active listings:*\n"
             f"{nearby_formatted}\n\n"
-            f"Would you like me to search any of these?"
+            f"Reply with any of these areas and I'll search immediately."
+        )
+    elif city:
+        nearby_text = (
+            f"\n\n📍 I can search other parts of *{city}* for you. "
+            f"Which area would you like to try?"
         )
 
+    next_steps = (
+        f"\n\n*What would you like to do?*\n"
+        f"1️⃣ Search a nearby area\n"
+        f"2️⃣ Adjust my budget\n"
+        f"3️⃣ Change property type\n"
+        f"4️⃣ Start a new search"
+    )
+
     return (
-        f"We don't have verified {ptype} listings "
-        f"in *{loc}* right now. 🔍\n\n"
-        f"This could mean:\n"
-        f"Our agents are currently auditing new "
-        f"arrivals in that area, or\n"
-        f"Inventory in {loc} is currently limited."
+        f"No verified {ptype} listings found in *{loc}* right now. 🔍"
         f"{nearby_text}"
         f"{budget_note}"
+        f"{next_steps}"
     )
 
 

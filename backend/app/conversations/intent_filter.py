@@ -417,6 +417,17 @@ COMPARISON_PATTERNS = [
     "number 2",
 ]
 
+LOST_BUYER_PHRASES = {
+    "so what do i do", "what do i do", "what now", "what should i do",
+    "what can i do", "what next", "what do i do now", "help me", "help",
+    "i don't know", "i dont know", "what are my options",
+    "what options do i have", "so what happens now", "guide me",
+    "what do you suggest", "suggest something", "any suggestions",
+    "what do you recommend", "recommend something", "i'm confused",
+    "im confused", "not sure what to do", "i need help",
+    "what should i search", "how do i find",
+}
+
 
 def normalise_property_type(ptype: str) -> str:
     if not ptype:
@@ -763,6 +774,16 @@ def classify_intent(
             confidence="high",
             extracted={},
             response_key="comparison",
+            needs_gpt=False,
+        )
+
+    # ── 7.8. LOST BUYER ─────────────────────────────────────
+    if any(phrase in text_lower for phrase in LOST_BUYER_PHRASES) or text_lower in LOST_BUYER_PHRASES:
+        return IntentResult(
+            intent="lost_buyer",
+            confidence="high",
+            extracted={},
+            response_key="lost_buyer_guidance",
             needs_gpt=False,
         )
 
