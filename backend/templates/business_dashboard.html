@@ -4401,20 +4401,14 @@
           }
         }
 
-        // Set paddingTop after toolbar renders
-        const _setPad = () => {
+        setTimeout(() => {
           const tb = g('propToolbar');
           const sa = g('scrollArea');
-          if (!tb || !sa) return;
-          const h = tb.getBoundingClientRect().height;
-          if (h > 0) {
-            sa.style.paddingTop = h + 'px';
-          } else {
-            // Toolbar not rendered yet, retry
-            requestAnimationFrame(_setPad);
+          if (tb && sa) {
+            const h = tb.getBoundingClientRect().height;
+            sa.style.paddingTop = (h + 10) + 'px';
           }
-        };
-        requestAnimationFrame(_setPad);
+        }, 80);
 
         // Hide old search bar if still present
         const sb = g('propSearchBar');
@@ -6099,7 +6093,7 @@
           const sa = g('scrollArea');
           if (tb && sa) {
             const h = tb.getBoundingClientRect().height;
-            if (h > 0) sa.style.paddingTop = h + 'px';
+            if (h > 0) sa.style.paddingTop = (h + 10) + 'px';
           }
           return;
         }
