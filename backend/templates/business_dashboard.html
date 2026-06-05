@@ -2559,8 +2559,10 @@
       width: 100%;
     }
 
-    .prop-grid-v3.prop-grid-single {
-      grid-template-columns: 1fr !important;
+    @media (max-width: 767px) {
+      .prop-grid-v3.prop-grid-single {
+        grid-template-columns: 1fr !important;
+      }
     }
 
     .prop-grid-v3.filtering {
@@ -6490,9 +6492,27 @@
     }
 
     function initColToggle() {
-      // Always default to 2 col on mobile first render
-      // unless user explicitly saved 1 col preference
+      const isMobile = window.innerWidth < 768;
       const saved = localStorage.getItem('prop-columns');
+
+      // On desktop, always force minimum 2 columns
+      // regardless of what was saved
+      if (!isMobile) {
+        _propColumns = 2;
+        localStorage.setItem('prop-columns', '2');
+        const grid = g('propGrid');
+        if (grid) {
+          grid.classList.remove('prop-grid-single');
+          grid.style.gridTemplateColumns = '';
+        }
+        const btn1 = g('colBtn1');
+        const btn2 = g('colBtn2');
+        if (btn1) btn1.classList.remove('active');
+        if (btn2) btn2.classList.add('active');
+        return;
+      }
+
+      // Mobile: respect saved preference
       _propColumns = saved ? parseInt(saved) : 2;
       setPropColumns(_propColumns);
     }
