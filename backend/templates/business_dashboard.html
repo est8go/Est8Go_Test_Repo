@@ -2180,6 +2180,353 @@
       .pc-more   .btn  { font-size: 9px; padding: 5px 4px }
       .prop-dots-btn   { font-size: 11px; padding: 5px 8px }
     }
+
+    /* ── Properties Tab v3 — World Class ──────────── */
+
+    /* Stats filter cards */
+    .prop-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 10px 10px 0;
+    }
+
+    .prop-stat-card-v3 {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .prop-stat-card-v3:active {
+      transform: scale(0.96);
+    }
+
+    .prop-stat-card-v3.active-filter {
+      border-color: var(--indigo);
+      background: var(--indigo-dim);
+    }
+
+    .prop-stat-card-v3.active-filter .prop-stat-num-v3 {
+      color: var(--indigo);
+    }
+
+    .prop-stat-card-v3.warn-filter {
+      border-color: var(--warn);
+      background: var(--warn-dim);
+    }
+
+    .prop-stat-card-v3.warn-filter .prop-stat-num-v3 {
+      color: var(--warn);
+    }
+
+    .prop-stat-card-v3.em-filter {
+      border-color: var(--em);
+      background: var(--em-dim);
+    }
+
+    .prop-stat-card-v3.em-filter .prop-stat-num-v3 {
+      color: var(--em);
+    }
+
+    .prop-stat-num-v3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .prop-stat-lbl-v3 {
+      font-size: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-top: 4px;
+      white-space: nowrap;
+    }
+
+    /* Column toggle */
+    .prop-col-toggle {
+      display: flex;
+      gap: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px;
+      flex-shrink: 0;
+    }
+
+    .prop-col-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: none;
+      background: none;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      font-size: 14px;
+    }
+
+    .prop-col-btn.active {
+      background: var(--indigo);
+      color: #fff;
+    }
+
+    /* Property card v3 */
+    .pc3 {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: transform 0.18s, box-shadow 0.18s;
+      position: relative;
+      border-left: 3px solid transparent;
+    }
+
+    .pc3:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    }
+
+    .pc3:active {
+      transform: scale(0.985);
+    }
+
+    /* Trust grade left border colours */
+    .pc3[data-grade="emerald"] { border-left-color: #10B981; }
+    .pc3[data-grade="gold"]    { border-left-color: #F59E0B; }
+    .pc3[data-grade="silver"]  { border-left-color: #94A3B8; }
+    .pc3[data-grade="bronze"]  { border-left-color: #CD7F32; }
+    .pc3[data-grade="ungraded"]{ border-left-color: #475569; }
+
+    .pc3-img {
+      position: relative;
+      aspect-ratio: 4/3;
+      background: var(--surface2);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pc3-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+
+    .pc3-img img.loaded {
+      opacity: 1;
+    }
+
+    /* Trust badge top-right */
+    .pc3-trust {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(10, 15, 30, 0.88);
+      backdrop-filter: blur(4px);
+      border-radius: 7px;
+      padding: 3px 7px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .pc3-trust-score {
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .pc3-trust-grade {
+      font-size: 8px;
+      font-weight: 700;
+      text-transform: capitalize;
+    }
+
+    /* Bottom overlay on image */
+    .pc3-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(
+        to top,
+        rgba(10,15,30,0.85) 0%,
+        rgba(10,15,30,0.3) 60%,
+        transparent 100%
+      );
+      padding: 20px 8px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pc3-type {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #fff;
+      background: rgba(79,70,229,0.85);
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+
+    .pc3-verified {
+      font-size: 9px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .pc3-verified-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #10B981;
+      display: inline-block;
+    }
+
+    /* Card body */
+    .pc3-body {
+      padding: 10px;
+    }
+
+    .pc3-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 2.4em;
+    }
+
+    .pc3-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      gap: 4px;
+    }
+
+    .pc3-location {
+      font-size: 10px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pc3-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--em);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .pc3-realtor {
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pc3-realtor.unassigned {
+      color: var(--warn);
+    }
+
+    /* Action bar */
+    .pc3-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .pc3-actions .btn {
+      flex: 1;
+      font-size: 9px;
+      padding: 6px 3px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+
+    /* Single column overrides */
+    .prop-grid-single .pc3-img {
+      aspect-ratio: 16/9;
+    }
+
+    .prop-grid-single .pc3-title {
+      font-size: 14px;
+    }
+
+    .prop-grid-single .pc3-price {
+      font-size: 16px;
+    }
+
+    .prop-grid-single .pc3-actions .btn {
+      font-size: 11px;
+      padding: 8px 6px;
+    }
+
+    .prop-grid-single .pc3-body {
+      padding: 12px;
+    }
+
+    /* Mobile tighten */
+    @media (max-width: 640px) {
+      .prop-stat-grid {
+        padding: 10px 10px 0;
+      }
+
+      .prop-grid-v3 {
+        padding: 10px 10px 16px;
+        gap: 8px;
+      }
+    }
+
+    /* Active filter chip in info line */
+    .prop-active-filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 99px;
+      background: var(--indigo-dim);
+      border: 1px solid var(--indigo-glow);
+      color: var(--indigo);
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -2334,14 +2681,14 @@
                          font-size:11px;align-items:center;
                          justify-content:center">✕</button>
         </div>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;align-items:center">
           <select id="propTypeFilter"
                   onchange="onPropFilterChange()"
                   style="flex:1;background:var(--surface2);
                          border:1px solid var(--border);
                          border-radius:10px;padding:8px 12px;
                          font-size:12px;font-weight:600;
-                color:var(--text);font-family:inherit;
+                         color:var(--text);font-family:inherit;
                          outline:none;cursor:pointer">
             <option value="">All Types</option>
             <option value="house">House</option>
@@ -2355,13 +2702,36 @@
                          border:1px solid var(--border);
                          border-radius:10px;padding:8px 12px;
                          font-size:12px;font-weight:600;
-                color:var(--text);font-family:inherit;
+                         color:var(--text);font-family:inherit;
                          outline:none;cursor:pointer">
             <option value="trust_score,desc">Highest Trust</option>
             <option value="price,desc">Price: High → Low</option>
             <option value="price,asc">Price: Low → High</option>
             <option value="created_at,desc">Newest First</option>
           </select>
+          <!-- Column toggle -->
+          <div class="prop-col-toggle">
+            <button class="prop-col-btn" id="colBtn2"
+                    onclick="setPropColumns(2)"
+                    title="2 columns">
+              <svg width="14" height="14" viewBox="0 0 14 14"
+                   fill="currentColor">
+                <rect x="0" y="0" width="6" height="6" rx="1"/>
+                <rect x="8" y="0" width="6" height="6" rx="1"/>
+                <rect x="0" y="8" width="6" height="6" rx="1"/>
+                <rect x="8" y="8" width="6" height="6" rx="1"/>
+              </svg>
+            </button>
+            <button class="prop-col-btn" id="colBtn1"
+                    onclick="setPropColumns(1)"
+                    title="1 column">
+              <svg width="14" height="14" viewBox="0 0 14 14"
+                   fill="currentColor">
+                <rect x="0" y="0" width="14" height="6" rx="1"/>
+                <rect x="0" y="8" width="14" height="6" rx="1"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -2584,34 +2954,50 @@
     </div>
 
     <!-- ─────────────── PROPERTIES TAB ─────────────── -->
-    <div id="propertiesTab" class="tab"
-         style="padding-top:0">
+    <div id="propertiesTab" class="tab" style="padding-top:0">
 
-      <!-- STATIC: Info line shell — JS updates text only -->
-      <div id="propInfoLine"
-           style="padding:6px 16px 10px;font-size:11px;
-                  color:var(--muted);display:flex;
-                  align-items:center;gap:10px;
-                  flex-wrap:nowrap;overflow:hidden;
-                  white-space:nowrap">
-        <span id="propInfoTotal"></span>
-        <span id="propInfoGPS"
-              style="color:var(--em)"></span>
-        <span id="propInfoDocs"
-              style="color:var(--indigo)"></span>
-        <span id="propInfoUnassigned"
-              style="color:var(--warn)"></span>
+      <!-- Stats filter cards -->
+      <div class="prop-stat-grid" id="propStatGrid">
+        <div class="prop-stat-card-v3" id="statAll"
+             onclick="setPropStatFilter('all')">
+          <div class="prop-stat-num-v3" id="statAllNum">—</div>
+          <div class="prop-stat-lbl-v3">All</div>
+        </div>
+        <div class="prop-stat-card-v3" id="statGPS"
+             onclick="setPropStatFilter('gps')">
+          <div class="prop-stat-num-v3" id="statGPSNum">—</div>
+          <div class="prop-stat-lbl-v3">GPS ✓</div>
+        </div>
+        <div class="prop-stat-card-v3" id="statDocs"
+             onclick="setPropStatFilter('docs')">
+          <div class="prop-stat-num-v3" id="statDocsNum">—</div>
+          <div class="prop-stat-lbl-v3">Docs</div>
+        </div>
+        <div class="prop-stat-card-v3" id="statUnassigned"
+             onclick="setPropStatFilter('unassigned')">
+          <div class="prop-stat-num-v3" id="statUnassignedNum">—</div>
+          <div class="prop-stat-lbl-v3">Unassigned</div>
+        </div>
       </div>
 
-      <!-- DYNAMIC: JS replaces innerHTML only -->
+      <!-- Active filter chip + count line -->
+      <div style="padding:8px 10px 4px;display:flex;
+                  align-items:center;gap:8px;flex-wrap:wrap">
+        <span id="propInfoTotal"
+              style="font-size:11px;color:var(--muted)"></span>
+        <span id="propActiveFilterChip"></span>
+      </div>
+
+      <!-- Grid + pagination -->
       <div id="propGrid"
            style="display:grid;
                   grid-template-columns:1fr 1fr;
-                  gap:10px;padding:0 16px 16px;
+                  gap:8px;
+                  padding:0 10px 16px;
                   align-items:start;
-                  transition:opacity 0.2s"></div>
+                  transition:opacity 0.2s"
+           class="prop-grid-v3"></div>
 
-      <!-- DYNAMIC: JS replaces innerHTML only -->
       <div id="propPagination"
            style="padding:16px;display:flex;
                   justify-content:center;
@@ -3557,7 +3943,21 @@
       if (g('scrollArea')) g('scrollArea').scrollTop = 0;
       updateFAB(tab);
       if (tab === 'home') loadHome();
-      if (tab === 'properties') { _propState.page = 1; loadListings(); const sb = g('propSearchBar'); if(sb) sb.style.display='block'; const ho = g('homeOnlyHeader'); if(ho) ho.style.display='none'; } else { const sb = g('propSearchBar'); if(sb) sb.style.display='none'; const ho = g('homeOnlyHeader'); if(ho) ho.style.display=''; }
+      if (tab === 'properties') {
+        _propState.page = 1;
+        _propStatFilter = 'all';
+        loadListings();
+        initColToggle();
+        const sb = g('propSearchBar');
+        if (sb) sb.style.display = 'block';
+        const ho = g('homeOnlyHeader');
+        if (ho) ho.style.display = 'none';
+      } else {
+        const sb = g('propSearchBar');
+        if (sb) sb.style.display = 'none';
+        const ho = g('homeOnlyHeader');
+        if (ho) ho.style.display = '';
+      }
       if (tab === 'pipeline') loadPipeline();
       if (tab === 'operations') loadOperations();
       if (tab === 'trust') loadTrust();
@@ -4111,133 +4511,191 @@
     }
 
     function renderPropStats(stats, total) {
-      const s = (id, val) => {
-        const el = g(id);
-        if (el && val) el.textContent = val;
+      // Cache for filter use
+      _propStatsCache = {
+        total,
+        gps:        stats.gps_verified   || 0,
+        docs:       stats.with_documents || 0,
+        unassigned: stats.unassigned     || 0,
       };
-      s('propInfoGPS',        stats.gps_verified   + ' GPS');
-      s('propInfoDocs',       stats.with_documents + ' Docs');
-      s('propInfoUnassigned', stats.unassigned     + ' Unassigned');
+
+      // Update stat card numbers
+      const sn = (id, val) => {
+        const el = g(id);
+        if (el) el.textContent = val;
+      };
+      sn('statAllNum',        total);
+      sn('statGPSNum',        _propStatsCache.gps);
+      sn('statDocsNum',       _propStatsCache.docs);
+      sn('statUnassignedNum', _propStatsCache.unassigned);
+
+      // Highlight unassigned card if count > 0
+      const unCard = g('statUnassigned');
+      if (unCard && _propStatsCache.unassigned > 0
+          && _propStatFilter !== 'unassigned') {
+        unCard.style.borderColor = 'rgba(245,158,11,0.4)';
+      }
+
+      // Keep legacy info line elements in sync
+      // (propInfoGPS, propInfoDocs, propInfoUnassigned no longer
+      // visible but kept for backwards compat)
     }
 
     function renderPropListings(listings, total) {
       const grid = g('propGrid');
       if (!grid) return;
 
+      // Cache all listings for client-side stat filtering
+      if (_propStatFilter === 'all') {
+        _propAllListings = listings;
+      }
+
+      // Update total count
       const infoTotal = g('propInfoTotal');
-      const infoGPS   = g('propInfoGPS');
-      const infoDocs  = g('propInfoDocs');
-      const infoUn    = g('propInfoUnassigned');
-      if (infoTotal) infoTotal.textContent = total + ' listings';
+      if (infoTotal) {
+        infoTotal.textContent = total + ' listing' +
+          (total !== 1 ? 's' : '');
+      }
 
       if (!listings.length) {
         grid.innerHTML = `
           <div style="grid-column:1/-1;text-align:center;
             padding:48px 20px">
             <div style="font-size:40px;margin-bottom:12px">🏠</div>
-            <div style="font-family:'Syne',sans-serif;font-size:16px;
-              font-weight:700;margin-bottom:6px">
-              No verified listings found</div>
+            <div style="font-family:'Syne',sans-serif;
+              font-size:16px;font-weight:700;margin-bottom:6px">
+              No listings found
+            </div>
             <div style="font-size:12px;color:var(--muted)">
               ${_propState.search
                 ? 'Try a different search term'
-                : 'Add your first verified property to begin'}
+                : _propStatFilter !== 'all'
+                  ? 'No listings match this filter'
+                  : 'Add your first verified property'}
             </div>
             ${_propState.search
               ? `<button class="btn btn-ghost btn-sm"
                   style="margin-top:12px"
-                  onclick="clearPropSearch()">Clear Search</button>`
-              : `<button class="btn btn-em btn-sm"
-                  style="margin-top:12px"
-                  onclick="openModal('uploadModal')">
-                  Add First Listing →</button>`
+                  onclick="clearPropSearch()">
+                  Clear Search</button>`
+              : _propStatFilter !== 'all'
+                ? `<button class="btn btn-ghost btn-sm"
+                    style="margin-top:12px"
+                    onclick="setPropStatFilter('all')">
+                    Show All</button>`
+                : `<button class="btn btn-em btn-sm"
+                    style="margin-top:12px"
+                    onclick="openModal('uploadModal')">
+                    Add First Listing →</button>`
             }
           </div>`;
         return;
       }
 
       const gc = {
-        emerald:'#10B981', gold:'#F59E0B',
-        silver:'#94A3B8', bronze:'#CD7F32',
-        ungraded:'#64748B'
+        emerald: '#10B981',
+        gold:    '#F59E0B',
+        silver:  '#94A3B8',
+        bronze:  '#CD7F32',
+        ungraded:'#64748B',
       };
 
       grid.innerHTML = listings.map(l => {
-        const color   = gc[l.trust_grade] || '#64748B';
-        const img     = l.images?.[0]?.url || '';
-        const price   = formatMoney(l.price || 0);
-        const realtor = l.assigned_realtor_name
-          ? `<span style="font-size:11px;color:var(--muted)">
+        const grade  = (l.trust_grade || 'ungraded').toLowerCase();
+        const color  = gc[grade] || '#64748B';
+        const img    = l.images?.[0]?.url || '';
+        const price  = formatMoney(l.price || 0);
+
+        const realtorHtml = l.assigned_realtor_name
+          ? `<div class="pc3-realtor">
                👤 ${sanitise(l.assigned_realtor_name)}
-               ${l.assigned_realtor_phone ? ' 📱' : ' ⚠️'}
-             </span>`
-          : `<span style="font-size:11px;color:var(--warn)">⚠️ Unassigned</span>`;
+             </div>`
+          : `<div class="pc3-realtor unassigned">
+               ⚠️ Unassigned
+             </div>`;
 
         return `
-          <div data-prop-card="${l.id}" class="pc">
-            <div class="pc-img">
+          <div class="pc3"
+               data-grade="${sanitise(grade)}"
+               data-prop-card="${l.id}">
+
+            <!-- Image zone -->
+            <div class="pc3-img">
               ${img
-                ? `<img src="${img}" alt="${sanitise(l.title)}"
-                    loading="lazy" class="prop-img-fade"
-                    onload="this.classList.add('loaded')"
-                    onerror="this.style.display='none'"/>`
-                : `<div style="width:100%;height:100%;display:flex;
-                    align-items:center;justify-content:center;
-                    font-size:32px">🏠</div>`
+                ? `<img src="${img}"
+                       alt="${sanitise(l.title)}"
+                       loading="lazy"
+                       onload="this.classList.add('loaded')"
+                       onerror="this.style.display='none'"/>`
+                : `<div style="font-size:32px">🏠</div>`
               }
-              <div class="pc-trust">
-                <span class="pc-trust-score" style="color:${color}">${l.trust_score||0}</span>
-                <span class="pc-trust-grade" style="color:${color}">${l.trust_grade||'ungraded'}</span>
+              <!-- Trust badge -->
+              <div class="pc3-trust">
+                <span class="pc3-trust-score"
+                      style="color:${color}">
+                  ${l.trust_score || 0}
+                </span>
+                <span class="pc3-trust-grade"
+                      style="color:${color}">
+                  ${sanitise(grade)}
+                </span>
               </div>
-              <div class="pc-overlay">
-                ${l.property_type ? `<span class="pc-type">${sanitise(l.property_type)}</span>` : ''}
-                <span class="pc-verified">
-                  <span class="pc-verified-dot"></span>verified
+              <!-- Bottom overlay -->
+              <div class="pc3-overlay">
+                ${l.property_type
+                  ? `<span class="pc3-type">
+                       ${sanitise(l.property_type)}
+                     </span>`
+                  : ''
+                }
+                <span class="pc3-verified">
+                  <span class="pc3-verified-dot"></span>
+                  verified
                 </span>
               </div>
             </div>
-            <div class="pc-body">
-              <div class="pc-title">${sanitise(l.title)||'Untitled'}</div>
-              <div class="pc-meta">
-                <div class="pc-location">
-                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round"
-                    style="flex-shrink:0">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+
+            <!-- Body zone -->
+            <div class="pc3-body">
+              <div class="pc3-title">
+                ${sanitise(l.title) || 'Untitled'}
+              </div>
+              <div class="pc3-meta">
+                <div class="pc3-location">
+                  <svg width="9" height="9"
+                       viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor"
+                       stroke-width="2.5"
+                       stroke-linecap="round"
+                       stroke-linejoin="round"
+                       style="flex-shrink:0">
+                    <path d="M21 10c0 7-9 13-9 13
+                             s-9-6-9-13a9 9 0 0118 0z"/>
                     <circle cx="12" cy="10" r="3"/>
                   </svg>
-                  ${sanitise(l.location)||'—'}
+                  ${sanitise(l.location) || '—'}
                 </div>
-                <div class="pc-price">${price}</div>
+                <div class="pc3-price">${price}</div>
               </div>
-              <div class="pc-realtor">${realtor}</div>
-              <div class="pc-actions">
-                <button class="btn btn-em btn-sm prop-trust-btn"
-                  onclick="viewTrustDash(${l.id})">
-                  🛡️ Trust
-                </button>
+              ${realtorHtml}
+              <!-- Action bar -->
+              <div class="pc3-actions">
                 <button class="btn btn-ghost btn-sm"
-                  onclick="openAssignModal(${l.id},${l.assigned_realtor_id||'null'},'${sanitise(l.title)}')">
+                  onclick="openAssignModal(
+                    ${l.id},
+                    ${l.assigned_realtor_id || 'null'},
+                    '${sanitise(l.title).replace(/'/g,"\\'")}')">
                   👤 Assign
                 </button>
-                <button class="btn btn-ghost btn-sm prop-reel-btn"
-                  onclick="loadReelOptions(${l.id})">
-                  🎬 Reel
-                </button>
-                <button class="prop-dots-btn btn btn-ghost btn-sm"
-                  onclick="togglePropMore(this,${l.id})">
-                  ⋯
-                </button>
-              </div>
-              <div class="pc-more prop-more-actions">
-                <button class="btn btn-em btn-sm"
-                  onclick="viewTrustDash(${l.id})">
-                  🛡️ Trust
+                <button class="btn btn-ghost btn-sm"
+                  onclick="window.open(
+                    'https://api.est8go.com/public/property/${l.id}',
+                    '_blank')">
+                  👁 View
                 </button>
                 <button class="btn btn-ghost btn-sm"
-                  onclick="loadReelOptions(${l.id})">
-                  🎬 Reel
+                  onclick="shareListing(${l.id})">
+                  🔗 Share
                 </button>
               </div>
             </div>
@@ -5535,6 +5993,120 @@
       closeFAB();
       const action = _fabActions[i];
       if (action) action.action();
+    }
+
+    /* ── COLUMN TOGGLE ───────────────────────── */
+    let _propColumns = parseInt(localStorage.getItem('prop-columns') || '2');
+
+    function setPropColumns(n) {
+      _propColumns = n;
+      localStorage.setItem('prop-columns', n);
+      const grid = g('propGrid');
+      if (!grid) return;
+      grid.style.gridTemplateColumns = n === 1 ? '1fr' : '1fr 1fr';
+      grid.classList.toggle('prop-grid-single', n === 1);
+      const btn1 = g('colBtn1');
+      const btn2 = g('colBtn2');
+      if (btn1) btn1.classList.toggle('active', n === 1);
+      if (btn2) btn2.classList.toggle('active', n === 2);
+    }
+
+    function initColToggle() {
+      setPropColumns(_propColumns);
+    }
+
+    /* ── STAT FILTER ─────────────────────────── */
+    let _propStatFilter = 'all';
+    let _propStatsCache = { total:0, gps:0, docs:0, unassigned:0 };
+    let _propAllListings = [];
+
+    function setPropStatFilter(filter) {
+      _propStatFilter = filter;
+
+      // Update card visual states
+      ['all','gps','docs','unassigned'].forEach(f => {
+        const card = g('stat' + f.charAt(0).toUpperCase() + f.slice(1));
+        if (!card) return;
+        card.classList.remove(
+          'active-filter','em-filter','warn-filter'
+        );
+        if (f === filter) {
+          if (f === 'gps')        card.classList.add('em-filter');
+          else if (f === 'unassigned') card.classList.add('warn-filter');
+          else                    card.classList.add('active-filter');
+        }
+      });
+
+      // Update active filter chip
+      const chip = g('propActiveFilterChip');
+      if (chip) {
+        if (filter === 'all') {
+          chip.innerHTML = '';
+        } else {
+          const labels = {
+            gps: '📍 GPS verified',
+            docs: '📄 Has documents',
+            unassigned: '⚠️ Unassigned',
+          };
+          chip.innerHTML = `
+            <span class="prop-active-filter-chip"
+                  onclick="setPropStatFilter('all')">
+              ${labels[filter]} ✕
+            </span>`;
+        }
+      }
+
+      // Filter cached listings client-side (no API call)
+      const filtered = _filterListingsByStatFilter(
+        _propAllListings, filter
+      );
+      renderPropListings(filtered, filtered.length);
+      renderPropPagination(1);
+    }
+
+    function _filterListingsByStatFilter(listings, filter) {
+      if (filter === 'all') return listings;
+      if (filter === 'gps')
+        return listings.filter(l => l.gps_verified_at);
+      if (filter === 'docs')
+        return listings.filter(l =>
+          l.cof_uploaded || l.deed_uploaded || l.survey_uploaded
+        );
+      if (filter === 'unassigned')
+        return listings.filter(l => !l.assigned_realtor_id);
+      return listings;
+    }
+
+    /* ── SHARE LISTING ───────────────────────── */
+    function shareListing(id) {
+      const url =
+        `https://api.est8go.com/public/property/${id}`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+          toast('✅ Link copied — share with buyers');
+        }).catch(() => {
+          _fallbackCopy(url);
+        });
+      } else {
+        _fallbackCopy(url);
+      }
+    }
+
+    function _fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand('copy');
+        toast('✅ Link copied — share with buyers');
+      } catch (_) {
+        toast('Copy failed — ' + text, 'info');
+      }
+      document.body.removeChild(ta);
     }
 
   </script>
