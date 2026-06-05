@@ -2305,6 +2305,7 @@
       align-items: center;
       justify-content: center;
       aspect-ratio: 1/1;
+      min-height: 120px;
     }
 
     .pc3-img img {
@@ -2322,7 +2323,13 @@
     .prop-grid-single .pc3-img { aspect-ratio: 16/9; }
 
     @media (min-width: 768px) {
-      .pc3-img { aspect-ratio: 16/9; }
+      .pc3-img {
+        aspect-ratio: 16/9 !important;
+        min-height: 160px;
+      }
+      .pc3-img > div {
+        font-size: 40px;
+      }
     }
 
     /* Trust badge */
@@ -2527,36 +2534,44 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      padding: 8px 10px 80px;
+      padding: 10px 10px 20px;
       align-items: start;
       transition: opacity 0.15s ease;
-      width: 100%;
       box-sizing: border-box;
+      width: 100%;
     }
 
     .prop-grid-v3.prop-grid-single {
       grid-template-columns: 1fr !important;
     }
 
+    .prop-grid-v3.filtering {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
     @media (min-width: 768px) {
       .prop-grid-v3 {
         grid-template-columns: 1fr 1fr 1fr;
         gap: 14px;
-        padding: 12px 16px 80px;
+        padding: 14px 16px 20px;
       }
     }
 
     @media (min-width: 1200px) {
       .prop-grid-v3 {
         grid-template-columns: 1fr 1fr 1fr 1fr;
-        gap: 18px;
-        padding: 16px 20px 80px;
+        gap: 16px;
+        padding: 16px 20px 20px;
       }
     }
 
-    .prop-grid-v3.filtering {
-      opacity: 0.4;
-      pointer-events: none;
+    #propPagination {
+      padding: 12px 16px 16px;
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
     /* Active filter chip */
@@ -3394,10 +3409,7 @@
       </div>
       <div id="propGrid"
            class="prop-grid-v3"></div>
-      <div id="propPagination"
-           style="padding:16px;display:flex;
-                  justify-content:center;
-                  gap:6px;flex-wrap:wrap"></div>
+      <div id="propPagination"></div>
     </div>
 
     <!-- ─────────────── STUDIO TAB ─────────────── -->
@@ -4375,6 +4387,8 @@
             if (toolbar && sa) {
               const h = toolbar.getBoundingClientRect().height;
               sa.style.paddingTop = Math.ceil(h) + 'px';
+              // Also scroll to top so first card is visible
+              sa.scrollTop = 0;
             }
           });
         });
@@ -6062,7 +6076,9 @@
           const sa = g('scrollArea');
           if (toolbar && sa) {
             const h = toolbar.getBoundingClientRect().height;
-            if (h > 0) sa.style.paddingTop = Math.ceil(h) + 'px';
+            if (h > 0) {
+              sa.style.paddingTop = Math.ceil(h) + 'px';
+            }
           }
           return;
         }
@@ -6496,6 +6512,10 @@
     }
 
     function initColToggle() {
+      // Always default to 2 col on mobile first render
+      // unless user explicitly saved 1 col preference
+      const saved = localStorage.getItem('prop-columns');
+      _propColumns = saved ? parseInt(saved) : 2;
       setPropColumns(_propColumns);
     }
 
