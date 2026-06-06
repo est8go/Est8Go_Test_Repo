@@ -1084,12 +1084,40 @@ async def handle_incoming_message(data: dict, db: Session):
             convo.state = "ACTIVE"
             convo.lead_score = 0
             db.commit()
+            import random as _rand
+            _fresh_variants = [
+                (
+                    f"Consider it done, {first_name}. 🔄\n\n"
+                    f"I've cleared your previous search and opened a fresh "
+                    f"connection to our verified vault.\n\n"
+                    f"What are you looking for this time?\n\n"
+                    f"🌱 *Land* — prime plots for development or investment\n"
+                    f"🏠 *House* — fully detached, semi-detached or duplex\n"
+                    f"🏢 *Apartment* — modern flats and studio units\n\n"
+                    f"Or simply describe what you have in mind. 😊"
+                ),
+                (
+                    f"Fresh start, {first_name}. ✨\n\n"
+                    f"Our verified vault is open and ready.\n\n"
+                    f"What type of property are you searching for today?\n\n"
+                    f"🌱 *Land* — build or invest\n"
+                    f"🏠 *House* — move-in ready or off-plan\n"
+                    f"🏢 *Apartment* — city living at its finest\n\n"
+                    f"Just tell me what you need."
+                ),
+                (
+                    f"All cleared, {first_name}. Let's find you something exceptional. 🏡\n\n"
+                    f"Every property I show you is GPS-verified and document-checked — "
+                    f"no fake listings, no wasted trips.\n\n"
+                    f"What are we searching for?\n\n"
+                    f"🌱 *Land*\n"
+                    f"🏠 *House*\n"
+                    f"🏢 *Apartment*"
+                ),
+            ]
             await send_meta_message(
                 sender_id,
-                "Starting fresh. What type of property are you looking for?\n\n"
-                "Land — plots for development\n"
-                "House — detached, semi-detached or duplex\n"
-                "Apartment — flats and studio units",
+                _rand.choice(_fresh_variants),
                 phone_number_id=platform_id,
             )
             return
@@ -1562,11 +1590,40 @@ async def handle_incoming_message(data: dict, db: Session):
                 convo.state = "ACTIVE"
                 convo.lead_score = 0
                 db.commit()
+                import random as _rand2
+                _fresh_variants2 = [
+                    (
+                        f"Consider it done, {first_name}. 🔄\n\n"
+                        f"I've cleared your previous search and opened a fresh "
+                        f"connection to our verified vault.\n\n"
+                        f"What are you looking for this time?\n\n"
+                        f"🌱 *Land* — prime plots for development or investment\n"
+                        f"🏠 *House* — fully detached, semi-detached or duplex\n"
+                        f"🏢 *Apartment* — modern flats and studio units\n\n"
+                        f"Or simply describe what you have in mind. 😊"
+                    ),
+                    (
+                        f"Fresh start, {first_name}. ✨\n\n"
+                        f"Our verified vault is open and ready.\n\n"
+                        f"What type of property are you searching for today?\n\n"
+                        f"🌱 *Land* — build or invest\n"
+                        f"🏠 *House* — move-in ready or off-plan\n"
+                        f"🏢 *Apartment* — city living at its finest\n\n"
+                        f"Just tell me what you need."
+                    ),
+                    (
+                        f"All cleared, {first_name}. Let's find you something exceptional. 🏡\n\n"
+                        f"Every property I show you is GPS-verified and document-checked — "
+                        f"no fake listings, no wasted trips.\n\n"
+                        f"What are we searching for?\n\n"
+                        f"🌱 *Land*\n"
+                        f"🏠 *House*\n"
+                        f"🏢 *Apartment*"
+                    ),
+                ]
                 await send_meta_message(
                     sender_id,
-                    f"Starting fresh, {first_name}. 🔄\n\n"
-                    f"What type of property are you looking for?\n\n"
-                    f"Land · House · Apartment",
+                    _rand2.choice(_fresh_variants2),
                     phone_number_id=platform_id,
                 )
                 return
