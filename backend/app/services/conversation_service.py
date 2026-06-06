@@ -512,7 +512,8 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
 
 async def _handle_platform_care(
     db, tenant_id, sender_id,
-    whatsapp_name, first_name, text_body, convo
+    whatsapp_name, first_name, text_body, convo,
+    phone_number_id=None
 ):
     if not convo:
         res = start_conversation_service(
@@ -532,13 +533,13 @@ async def _handle_platform_care(
     ) or not convo_data.get("platform_state")
 
     if is_greeting:
-        await send_meta_message(sender_id, get_welcome(first_name))
+        await send_meta_message(sender_id, get_welcome(first_name), phone_number_id=phone_number_id)
         convo_data["platform_state"] = "menu"
     else:
         response, convo_data = get_platform_care_response(
             text_body, first_name, convo_data
         )
-        await send_meta_message(sender_id, response)
+        await send_meta_message(sender_id, response, phone_number_id=phone_number_id)
 
     convo.data_json = json.dumps(convo_data)
     convo.state = "ACTIVE"
@@ -636,7 +637,8 @@ async def handle_incoming_message(data: dict, db: Session):
         if getattr(tenant, "tenant_type", "") == "platform":
             await _handle_platform_care(
                 db, tenant_id, sender_id,
-                whatsapp_name, first_name, text_body, convo
+                whatsapp_name, first_name, text_body, convo,
+                phone_number_id=platform_id
             )
             return
 
@@ -654,12 +656,13 @@ async def handle_incoming_message(data: dict, db: Session):
                     sender_id,
                     f"✅ *Interest Verified, {first_name}* \n\n"
                     f"Establishing a direct satellite link to the site... 🛰️",
+                    phone_number_id=platform_id,
                 )
                 nav_msg = build_inspection_confirmation(
                     first_name, listing.title, listing.latitude, listing.longitude
                 )
-                await send_meta_message(sender_id, nav_msg)
-                await alert_realtor_of_lead(db, list_id, sender_id, biz_name)
+                await send_meta_message(sender_id, nav_msg, phone_number_id=platform_id)
+                await alert_realtor_of_lead(db, list_id, sender_id, biz_name, phone_number_id=platform_id)
 
                 # Update funnel to handshake
                 if convo:
@@ -691,7 +694,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     convo = db.get(Conversation, res["conversation_id"])
 
                 intro = get_executive_response("intro", first_name, biz_name)
-                await send_meta_message(sender_id, intro)
+                await send_meta_message(sender_id, intro, phone_number_id=platform_id)
 
                 areas = tenant_profile.get("areas_covered", "Abuja")
                 emoji = tenant_profile.get("emoji", "🏠")
@@ -702,6 +705,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     sender_id,
                     f"I am currently monitoring verified deals in "
                     f"*{areas}* {emoji}. {question}",
+                    phone_number_id=platform_id,
                 )
 
             elif is_returning_buyer(convo):
@@ -709,7 +713,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 convo.session_count = (convo.session_count or 1) + 1
                 db.commit()
                 welcome_msg = build_welcome_back_message(convo, first_name)
-                await send_meta_message(sender_id, welcome_msg)
+                await send_meta_message(sender_id, welcome_msg, phone_number_id=platform_id)
 
             else:
                 # Returning user — generic resume message
@@ -719,7 +723,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 resume_msg = build_resume_message(
                     session_state, first_name, biz_name, prefs
                 )
-                await send_meta_message(sender_id, resume_msg)
+                await send_meta_message(sender_id, resume_msg, phone_number_id=platform_id)
 
             convo.state = "ACTIVE"
             convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
@@ -755,6 +759,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 f"the inspection immediately.\n\n"
                 f"In the meantime, would you like to see other verified "
                 f"properties in {_location}, or explore a different area?",
+                phone_number_id=platform_id,
             )
             return
 
@@ -765,7 +770,7 @@ async def handle_incoming_message(data: dict, db: Session):
             _current = json.loads(convo.data_json or "{}")
             _next_q = get_next_question(_current)
             if _next_q:
-                await send_meta_message(sender_id, _next_q)
+                await send_meta_message(sender_id, _next_q, phone_number_id=platform_id)
                 return
             # All data collected — run search immediately
             if _current.get("location") and (
@@ -778,9 +783,10 @@ async def handle_incoming_message(data: dict, db: Session):
                         _sum = build_property_summary(
                             _ms[0], _ms, _sr.get("total_count", 0), first_name
                         )
-                        await send_meta_message(sender_id, _sum)
+                        await send_meta_message(sender_id, _sum, phone_number_id=platform_id)
                         await send_meta_carousel(
-                            sender_id, prepare_meta_carousel(_ms)
+                            sender_id, prepare_meta_carousel(_ms),
+                            phone_number_id=platform_id,
                         )
                         _current["last_viewed_id"] = _ms[0].id
                         _current["last_viewed_title"] = _ms[0].title or ""
@@ -799,6 +805,7 @@ async def handle_incoming_message(data: dict, db: Session):
                                 _current.get("property_type", ""),
                                 _current.get("budget_max") or _current.get("budget"),
                             ),
+                            phone_number_id=platform_id,
                         )
                 except Exception as _e:
                     logger.error(f"Continue search failed: {_e}")
@@ -816,6 +823,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 "Land — plots for development\n"
                 "House — detached, semi-detached or duplex\n"
                 "Apartment — flats and studio units",
+                phone_number_id=platform_id,
             )
             return
 
@@ -851,6 +859,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"It may have been removed or is no longer available.\n\n"
                             f"What property are you looking for? "
                             f"I can help you find verified options.",
+                            phone_number_id=platform_id,
                         )
                         return
 
@@ -889,11 +898,12 @@ async def handle_incoming_message(data: dict, db: Session):
                         f"This property has been GPS-verified and is ready for inspection.\n\n"
                         f"Would you like to schedule a site visit? "
                         f"Just give me a preferred time and our agent will confirm. 📅",
+                        phone_number_id=platform_id,
                     )
 
                     # Alert realtor immediately
                     try:
-                        await alert_realtor_of_lead(db, _lid, sender_id, biz_name)
+                        await alert_realtor_of_lead(db, _lid, sender_id, biz_name, phone_number_id=platform_id)
                     except Exception as _ae:
                         logger.warning(f"Property page lead realtor alert failed: {_ae}")
 
@@ -910,12 +920,14 @@ async def handle_incoming_message(data: dict, db: Session):
                     sender_id,
                     f"Please run a property search first, {first_name}, "
                     f"and I'll compare the results for you.",
+                    phone_number_id=platform_id,
                 )
             elif len(_match_ids) == 1:
                 await send_meta_message(
                     sender_id,
                     "There is only one property in your last search. "
                     "Would you like more details about it?",
+                    phone_number_id=platform_id,
                 )
             else:
                 _cmp_listings = (
@@ -926,7 +938,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 # Sort by trust desc so options 1-N are already ranked
                 _cmp_listings.sort(key=lambda x: (x.trust_score or 0), reverse=True)
                 _cmp_text = build_comparison_message(_cmp_listings, first_name)
-                await send_meta_message(sender_id, _cmp_text)
+                await send_meta_message(sender_id, _cmp_text, phone_number_id=platform_id)
             return
 
         # --- 8c.5 GPT MISS HANDLER ---
@@ -943,6 +955,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 f"   e.g. Lekki, Guzape, GRA, Maitama\n\n"
                 f"2️⃣ *What is your budget?*\n"
                 f"   e.g. 50M, 80M, 120M",
+                phone_number_id=platform_id,
             )
             return
 
@@ -976,7 +989,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"4️⃣ *Start fresh* — say *New Search*\n\n"
                     f"What works best for you?"
                 )
-            await send_meta_message(sender_id, _guidance)
+            await send_meta_message(sender_id, _guidance, phone_number_id=platform_id)
             return
 
         # --- 9. OBJECTION HANDLER ---
@@ -990,7 +1003,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 if grade_raw and grade_raw != "ungraded":
                     trust_grade = grade_raw.title()
             response = get_objection_response(objection_key, first_name, biz_name, trust_grade)
-            await send_meta_message(sender_id, response)
+            await send_meta_message(sender_id, response, phone_number_id=platform_id)
             return
 
         # Also trigger search if intent is search_ready
@@ -1077,12 +1090,12 @@ async def handle_incoming_message(data: dict, db: Session):
                             ListingImage.listing_id == matches[0].id
                         ).first()
                         if _img and _img.url:
-                            await send_meta_image_message(sender_id, _img.url, summary)
+                            await send_meta_image_message(sender_id, _img.url, summary, phone_number_id=platform_id)
                         else:
-                            await send_meta_message(sender_id, summary)
+                            await send_meta_message(sender_id, summary, phone_number_id=platform_id)
                     except Exception as _img_e:
                         logger.warning(f"Image send failed: {_img_e}")
-                        await send_meta_message(sender_id, summary)
+                        await send_meta_message(sender_id, summary, phone_number_id=platform_id)
                     # Lock state to HANDOFF — prevents search re-triggering
                     prefs["last_viewed_id"] = matches[0].id
                     prefs["last_viewed_title"] = matches[0].title or ""
@@ -1106,7 +1119,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     )
                     db.commit()
                     carousel_data = prepare_meta_carousel(matches)
-                    await send_meta_carousel(sender_id, carousel_data)
+                    await send_meta_carousel(sender_id, carousel_data, phone_number_id=platform_id)
 
                     # Advance funnel
                     convo.funnel_stage = "commitment"
@@ -1124,6 +1137,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             prefs.get("property_type", ""),
                             prefs.get("budget_max") or prefs.get("budget"),
                         ),
+                        phone_number_id=platform_id,
                     )
                     prefs.pop("location", None)
                     convo.data_json = json.dumps(prefs)
@@ -1137,7 +1151,7 @@ async def handle_incoming_message(data: dict, db: Session):
 
             except Exception as e:
                 logger.error(f"Search Block Failure: {e}")
-                await send_meta_message(sender_id, handle_logic_error("search_failure"))
+                await send_meta_message(sender_id, handle_logic_error("search_failure"), phone_number_id=platform_id)
                 return
         # --- 11. KORA PERSONALITY & HANDSHAKE ---
         try:
@@ -1203,7 +1217,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"where every property is verified before "
                             f"it reaches you. 🏠"
                         )
-                        await send_meta_message(sender_id, confirmation)
+                        await send_meta_message(sender_id, confirmation, phone_number_id=platform_id)
                         return
 
                     else:
@@ -1212,6 +1226,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"What time works best for your inspection, "
                             f"{first_name}? "
                             f"(e.g. Tomorrow 10am, Friday afternoon) 📅",
+                            phone_number_id=platform_id,
                         )
                         return
 
@@ -1270,14 +1285,14 @@ async def handle_incoming_message(data: dict, db: Session):
                                     ListingImage.listing_id == matches[0].id
                                 ).first()
                                 if _img2 and _img2.url:
-                                    await send_meta_image_message(sender_id, _img2.url, summary)
+                                    await send_meta_image_message(sender_id, _img2.url, summary, phone_number_id=platform_id)
                                 else:
-                                    await send_meta_message(sender_id, summary)
+                                    await send_meta_message(sender_id, summary, phone_number_id=platform_id)
                             except Exception as _img2_e:
                                 logger.warning(f"Image send failed: {_img2_e}")
-                                await send_meta_message(sender_id, summary)
+                                await send_meta_message(sender_id, summary, phone_number_id=platform_id)
                             carousel_data = prepare_meta_carousel(matches)
-                            await send_meta_carousel(sender_id, carousel_data)
+                            await send_meta_carousel(sender_id, carousel_data, phone_number_id=platform_id)
                             prefs["last_viewed_id"] = matches[0].id
                             prefs["last_viewed_title"] = matches[0].title or ""
                             prefs["last_match_ids"] = [m.id for m in matches]
@@ -1297,6 +1312,7 @@ async def handle_incoming_message(data: dict, db: Session):
                                     prefs.get("property_type", ""),
                                     prefs.get("budget_max") or prefs.get("budget"),
                                 ),
+                                phone_number_id=platform_id,
                             )
                             prefs.pop("location", None)
                             convo.data_json = json.dumps(prefs)
@@ -1309,7 +1325,8 @@ async def handle_incoming_message(data: dict, db: Session):
                     except Exception as e:
                         logger.error(f"Search from completed_flag failed: {e}")
                         await send_meta_message(
-                            sender_id, handle_logic_error("search_failure")
+                            sender_id, handle_logic_error("search_failure"),
+                            phone_number_id=platform_id,
                         )
                     return
 
@@ -1330,8 +1347,8 @@ async def handle_incoming_message(data: dict, db: Session):
                         search_result.get("total_count"),
                         first_name,
                     )
-                    await send_meta_message(sender_id, summary)
-                    await send_meta_carousel(sender_id, prepare_meta_carousel(matches))
+                    await send_meta_message(sender_id, summary, phone_number_id=platform_id)
+                    await send_meta_carousel(sender_id, prepare_meta_carousel(matches), phone_number_id=platform_id)
                 return
 
             # Handshake trigger
@@ -1339,6 +1356,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 await send_meta_message(
                     sender_id,
                     get_executive_response("intent_location", first_name, biz_name),
+                    phone_number_id=platform_id,
                 )
                 return
             if final_reply == "handshake_flag" or intent == "agreement":
@@ -1348,8 +1366,8 @@ async def handle_incoming_message(data: dict, db: Session):
                     connection_msg = build_inspection_confirmation(
                         first_name, listing.title, listing.latitude, listing.longitude
                     )
-                    await send_meta_message(sender_id, connection_msg)
-                    await alert_realtor_of_lead(db, last_id, sender_id, biz_name)
+                    await send_meta_message(sender_id, connection_msg, phone_number_id=platform_id)
+                    await alert_realtor_of_lead(db, last_id, sender_id, biz_name, phone_number_id=platform_id)
                     convo.funnel_stage = "handshake"
                     convo.lead_score = min((convo.lead_score or 0) + 20, 100)
                     convo.last_active_at = datetime.now(timezone.utc).replace(
@@ -1362,6 +1380,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     await send_meta_message(
                         sender_id,
                         get_executive_response("intent_location", first_name, biz_name),
+                        phone_number_id=platform_id,
                     )
                     return
 
@@ -1373,18 +1392,18 @@ async def handle_incoming_message(data: dict, db: Session):
                         f"https://est8go-api.onrender.com/public/property/{listing.id}"
                     )
                     response = build_media_redirect(first_name, biz_name, showroom_link)
-                    await send_meta_message(sender_id, response)
+                    await send_meta_message(sender_id, response, phone_number_id=platform_id)
                     return
 
             # Never send raw flag strings or generic fallback
             if final_reply in ("I am here to assist you.", "filler_flag", ""):
                 next_q = get_next_question(prefs)
                 if next_q:
-                    await send_meta_message(sender_id, next_q)
+                    await send_meta_message(sender_id, next_q, phone_number_id=platform_id)
                 return
 
             # Default voice deliver
-            await send_meta_message(sender_id, final_reply)
+            await send_meta_message(sender_id, final_reply, phone_number_id=platform_id)
 
         except Exception as e:
             logger.error(f"❌ PERSONALITY ERROR: {e}")
@@ -1392,6 +1411,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 sender_id,
                 "I'm still here! I had a small glitch — could you please "
                 "say that again? 🙏",
+                phone_number_id=platform_id,
             )
 
     except Exception as e:

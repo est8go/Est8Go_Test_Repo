@@ -20,13 +20,14 @@ BUSINESS_PHONE_ID = os.getenv("WHATSAPP_PHONE_ID")
 # ---------------------------------------------------------
 
 
-async def send_meta_text_message(recipient_id: str, text: str):
+async def send_meta_text_message(recipient_id: str, text: str, phone_number_id: str = None):
     """Low-level service to push text messages to WhatsApp/Instagram."""
-    if not META_ACCESS_TOKEN or not BUSINESS_PHONE_ID:
+    pid = phone_number_id or BUSINESS_PHONE_ID
+    if not META_ACCESS_TOKEN or not pid:
         logger.error("❌ Meta Credentials missing in .env. Cannot send message.")
         return
 
-    url = f"https://graph.facebook.com/v19.0/{BUSINESS_PHONE_ID}/messages"
+    url = f"https://graph.facebook.com/v19.0/{pid}/messages"
     headers = {
         "Authorization": f"Bearer {META_ACCESS_TOKEN}",
         "Content-Type": "application/json",
@@ -53,7 +54,8 @@ async def send_meta_text_message(recipient_id: str, text: str):
 
 
 async def alert_realtor_of_lead(
-    db: Session, listing_id: int, user_phone: str, biz_name: str
+    db: Session, listing_id: int, user_phone: str, biz_name: str,
+    phone_number_id: str = None
 ):
     """
     Alert priority:
@@ -128,7 +130,7 @@ async def alert_realtor_of_lead(
             f"Reach out immediately! 🤝"
         )
 
-        await send_meta_text_message(alert_phone, alert_text)
+        await send_meta_text_message(alert_phone, alert_text, phone_number_id=phone_number_id)
         logger.info(
             f"✅ Lead alert sent to {alert_phone} for listing {listing_id}"
         )

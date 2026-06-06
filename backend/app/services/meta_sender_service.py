@@ -9,12 +9,13 @@ ACCESS_TOKEN = os.getenv("WHATSAPP_ACCESS_TOKEN")
 PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_ID")
 
 
-async def send_meta_message(recipient_id: str, text: str):
+async def send_meta_message(recipient_id: str, text: str, phone_number_id: str = None):
     """
     Sends a standard text message.
     The recipient_id must be a string (e.g. '2348030000000')
     """
-    if not ACCESS_TOKEN or not PHONE_NUMBER_ID:
+    pid = phone_number_id or PHONE_NUMBER_ID
+    if not ACCESS_TOKEN or not pid:
         logger.error("❌ META ERROR: Credentials missing")
         return
 
@@ -25,7 +26,7 @@ async def send_meta_message(recipient_id: str, text: str):
         )
         return
 
-    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+    url = f"https://graph.facebook.com/v19.0/{pid}/messages"
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
         "Content-Type": "application/json",
@@ -53,16 +54,17 @@ async def send_meta_message(recipient_id: str, text: str):
             logger.error(f"❌ Connection Error: {e}")
 
 
-async def send_meta_carousel(recipient_id: str, cards: list):
+async def send_meta_carousel(recipient_id: str, cards: list, phone_number_id: str = None):
     """
     Sends a high-intent property carousel.
     Requires 'property_carousel' template to be approved in Meta Dashboard.
     """
-    if not ACCESS_TOKEN or not PHONE_NUMBER_ID:
+    pid = phone_number_id or PHONE_NUMBER_ID
+    if not ACCESS_TOKEN or not pid:
         logger.error("❌ CRITICAL: Meta credentials missing.")
         return
 
-    url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
+    url = f"https://graph.facebook.com/v19.0/{pid}/messages"
     headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
 
     payload = {
