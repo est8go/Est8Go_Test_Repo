@@ -504,6 +504,10 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
             "price_query",
             "search_ready",
         ):
+            if not current_data.get("purpose"):
+                current_data["purpose"] = "general"
+                convo.data_json = json.dumps(current_data)
+                db.commit()
             next_q = get_next_question(
                 current_data,
                 tenant_areas_by_budget=current_data.get("tenant_areas_in_budget", []),
@@ -1886,6 +1890,72 @@ async def handle_incoming_message(data: dict, db: Session):
                     convo.data_json = json.dumps(_data)
                     convo.state = "ACTIVE"
                     db.commit()
+                return
+
+            if objection_key == "objection_more_options":
+                _mo_data = json.loads(convo.data_json or "{}")
+                _mo_ptype = _mo_data.get("property_type", "")
+                _mo_budget = _mo_data.get("budget_max") or _mo_data.get("budget")
+                _mo_last_id = _mo_data.get("last_viewed_id")
+
+                _mo_prefs = {
+                    "property_type": _mo_ptype,
+                    "budget_max": _mo_budget,
+                    "budget": _mo_budget,
+                    # No location — show all tenant listings
+                }
+                try:
+                    _mo_result = execute_premium_search(db, tenant_id, _mo_prefs)
+                    _mo_matches = _mo_result.get("data", [])
+                    _mo_matches = [
+                        m for m in _mo_matches
+                        if str(m.id) != str(_mo_last_id)
+                    ]
+
+                    if _mo_matches:
+                        _mo_ptype_title = _mo_ptype.title() if _mo_ptype else "property"
+                        _mo_msg = f"Here are all our verified {_mo_ptype_title} options"
+                        if _mo_budget:
+                            _mo_b_fmt = f"₦{int(_mo_budget)/1_000_000:.0f}M"
+                            _mo_msg += f" within *{_mo_b_fmt}*"
+                        _mo_msg += ":\n\n"
+
+                        for _mm in _mo_matches[:5]:
+                            _mp = _mm.price or 0
+                            _mp_fmt = f"₦{_mp/1_000_000:.0f}M" if _mp >= 1_000_000 else f"₦{_mp:,}"
+                            _ms = _mm.trust_score or 0
+                            _mg = (_mm.trust_grade or "verified").title()
+                            _ml = (_mm.location or "").title()
+                            _mo_msg += (
+                                f"🏠 *{_mm.title}*\n"
+                                f"📍 {_ml} | 💰 {_mp_fmt} | 🛡️ {_ms}/100 ({_mg})\n\n"
+                            )
+
+                        _mo_msg += (
+                            f"Which of these interests you most? "
+                            f"Just mention the area and I'll get you the full details. 😊"
+                        )
+
+                        _mo_data["last_match_ids"] = [m.id for m in _mo_matches]
+                        convo.data_json = json.dumps(_mo_data)
+                        db.commit()
+                        await send_meta_message(sender_id, _mo_msg, phone_number_id=platform_id)
+                    else:
+                        _mo_data["awaiting_referral_permission"] = True
+                        convo.data_json = json.dumps(_mo_data)
+                        db.commit()
+                        _mo_budget_note = " within your budget" if _mo_budget else ""
+                        await send_meta_message(
+                            sender_id,
+                            f"I've shown you everything we currently have verified"
+                            f"{_mo_budget_note}, {first_name}.\n\n"
+                            f"May I check our verified partner network? "
+                            f"All properties are Est8Go verified. 🤝\n\n"
+                            f"Reply *Yes* to search the wider network.",
+                            phone_number_id=platform_id,
+                        )
+                except Exception as _mo_e:
+                    logger.error(f"More options search failed: {_mo_e}")
                 return
 
             last_id = prefs.get("last_viewed_id")

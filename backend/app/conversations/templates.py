@@ -108,9 +108,9 @@ def get_next_question(
     purpose → property_type → bedrooms (if residential) → budget → area (guided) → search
     """
 
-    # STEP 1 — Purpose (handled by opener, skip if not set)
+    # STEP 1 — Purpose (default to general — never block funnel)
     if not current_data.get("purpose"):
-        return None
+        current_data["purpose"] = "general"
 
     # STEP 2 — Property type
     if not current_data.get("property_type"):
