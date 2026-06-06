@@ -675,9 +675,40 @@ async def _no_results_cascade(
 
         if _budget_val and _cheapest_price <= _budget_val:
             # Within budget — location mismatch, not budget mismatch
+            _cheap_loc_lower = (_cheapest.get("location") or "").lower()
+            _same_city_map = {
+                "abuja": {
+                    "apo", "maitama", "asokoro", "guzape", "wuse", "garki",
+                    "jabi", "gwarinpa", "kubwa", "lugbe", "galadimawa", "lifecamp",
+                    "katampe", "nbora", "dawaki", "gwagwalada", "kuje", "bwari",
+                    "wuse 2", "wuse2", "central business district", "cbd",
+                },
+                "lagos": {
+                    "lekki", "vi", "victoria island", "ikoyi", "ajah", "surulere",
+                    "yaba", "ikeja", "gbagada", "maryland", "magodo", "festac",
+                    "isolo", "ojodu", "agege", "badagry", "epe",
+                },
+            }
+            _same_city = False
+            for _city_key, _city_areas in _same_city_map.items():
+                _search_in_city = (
+                    _loc == _city_key or any(a in _loc for a in _city_areas)
+                )
+                _found_in_city = (
+                    _cheap_loc_lower == _city_key
+                    or any(a in _cheap_loc_lower for a in _city_areas)
+                )
+                if _search_in_city and _found_in_city:
+                    _same_city = True
+                    break
+            _location_phrase = (
+                "in a nearby area of the same city"
+                if _same_city
+                else "in a different area"
+            )
             await send_meta_message(
                 sender_id,
-                f"We have a verified {_ptype_title} within your budget in a different location:\n\n"
+                f"We have a verified {_ptype_title} within your budget {_location_phrase}:\n\n"
                 f"🏠 *{_cheapest.get('title')}*\n"
                 f"📍 {_cheap_loc}\n"
                 f"💰 *{_cheap_fmt}*\n"
@@ -1199,12 +1230,24 @@ async def handle_incoming_message(data: dict, db: Session):
             _saved2.pop("awaiting_stretch_choice", None)
             _stretch_id = _saved2.pop("stretch_listing_id", None)
 
-            _yes_w = {"yes", "ok", "okay", "sure", "consider", "show me",
+            _yes_w = {"yes", "ok", "okay", "sure", "consider",
                       "yes please", "i'll consider", "let me see", "show details", "proceed"}
             _no_w = {"no", "nope", "partner", "check partner", "wider network",
                      "other options", "not interested"}
+            _see_all_triggers_sc = {
+                "everything", "all", "more", "other", "else", "show all",
+                "what else", "see all", "everything else", "show me all",
+                "show me everything", "what do you have", "all options",
+                "full inventory",
+            }
 
-            if any(w in _sc for w in _yes_w):
+            if any(w in _sc for w in _see_all_triggers_sc):
+                _saved2["awaiting_see_all_tenant"] = True
+                convo.data_json = json.dumps(_saved2)
+                db.commit()
+                text_body = "yes"
+                # Fall through to awaiting_see_all_tenant handler below
+            elif any(w in _sc for w in _yes_w):
                 if _stretch_id:
                     _lst = db.get(Listing, _stretch_id)
                     if _lst:
@@ -1230,6 +1273,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         convo.funnel_stage = "commitment"
                         convo.state = "HANDOFF"
                         db.commit()
+                return
             else:
                 _saved2["awaiting_see_all_tenant"] = True
                 convo.data_json = json.dumps(_saved2)
@@ -1241,7 +1285,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"Reply *Yes* to see everything we currently have.",
                     phone_number_id=platform_id,
                 )
-            return
+                return
 
         # ── REFERRAL PERMISSION HANDLER ───────────────────────────────
         if _saved2.get("awaiting_referral_permission"):
@@ -1461,12 +1505,24 @@ async def handle_incoming_message(data: dict, db: Session):
             _saved2.pop("awaiting_location_alt", None)
             _alt_id = _saved2.pop("alt_listing_id", None)
 
+            _see_all_triggers_la = {
+                "everything", "all", "more", "other", "else", "show all",
+                "what else", "see all", "everything else", "show me all",
+                "show me everything", "what do you have", "all options",
+                "full inventory",
+            }
             _yes_loc_words = {
                 "yes", "ok", "okay", "sure", "works", "that works",
-                "yes please", "show me", "interested", "i'll consider", "proceed",
+                "yes please", "interested", "i'll consider", "proceed",
             }
 
-            if any(w in _lac for w in _yes_loc_words):
+            if any(w in _lac for w in _see_all_triggers_la):
+                _saved2["awaiting_see_all_tenant"] = True
+                convo.data_json = json.dumps(_saved2)
+                db.commit()
+                text_body = "yes"
+                # Fall through to awaiting_see_all_tenant handler below
+            elif any(w in _lac for w in _yes_loc_words):
                 if _alt_id:
                     _lst = db.get(Listing, _alt_id)
                     if _lst:
@@ -2268,6 +2324,15 @@ async def handle_incoming_message(data: dict, db: Session):
                     carousel_data = prepare_meta_carousel(matches)
                     await send_meta_carousel(sender_id, carousel_data, phone_number_id=platform_id)
 
+                    if total > 1:
+                        _ptype_c = (prefs.get("property_type") or "property").title()
+                        await send_meta_message(
+                            sender_id,
+                            f"I found *{total}* verified {_ptype_c} listings matching your criteria. "
+                            f"The top match is shown above. Reply *Show all* to see the complete list.",
+                            phone_number_id=platform_id,
+                        )
+
                     # Advance funnel
                     convo.funnel_stage = "commitment"
                     convo.last_active_at = datetime.now(timezone.utc).replace(
@@ -2428,6 +2493,16 @@ async def handle_incoming_message(data: dict, db: Session):
                                 await send_meta_message(sender_id, summary, phone_number_id=platform_id)
                             carousel_data = prepare_meta_carousel(matches)
                             await send_meta_carousel(sender_id, carousel_data, phone_number_id=platform_id)
+
+                            if total > 1:
+                                _ptype_c2 = (prefs.get("property_type") or "property").title()
+                                await send_meta_message(
+                                    sender_id,
+                                    f"I found *{total}* verified {_ptype_c2} listings matching your criteria. "
+                                    f"The top match is shown above. Reply *Show all* to see the complete list.",
+                                    phone_number_id=platform_id,
+                                )
+
                             prefs["last_viewed_id"] = matches[0].id
                             prefs["last_viewed_title"] = matches[0].title or ""
                             prefs["last_match_ids"] = [m.id for m in matches]
@@ -2512,7 +2587,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 listing = db.get(Listing, prefs.get("last_viewed_id"))
                 if listing:
                     showroom_link = (
-                        f"https://est8go-api.onrender.com/public/property/{listing.id}"
+                        f"{os.getenv('BASE_URL', 'https://est8go-api.onrender.com')}/public/property/{listing.id}"
                     )
                     response = build_media_redirect(first_name, biz_name, showroom_link)
                     await send_meta_message(sender_id, response, phone_number_id=platform_id)
