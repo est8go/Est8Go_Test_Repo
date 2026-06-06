@@ -106,32 +106,23 @@ def build_property_summary(
 
 
 def build_no_results_message(
-    location: str, property_type: str, budget=None
+    location: str,
+    property_type: str,
+    budget: int = None,
+    nearby_areas: list = None,
+    nearby_min_price: int = None,
 ) -> str:
     loc = location.title() if location else "that area"
     ptype = property_type.title() if property_type else "Property"
     location_lower = (location or "").lower().strip()
 
     budget_note = ""
-    if budget:
+    if nearby_min_price:
         try:
-            budget_int = int(budget)
-            is_house = (property_type or "").lower() in ("house", "duplex", "bungalow")
-            is_apartment = (property_type or "").lower() in ("apartment", "flat", "studio")
-            if is_house and budget_int < 30_000_000:
-                budget_note = (
-                    f"\n\n💡 *Budget note:* ₦{budget_int / 1_000_000:.0f}M "
-                    f"may be below current market rate for a verified "
-                    f"{ptype} in {loc}. "
-                    f"Most verified houses here start from ₦30M. "
-                    f"Would you like to adjust your budget or explore a more affordable area?"
-                )
-            elif is_apartment and budget_int < 10_000_000:
-                budget_note = (
-                    f"\n\n💡 *Budget note:* ₦{budget_int / 1_000_000:.0f}M "
-                    f"may be tight for a verified apartment in {loc}. "
-                    f"Would you like to explore nearby areas or adjust your budget?"
-                )
+            budget_note = (
+                f"\n\n💡 Verified {ptype}s in nearby areas start from "
+                f"₦{nearby_min_price / 1_000_000:.0f}M."
+            )
         except (ValueError, TypeError):
             pass
 

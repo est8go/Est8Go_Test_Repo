@@ -827,6 +827,109 @@ async def handle_incoming_message(data: dict, db: Session):
             )
             return
 
+        # ── NO RESULTS MENU HANDLER ──────────────────────────────────
+        _saved_nr = json.loads(convo.data_json or "{}")
+        if _saved_nr.get("awaiting_no_results_choice"):
+            _nr_choice = text_body.strip().lower()
+            _nr_nearby_list = _saved_nr.get("no_results_nearby", [])
+            _nr_orig_loc = _saved_nr.get("no_results_location", "")
+            _nr_orig_type = _saved_nr.get("no_results_type", "")
+            _nr_orig_budget = _saved_nr.get("no_results_budget")
+
+            # Clear menu state flags
+            _saved_nr.pop("awaiting_no_results_choice", None)
+            _saved_nr.pop("no_results_location", None)
+            _saved_nr.pop("no_results_type", None)
+            _saved_nr.pop("no_results_budget", None)
+            _saved_nr.pop("no_results_nearby", None)
+
+            if _nr_choice in ("1", "search nearby", "nearby", "search a nearby area"):
+                if _nr_nearby_list:
+                    nearby_list_str = "\n".join(
+                        f"{i + 1}. *{area.title()}*"
+                        for i, area in enumerate(_nr_nearby_list)
+                    )
+                    await send_meta_message(
+                        sender_id,
+                        f"Which nearby area would you like me to search, "
+                        f"{first_name}? 📍\n\n"
+                        f"{nearby_list_str}\n\n"
+                        f"Just reply with the area name.",
+                        phone_number_id=platform_id,
+                    )
+                else:
+                    await send_meta_message(
+                        sender_id,
+                        f"Which area would you like to search instead, "
+                        f"{first_name}? Tell me the neighbourhood.",
+                        phone_number_id=platform_id,
+                    )
+                _saved_nr["property_type"] = _nr_orig_type
+                _saved_nr["budget"] = _nr_orig_budget
+                _saved_nr["budget_max"] = _nr_orig_budget
+                convo.data_json = json.dumps(_saved_nr)
+                convo.state = "ACTIVE"
+                db.commit()
+                return
+
+            elif _nr_choice in ("2", "adjust my budget", "adjust budget", "change budget"):
+                await send_meta_message(
+                    sender_id,
+                    f"What is your revised budget, {first_name}? 💰\n\n"
+                    f"(e.g. '40M', '50M to 80M', '₦45,000,000')",
+                    phone_number_id=platform_id,
+                )
+                _saved_nr["property_type"] = _nr_orig_type
+                _saved_nr["location"] = _nr_orig_loc
+                _saved_nr.pop("budget", None)
+                _saved_nr.pop("budget_max", None)
+                convo.data_json = json.dumps(_saved_nr)
+                convo.state = "ACTIVE"
+                db.commit()
+                return
+
+            elif _nr_choice in ("3", "change property type", "change type"):
+                await send_meta_message(
+                    sender_id,
+                    f"What type of property are you open to, {first_name}? 🏠\n\n"
+                    f"Land · House · Apartment",
+                    phone_number_id=platform_id,
+                )
+                _saved_nr["location"] = _nr_orig_loc
+                _saved_nr["budget"] = _nr_orig_budget
+                _saved_nr["budget_max"] = _nr_orig_budget
+                _saved_nr.pop("property_type", None)
+                convo.data_json = json.dumps(_saved_nr)
+                convo.state = "ACTIVE"
+                db.commit()
+                return
+
+            elif _nr_choice in ("4", "start a new search", "new search", "start fresh"):
+                convo.data_json = json.dumps({})
+                convo.funnel_stage = "awareness"
+                convo.state = "ACTIVE"
+                convo.lead_score = 0
+                db.commit()
+                await send_meta_message(
+                    sender_id,
+                    f"Starting fresh, {first_name}. 🔄\n\n"
+                    f"What type of property are you looking for?\n\n"
+                    f"Land · House · Apartment",
+                    phone_number_id=platform_id,
+                )
+                return
+
+            else:
+                # Treat as area name — search it directly
+                _saved_nr["property_type"] = _nr_orig_type
+                _saved_nr["budget"] = _nr_orig_budget
+                _saved_nr["budget_max"] = _nr_orig_budget
+                _saved_nr["location"] = text_body.strip().lower()
+                convo.data_json = json.dumps(_saved_nr)
+                convo.state = "ACTIVE"
+                db.commit()
+                # Fall through to intent pipeline which will trigger search
+
         # --- 8. INTENT PIPELINE ---
         pipe = add_message_service(convo.id, text_body, tenant_id, db)
         # Merge pipe prefs with saved conversation prefs
@@ -1252,16 +1355,15 @@ async def handle_incoming_message(data: dict, db: Session):
                     return
 
                 else:
-                    await send_meta_message(
-                        sender_id,
-                        build_no_results_message(
-                            prefs.get("location", ""),
-                            prefs.get("property_type", ""),
-                            prefs.get("budget_max") or prefs.get("budget"),
-                        ),
-                        phone_number_id=platform_id,
-                    )
-                    prefs.pop("location", None)
+                    _nr_loc = prefs.get("location", "")
+                    _nr_type = prefs.get("property_type", "")
+                    _nr_budget = prefs.get("budget_max") or prefs.get("budget")
+                    _nr_nearby = nearby_areas[:3] if nearby_areas else []
+                    prefs["awaiting_no_results_choice"] = True
+                    prefs["no_results_location"] = _nr_loc
+                    prefs["no_results_type"] = _nr_type
+                    prefs["no_results_budget"] = _nr_budget
+                    prefs["no_results_nearby"] = _nr_nearby
                     convo.data_json = json.dumps(prefs)
                     convo.state = "ACTIVE"
                     convo.funnel_stage = "verification"
@@ -1269,6 +1371,16 @@ async def handle_incoming_message(data: dict, db: Session):
                         tzinfo=None
                     )
                     db.commit()
+                    await send_meta_message(
+                        sender_id,
+                        build_no_results_message(
+                            _nr_loc,
+                            _nr_type,
+                            _nr_budget,
+                            nearby_areas=_nr_nearby,
+                        ),
+                        phone_number_id=platform_id,
+                    )
                     return
 
             except Exception as e:
@@ -1427,16 +1539,15 @@ async def handle_incoming_message(data: dict, db: Session):
                             db.commit()
                             logger.info(f"Saved last_viewed_id: {matches[0].id}")
                         else:
-                            await send_meta_message(
-                                sender_id,
-                                build_no_results_message(
-                                    prefs.get("location", ""),
-                                    prefs.get("property_type", ""),
-                                    prefs.get("budget_max") or prefs.get("budget"),
-                                ),
-                                phone_number_id=platform_id,
-                            )
-                            prefs.pop("location", None)
+                            _nr_loc2 = prefs.get("location", "")
+                            _nr_type2 = prefs.get("property_type", "")
+                            _nr_budget2 = prefs.get("budget_max") or prefs.get("budget")
+                            _nr_nearby2 = nearby_areas[:3] if nearby_areas else []
+                            prefs["awaiting_no_results_choice"] = True
+                            prefs["no_results_location"] = _nr_loc2
+                            prefs["no_results_type"] = _nr_type2
+                            prefs["no_results_budget"] = _nr_budget2
+                            prefs["no_results_nearby"] = _nr_nearby2
                             convo.data_json = json.dumps(prefs)
                             convo.state = "ACTIVE"
                             convo.funnel_stage = "verification"
@@ -1444,6 +1555,16 @@ async def handle_incoming_message(data: dict, db: Session):
                                 tzinfo=None
                             )
                             db.commit()
+                            await send_meta_message(
+                                sender_id,
+                                build_no_results_message(
+                                    _nr_loc2,
+                                    _nr_type2,
+                                    _nr_budget2,
+                                    nearby_areas=_nr_nearby2,
+                                ),
+                                phone_number_id=platform_id,
+                            )
                     except Exception as e:
                         logger.error(f"Search from completed_flag failed: {e}")
                         await send_meta_message(
