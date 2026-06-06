@@ -995,6 +995,109 @@ async def handle_incoming_message(data: dict, db: Session):
         # --- 9. OBJECTION HANDLER ---
         if intent == "objection":
             objection_key = pipe.get("objection_key", "objection_stalling")
+
+            if objection_key == "objection_budget_mismatch":
+                from app.conversations.intent_filter import extract_budget_from_text
+                new_budget = extract_budget_from_text(text_body)
+                _data = json.loads(convo.data_json or "{}")
+
+                if new_budget:
+                    _data["budget"] = new_budget
+                    _data["budget_max"] = new_budget
+                    convo.data_json = json.dumps(_data)
+                    convo.state = "ACTIVE"
+                    db.commit()
+
+                    budget_fmt = f"₦{new_budget / 1_000_000:.0f}M"
+                    _bm_location = (_data.get("location") or "").title()
+
+                    await send_meta_message(
+                        sender_id,
+                        f"Understood, {first_name}. "
+                        f"Let me search within *{budget_fmt}* "
+                        f"for you in *{_bm_location}*. 🔍",
+                        phone_number_id=platform_id,
+                    )
+
+                    search_result = execute_premium_search(db, tenant_id, _data)
+                    matches = search_result.get("data", [])
+
+                    if matches:
+                        summary = build_property_summary(
+                            matches[0], matches,
+                            search_result.get("total_count", 0),
+                            first_name,
+                        )
+                        await send_meta_message(
+                            sender_id, summary, phone_number_id=platform_id
+                        )
+                        carousel_data = prepare_meta_carousel(matches)
+                        await send_meta_carousel(
+                            sender_id, carousel_data, phone_number_id=platform_id
+                        )
+                        _data["last_viewed_id"] = matches[0].id
+                        _data["last_viewed_title"] = matches[0].title
+                        _data["last_match_ids"] = [m.id for m in matches]
+                        convo.data_json = json.dumps(_data)
+                        convo.state = "HANDOFF"
+                        convo.funnel_stage = "commitment"
+                        convo.last_active_at = datetime.now(timezone.utc).replace(
+                            tzinfo=None
+                        )
+                        db.commit()
+                    else:
+                        await send_meta_message(
+                            sender_id,
+                            f"I searched thoroughly, {first_name}, "
+                            f"but there are no verified listings "
+                            f"in *{_bm_location}* within *{budget_fmt}* "
+                            f"right now.\n\n"
+                            f"A few options:\n\n"
+                            f"1️⃣ *Expand your search area* — "
+                            f"nearby areas may have options\n"
+                            f"2️⃣ *Adjust your budget slightly* — "
+                            f"tell me your maximum stretch\n"
+                            f"3️⃣ *Change property type* — "
+                            f"Land is often more affordable\n\n"
+                            f"What would you prefer?",
+                            phone_number_id=platform_id,
+                        )
+                        _data.pop("location", None)
+                        convo.data_json = json.dumps(_data)
+                        convo.state = "ACTIVE"
+                        convo.funnel_stage = "verification"
+                        db.commit()
+                else:
+                    current_price = 0
+                    _last_id = _data.get("last_viewed_id")
+                    if _last_id:
+                        _viewed = db.get(Listing, _last_id)
+                        if _viewed:
+                            current_price = _viewed.price or 0
+
+                    price_fmt = (
+                        f"₦{current_price / 1_000_000:.0f}M"
+                        if current_price >= 1_000_000
+                        else "this property"
+                    )
+
+                    await send_meta_message(
+                        sender_id,
+                        f"I understand, {first_name}. "
+                        f"{price_fmt} may be above your range.\n\n"
+                        f"What is your maximum budget? "
+                        f"I'll find you the best verified options "
+                        f"within that figure. 💰\n\n"
+                        f"(e.g. '30M', '₦45,000,000', '20M to 50M')",
+                        phone_number_id=platform_id,
+                    )
+                    _data.pop("budget", None)
+                    _data.pop("budget_max", None)
+                    convo.data_json = json.dumps(_data)
+                    convo.state = "ACTIVE"
+                    db.commit()
+                return
+
             last_id = prefs.get("last_viewed_id")
             trust_grade = "Verified"
             if last_id:
@@ -1033,6 +1136,25 @@ async def handle_incoming_message(data: dict, db: Session):
             )
         ):
             try:
+                # Acknowledge budget when it was just captured in this message
+                budget_just_captured = (
+                    pipe.get("intent") in ("price_query", "search_ready")
+                    and pipe.get("prefs", {}).get("budget")
+                    and not json.loads(convo.data_json or "{}").get("budget")
+                )
+                if budget_just_captured and prefs.get("location"):
+                    _bval = prefs.get("budget", 0)
+                    _bfmt = f"₦{_bval / 1_000_000:.0f}M"
+                    _bloc = (prefs.get("location") or "").title()
+                    _btype = (prefs.get("property_type") or "property").title()
+                    await send_meta_message(
+                        sender_id,
+                        f"Perfect, {first_name}. "
+                        f"Searching for *{_btype}* in "
+                        f"*{_bloc}* within *{_bfmt}*. 🔍",
+                        phone_number_id=platform_id,
+                    )
+
                 search_result = execute_premium_search(db, tenant_id, prefs)
                 matches = search_result.get("data", [])
                 total = search_result.get("total_count", 0)

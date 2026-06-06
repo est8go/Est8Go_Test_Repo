@@ -74,35 +74,15 @@ OBJECTION_RESPONSES = {
     # --- 4. PRICE NEGOTIATION ("last price?", "can owner reduce?") ---
     "objection_price": [
         (
-            "A fair question, {name}. 💰\n\n"
-            "I will be honest with you, properties with a *{trust_grade} Trust Score* "
-            "rarely drop in price because the documentation and verification work "
-            "has already been done for you. You are paying for certainty, not just land.\n\n"
-            "That said, our agent can discuss *flexible payment structures* directly with you. "
-            "Would you like me to arrange that conversation?"
-        ),
-        (
-            "I hear you, {name}. Let me be direct. 🤝\n\n"
-            "The price reflects a GPS-verified, AI-audited, fully documented property. "
-            "In a market full of stories and fake listings, that premium is the difference "
-            "between owning property and owning a problem.\n\n"
-            "Our agent is available to discuss terms. Shall I connect you?"
-        ),
-    ],
-    # --- 5. BUDGET MISMATCH ("above my budget", "not my budget") ---
-    "objection_budget_mismatch": [
-        (
-            "Understood, {name}  budget alignment is everything. 📊\n\n"
-            "Let me search our vault for options within your range. "
-            "Our network covers multiple price points, all verified to the same Truth Standard.\n\n"
-            "What is your actual comfortable range? I will pull the best matches immediately."
-        ),
-        (
-            "No problem at all, {name}. 🔄\n\n"
-            "We have verified properties across a wide price spectrum. "
-            "Tell me your realistic budget and I will filter only the options that fit "
-            "no wasted time, no pressure.\n\n"
-            "What figure works best for you?"
+            "Fair point, {name}. 💰\n\n"
+            "Verified properties tend to hold their value because the trust "
+            "work is already done — but I understand budget matters.\n\n"
+            "Let me check what else is available:\n\n"
+            "1️⃣ *A lower-priced option* in the same area\n"
+            "2️⃣ *A nearby area* within your budget\n"
+            "3️⃣ *Speak to the agent* about payment structure\n\n"
+            "Which would you prefer? "
+            "Or tell me your maximum and I'll search now."
         ),
     ],
     # --- 6. THIRD PARTY ("my wife", "my husband", "my partner") ---

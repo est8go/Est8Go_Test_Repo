@@ -16,6 +16,8 @@ def execute_premium_search(db: Session, tenant_id: int, prefs: dict) -> dict:
     """
     location = prefs.get("location", "").strip()
     p_type = prefs.get("property_type", "").strip()
+    budget_max = prefs.get("budget_max") or prefs.get("budget")
+    budget_min = prefs.get("budget_min")
 
     # --- STEP 1: PRIMARY SEARCH (Current Realtor) ---
     query = (
@@ -28,6 +30,10 @@ def execute_premium_search(db: Session, tenant_id: int, prefs: dict) -> dict:
         query = query.filter(Listing.location.ilike(f"%{location}%"))
     if p_type:
         query = query.filter(Listing.property_type.ilike(f"%{p_type}%"))
+    if budget_max:
+        query = query.filter(Listing.price <= budget_max)
+    if budget_min:
+        query = query.filter(Listing.price >= budget_min)
 
     # 🔹 MULTI-TIER SORTING: High Trust Score first, then Lowest Price
     query = query.order_by(Listing.trust_score.desc(), Listing.price.asc())
@@ -60,6 +66,10 @@ def execute_premium_search(db: Session, tenant_id: int, prefs: dict) -> dict:
         net_query = net_query.filter(Listing.location.ilike(f"%{location}%"))
     if p_type:
         net_query = net_query.filter(Listing.property_type.ilike(f"%{p_type}%"))
+    if budget_max:
+        net_query = net_query.filter(Listing.price <= budget_max)
+    if budget_min:
+        net_query = net_query.filter(Listing.price >= budget_min)
 
     # Sort the network results as well
     net_query = net_query.order_by(Listing.trust_score.desc(), Listing.price.asc())
