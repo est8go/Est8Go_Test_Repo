@@ -662,11 +662,34 @@ async def _no_results_cascade(
     _cheapest = get_tenant_cheapest_listing(db, tenant_id, _ptype)
 
     if _cheapest and _cheapest.get("price"):
+        _cheapest_price = _cheapest["price"]
+        _budget_val = int(_budget) if _budget else 0
         _cheap_fmt = _cheapest.get("price_fmt", "")
         _cheap_loc = (_cheapest.get("location") or "").title()
         _cheap_score = _cheapest.get("trust_score", 0)
         _cheap_grade = (_cheapest.get("trust_grade") or "verified").title()
 
+        if _budget_val and _cheapest_price <= _budget_val:
+            # Within budget — location mismatch, not budget mismatch
+            await send_meta_message(
+                sender_id,
+                f"We have a verified {_ptype_title} within your budget in a different location:\n\n"
+                f"🏠 *{_cheapest.get('title')}*\n"
+                f"📍 {_cheap_loc}\n"
+                f"💰 *{_cheap_fmt}*\n"
+                f"🛡️ Trust: {_cheap_score}/100 ({_cheap_grade})\n\n"
+                f"Would this location work for you? Or shall I search our verified partner network? 🤝",
+                phone_number_id=platform_id,
+            )
+            prefs["awaiting_location_alt"] = True
+            prefs["alt_listing_id"] = _cheapest.get("id")
+            convo.data_json = json.dumps(prefs)
+            convo.state = "ACTIVE"
+            convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            db.commit()
+            return
+
+        # Above budget — show as stretch option
         _stretch_msg = (
             f"Our closest verified {_ptype_title} to your budget is:\n\n"
             f"🏠 *{_cheapest.get('title')}*\n"
@@ -674,9 +697,14 @@ async def _no_results_cascade(
             f"💰 *{_cheap_fmt}* | 🛡️ {_cheap_score}/100 ({_cheap_grade})\n\n"
         )
 
-        if _budget:
-            _diff = (_cheapest["price"] - _budget) / 1_000_000
-            _stretch_msg += f"That's ₦{_diff:.0f}M above your current budget.\n\n"
+        if _budget_val:
+            _diff = (_cheapest_price - _budget_val) / 1_000_000
+            if _diff > 0:
+                _stretch_msg += f"That's ₦{_diff:.0f}M above your current budget.\n\n"
+            elif _diff < 0:
+                _stretch_msg += f"This is actually ₦{abs(_diff):.0f}M *within* your budget. ✅\n\n"
+            else:
+                _stretch_msg += f"This matches your budget exactly. ✅\n\n"
 
         _stretch_msg += (
             f"Would you like to consider this option? Or shall I check what our "
@@ -1396,6 +1424,57 @@ async def handle_incoming_message(data: dict, db: Session):
                 )
             return
 
+        # ── LOCATION ALTERNATIVE HANDLER ─────────────────────────────
+        if _saved2.get("awaiting_location_alt"):
+            _lac = text_body.strip().lower()
+            _saved2.pop("awaiting_location_alt", None)
+            _alt_id = _saved2.pop("alt_listing_id", None)
+
+            _yes_loc_words = {
+                "yes", "ok", "okay", "sure", "works", "that works",
+                "yes please", "show me", "interested", "i'll consider", "proceed",
+            }
+
+            if any(w in _lac for w in _yes_loc_words):
+                if _alt_id:
+                    _lst = db.get(Listing, _alt_id)
+                    if _lst:
+                        _p = _lst.price or 0
+                        _p_fmt = f"₦{_p/1_000_000:.0f}M" if _p >= 1_000_000 else f"₦{_p:,}"
+                        _base_url = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+                        await send_meta_message(
+                            sender_id,
+                            f"Here are the full details, {first_name}:\n\n"
+                            f"*{_lst.title}*\n"
+                            f"📍 {(_lst.location or '').title()}\n"
+                            f"💰 *{_p_fmt}*\n"
+                            f"🛡️ Trust Score: {_lst.trust_score}/100\n\n"
+                            f"🔗 View property:\n{_base_url}/public/property/{_lst.id}\n\n"
+                            f"Would you like to schedule a site inspection? 📅",
+                            phone_number_id=platform_id,
+                        )
+                        _saved2["last_viewed_id"] = _lst.id
+                        _saved2["last_viewed_title"] = _lst.title or ""
+                        convo.data_json = json.dumps(_saved2)
+                        convo.funnel_stage = "commitment"
+                        convo.state = "HANDOFF"
+                        convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                        db.commit()
+                return
+            else:
+                _saved2["awaiting_referral_permission"] = True
+                convo.data_json = json.dumps(_saved2)
+                db.commit()
+                await send_meta_message(
+                    sender_id,
+                    f"Understood, {first_name}. 🤝\n\n"
+                    f"May I check our verified partner network for options "
+                    f"in your preferred area?\n\n"
+                    f"Reply *Yes* to search.",
+                    phone_number_id=platform_id,
+                )
+                return
+
         # ── NO RESULTS MENU HANDLER ──────────────────────────────────
         _saved_nr = json.loads(convo.data_json or "{}")
         if _saved_nr.get("awaiting_no_results_choice"):
@@ -1498,6 +1577,45 @@ async def handle_incoming_message(data: dict, db: Session):
                 convo.state = "ACTIVE"
                 db.commit()
                 # Fall through to intent pipeline which will trigger search
+
+        # ── STANDALONE PURPOSE DETECTION (no awaiting_purpose flag needed) ─
+        # Fires when buyer states purpose as first message without greeting
+        if not _saved.get("purpose"):
+            _txt = text_body.strip().lower()
+            _invest_words = {
+                "invest", "investment", "roi",
+                "rental income", "rent out",
+                "resell", "capital", "yield",
+                "buy to let", "income property",
+                "i want to invest",
+                "for investment",
+                "as investment",
+            }
+            _personal_words = {
+                "personal", "myself", "family",
+                "live in", "living", "my home",
+                "residential", "my own",
+                "move in", "own use",
+                "i want to live",
+            }
+            _is_invest = any(w in _txt for w in _invest_words)
+            _is_personal = any(w in _txt for w in _personal_words)
+
+            if _is_invest or _is_personal:
+                _purpose = "investment" if _is_invest else "personal"
+                _saved["purpose"] = _purpose
+                _saved.pop("awaiting_purpose", None)
+                convo.data_json = json.dumps(_saved)
+                convo.state = "ACTIVE"
+                convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                db.commit()
+                _followup = (
+                    get_investment_followup(first_name)
+                    if _is_invest
+                    else get_personal_followup(first_name)
+                )
+                await send_meta_message(sender_id, _followup, phone_number_id=platform_id)
+                return
 
         # --- 8. INTENT PIPELINE ---
         pipe = add_message_service(convo.id, text_body, tenant_id, db)
