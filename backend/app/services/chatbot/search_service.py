@@ -92,3 +92,96 @@ def execute_premium_search(db: Session, tenant_id: int, prefs: dict) -> dict:
 
     # --- STEP 3: NO MATCHES ---
     return {"source": "none", "data": [], "total_count": 0, "prefs": prefs}
+
+
+def get_tenant_areas_by_budget(
+    db,
+    tenant_id: int,
+    budget: int,
+    property_type: str = None,
+    city: str = None,
+) -> list:
+    """
+    Returns areas from tenant listings that have at least one property
+    within the given budget. Sorted by min_price ascending.
+    """
+    from app.listings.models import Listing
+    from sqlalchemy import func
+
+    query = db.query(
+        Listing.location,
+        func.min(Listing.price).label("min_price"),
+        func.count(Listing.id).label("count"),
+    ).filter(
+        Listing.tenant_id == tenant_id,
+        Listing.price <= budget,
+        Listing.status == "verified",
+    )
+
+    if property_type:
+        query = query.filter(
+            Listing.property_type.ilike(f"%{property_type}%")
+        )
+
+    if city:
+        query = query.filter(
+            Listing.location.ilike(f"%{city}%")
+        )
+
+    results = query.group_by(Listing.location).order_by("min_price").limit(6).all()
+
+    return [
+        {
+            "area": r.location or "",
+            "min_price": int(r.min_price or 0),
+            "count": int(r.count or 0),
+        }
+        for r in results
+        if r.location
+    ]
+
+
+def get_tenant_cheapest_listing(
+    db,
+    tenant_id: int,
+    property_type: str = None,
+) -> dict:
+    """
+    Returns the cheapest verified listing for this tenant.
+    Used when buyer budget is too low.
+    """
+    from app.listings.models import Listing
+
+    query = db.query(Listing).filter(
+        Listing.tenant_id == tenant_id,
+        Listing.status == "verified",
+    )
+
+    if property_type:
+        query = query.filter(
+            Listing.property_type.ilike(f"%{property_type}%")
+        )
+
+    listing = query.order_by(Listing.price.asc()).first()
+
+    if not listing:
+        return {}
+
+    price = listing.price or 0
+    if price >= 1_000_000_000:
+        price_fmt = f"₦{price/1_000_000_000:.1f}B"
+    elif price >= 1_000_000:
+        price_fmt = f"₦{price/1_000_000:.0f}M"
+    else:
+        price_fmt = f"₦{price:,}"
+
+    return {
+        "id": listing.id,
+        "title": listing.title,
+        "location": listing.location,
+        "price": price,
+        "price_fmt": price_fmt,
+        "trust_score": listing.trust_score,
+        "trust_grade": listing.trust_grade,
+        "property_type": listing.property_type,
+    }

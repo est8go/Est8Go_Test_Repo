@@ -15,6 +15,7 @@ Complete pipeline:
 import logging
 import json
 import json as _json
+import os
 import re
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
@@ -61,7 +62,12 @@ from app.services.chatbot.message_builder import (
     build_referral_summary,
     build_inspection_confirmation,
 )
-from app.services.chatbot.kora_behavior import determine_bot_voice
+from app.services.chatbot.kora_behavior import (
+    determine_bot_voice,
+    get_conversational_opener,
+    get_investment_followup,
+    get_personal_followup,
+)
 from app.services.chatbot.fallback_engine import handle_logic_error
 
 # Tenant Resolver
@@ -238,40 +244,69 @@ def is_returning_buyer(convo) -> bool:
     return (now - last).total_seconds() > 1800
 
 
-def build_welcome_back_message(convo, display_name: str) -> str:
-    """Resume message that recalls the buyer's previous search criteria."""
+def build_welcome_back_message(
+    convo,
+    display_name: str,
+    session_state: str,
+    biz_name: str,
+) -> str:
+    """World class returning buyer welcome. Personalised by search history and time away."""
     data = json.loads(convo.data_json or "{}")
-    location = data.get("location", "").title()
-    prop_type = data.get("property_type", "").title()
+    location = (data.get("location") or "").title()
+    prop_type = (data.get("property_type") or "").title()
+    purpose = data.get("purpose", "")
     budget = data.get("budget_max") or data.get("budget")
+    bedrooms = data.get("bedrooms", "")
 
-    memory_parts = []
-    if prop_type:
-        memory_parts.append(prop_type)
-    if location:
-        memory_parts.append(f"in {location}")
+    budget_fmt = ""
     if budget:
         try:
-            budget_int = int(budget)
-            memory_parts.append(f"budget ₦{budget_int / 1_000_000:.0f}M")
+            b = int(budget)
+            budget_fmt = f"₦{b/1_000_000:.0f}M"
         except (ValueError, TypeError):
-            memory_parts.append(f"budget {budget}")
+            pass
 
-    memory_str = " ".join(memory_parts)
+    search_parts = []
+    if bedrooms and bedrooms != "any":
+        search_parts.append(f"{bedrooms}-bed")
+    if prop_type:
+        search_parts.append(prop_type)
+    if location:
+        search_parts.append(f"in {location}")
+    if budget_fmt:
+        search_parts.append(f"within {budget_fmt}")
 
-    if memory_str:
+    search_summary = " ".join(search_parts) if search_parts else "a property"
+
+    if session_state == "hot":
         return (
-            f"Welcome back, {display_name}! \U0001f44b\n\n"
-            f"I remember you were looking for *{memory_str}*.\n\n"
-            f"Would you like to continue that search, or start fresh?\n\n"
-            f"Reply *Continue* to pick up where we left off, "
-            f"or *New Search* to start over."
+            f"Welcome back, {display_name}! 🔥\n\n"
+            f"You were just here looking for *{search_summary}*.\n\n"
+            f"Shall I pull up where we left off?\n\n"
+            f"Reply *Yes* to continue or *New Search* to start fresh."
         )
-    return (
-        f"Welcome back, {display_name}! \U0001f44b\n\n"
-        f"Good to hear from you again. "
-        f"What property are you looking for today?"
-    )
+
+    elif session_state == "warm":
+        purpose_note = ""
+        if purpose == "investment":
+            purpose_note = " The market has seen some movement — good time to act."
+        return (
+            f"Good to have you back, {display_name}! 👋\n\n"
+            f"It's been a few days since we last spoke. The verified inventory at "
+            f"*{biz_name}* has been updated.{purpose_note}\n\n"
+            f"You were looking for *{search_summary}*.\n\n"
+            f"Continue your search or start fresh?\n\n"
+            f"Reply *Continue* or *New Search*."
+        )
+
+    else:
+        return (
+            f"Welcome back to *{biz_name}*, {display_name}! 🏡\n\n"
+            f"It's been a while — we have exciting new verified listings since your last visit.\n\n"
+            f"Last time you searched for *{search_summary}*.\n\n"
+            f"Shall we start fresh or continue from where you left?\n\n"
+            f"Reply *Continue* or *New Search*."
+        )
 
 
 # ================================================================
@@ -408,10 +443,36 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
         convo.data_json = json.dumps(current_data)
         db.commit()
 
+    # After budget captured — show tenant areas within budget
+    _extr = intent_result.extracted or {}
+    if (
+        (_extr.get("budget") or _extr.get("budget_max"))
+        and not _extr.get("location")
+        and not current_data.get("location")
+    ):
+        try:
+            from app.services.chatbot.search_service import get_tenant_areas_by_budget
+            _bval = (
+                _extr.get("budget_max") or _extr.get("budget")
+                or current_data.get("budget_max") or current_data.get("budget")
+            )
+            _areas = get_tenant_areas_by_budget(
+                db, tenant_id, int(_bval),
+                current_data.get("property_type", ""),
+            )
+            current_data["tenant_areas_in_budget"] = _areas
+            convo.data_json = json.dumps(current_data)
+            db.commit()
+        except Exception:
+            pass
+
     # If intent is known — return immediately without GPT
     if not intent_result.needs_gpt:
         next_q = (
-            get_next_question(current_data) if not intent_result.extracted else None
+            get_next_question(
+                current_data,
+                tenant_areas_by_budget=current_data.get("tenant_areas_in_budget", []),
+            ) if not intent_result.extracted else None
         )
 
         # Handle all known intents without GPT
@@ -443,7 +504,10 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
             "price_query",
             "search_ready",
         ):
-            next_q = get_next_question(current_data)
+            next_q = get_next_question(
+                current_data,
+                tenant_areas_by_budget=current_data.get("tenant_areas_in_budget", []),
+            )
             if not next_q:
                 # All data collected — trigger search
                 convo.state = "HANDOFF"
@@ -495,7 +559,10 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
     if updated_data.get("location"):
         updated_data["location"] = normalise_location(updated_data["location"])
     convo.data_json = json.dumps(updated_data)
-    next_q = get_next_question(updated_data)
+    next_q = get_next_question(
+        updated_data,
+        tenant_areas_by_budget=updated_data.get("tenant_areas_in_budget", []),
+    )
 
     if not next_q:
         convo.state = "HANDOFF"
@@ -503,6 +570,140 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
 
     db.commit()
     return {"reply": next_q, "prefs": updated_data, "intent": "gpt_extracted"}
+
+
+# ================================================================
+# NO-RESULTS CASCADE HELPER
+# ================================================================
+
+
+async def _no_results_cascade(
+    prefs: dict,
+    first_name: str,
+    sender_id: str,
+    tenant_id: int,
+    db,
+    convo,
+    platform_id: str,
+    tenant_profile: dict,
+    biz_name: str,
+):
+    """6-level no-results cascade: nearby → cheapest → referral permission."""
+    _loc = (prefs.get("location") or "").lower()
+    _ptype = prefs.get("property_type", "")
+    _budget = prefs.get("budget_max") or prefs.get("budget")
+    _budget_fmt = f"₦{int(_budget)/1_000_000:.0f}M" if _budget else ""
+    _loc_title = _loc.title()
+    _ptype_title = _ptype.title()
+
+    _searched = set(prefs.get("_searched_areas", []))
+    _searched.add(_loc)
+    prefs["_searched_areas"] = list(_searched)
+
+    # ── LEVEL 1: Nearby areas (real listings) ──────────────────
+    from app.services.chatbot.message_builder import NEARBY_AREAS
+    _nearby = [a for a in NEARBY_AREAS.get(_loc, []) if a not in _searched]
+
+    _nearby_results = {}
+    for _area in _nearby[:5]:
+        try:
+            _exp = execute_premium_search(db, tenant_id, {**prefs, "location": _area})
+            _exp_matches = _exp.get("data", [])
+            if _exp_matches:
+                _nearby_results[_area] = _exp_matches
+        except Exception:
+            continue
+
+    if _nearby_results:
+        _msg = f"No verified {_ptype_title} listings in *{_loc_title}*"
+        if _budget_fmt:
+            _msg += f" within *{_budget_fmt}*"
+        _msg += " — but I found verified options close by:\n\n"
+
+        _best = None
+        for _area, _area_listings in _nearby_results.items():
+            _l = _area_listings[0]
+            _p = _l.price or 0
+            _p_fmt = f"₦{_p/1_000_000:.0f}M" if _p >= 1_000_000 else f"₦{_p:,}"
+            _s = _l.trust_score or 0
+            _g = (_l.trust_grade or "verified").title()
+            _msg += f"📍 *{_area.title()}*\n🏠 {_l.title}\n💰 {_p_fmt} | 🛡️ {_s}/100 ({_g})\n\n"
+            if _best is None:
+                _best = _l
+
+        _all_prices = [_v[0].price for _v in _nearby_results.values() if _v]
+        _min_nearby = min(_all_prices) if _all_prices else 0
+
+        if _budget and _min_nearby > _budget:
+            _min_fmt = f"₦{_min_nearby/1_000_000:.0f}M"
+            _msg += (
+                f"💡 These are above your {_budget_fmt} budget. "
+                f"Closest option is *{_min_fmt}*.\n\n"
+                f"Would you like to adjust your budget to match? "
+                f"Or shall I check our wider verified network? 🤝"
+            )
+        else:
+            _msg += "Would any of these work for you? Just say the area name to search further. 😊"
+
+        if _best:
+            prefs["last_viewed_id"] = _best.id
+            prefs["last_viewed_title"] = _best.title or ""
+
+        convo.data_json = json.dumps(prefs)
+        convo.state = "HANDOFF"
+        convo.funnel_stage = "commitment"
+        convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        db.commit()
+        await send_meta_message(sender_id, _msg, phone_number_id=platform_id)
+        return
+
+    # ── LEVEL 2: Tenant cheapest option ────────────────────────
+    from app.services.chatbot.search_service import get_tenant_cheapest_listing
+    _cheapest = get_tenant_cheapest_listing(db, tenant_id, _ptype)
+
+    if _cheapest and _cheapest.get("price"):
+        _cheap_fmt = _cheapest.get("price_fmt", "")
+        _cheap_loc = (_cheapest.get("location") or "").title()
+        _cheap_score = _cheapest.get("trust_score", 0)
+        _cheap_grade = (_cheapest.get("trust_grade") or "verified").title()
+
+        _stretch_msg = (
+            f"Our closest verified {_ptype_title} to your budget is:\n\n"
+            f"🏠 *{_cheapest.get('title')}*\n"
+            f"📍 {_cheap_loc}\n"
+            f"💰 *{_cheap_fmt}* | 🛡️ {_cheap_score}/100 ({_cheap_grade})\n\n"
+        )
+
+        if _budget:
+            _diff = (_cheapest["price"] - _budget) / 1_000_000
+            _stretch_msg += f"That's ₦{_diff:.0f}M above your current budget.\n\n"
+
+        _stretch_msg += (
+            f"Would you like to consider this option? Or shall I check what our "
+            f"verified partner network has within {_budget_fmt}? 🤝"
+        )
+
+        prefs["awaiting_stretch_choice"] = True
+        prefs["stretch_listing_id"] = _cheapest.get("id")
+        convo.data_json = json.dumps(prefs)
+        convo.state = "ACTIVE"
+        db.commit()
+        await send_meta_message(sender_id, _stretch_msg, phone_number_id=platform_id)
+        return
+
+    # ── LEVEL 3: Partner referral permission ───────────────────
+    _referral_perm_msg = (
+        f"I've searched thoroughly in *{_loc_title}* and nearby areas, {first_name}.\n\n"
+        f"May I check our verified partner network in the same city? 🤝\n\n"
+        f"All properties are Est8Go verified — GPS confirmed and document checked.\n\n"
+        f"Reply *Yes* to search the wider network."
+    )
+
+    prefs["awaiting_referral_permission"] = True
+    convo.data_json = json.dumps(prefs)
+    convo.state = "ACTIVE"
+    db.commit()
+    await send_meta_message(sender_id, _referral_perm_msg, phone_number_id=platform_id)
 
 
 # ================================================================
@@ -683,6 +884,8 @@ async def handle_incoming_message(data: dict, db: Session):
             and len(text_body.strip().split()) <= 3
         )
 
+        _process_as_intent = False
+
         if is_greeting:
             session_state = get_session_state(convo)
 
@@ -693,26 +896,54 @@ async def handle_incoming_message(data: dict, db: Session):
                     )
                     convo = db.get(Conversation, res["conversation_id"])
 
-                intro = get_executive_response("intro", first_name, biz_name)
-                await send_meta_message(sender_id, intro, phone_number_id=platform_id)
+                # Check if buyer gave details in greeting (e.g. "hi apt lekki 30M")
+                from app.listings.models import Listing as _LM
+                _tenant_locs = [
+                    r[0].lower()
+                    for r in db.query(_LM.location)
+                    .filter(_LM.tenant_id == tenant_id)
+                    .distinct()
+                    .all()
+                    if r[0]
+                ]
+                _gr = classify_intent(text_body.lower(), {}, _tenant_locs)
+                greeting_has_details = bool(
+                    _gr.extracted.get("property_type") or
+                    _gr.extracted.get("location") or
+                    _gr.extracted.get("budget") or
+                    _gr.extracted.get("budget_max")
+                )
 
-                areas = tenant_profile.get("areas_covered", "Abuja")
-                emoji = tenant_profile.get("emoji", "🏠")
-                question = get_executive_response(
-                    "intent_location", first_name, biz_name
-                )
-                await send_meta_message(
-                    sender_id,
-                    f"I am currently monitoring verified deals in "
-                    f"*{areas}* {emoji}. {question}",
-                    phone_number_id=platform_id,
-                )
+                if greeting_has_details:
+                    # Skip opener — process intent directly
+                    _gd = json.loads(convo.data_json or "{}")
+                    _gd["purpose"] = "general"
+                    convo.data_json = json.dumps(_gd)
+                    convo.state = "ACTIVE"
+                    convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                    db.commit()
+                    _process_as_intent = True
+                else:
+                    # New buyer with no details — conversational opener
+                    opener = get_conversational_opener(
+                        first_name, biz_name,
+                        tenant_profile.get("areas_covered", "Abuja"),
+                    )
+                    await send_meta_message(sender_id, opener, phone_number_id=platform_id)
+                    _gd = json.loads(convo.data_json or "{}")
+                    _gd["awaiting_purpose"] = True
+                    convo.data_json = json.dumps(_gd)
+                    convo.state = "ACTIVE"
+                    convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                    db.commit()
+                    return
 
             elif is_returning_buyer(convo):
                 # Returning buyer with active search — show memory recap
+                session_state = get_session_state(convo)
                 convo.session_count = (convo.session_count or 1) + 1
                 db.commit()
-                welcome_msg = build_welcome_back_message(convo, first_name)
+                welcome_msg = build_welcome_back_message(convo, first_name, session_state, biz_name)
                 await send_meta_message(sender_id, welcome_msg, phone_number_id=platform_id)
 
             else:
@@ -725,10 +956,11 @@ async def handle_incoming_message(data: dict, db: Session):
                 )
                 await send_meta_message(sender_id, resume_msg, phone_number_id=platform_id)
 
-            convo.state = "ACTIVE"
-            convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
-            db.commit()
-            return
+            if not _process_as_intent:
+                convo.state = "ACTIVE"
+                convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                db.commit()
+                return
 
         # --- 7. GUARD: Create conversation if missing ---
         if not convo:
@@ -768,7 +1000,10 @@ async def handle_incoming_message(data: dict, db: Session):
 
         if _text_lower in ("continue", "yes continue", "yes, continue"):
             _current = json.loads(convo.data_json or "{}")
-            _next_q = get_next_question(_current)
+            _next_q = get_next_question(
+                _current,
+                tenant_areas_by_budget=_current.get("tenant_areas_in_budget", []),
+            )
             if _next_q:
                 await send_meta_message(sender_id, _next_q, phone_number_id=platform_id)
                 return
@@ -825,6 +1060,340 @@ async def handle_incoming_message(data: dict, db: Session):
                 "Apartment — flats and studio units",
                 phone_number_id=platform_id,
             )
+            return
+
+        # ── PURPOSE HANDLER ──────────────────────────────────────────
+        _saved = json.loads(convo.data_json or "{}")
+        if _saved.get("awaiting_purpose"):
+            _pt = text_body.strip().lower()
+            investment_words = {
+                "investment", "invest", "roi", "rental", "rent out", "resell",
+                "capital", "yield", "return", "buy to let", "commercial",
+                "income", "profit", "appreciation",
+            }
+            personal_words = {
+                "personal", "myself", "family", "live in", "living", "home",
+                "residential", "my own", "stay", "house for myself",
+                "move in", "own use", "we want to live",
+            }
+            _pt_words = set(_pt.split())
+            if _pt_words & investment_words or any(w in _pt for w in investment_words):
+                purpose = "investment"
+                followup = get_investment_followup(first_name)
+            elif _pt_words & personal_words or any(w in _pt for w in personal_words):
+                purpose = "personal"
+                followup = get_personal_followup(first_name)
+            else:
+                purpose = "personal"
+                followup = get_personal_followup(first_name)
+
+            _saved["purpose"] = purpose
+            _saved.pop("awaiting_purpose", None)
+            convo.data_json = json.dumps(_saved)
+            convo.state = "ACTIVE"
+            convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            db.commit()
+            await send_meta_message(sender_id, followup, phone_number_id=platform_id)
+            return
+
+        # ── BEDROOMS HANDLER ──────────────────────────────────────────
+        if _saved.get("awaiting_bedrooms"):
+            _bt = text_body.strip().lower()
+            bedroom_map = {
+                "1": "1", "one": "1", "1 bed": "1",
+                "2": "2", "two": "2", "2 bed": "2",
+                "3": "3", "three": "3", "3 bed": "3",
+                "4": "4", "four": "4", "4 bed": "4",
+                "5": "5", "five": "5", "5+": "5+",
+                "any": "any", "flexible": "any", "doesn't matter": "any",
+            }
+            bedrooms = "any"
+            for key, val in bedroom_map.items():
+                if key in _bt:
+                    bedrooms = val
+                    break
+            import re as _re2
+            _digit = _re2.search(r'\b(\d)\b', _bt)
+            if _digit:
+                bedrooms = _digit.group(1)
+
+            _saved["bedrooms"] = bedrooms
+            _saved.pop("awaiting_bedrooms", None)
+            convo.data_json = json.dumps(_saved)
+            db.commit()
+
+            _prop_type = (_saved.get("property_type") or "property").title()
+            _bed_str = f"{bedrooms}-bedroom " if bedrooms != "any" else ""
+            await send_meta_message(
+                sender_id,
+                f"Perfect. What is your budget for a {_bed_str}{_prop_type}? 💰\n\n"
+                f"(e.g. '30M', '20M to 80M', '₦45,000,000')",
+                phone_number_id=platform_id,
+            )
+            return
+
+        # ── STRETCH CHOICE HANDLER ────────────────────────────────────
+        _saved2 = json.loads(convo.data_json or "{}")
+        if _saved2.get("awaiting_stretch_choice"):
+            _sc = text_body.strip().lower()
+            _saved2.pop("awaiting_stretch_choice", None)
+            _stretch_id = _saved2.pop("stretch_listing_id", None)
+
+            _yes_w = {"yes", "ok", "okay", "sure", "consider", "show me",
+                      "yes please", "i'll consider", "let me see", "show details", "proceed"}
+            _no_w = {"no", "nope", "partner", "check partner", "wider network",
+                     "other options", "not interested"}
+
+            if any(w in _sc for w in _yes_w):
+                if _stretch_id:
+                    _lst = db.get(Listing, _stretch_id)
+                    if _lst:
+                        _p = _lst.price or 0
+                        _p_fmt = f"₦{_p/1_000_000:.0f}M" if _p >= 1_000_000 else f"₦{_p:,}"
+                        _score = _lst.trust_score or 0
+                        _grade = (_lst.trust_grade or "verified").title()
+                        _base_url = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+                        await send_meta_message(
+                            sender_id,
+                            f"Excellent choice, {first_name}! 🎯\n\n"
+                            f"*{_lst.title}*\n"
+                            f"📍 {(_lst.location or '').title()}\n"
+                            f"💰 *{_p_fmt}*\n"
+                            f"🛡️ Trust Score: *{_score}/100 ({_grade})*\n\n"
+                            f"🔗 View full details:\n{_base_url}/public/property/{_lst.id}\n\n"
+                            f"Would you like to schedule a site inspection? 📅",
+                            phone_number_id=platform_id,
+                        )
+                        _saved2["last_viewed_id"] = _lst.id
+                        _saved2["last_viewed_title"] = _lst.title or ""
+                        convo.data_json = json.dumps(_saved2)
+                        convo.funnel_stage = "commitment"
+                        convo.state = "HANDOFF"
+                        db.commit()
+            else:
+                _saved2["awaiting_referral_permission"] = True
+                convo.data_json = json.dumps(_saved2)
+                db.commit()
+                await send_meta_message(
+                    sender_id,
+                    f"Understood, {first_name}. 🤝\n\n"
+                    f"May I check our verified partner network? "
+                    f"All properties are Est8Go verified.\n\n"
+                    f"Reply *Yes* to search the wider network.",
+                    phone_number_id=platform_id,
+                )
+            return
+
+        # ── REFERRAL PERMISSION HANDLER ───────────────────────────────
+        if _saved2.get("awaiting_referral_permission"):
+            _rpc = text_body.strip().lower()
+            _yes_rp = {"yes", "ok", "sure", "go ahead", "check", "search",
+                       "yes please", "proceed", "absolutely"}
+
+            if any(w in _rpc for w in _yes_rp):
+                _saved2.pop("awaiting_referral_permission", None)
+                _ref_ptype = _saved2.get("property_type", "")
+                _ref_budget = _saved2.get("budget_max") or _saved2.get("budget")
+                _ref_loc = (_saved2.get("location") or "").lower()
+                _ref_city = None
+                for _city_name in ["abuja", "lagos", "port harcourt", "enugu", "ibadan"]:
+                    if _city_name in _ref_loc:
+                        _ref_city = _city_name
+                        break
+                try:
+                    from app.listings.models import Listing as _RL
+                    _rq = db.query(_RL).filter(
+                        _RL.tenant_id != tenant_id,
+                        _RL.status == "verified",
+                        _RL.trust_score > 30,
+                    )
+                    if _ref_ptype:
+                        _rq = _rq.filter(_RL.property_type.ilike(f"%{_ref_ptype}%"))
+                    if _ref_budget:
+                        _rq = _rq.filter(_RL.price <= int(_ref_budget))
+                    if _ref_city:
+                        _rq = _rq.filter(_RL.location.ilike(f"%{_ref_city}%"))
+                    _ref_listing = _rq.order_by(_RL.trust_score.desc()).first()
+
+                    if _ref_listing:
+                        _rp_val = _ref_listing.price or 0
+                        _rp_range = (
+                            f"₦{(_rp_val * 0.9)/1_000_000:.0f}M – ₦{(_rp_val * 1.1)/1_000_000:.0f}M"
+                            if _rp_val >= 1_000_000 else f"₦{_rp_val:,}"
+                        )
+                        _city_show = _ref_city.title() if _ref_city else "same city"
+                        _ref_grade = (_ref_listing.trust_grade or "verified").title()
+                        _ref_msg = (
+                            f"Good news, {first_name}! 🎯\n\n"
+                            f"I found a verified match in our wider network:\n\n"
+                            f"🏠 {(_ref_listing.property_type or 'Property').title()} — {_city_show}\n"
+                            f"💰 Around {_rp_range}\n"
+                            f"🛡️ Est8Go Verified ({_ref_grade} grade) ✓\n\n"
+                            f"A consultant will share the full details with you directly.\n\n"
+                            f"Shall I connect you now? 📞"
+                        )
+                        _saved2["awaiting_consultant"] = True
+                        _saved2["referral_listing_id"] = _ref_listing.id
+                        convo.data_json = json.dumps(_saved2)
+                        convo.funnel_stage = "commitment"
+                        db.commit()
+                        await send_meta_message(sender_id, _ref_msg, phone_number_id=platform_id)
+                    else:
+                        _base_r = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+                        _slug_r = tenant_profile.get("slug", "")
+                        await send_meta_message(
+                            sender_id,
+                            f"I've searched our entire verified network, {first_name}.\n\n"
+                            f"Two options:\n\n"
+                            f"1️⃣ *Browse our full vault* — you may find something I missed:\n"
+                            f"👉 {_base_r}/public/{_slug_r}\n\n"
+                            f"2️⃣ *Speak to a consultant* — they have access to off-market "
+                            f"verified deals not yet listed online.\n\n"
+                            f"Which would you prefer?",
+                            phone_number_id=platform_id,
+                        )
+                        _saved2["awaiting_last_resort"] = True
+                        convo.data_json = json.dumps(_saved2)
+                        db.commit()
+                except Exception as _re_err:
+                    logger.error(f"Referral search failed: {_re_err}")
+            else:
+                _saved2.pop("awaiting_referral_permission", None)
+                convo.data_json = json.dumps(_saved2)
+                db.commit()
+                await send_meta_message(
+                    sender_id,
+                    f"No problem, {first_name}. 😊\n\n"
+                    f"Would you like to:\n\n"
+                    f"1️⃣ *Try a different area* — tell me another location\n"
+                    f"2️⃣ *Adjust your budget* — tell me your new range\n"
+                    f"3️⃣ *Change property type* — Land · House · Apartment\n"
+                    f"4️⃣ *Start fresh* — say *New Search*",
+                    phone_number_id=platform_id,
+                )
+            return
+
+        # ── CONSULTANT CONNECTION HANDLER ─────────────────────────────
+        if _saved2.get("awaiting_consultant"):
+            _cc = text_body.strip().lower()
+            _yes_cc = {"yes", "ok", "sure", "connect", "yes please",
+                       "go ahead", "connect me", "absolutely"}
+            if any(w in _cc for w in _yes_cc):
+                _saved2.pop("awaiting_consultant", None)
+                _cref_id = _saved2.pop("referral_listing_id", None)
+                _cptype = (_saved2.get("property_type") or "property").title()
+                _cloc = (_saved2.get("location") or "any area").title()
+                _cbudget = _saved2.get("budget_max") or _saved2.get("budget")
+                _cbudget_str = f"₦{int(_cbudget)/1_000_000:.0f}M" if _cbudget else "not specified"
+                _cbedrooms = _saved2.get("bedrooms", "")
+                _cpurpose = _saved2.get("purpose", "not specified")
+                _cbed_str = f"{_cbedrooms} bedrooms" if _cbedrooms and _cbedrooms != "any" else ""
+
+                _buyer_brief = (
+                    f"🔔 *NEW LEAD — CONSULTANT REQUIRED*\n\n"
+                    f"👤 Buyer: {first_name} ({whatsapp_name})\n"
+                    f"📱 Contact: {sender_id}\n\n"
+                    f"📋 *Search Brief:*\n"
+                    f"• Purpose: {_cpurpose.title()}\n"
+                    f"• Property: {_cptype}{' ' + _cbed_str if _cbed_str else ''}\n"
+                    f"• Area: {_cloc}\n"
+                    f"• Budget: {_cbudget_str}\n"
+                )
+                if _cref_id:
+                    _cref_lst = db.get(Listing, _cref_id)
+                    if _cref_lst:
+                        _crp = _cref_lst.price or 0
+                        _crp_fmt = f"₦{_crp/1_000_000:.0f}M" if _crp >= 1_000_000 else f"₦{_crp:,}"
+                        _buyer_brief += (
+                            f"\n🏠 *Matched Listing:*\n"
+                            f"{_cref_lst.title}\n"
+                            f"📍 {(_cref_lst.location or '').title()}\n"
+                            f"💰 {_crp_fmt}\n"
+                            f"🛡️ Trust: {_cref_lst.trust_score}/100\n"
+                        )
+                _buyer_brief += "\n⚡ Buyer is ready to proceed. Please reach out within 2 hours."
+
+                try:
+                    await alert_realtor_of_lead(
+                        db, _cref_id or 0, sender_id, biz_name,
+                        phone_number_id=platform_id,
+                        custom_message=_buyer_brief,
+                    )
+                except Exception as _cae:
+                    logger.warning(f"Consultant alert failed: {_cae}")
+                    _tenant_wa = getattr(tenant, "whatsapp_phone_number", None)
+                    if _tenant_wa:
+                        try:
+                            await send_meta_message(
+                                _tenant_wa, _buyer_brief, phone_number_id=platform_id,
+                            )
+                        except Exception:
+                            pass
+
+                await send_meta_message(
+                    sender_id,
+                    f"You're all set, {first_name}! ✅\n\n"
+                    f"Your search brief has been sent to our consultant:\n\n"
+                    f"📋 *{_cptype}* in *{_cloc}*\n"
+                    f"💰 Budget: *{_cbudget_str}*\n\n"
+                    f"They will reach out within *2 hours* with full details on verified options "
+                    f"that match your exact requirements.\n\n"
+                    f"Please keep your phone available. 📱\n\n"
+                    f"Thank you for choosing *{biz_name}* — where every property is verified "
+                    f"before it reaches you. 🛡️",
+                    phone_number_id=platform_id,
+                )
+                convo.data_json = json.dumps(_saved2)
+                convo.funnel_stage = "closed"
+                convo.state = "CLOSED"
+                convo.lead_score = 90
+                convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                db.commit()
+            else:
+                _saved2.pop("awaiting_consultant", None)
+                _saved2.pop("referral_listing_id", None)
+                convo.data_json = json.dumps(_saved2)
+                db.commit()
+                await send_meta_message(
+                    sender_id,
+                    f"No problem, {first_name}. 😊\n\n"
+                    f"Is there anything else I can help you with?\n\n"
+                    f"Say *New Search* to search for a different property, "
+                    f"or *Menu* to see all options.",
+                    phone_number_id=platform_id,
+                )
+            return
+
+        # ── LAST RESORT HANDLER ───────────────────────────────────────
+        if _saved2.get("awaiting_last_resort"):
+            _lrc = text_body.strip().lower()
+            _saved2.pop("awaiting_last_resort", None)
+            if "1" in _lrc or "browse" in _lrc or "vault" in _lrc:
+                _base_lr = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+                _slug_lr = tenant_profile.get("slug", "")
+                convo.data_json = json.dumps(_saved2)
+                db.commit()
+                await send_meta_message(
+                    sender_id,
+                    f"Here's our full verified property vault, {first_name}:\n\n"
+                    f"👉 {_base_lr}/public/{_slug_lr}\n\n"
+                    f"Every listing is GPS-verified and document-checked. "
+                    f"Take your time browsing. 😊\n\n"
+                    f"Reply *I'm interested* on any listing and I'll connect you immediately.",
+                    phone_number_id=platform_id,
+                )
+            else:
+                _saved2["awaiting_consultant"] = True
+                convo.data_json = json.dumps(_saved2)
+                db.commit()
+                await send_meta_message(
+                    sender_id,
+                    f"Great choice, {first_name}. 📞\n\n"
+                    f"Our property consultants have access to off-market verified deals "
+                    f"not yet listed online.\n\n"
+                    f"Shall I connect you now?",
+                    phone_number_id=platform_id,
+                )
             return
 
         # ── NO RESULTS MENU HANDLER ──────────────────────────────────
@@ -1355,31 +1924,10 @@ async def handle_incoming_message(data: dict, db: Session):
                     return
 
                 else:
-                    _nr_loc = prefs.get("location", "")
-                    _nr_type = prefs.get("property_type", "")
-                    _nr_budget = prefs.get("budget_max") or prefs.get("budget")
-                    _nr_nearby = nearby_areas[:3] if nearby_areas else []
-                    prefs["awaiting_no_results_choice"] = True
-                    prefs["no_results_location"] = _nr_loc
-                    prefs["no_results_type"] = _nr_type
-                    prefs["no_results_budget"] = _nr_budget
-                    prefs["no_results_nearby"] = _nr_nearby
-                    convo.data_json = json.dumps(prefs)
-                    convo.state = "ACTIVE"
-                    convo.funnel_stage = "verification"
-                    convo.last_active_at = datetime.now(timezone.utc).replace(
-                        tzinfo=None
-                    )
-                    db.commit()
-                    await send_meta_message(
-                        sender_id,
-                        build_no_results_message(
-                            _nr_loc,
-                            _nr_type,
-                            _nr_budget,
-                            nearby_areas=_nr_nearby,
-                        ),
-                        phone_number_id=platform_id,
+                    await _no_results_cascade(
+                        prefs, first_name, sender_id,
+                        tenant_id, db, convo, platform_id,
+                        tenant_profile, biz_name,
                     )
                     return
 
@@ -1539,31 +2087,10 @@ async def handle_incoming_message(data: dict, db: Session):
                             db.commit()
                             logger.info(f"Saved last_viewed_id: {matches[0].id}")
                         else:
-                            _nr_loc2 = prefs.get("location", "")
-                            _nr_type2 = prefs.get("property_type", "")
-                            _nr_budget2 = prefs.get("budget_max") or prefs.get("budget")
-                            _nr_nearby2 = nearby_areas[:3] if nearby_areas else []
-                            prefs["awaiting_no_results_choice"] = True
-                            prefs["no_results_location"] = _nr_loc2
-                            prefs["no_results_type"] = _nr_type2
-                            prefs["no_results_budget"] = _nr_budget2
-                            prefs["no_results_nearby"] = _nr_nearby2
-                            convo.data_json = json.dumps(prefs)
-                            convo.state = "ACTIVE"
-                            convo.funnel_stage = "verification"
-                            convo.last_active_at = datetime.now(timezone.utc).replace(
-                                tzinfo=None
-                            )
-                            db.commit()
-                            await send_meta_message(
-                                sender_id,
-                                build_no_results_message(
-                                    _nr_loc2,
-                                    _nr_type2,
-                                    _nr_budget2,
-                                    nearby_areas=_nr_nearby2,
-                                ),
-                                phone_number_id=platform_id,
+                            await _no_results_cascade(
+                                prefs, first_name, sender_id,
+                                tenant_id, db, convo, platform_id,
+                                tenant_profile, biz_name,
                             )
                     except Exception as e:
                         logger.error(f"Search from completed_flag failed: {e}")
@@ -1640,7 +2167,10 @@ async def handle_incoming_message(data: dict, db: Session):
 
             # Never send raw flag strings or generic fallback
             if final_reply in ("I am here to assist you.", "filler_flag", ""):
-                next_q = get_next_question(prefs)
+                next_q = get_next_question(
+                    prefs,
+                    tenant_areas_by_budget=prefs.get("tenant_areas_in_budget", []),
+                )
                 if next_q:
                     await send_meta_message(sender_id, next_q, phone_number_id=platform_id)
                 return

@@ -99,56 +99,89 @@ def normalise_location(loc: str) -> str:
 # ================================================================
 
 
-def get_next_question(current_data: dict) -> Optional[str]:
+def get_next_question(
+    current_data: dict,
+    tenant_areas_by_budget: list = None,
+) -> Optional[str]:
     """
-    Strict funnel order: property_type → city → area → budget → search.
-    Picks up from any point — works with partial or full messages.
+    New funnel order:
+    purpose → property_type → bedrooms (if residential) → budget → area (guided) → search
     """
 
-    # STEP 1 — Property type missing
+    # STEP 1 — Purpose (handled by opener, skip if not set)
+    if not current_data.get("purpose"):
+        return None
+
+    # STEP 2 — Property type
     if not current_data.get("property_type"):
+        purpose = current_data.get("purpose", "")
+        if purpose == "investment":
+            return (
+                "What type of property are you investing in? 🏢\n\n"
+                "🌱 *Land* — buy and hold or develop\n"
+                "🏠 *House* — rental income or capital gain\n"
+                "🏢 *Apartment* — high yield rental in prime areas"
+            )
+        else:
+            return (
+                "What type of property are you looking for? 🏠\n\n"
+                "🌱 *Land* — build your dream home\n"
+                "🏠 *House* — move-in ready family home\n"
+                "🏢 *Apartment* — modern city living"
+            )
+
+    # STEP 3 — Bedrooms (only for house/apartment + personal use)
+    prop_type = current_data.get("property_type", "")
+    purpose = current_data.get("purpose", "")
+
+    if (
+        prop_type in ("house", "apartment")
+        and purpose == "personal"
+        and not current_data.get("bedrooms")
+        and not current_data.get("bedrooms_skipped")
+    ):
         return (
-            "What type of property are you looking for? 🏠\n\n"
-            "Land — plots for development\n"
-            "House — detached, semi-detached or duplex\n"
-            "Apartment — flats and studio units"
+            f"How many bedrooms do you need for your {prop_type}? 🛏️\n\n"
+            f"1 bed · 2 bed · 3 bed · 4 bed · 5+ bed\n\n"
+            f"(Or say *Any* if flexible)"
         )
 
-    # STEP 2 — Location missing entirely
-    if not current_data.get("location"):
-        prop_type = current_data.get("property_type", "property").title()
-        return (
-            f"Which city are you searching in for your {prop_type}? 🏙️\n\n"
-            f"We cover Abuja, Lagos, Port Harcourt, "
-            f"Ibadan, Enugu and more."
-        )
-
-    # STEP 3 — Location is city-level (needs specific area)
-    location_val = (current_data.get("location") or "").lower().strip()
-    if location_val in CITY_TERMS:
-        examples = CITY_AREA_EXAMPLES.get(
-            location_val,
-            "please specify a neighbourhood or area"
-        )
-        city_display = location_val.title()
-        return (
-            f"Which area of *{city_display}* are you targeting? 📍\n\n"
-            f"For example: {examples}\n\n"
-            f"This helps me find the most relevant "
-            f"verified properties for you."
-        )
-
-    # STEP 4 — Budget missing
+    # STEP 4 — Budget (before location)
     if not current_data.get("budget_max") and not current_data.get("budget"):
-        prop_type = current_data.get("property_type", "property").title()
-        location = current_data.get("location", "").title()
+        prop_type_title = prop_type.title()
+        purpose_hint = ""
+        if purpose == "investment":
+            purpose_hint = (
+                "\n\nMost verified investment properties start from ₦15M. "
+                "Returns depend on location and trust grade."
+            )
         return (
-            f"What is your budget for the *{prop_type}* "
-            f"in *{location}*? 💰\n\n"
-            f"(e.g. '50m', '20m to 80m', '₦45,000,000')"
+            f"What is your budget for this {prop_type_title}? 💰\n\n"
+            f"(e.g. '30M', '20M to 80M', '₦45,000,000'){purpose_hint}"
         )
 
-    # STEP 5 — All collected, ready to search
+    # STEP 5 — Area guided by budget
+    if not current_data.get("location"):
+        budget = current_data.get("budget_max") or current_data.get("budget") or 0
+        budget_fmt = f"₦{int(budget)/1_000_000:.0f}M" if budget else ""
+
+        if tenant_areas_by_budget and len(tenant_areas_by_budget) > 0:
+            areas_list = "\n".join([
+                f"📍 *{a['area'].title()}* — from ₦{a['min_price']/1_000_000:.0f}M"
+                for a in tenant_areas_by_budget[:4]
+            ])
+            return (
+                f"For *{budget_fmt}* we have verified {prop_type.title()} listings in:\n\n"
+                f"{areas_list}\n\n"
+                f"Which area interests you? Or type a specific area you have in mind. 📍"
+            )
+        else:
+            return (
+                "Which area are you targeting? 📍\n\n"
+                "Tell me the neighbourhood or estate and I'll search our verified listings."
+            )
+
+    # All collected — ready to search
     return None
 
 
