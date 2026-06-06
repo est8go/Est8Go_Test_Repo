@@ -682,7 +682,7 @@ async def _no_results_cascade(
                 f"📍 {_cheap_loc}\n"
                 f"💰 *{_cheap_fmt}*\n"
                 f"🛡️ Trust: {_cheap_score}/100 ({_cheap_grade})\n\n"
-                f"Would this location work for you? Or shall I search our verified partner network? 🤝",
+                f"Would this location work for you? Or shall I show you everything else we have verified right now? 😊",
                 phone_number_id=platform_id,
             )
             prefs["awaiting_location_alt"] = True
@@ -711,8 +711,8 @@ async def _no_results_cascade(
                 _stretch_msg += f"This matches your budget exactly. ✅\n\n"
 
         _stretch_msg += (
-            f"Would you like to consider this option? Or shall I check what our "
-            f"verified partner network has within {_budget_fmt}? 🤝"
+            f"Would you like to consider this option? Or shall I show you everything else "
+            f"we have verified right now? 😊"
         )
 
         prefs["awaiting_stretch_choice"] = True
@@ -1231,15 +1231,14 @@ async def handle_incoming_message(data: dict, db: Session):
                         convo.state = "HANDOFF"
                         db.commit()
             else:
-                _saved2["awaiting_referral_permission"] = True
+                _saved2["awaiting_see_all_tenant"] = True
                 convo.data_json = json.dumps(_saved2)
                 db.commit()
                 await send_meta_message(
                     sender_id,
-                    f"Understood, {first_name}. 🤝\n\n"
-                    f"May I check our verified partner network? "
-                    f"All properties are Est8Go verified.\n\n"
-                    f"Reply *Yes* to search the wider network.",
+                    f"No problem, {first_name}. 😊\n\n"
+                    f"Let me pull up our complete verified inventory for you.\n\n"
+                    f"Reply *Yes* to see everything we currently have.",
                     phone_number_id=platform_id,
                 )
             return
@@ -1494,14 +1493,123 @@ async def handle_incoming_message(data: dict, db: Session):
                         db.commit()
                 return
             else:
+                _saved2["awaiting_see_all_tenant"] = True
+                convo.data_json = json.dumps(_saved2)
+                db.commit()
+                await send_meta_message(
+                    sender_id,
+                    f"No problem, {first_name}. 😊\n\n"
+                    f"Let me show you our complete verified inventory.\n\n"
+                    f"Reply *Yes* to see everything we currently have.",
+                    phone_number_id=platform_id,
+                )
+                return
+
+        # ── SEE ALL TENANT INVENTORY HANDLER ─────────────────────────
+        if _saved2.get("awaiting_see_all_tenant"):
+            _choice = text_body.strip().lower()
+            _saved2.pop("awaiting_see_all_tenant", None)
+            _ptype = _saved2.get("property_type", "")
+            _budget = _saved2.get("budget_max") or _saved2.get("budget")
+            _last_id = _saved2.get("last_viewed_id")
+
+            _see_all_yes = {
+                "yes", "ok", "okay", "sure", "show me", "show everything",
+                "see all", "what else", "other options", "yes please",
+                "everything", "show all", "see more", "partner network",
+            }
+
+            if any(w in _choice for w in _see_all_yes):
+                if "partner" in _choice or "network" in _choice:
+                    # Buyer explicitly asked for partner — skip inventory
+                    _saved2["awaiting_referral_permission"] = True
+                    convo.data_json = json.dumps(_saved2)
+                    db.commit()
+                    await send_meta_message(
+                        sender_id,
+                        f"Got it, {first_name}. 🤝\n\n"
+                        f"May I check our verified partner network?\n\n"
+                        f"Reply *Yes* to search.",
+                        phone_number_id=platform_id,
+                    )
+                    return
+
+                try:
+                    from app.listings.models import Listing as _AL
+                    _all_q = db.query(_AL).filter(
+                        _AL.tenant_id == tenant_id,
+                        _AL.status == "verified",
+                    )
+                    if _ptype:
+                        _all_q = _all_q.filter(_AL.property_type.ilike(f"%{_ptype}%"))
+                    _all_listings = _all_q.order_by(_AL.price.asc()).limit(8).all()
+                    _all_listings = [l for l in _all_listings if str(l.id) != str(_last_id)]
+
+                    if _all_listings:
+                        _ptype_title = _ptype.title() if _ptype else "Property"
+                        _inv_msg = (
+                            f"Here is everything we currently have verified "
+                            f"for *{_ptype_title}*, {first_name}:\n\n"
+                        )
+                        for _l in _all_listings[:6]:
+                            _p = _l.price or 0
+                            _p_fmt = f"₦{_p/1_000_000:.0f}M" if _p >= 1_000_000 else f"₦{_p:,}"
+                            _s = _l.trust_score or 0
+                            _g = (_l.trust_grade or "verified").title()
+                            _loc = (_l.location or "").title()
+                            _inv_msg += (
+                                f"🏠 *{_l.title}*\n"
+                                f"📍 {_loc} | 💰 {_p_fmt} | 🛡️ {_s}/100 ({_g})\n\n"
+                            )
+
+                        _within_budget = [
+                            l for l in _all_listings
+                            if _budget and (l.price or 0) <= int(_budget)
+                        ]
+                        if _within_budget:
+                            _inv_msg += (
+                                f"✅ *{len(_within_budget)}* of these are within your budget. "
+                                f"Which area interests you most?"
+                            )
+                        else:
+                            _inv_msg += (
+                                f"These are our current verified options. "
+                                f"Which comes closest to what you need? 😊\n\n"
+                                f"Or say *Partner Network* and I'll search our wider verified network."
+                            )
+
+                        _saved2["last_match_ids"] = [l.id for l in _all_listings]
+                        convo.data_json = json.dumps(_saved2)
+                        convo.state = "HANDOFF"
+                        convo.funnel_stage = "commitment"
+                        convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                        db.commit()
+                        await send_meta_message(sender_id, _inv_msg, phone_number_id=platform_id)
+                    else:
+                        # Truly nothing left — now go to partner
+                        _saved2["awaiting_referral_permission"] = True
+                        convo.data_json = json.dumps(_saved2)
+                        db.commit()
+                        await send_meta_message(
+                            sender_id,
+                            f"I've shown you our complete verified inventory, {first_name}.\n\n"
+                            f"May I check our verified partner network? "
+                            f"All properties are Est8Go verified. 🤝\n\n"
+                            f"Reply *Yes* to search the wider network.",
+                            phone_number_id=platform_id,
+                        )
+                except Exception as _sa_e:
+                    logger.error(f"See all tenant failed: {_sa_e}")
+                return
+            else:
+                # Buyer declined everything — now go to partner
                 _saved2["awaiting_referral_permission"] = True
                 convo.data_json = json.dumps(_saved2)
                 db.commit()
                 await send_meta_message(
                     sender_id,
                     f"Understood, {first_name}. 🤝\n\n"
-                    f"May I check our verified partner network for options "
-                    f"in your preferred area?\n\n"
+                    f"May I check our verified partner network?\n\n"
                     f"Reply *Yes* to search.",
                     phone_number_id=platform_id,
                 )
