@@ -34,9 +34,10 @@ def get_tenant_profile(db: Session, tenant_id: int):
 
     if tenant:
         return {
-            "business_name": tenant.name,
+            "business_name": tenant.business_name or tenant.name,
             "tone": tenant.tone,
             "emoji": tenant.emoji,
+            "slug": tenant.slug or "",
         }
 
     # Standard fallback if tenant is not found
