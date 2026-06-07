@@ -1822,55 +1822,6 @@ async def handle_incoming_message(data: dict, db: Session):
                     return
 
                 try:
-                    # ── STEP 1: Send tenant vault link first ──────────────
-                    _base_url = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
-                    _slug = tenant_profile.get("slug", "")
-                    _vault_url = f"{_base_url}/public/{_slug}" if _slug else None
-                    _ptype_title = _ptype.title() if _ptype else "Property"
-                    _site_up = False
-
-                    if _vault_url:
-                        try:
-                            import httpx as _httpx
-
-                            _res = _httpx.get(
-                                _vault_url, timeout=4, follow_redirects=True
-                            )
-                            _site_up = _res.status_code < 500
-                        except Exception as _ping_err:
-                            logger.warning(f"Vault link check failed: {_ping_err}")
-                            _site_up = False
-
-                    if _site_up and _vault_url:
-                        # Site is accessible — send the link
-                        await send_meta_message(
-                            sender_id,
-                            f"Here is our full verified {_ptype_title} vault, "
-                            f"{first_name}: 🏠\n\n"
-                            f"👉 {_vault_url}\n\n"
-                            f"Every listing is GPS-verified and document-checked. "
-                            f"Tap any property to view full details and connect "
-                            f"with us directly. 😊",
-                            phone_number_id=platform_id,
-                        )
-                        _saved2["last_match_ids"] = []
-                        convo.data_json = json.dumps(_saved2)
-                        convo.state = "HANDOFF"
-                        convo.funnel_stage = "commitment"
-                        convo.last_active_at = datetime.now(timezone.utc).replace(
-                            tzinfo=None
-                        )
-                        db.commit()
-                        return
-
-                    # ── STEP 2: Vault inaccessible — inform user, show inline inventory ──
-                    _fallback_notice = (
-                        f"Our property website is temporarily unavailable, "
-                        f"{first_name}. 🙏\n\n"
-                        f"No worries — let me show you everything we have "
-                        f"right here. 👇\n\n"
-                    )
-
                     from app.listings.models import Listing as _AL
 
                     _all_q = db.query(_AL).filter(
@@ -1885,7 +1836,11 @@ async def handle_incoming_message(data: dict, db: Session):
                     ]
 
                     if _all_listings:
-                        _inv_msg = _fallback_notice
+                        _ptype_title = _ptype.title() if _ptype else "Property"
+                        _inv_msg = (
+                            f"Here is everything we currently have verified "
+                            f"for *{_ptype_title}*, {first_name}:\n\n"
+                        )
                         for _l in _all_listings[:6]:
                             _p = _l.price or 0
                             _p_fmt = (
@@ -1898,9 +1853,9 @@ async def handle_incoming_message(data: dict, db: Session):
                             _loc = (_l.location or "").title()
                             _inv_msg += (
                                 f"🏠 *{_l.title}*\n"
-                                f"📍 {_loc} | 💰 {_p_fmt} | "
-                                f"🛡️ {_s}/100 ({_g})\n\n"
+                                f"📍 {_loc} | 💰 {_p_fmt} | 🛡️ {_s}/100 ({_g})\n\n"
                             )
+
                         _within_budget = [
                             l
                             for l in _all_listings
@@ -1908,14 +1863,16 @@ async def handle_incoming_message(data: dict, db: Session):
                         ]
                         if _within_budget:
                             _inv_msg += (
-                                f"✅ *{len(_within_budget)}* of these are within "
-                                f"your budget. Which area interests you most?"
+                                f"✅ *{len(_within_budget)}* of these are within your budget. "
+                                f"Which area interests you most?"
                             )
                         else:
                             _inv_msg += (
                                 f"These are our current verified options. "
-                                f"Which comes closest to what you need? 😊"
+                                f"Which comes closest to what you need? 😊\n\n"
+                                f"Or say *Partner Network* and I'll search our wider verified network."
                             )
+
                         _saved2["last_match_ids"] = [l.id for l in _all_listings]
                         convo.data_json = json.dumps(_saved2)
                         convo.state = "HANDOFF"
@@ -1928,23 +1885,20 @@ async def handle_incoming_message(data: dict, db: Session):
                             sender_id, _inv_msg, phone_number_id=platform_id
                         )
                     else:
-                        # Nothing in inventory either — go to partner network
+                        # Truly nothing left — now go to partner
                         _saved2["awaiting_referral_permission"] = True
                         convo.data_json = json.dumps(_saved2)
                         db.commit()
                         await send_meta_message(
                             sender_id,
-                            f"{_fallback_notice}"
-                            f"And it looks like we don't have any verified "
-                            f"{_ptype_title} listings at the moment.\n\n"
+                            f"I've shown you our complete verified inventory, {first_name}.\n\n"
                             f"May I check our verified partner network? "
                             f"All properties are Est8Go verified. 🤝\n\n"
                             f"Reply *Yes* to search the wider network.",
                             phone_number_id=platform_id,
                         )
-
                 except Exception as _sa_e:
-                    logger.error(f"See all tenant handler failed: {_sa_e}")
+                    logger.error(f"See all tenant failed: {_sa_e}")
                 return
             else:
                 # Buyer declined everything — now go to partner
