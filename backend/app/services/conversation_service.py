@@ -1822,6 +1822,31 @@ async def handle_incoming_message(data: dict, db: Session):
                     return
 
                 try:
+                    _base_url = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+                    _slug = tenant_profile.get("slug", "")
+                    _vault_url = f"{_base_url}/public/{_slug}" if _slug else None
+                    _ptype_title = _ptype.title() if _ptype else "Property"
+
+                    if _vault_url:
+                        await send_meta_message(
+                            sender_id,
+                            f"Here is our full verified {_ptype_title} vault, "
+                            f"{first_name}: 🏠\n\n"
+                            f"👉 {_vault_url}\n\n"
+                            f"Every listing is GPS-verified and document-checked. "
+                            f"Tap any property to view full details and connect "
+                            f"with us directly. 😊",
+                            phone_number_id=platform_id,
+                        )
+                        _saved2["last_match_ids"] = []
+                        convo.data_json = json.dumps(_saved2)
+                        convo.state = "HANDOFF"
+                        convo.funnel_stage = "commitment"
+                        convo.last_active_at = datetime.now(timezone.utc).replace(
+                            tzinfo=None
+                        )
+                        db.commit()
+                        return
                     from app.listings.models import Listing as _AL
 
                     _all_q = db.query(_AL).filter(
