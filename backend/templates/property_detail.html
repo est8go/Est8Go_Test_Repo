@@ -14,7 +14,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0F172A" id="themeColorMeta">
-<title>{{ listing.title }} — Est8Go</title>
+<title>{{ listing.title }} | Est8Go Verified Property</title>
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Est8Go">
@@ -25,6 +25,71 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ listing.title }} — Est8Go">
 {% if listing.images %}<meta name="twitter:image" content="{{ listing.images[0].url }}">{% endif %}
+
+<meta name="description" content="{{ listing.property_type|title if listing.property_type else 'Property' }} for sale in {{ listing.location|title if listing.location else 'Nigeria' }}. ₦{{ '{:,.0f}'.format(listing.price) if listing.price else 'Price on request' }}. GPS verified, document checked. Trust Score {{ listing.trust_score or 0 }}/100 ({{ listing.trust_grade|title if listing.trust_grade else 'Ungraded' }}). Listed by {{ tenant.business_name if tenant else 'Est8Go Partner' }}."/>
+<link rel="canonical" href="{{ base_url }}/public/property/{{ listing.id }}"/>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "RealEstateListing",
+  "name": "{{ listing.title }}",
+  "description": "{{ listing.description or listing.title }} — GPS verified and document checked by Est8Go. Trust Score: {{ listing.trust_score }}/100.",
+  "url": "{{ base_url }}/public/property/{{ listing.id }}",
+  "offers": {
+    "@type": "Offer",
+    "price": "{{ listing.price or 0 }}",
+    "priceCurrency": "NGN",
+    "availability": "https://schema.org/InStock"
+  },
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "{{ listing.location or '' }}",
+    "addressCountry": "NG"
+  },
+  "numberOfRooms": "{{ listing.bedrooms or '' }}",
+  "floorSize": {
+    "@type": "QuantitativeValue",
+    "value": "{{ listing.size or '' }}",
+    "unitCode": "MTK"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": "{{ listing.latitude or '' }}",
+    "longitude": "{{ listing.longitude or '' }}"
+  },
+  "provider": {
+    "@type": "Organization",
+    "name": "Est8Go",
+    "url": "https://est8go.com",
+    "description": "Nigeria's property trust verification infrastructure"
+  },
+  "additionalProperty": [
+    {
+      "@type": "PropertyValue",
+      "name": "Trust Score",
+      "value": "{{ listing.trust_score or 0 }}/100"
+    },
+    {
+      "@type": "PropertyValue",
+      "name": "Trust Grade",
+      "value": "{{ listing.trust_grade or 'ungraded' }}"
+    },
+    {
+      "@type": "PropertyValue",
+      "name": "GPS Verified",
+      "value": "{{ 'Yes' if listing.gps_verified_at else 'No' }}"
+    },
+    {
+      "@type": "PropertyValue",
+      "name": "Verification Platform",
+      "value": "Est8Go"
+    }
+  ],
+  "image": [
+    {% if listing.images %}{% for img in listing.images[:3] %}"{{ img.url }}"{% if not loop.last %},{% endif %}{% endfor %}{% endif %}
+  ]
+}
+</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

@@ -5,13 +5,39 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0F172A" id="vaultThemeColor">
-<title>{{ tenant.business_name or 'Agency' }} — Verified Properties | Est8Go</title>
+<title>{{ tenant.business_name }} — Verified Properties | Est8Go</title>
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="{{ tenant.business_name }} Verified Properties">
 <meta property="og:description" content="GPS-verified, AI-audited properties from {{ tenant.business_name }}. Powered by Est8Go Trust Infrastructure.">
 <meta property="og:url" content="{{ base_url }}/public/{{ tenant.slug or (tenant.business_name | lower | replace(' ', '-')) }}">
 <meta name="twitter:card" content="summary">
+
+<meta name="description" content="{{ tenant.business_name }} is a verified real estate partner on Est8Go. {{ listings|length }} GPS-verified, document-checked properties available. Trust scores on every listing."/>
+<link rel="canonical" href="{{ base_url }}/public/{{ tenant.slug }}"/>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "RealEstateAgent",
+  "name": "{{ tenant.business_name }}",
+  "url": "{{ base_url }}/public/{{ tenant.slug }}",
+  "description": "Verified real estate agency on Est8Go. GPS-verified listings with trust scores. {{ listings|length }} verified properties available.",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "NG"
+  },
+  "memberOf": {
+    "@type": "Organization",
+    "name": "Est8Go Verified Partner Network",
+    "url": "https://est8go.com"
+  },
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Verified Properties",
+    "numberOfItems": "{{ listings|length }}"
+  }
+}
+</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

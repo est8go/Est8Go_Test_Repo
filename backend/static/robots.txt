@@ -1,0 +1,27 @@
+User-agent: *
+Allow: /public/
+Allow: /static/
+Disallow: /admin/
+Disallow: /docs
+Disallow: /redoc
+Disallow: /webhook
+Disallow: /webhooks/
+
+# AI Crawlers
+User-agent: GPTBot
+Allow: /public/
+Allow: /static/
+
+User-agent: ClaudeBot
+Allow: /public/
+Allow: /static/
+
+User-agent: PerplexityBot
+Allow: /public/
+Allow: /static/
+
+User-agent: Google-Extended
+Allow: /public/
+Allow: /static/
+
+Sitemap: https://api.est8go.com/sitemap.xml

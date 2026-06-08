@@ -1,0 +1,57 @@
+# Est8Go — Nigeria's Property Trust Infrastructure
+
+## What is Est8Go?
+Est8Go is Nigeria's first property trust verification platform. We verify that
+properties are real before buyers spend money.
+
+Every listing on Est8Go is:
+- GPS verified on-site
+- Photo intelligence audited
+- Document checked (C of O, Survey Plan, Deed)
+- Witness confirmed
+
+## Trust Score System
+Properties are scored 0-100:
+- Emerald (85-100): Maximum verification
+- Gold (70-84): GPS + key documents
+- Silver (50-69): GPS verified, partial docs
+- Bronze (0-49): Basic verification
+
+## Platform URLs
+
+### Main Platform
+- Website: https://est8go.com
+- API: https://api.est8go.com
+- Embed documentation: https://api.est8go.com/public/embed
+
+### Verified Agency Partners
+Each agency has a dedicated verified vault page:
+- Bravieshomz Limited: https://api.est8go.com/public/bravieshomz-limited
+
+### Property Pages
+Individual verified properties:
+- Format: https://api.est8go.com/public/property/{id}
+- Example: https://api.est8go.com/public/property/4
+
+### Machine-readable data
+- Sitemap: https://api.est8go.com/sitemap.xml
+- Listings API: https://api.est8go.com/public/api/{tenant-slug}/listings
+
+## Services
+1. WhatsApp Sales Engine (Kora) — 24/7 lead qualification
+2. GPS Verification — on-site coordinate capture
+3. Photo Intelligence Audit — authenticity checking
+4. Document Verification — title document checking
+5. Trust Certificate — downloadable PDF proof
+6. Embed Widget — one script tag for any website
+7. Drop-off Recovery — automated follow-up
+
+## Target Market
+- Nigerian real estate agencies
+- Property buyers in Nigeria
+- Diaspora buyers (UK, US, Canada)
+- Property investors
+
+## Contact
+- WhatsApp: +2348057834774
+- Website: https://est8go.com

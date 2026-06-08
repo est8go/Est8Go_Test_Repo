@@ -78,6 +78,8 @@ def _property_context(listing, db: Session) -> dict:
         "trust_color": trust.get("color", "green"),
         "wa_link": wa_link,
         "wa_number": wa_number,
+        "base_url": os.getenv("BASE_URL", "https://api.est8go.com"),
+        "tenant": listing.tenant,
     }
 
 

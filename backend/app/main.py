@@ -16,9 +16,11 @@ from app.models_registry import register_all_models  # noqa: E402
 register_all_models()
 
 # ── 3. FASTAPI CORE ───────────────────────────────────────────
-from fastapi import FastAPI, Request  # noqa: E402
+import os  # noqa: E402
+from datetime import datetime  # noqa: E402
+from fastapi import Depends, FastAPI, Request  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
-from fastapi.responses import JSONResponse  # noqa: E402
+from fastapi.responses import JSONResponse, PlainTextResponse, Response  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from starlette.middleware.trustedhost import TrustedHostMiddleware  # noqa: E402
 
@@ -43,6 +45,8 @@ from app.credits.router import router as credits_router  # noqa: E402
 from app.credits.seat_router import router as seat_router  # noqa: E402
 from app.admin.health_router import router as health_router  # noqa: E402
 from app.admin.issues_router import router as issues_router  # noqa: E402
+from app.database.db import get_db  # noqa: E402
+from sqlalchemy.orm import Session  # noqa: E402
 
 # ── 5. SECURITY MIDDLEWARE ────────────────────────────────────
 from app.auth.deps import audit_platform_actions  # noqa: E402
@@ -134,3 +138,87 @@ def root():
         "version": "3.0.0",
         "security": "Fort Knox Edition",
     }
+
+
+# ── 13. SEO / CRAWL FILES ─────────────────────────────────────
+_STATIC_DIR = os.path.join(os.path.dirname(__file__), "../static")
+
+
+@app.get("/robots.txt", response_class=PlainTextResponse, include_in_schema=False)
+def robots_txt():
+    try:
+        with open(os.path.join(_STATIC_DIR, "robots.txt")) as f:
+            return f.read()
+    except Exception:
+        return (
+            "User-agent: *\nAllow: /public/\n"
+            "Sitemap: https://api.est8go.com/sitemap.xml\n"
+        )
+
+
+@app.get("/sitemap.xml", include_in_schema=False)
+def sitemap_xml(db: Session = Depends(get_db)):
+    return _sitemap_xml_inner(db)
+
+
+def _sitemap_xml_inner(db):
+    from app.tenants.models import Tenant
+    from app.listings.models import Listing as _Listing
+
+    base_url = os.getenv("BASE_URL", "https://api.est8go.com")
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    urls = []
+
+    for url, priority, freq in [
+        ("https://est8go.com", "1.0", "weekly"),
+        (f"{base_url}/public/embed", "0.8", "monthly"),
+    ]:
+        urls.append(
+            f"  <url>\n    <loc>{url}</loc>\n    <lastmod>{today}</lastmod>\n"
+            f"    <changefreq>{freq}</changefreq>\n    <priority>{priority}</priority>\n  </url>"
+        )
+
+    tenants = db.query(Tenant).filter(
+        Tenant.is_active == True,
+        Tenant.slug != None,
+        Tenant.tenant_type != "platform",
+    ).all()
+    for tenant in tenants:
+        if tenant.slug:
+            urls.append(
+                f"  <url>\n    <loc>{base_url}/public/{tenant.slug}</loc>\n"
+                f"    <lastmod>{today}</lastmod>\n    <changefreq>daily</changefreq>\n"
+                f"    <priority>0.9</priority>\n  </url>"
+            )
+
+    listings = db.query(_Listing).filter(
+        _Listing.status == "verified",
+        _Listing.trust_score > 0,
+    ).all()
+    for lst in listings:
+        lastmod = lst.updated_at.strftime("%Y-%m-%d") if lst.updated_at else today
+        urls.append(
+            f"  <url>\n    <loc>{base_url}/public/property/{lst.id}</loc>\n"
+            f"    <lastmod>{lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n"
+            f"    <priority>0.8</priority>\n  </url>"
+        )
+
+    sitemap = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
+        '        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
+        + "\n".join(urls)
+        + "\n</urlset>"
+    )
+    return Response(content=sitemap, media_type="application/xml")
+
+
+@app.get("/llms.txt", response_class=PlainTextResponse, include_in_schema=False)
+def llms_txt():
+    try:
+        with open(os.path.join(_STATIC_DIR, "llms.txt")) as f:
+            return f.read()
+    except Exception:
+        return (
+            "# Est8Go\nNigeria's property trust verification platform.\nhttps://est8go.com\n"
+        )
