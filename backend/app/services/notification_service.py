@@ -20,7 +20,9 @@ BUSINESS_PHONE_ID = os.getenv("WHATSAPP_PHONE_ID")
 # ---------------------------------------------------------
 
 
-async def send_meta_text_message(recipient_id: str, text: str, phone_number_id: str = None):
+async def send_meta_text_message(
+    recipient_id: str, text: str, phone_number_id: str = None
+):
     """Low-level service to push text messages to WhatsApp/Instagram."""
     pid = phone_number_id or BUSINESS_PHONE_ID
     if not META_ACCESS_TOKEN or not pid:
@@ -54,8 +56,11 @@ async def send_meta_text_message(recipient_id: str, text: str, phone_number_id: 
 
 
 async def alert_realtor_of_lead(
-    db: Session, listing_id: int, user_phone: str, biz_name: str,
-    phone_number_id: str = None
+    db: Session,
+    listing_id: int,
+    user_phone: str,
+    biz_name: str,
+    phone_number_id: str = None,
 ):
     """
     Alert priority:
@@ -77,31 +82,37 @@ async def alert_realtor_of_lead(
 
         # Priority 1: Assigned realtor
         if listing.assigned_realtor_id:
-            realtor = db.query(User).filter(
-                User.id == listing.assigned_realtor_id,
-                User.is_active == True,
-            ).first()
+            realtor = (
+                db.query(User)
+                .filter(
+                    User.id == listing.assigned_realtor_id,
+                    User.is_active == True,
+                )
+                .first()
+            )
             if realtor and realtor.phone_number:
                 alert_phone = realtor.phone_number
-                alert_name = realtor.first_name or realtor.email.split('@')[0]
+                alert_name = realtor.first_name or realtor.email.split("@")[0]
 
         # Priority 2: Tenant admin
         if not alert_phone:
-            admin = db.query(User).filter(
-                User.tenant_id == listing.tenant_id,
-                User.role == "admin",
-                User.is_active == True,
-                User.phone_number.isnot(None),
-            ).first()
+            admin = (
+                db.query(User)
+                .filter(
+                    User.tenant_id == listing.tenant_id,
+                    User.role == "admin",
+                    User.is_active == True,
+                    User.phone_number.isnot(None),
+                )
+                .first()
+            )
             if admin and admin.phone_number:
                 alert_phone = admin.phone_number
-                alert_name = admin.first_name or admin.email.split('@')[0]
+                alert_name = admin.first_name or admin.email.split("@")[0]
 
         # Priority 3: Tenant WhatsApp number
         if not alert_phone:
-            tenant = db.query(_Tenant).filter(
-                _Tenant.id == listing.tenant_id
-            ).first()
+            tenant = db.query(_Tenant).filter(_Tenant.id == listing.tenant_id).first()
             if tenant and tenant.whatsapp_phone_number:
                 digits = _re.sub(r"\D", "", tenant.whatsapp_phone_number)
                 if digits.startswith("0"):
@@ -120,20 +131,44 @@ async def alert_realtor_of_lead(
             digits = "234" + digits[1:]
         alert_phone = digits
 
+        # Build Google Maps nav link for agent
+        nav_link = ""
+        if listing.latitude and listing.longitude:
+            nav_link = (
+                f"https://www.google.com/maps/dir/?api=1"
+                f"&destination={listing.latitude},{listing.longitude}"
+                f"&travelmode=driving"
+            )
+
         alert_text = (
-            f"🚨 *HOT LEAD ALERT* 🚨\n\n"
-            f"Hi {alert_name}, a buyer is interested in:\n"
+            f"🔔 *INSPECTION ALERT — ACTION REQUIRED*\n\n"
+            f"Hi {alert_name}, a buyer has confirmed interest "
+            f"in a property you manage:\n\n"
             f"🏠 *{listing.title}*\n"
-            f"📍 {listing.location}\n"
-            f"💰 ₦{listing.price:,}\n\n"
-            f"📱 *Buyer's Phone*: +{user_phone}\n\n"
-            f"Reach out immediately! 🤝"
+            f"📍 {(listing.location or '').title()}\n"
+            f"💰 ₦{listing.price:,}\n"
+            f"🛡️ Trust Score: {listing.trust_score or 0}/100\n\n"
+            f"👤 *Buyer Details:*\n"
+            f"📱 Contact: +{user_phone}\n\n"
+            f"⚡ *Your Action:*\n"
+            f"Please reach out to the buyer immediately to "
+            f"confirm the inspection date and time.\n\n"
+            + (
+                f"📍 *Navigate to Property:*\n" f"{nav_link}\n\n"
+                if nav_link
+                else f"📍 *Location:* {(listing.location or '').title()} "
+                f"— GPS coordinates pending verification.\n\n"
+            )
+            + f"You are required to be *physically present* "
+            f"at the property gate to receive the buyer. 🤝\n\n"
+            f"Please confirm your attendance by calling "
+            f"the buyer directly."
         )
 
-        await send_meta_text_message(alert_phone, alert_text, phone_number_id=phone_number_id)
-        logger.info(
-            f"✅ Lead alert sent to {alert_phone} for listing {listing_id}"
+        await send_meta_text_message(
+            alert_phone, alert_text, phone_number_id=phone_number_id
         )
+        logger.info(f"✅ Lead alert sent to {alert_phone} for listing {listing_id}")
         return True
 
     except Exception as e:
