@@ -2149,6 +2149,15 @@ async def handle_incoming_message(data: dict, db: Session):
                     convo.state = "HANDOFF"
                     db.commit()
                     await send_meta_message(sender_id, _msg, phone_number_id=platform_id)
+                    # Send carousel for visual browsing
+                    try:
+                        carousel_data = prepare_meta_carousel(_others[:5])
+                        if carousel_data:
+                            await send_meta_carousel(
+                                sender_id, carousel_data, phone_number_id=platform_id
+                            )
+                    except Exception as _ce:
+                        logger.warning(f"After-decline carousel failed: {_ce}")
                 else:
                     _saved_d["awaiting_referral_permission"] = True
                     convo.data_json = json.dumps(_saved_d)

@@ -1,6 +1,8 @@
 # EST8GO PREMIUM MESSAGE BUILDER
 # Responsible for high-converting property summaries and referral handshakes.
 
+import os
+
 NEARBY_AREAS = {
     "maitama": ["asokoro", "wuse 2", "katampe"],
     "asokoro": ["maitama", "garki", "wuse"],
@@ -77,9 +79,10 @@ def build_property_summary(
     prop, matches: list, total_count: int, first_name: str
 ) -> str:
     """The Complete Elite Showcase: Includes Location, Links, and Closing CTA."""
-    showroom_link = f"https://est8go-api.onrender.com/public/property/{prop.id}"
+    _base = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+    showroom_link = f"{_base}/public/property/{prop.id}"
     all_ids = ",".join([str(m.id) for m in matches[:50]])
-    boutique_link = f"https://est8go-api.onrender.com/public/matches?ids={all_ids}"
+    boutique_link = f"{_base}/public/matches?ids={all_ids}"
 
     price = f"₦{int(prop.price):,}" if prop.price else "Price on request"
     location = (prop.location or "Abuja").title()
@@ -215,7 +218,8 @@ def build_comparison_message(listings: list, first_name: str) -> str:
 
 def build_referral_summary(prop, original_biz_name: str) -> str:
     """The Complete Broker Handshake: Includes Location and Direct Link."""
-    direct_link = f"https://est8go-api.onrender.com/public/property/{prop.id}"
+    _base = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+    direct_link = f"{_base}/public/property/{prop.id}"
     price = f"₦{int(prop.price):,}" if prop.price else "Price on request"
     location = (prop.location or "Abuja").title()
     trust = prop.trust_score or 0
