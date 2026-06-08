@@ -103,9 +103,6 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-# ── 10. STATIC FILES ──────────────────────────────────────────
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
 # ── 11. INCLUDE ALL ROUTERS ───────────────────────────────────
 app.include_router(auth_router)
 app.include_router(users_router)
@@ -222,3 +219,7 @@ def llms_txt():
         return (
             "# Est8Go\nNigeria's property trust verification platform.\nhttps://est8go.com\n"
         )
+
+
+# ── 14. STATIC FILES (must be last — mount shadows later routes) ──
+app.mount("/static", StaticFiles(directory="static"), name="static")
