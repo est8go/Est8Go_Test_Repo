@@ -1389,6 +1389,14 @@ async def handle_incoming_message(data: dict, db: Session):
                 "what do you have",
                 "all options",
                 "full inventory",
+                "yes show me",
+                "show me",
+                "yes show",
+                "show everything",
+                "yes everything",
+                "see everything",
+                "what else do you have",
+                "everything you have",
             }
 
             if any(w in _sc for w in _see_all_triggers_sc):
@@ -1720,6 +1728,14 @@ async def handle_incoming_message(data: dict, db: Session):
                 "what do you have",
                 "all options",
                 "full inventory",
+                "yes show me",
+                "show me",
+                "yes show",
+                "show everything",
+                "yes everything",
+                "see everything",
+                "what else do you have",
+                "everything you have",
             }
             _yes_loc_words = {
                 "yes",
