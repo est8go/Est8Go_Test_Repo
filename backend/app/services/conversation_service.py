@@ -1137,6 +1137,10 @@ async def handle_incoming_message(data: dict, db: Session):
                 f"properties in {_location}, or explore a different area?",
                 phone_number_id=platform_id,
             )
+            _data["awaiting_after_decline"] = True
+            convo.data_json = json.dumps(_data)
+            convo.funnel_stage = "verification"
+            db.commit()
             return
 
         # --- 7d. CONTINUE / NEW SEARCH HANDLERS ---
@@ -2076,6 +2080,103 @@ async def handle_incoming_message(data: dict, db: Session):
                 convo.state = "ACTIVE"
                 db.commit()
                 # Fall through to intent pipeline which will trigger search
+
+        # ── AFTER DECLINE HANDLER ────────────────────────────────────
+        _saved_d = json.loads(convo.data_json or "{}")
+        if _saved_d.get("awaiting_after_decline"):
+            _choice = text_body.strip().lower()
+            _saved_d.pop("awaiting_after_decline", None)
+
+            _yes_words_d = {
+                "yes", "ok", "sure", "show me",
+                "yes please", "other properties",
+                "other options", "show others",
+            }
+
+            if any(w in _choice for w in _yes_words_d):
+                _ptype = _saved_d.get("property_type", "")
+                _budget = (
+                    _saved_d.get("budget_max") or
+                    _saved_d.get("budget")
+                )
+                _last_id = _saved_d.get("last_viewed_id")
+
+                from app.listings.models import Listing as _OL
+
+                _others_q = db.query(_OL).filter(
+                    _OL.tenant_id == tenant_id,
+                    _OL.status == "verified",
+                )
+                if _ptype:
+                    _others_q = _others_q.filter(
+                        _OL.property_type.ilike(f"%{_ptype}%")
+                    )
+                _others = _others_q.order_by(_OL.price.asc()).limit(8).all()
+                _others = [l for l in _others if str(l.id) != str(_last_id)]
+
+                if _others:
+                    _msg = f"Here are our other verified options, {first_name}:\n\n"
+                    for _o in _others[:5]:
+                        _p = _o.price or 0
+                        _p_fmt = (
+                            f"₦{_p/1_000_000:.0f}M"
+                            if _p >= 1_000_000
+                            else f"₦{_p:,}"
+                        )
+                        _s = _o.trust_score or 0
+                        _g = (_o.trust_grade or "verified").title()
+                        _loc = (_o.location or "").title()
+                        _msg += (
+                            f"🏠 *{_o.title}*\n"
+                            f"📍 {_loc} | 💰 {_p_fmt} | 🛡️ {_s}/100 ({_g})\n\n"
+                        )
+
+                    if _budget:
+                        _within = [
+                            o for o in _others if (o.price or 0) <= int(_budget)
+                        ]
+                        if _within:
+                            _msg += (
+                                f"✅ *{len(_within)}* within your budget. "
+                                f"Which interests you most?"
+                            )
+                        else:
+                            _msg += "Which comes closest to what you need? 😊"
+
+                    _saved_d["last_match_ids"] = [o.id for o in _others]
+                    convo.data_json = json.dumps(_saved_d)
+                    convo.funnel_stage = "commitment"
+                    convo.state = "HANDOFF"
+                    db.commit()
+                    await send_meta_message(sender_id, _msg, phone_number_id=platform_id)
+                else:
+                    _saved_d["awaiting_referral_permission"] = True
+                    convo.data_json = json.dumps(_saved_d)
+                    db.commit()
+                    await send_meta_message(
+                        sender_id,
+                        f"That's everything we have verified right now, {first_name}.\n\n"
+                        f"May I check our verified partner network? 🤝\n\n"
+                        f"Reply *Yes* to search.",
+                        phone_number_id=platform_id,
+                    )
+                return
+
+            else:
+                _saved_d["awaiting_no_results_choice"] = True
+                convo.data_json = json.dumps(_saved_d)
+                db.commit()
+                await send_meta_message(
+                    sender_id,
+                    f"No problem, {first_name}. 😊\n\n"
+                    f"What would you like to do?\n\n"
+                    f"1️⃣ Try a different area\n"
+                    f"2️⃣ Adjust my budget\n"
+                    f"3️⃣ Change property type\n"
+                    f"4️⃣ Start a new search",
+                    phone_number_id=platform_id,
+                )
+                return
 
         # ── STANDALONE PURPOSE DETECTION (no awaiting_purpose flag needed) ─
         # Fires when buyer states purpose as first message without greeting
