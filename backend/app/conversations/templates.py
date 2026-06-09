@@ -160,24 +160,16 @@ def get_next_question(
             f"(e.g. '30M', '20M to 80M', '₦45,000,000'){purpose_hint}"
         )
 
-    # STEP 5 — City (locked single-city tenants skip straight to area)
-    city_locked = current_data.get("city_locked")
-    if city_locked:
-        location_val = (current_data.get("location") or "").lower().strip()
-        if not location_val or location_val in CITY_TERMS:
-            current_data["location"] = city_locked
-            examples = CITY_AREA_EXAMPLES.get(
-                city_locked, "please specify a neighbourhood"
-            )
-            city_display = city_locked.title()
-            return (
-                f"Which area of *{city_display}* are you targeting? 📍\n\n"
-                f"For example: {examples}\n\n"
-                f"This helps me find the most relevant verified properties."
-            )
+    # STEP 5 — Area (budget-guided when available; city-generic otherwise)
+    # Fires when location is empty OR is a city/locked-city name (not a specific area)
+    location_val = (current_data.get("location") or "").lower().strip()
+    location_is_city = location_val in CITY_TERMS
+    location_is_locked_city = (
+        bool(current_data.get("city_locked"))
+        and location_val == current_data.get("city_locked", "").lower()
+    )
 
-    # STEP 6 — Area guided by budget (or city question for multi-city tenants)
-    if not current_data.get("location"):
+    if not location_val or location_is_city or location_is_locked_city:
         budget = current_data.get("budget_max") or current_data.get("budget") or 0
         budget_fmt = f"₦{int(budget)/1_000_000:.0f}M" if budget else ""
 
@@ -190,6 +182,15 @@ def get_next_question(
                 f"For *{budget_fmt}* we have verified {prop_type.title()} listings in:\n\n"
                 f"{areas_list}\n\n"
                 f"Which area interests you? Or type a specific area you have in mind. 📍"
+            )
+
+        city_locked = current_data.get("city_locked", "")
+        if city_locked:
+            examples = CITY_AREA_EXAMPLES.get(city_locked, "please specify a neighbourhood")
+            return (
+                f"Which area of *{city_locked.title()}* are you targeting? 📍\n\n"
+                f"For example: {examples}\n\n"
+                f"This helps me find the most relevant verified properties."
             )
 
         coverage = current_data.get("coverage_cities", [])

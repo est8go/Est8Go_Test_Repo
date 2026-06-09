@@ -746,22 +746,45 @@ async def _no_results_cascade(
                 if _same_city
                 else "in a different area"
             )
-            await send_meta_message(
-                sender_id,
-                f"We have a verified {_ptype_title} within your budget {_location_phrase}:\n\n"
-                f"🏠 *{_cheapest.get('title')}*\n"
-                f"📍 {_cheap_loc}\n"
-                f"💰 *{_cheap_fmt}*\n"
-                f"🛡️ Trust: {_cheap_score}/100 ({_cheap_grade})\n\n"
-                f"Would this location work for you? Or shall I show you everything else we have verified right now? 😊",
-                phone_number_id=platform_id,
-            )
-            prefs["awaiting_location_alt"] = True
-            prefs["alt_listing_id"] = _cheapest.get("id")
-            convo.data_json = json.dumps(prefs)
-            convo.state = "ACTIVE"
-            convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
-            db.commit()
+            _areas_in_budget = prefs.get("tenant_areas_in_budget", [])
+            if _areas_in_budget:
+                # FIX 3: Buyer already saw budget-guided areas — remind them instead of showing a card
+                _reminder_lines = "\n".join([
+                    f"📍 *{a['area'].title()}* — from ₦{a['min_price']/1_000_000:.0f}M"
+                    for a in _areas_in_budget[:4]
+                ])
+                await send_meta_message(
+                    sender_id,
+                    f"No verified {_ptype_title} listings found in *{_loc_title}* right now.\n\n"
+                    f"Here are the areas where we have verified options within *{_budget_fmt}*:\n\n"
+                    f"{_reminder_lines}\n\n"
+                    f"Which area works for you? Just reply with the area name. 😊",
+                    phone_number_id=platform_id,
+                )
+                prefs.pop("location", None)
+                convo.data_json = json.dumps(prefs)
+                convo.state = "ACTIVE"
+                convo.funnel_stage = "verification"
+                convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                db.commit()
+            else:
+                # FIX 2: Suggest the area only — no full property card
+                await send_meta_message(
+                    sender_id,
+                    f"No verified {_ptype_title} listings in *{_loc_title}* right now.\n\n"
+                    f"We have verified options in *{_cheap_loc}* ({_location_phrase}) "
+                    f"from *{_cheap_fmt}*.\n\n"
+                    f"📍 Would *{_cheap_loc}* work for you?\n\n"
+                    f"Reply *Yes* to see listings there, or *New Search* to start fresh. 😊",
+                    phone_number_id=platform_id,
+                )
+                prefs["awaiting_location_alt"] = True
+                prefs["alt_listing_id"] = _cheapest.get("id")
+                prefs["alt_location"] = (_cheapest.get("location") or "").lower()
+                convo.data_json = json.dumps(prefs)
+                convo.state = "ACTIVE"
+                convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                db.commit()
             return
 
         # Above budget — show as stretch option
@@ -1838,6 +1861,7 @@ async def handle_incoming_message(data: dict, db: Session):
             _lac = text_body.strip().lower()
             _saved2.pop("awaiting_location_alt", None)
             _alt_id = _saved2.pop("alt_listing_id", None)
+            _alt_loc = _saved2.pop("alt_location", None)
 
             _see_all_triggers_la = {
                 "everything",
@@ -1883,7 +1907,74 @@ async def handle_incoming_message(data: dict, db: Session):
                 text_body = "yes"
                 # Fall through to awaiting_see_all_tenant handler below
             elif any(w in _lac for w in _yes_loc_words):
-                if _alt_id:
+                if _alt_loc:
+                    # Search in the alt area and show proper results
+                    _saved2["location"] = _alt_loc
+                    convo.data_json = json.dumps(_saved2)
+                    convo.state = "ACTIVE"
+                    db.commit()
+                    try:
+                        _ar = execute_premium_search(db, tenant_id, _saved2)
+                        _am = _ar.get("data", [])
+                        _at = _ar.get("total_count", 0)
+                        if _am:
+                            _asum = build_property_summary(
+                                _am[0], _am, _at, first_name
+                            )
+                            try:
+                                from app.listings.models import ListingImage as _LAI
+                                from app.services.notification_service import (
+                                    send_meta_image_message as _sim,
+                                )
+                                _aimg = (
+                                    db.query(_LAI)
+                                    .filter(_LAI.listing_id == _am[0].id)
+                                    .first()
+                                )
+                                if _aimg and _aimg.url:
+                                    await _sim(
+                                        sender_id,
+                                        _aimg.url,
+                                        _asum,
+                                        phone_number_id=platform_id,
+                                    )
+                                else:
+                                    await send_meta_message(
+                                        sender_id, _asum, phone_number_id=platform_id
+                                    )
+                            except Exception:
+                                await send_meta_message(
+                                    sender_id, _asum, phone_number_id=platform_id
+                                )
+                            _saved2["last_viewed_id"] = _am[0].id
+                            _saved2["last_viewed_title"] = _am[0].title or ""
+                            _saved2["last_match_ids"] = [m.id for m in _am]
+                            convo.data_json = json.dumps(_saved2)
+                            convo.funnel_stage = "commitment"
+                            convo.state = "HANDOFF"
+                            convo.last_active_at = datetime.now(timezone.utc).replace(
+                                tzinfo=None
+                            )
+                            db.commit()
+                            carousel_data = prepare_meta_carousel(_am)
+                            await send_meta_carousel(
+                                sender_id, carousel_data, phone_number_id=platform_id
+                            )
+                        else:
+                            await send_meta_message(
+                                sender_id,
+                                f"No verified listings found in *{_alt_loc.title()}* "
+                                f"right now either, {first_name}.\n\n"
+                                f"Would you like to see everything we have? 😊",
+                                phone_number_id=platform_id,
+                            )
+                            _saved2["awaiting_see_all_tenant"] = True
+                            convo.data_json = json.dumps(_saved2)
+                            db.commit()
+                    except Exception as _ale:
+                        logger.error(f"Alt location search failed: {_ale}")
+                elif _alt_id:
+                    # Fallback for legacy stored prefs without alt_location
                     _lst = db.get(Listing, _alt_id)
                     if _lst:
                         _p = _lst.price or 0
