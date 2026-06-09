@@ -975,24 +975,128 @@ async def handle_incoming_message(data: dict, db: Session):
             list_id = int(btn_payload.split("_")[-1])
             listing = db.get(Listing, list_id)
             if listing:
+                # Resolve dedicated agent/admin for this listing
+                _agent_name = None
+                _agent_role = None
+                _agent_phone = None
+                try:
+                    from app.users.models import User as _BtnUser
+                    _agent_user = None
+                    if listing.assigned_realtor_id:
+                        _agent_user = (
+                            db.query(_BtnUser)
+                            .filter(
+                                _BtnUser.id == listing.assigned_realtor_id,
+                                _BtnUser.is_active == True,
+                            )
+                            .first()
+                        )
+                    if not _agent_user:
+                        _agent_user = (
+                            db.query(_BtnUser)
+                            .filter(
+                                _BtnUser.tenant_id == tenant_id,
+                                _BtnUser.role == "admin",
+                                _BtnUser.is_active == True,
+                                _BtnUser.phone_number.isnot(None),
+                            )
+                            .first()
+                        )
+                    if _agent_user:
+                        _agent_name = (
+                            _agent_user.first_name
+                            or _agent_user.email.split("@")[0]
+                        )
+                        _agent_role = "Lead Property Consultant"
+                        _agent_phone = _agent_user.phone_number or None
+                except Exception:
+                    pass
+
+                # Message 1 — inspection confirmed + agent details
+                _insp_msg = (
+                    f"Perfect, {first_name}! 🎯\n\n"
+                    f"Your inspection request for *{listing.title}* "
+                    f"has been received and logged.\n\n"
+                )
+                if _agent_name:
+                    _insp_msg += f"*Your dedicated consultant:*\n👤 {_agent_name}\n"
+                    if _agent_role:
+                        _insp_msg += f"🏢 {_agent_role}\n"
+                    if _agent_phone:
+                        _insp_msg += f"📱 {_agent_phone}\n"
+                    _insp_msg += "\n"
+                _insp_msg += (
+                    f"They will call you personally within *2 hours* "
+                    f"to confirm your visit details.\n\n"
+                    f"Please keep your phone available. 📱"
+                )
                 await send_meta_message(
-                    sender_id,
-                    f"✅ *Interest Verified, {first_name}* \n\n"
-                    f"Establishing a direct satellite link to the site... 🛰️",
-                    phone_number_id=platform_id,
-                )
-                nav_msg = build_inspection_confirmation(
-                    first_name, listing.title, listing.latitude, listing.longitude
-                )
-                await send_meta_message(sender_id, nav_msg, phone_number_id=platform_id)
-                await alert_realtor_of_lead(
-                    db, list_id, sender_id, biz_name, phone_number_id=platform_id
+                    sender_id, _insp_msg, phone_number_id=platform_id
                 )
 
-                # Update funnel to handshake
+                # Message 2 — navigation + directions (if available)
+                _nav_url = ""
+                if listing.latitude and listing.longitude:
+                    _nav_url = (
+                        f"https://www.google.com/maps/dir/?api=1"
+                        f"&destination={listing.latitude},{listing.longitude}"
+                        f"&travelmode=driving"
+                    )
+                _lst_dir = getattr(listing, "directions", None)
+                if _nav_url or _lst_dir:
+                    _close_msg = ""
+                    if _nav_url:
+                        _close_msg += f"📍 *Property Location:*\n{_nav_url}\n\n"
+                    if _lst_dir:
+                        _close_msg += f"🗺️ *How to find us:*\n{_lst_dir}\n\n"
+                    _close_msg += (
+                        f"Thank you for choosing *{biz_name}* — where every "
+                        f"listing is GPS-verified and document-checked. 🛡️"
+                    )
+                    await send_meta_message(
+                        sender_id, _close_msg, phone_number_id=platform_id
+                    )
+
+                # Alert agent with full buyer brief
+                _bp = listing.price or 0
+                _bp_fmt = (
+                    f"₦{_bp/1_000_000:.0f}M" if _bp >= 1_000_000 else f"₦{_bp:,}"
+                )
+                _alert = (
+                    f"🔔 *NEW INSPECTION REQUEST*\n\n"
+                    f"👤 *Buyer:* {first_name}\n"
+                    f"📱 *WhatsApp:* wa.me/{sender_id}\n\n"
+                    f"🏠 *Property:* {listing.title}\n"
+                    f"📍 *Location:* {(listing.location or '').title()}\n"
+                    f"💰 *Price:* {_bp_fmt}\n"
+                    f"🛡️ *Trust Score:* {listing.trust_score or 0}/100\n\n"
+                )
+                if _lst_dir:
+                    _alert += f"🗺️ *Directions:*\n{_lst_dir}\n\n"
+                if listing.latitude and listing.longitude:
+                    _alert += (
+                        f"📍 *Google Maps:*\n"
+                        f"https://www.google.com/maps/dir/?api=1"
+                        f"&destination={listing.latitude},{listing.longitude}\n\n"
+                    )
+                _alert += (
+                    f"⚡ *Please call this buyer within 2 hours.*\n\n"
+                    f"Tap to open their WhatsApp:\nwa.me/{sender_id}"
+                )
+                await alert_realtor_of_lead(
+                    db,
+                    list_id,
+                    sender_id,
+                    biz_name,
+                    phone_number_id=platform_id,
+                    custom_message=_alert,
+                )
+
+                # Close funnel — agent takes over
                 if convo:
-                    convo.funnel_stage = "handshake"
-                    convo.lead_score = 85
+                    convo.funnel_stage = "closed"
+                    convo.state = "CLOSED"
+                    convo.lead_score = 90
                     convo.last_active_at = datetime.now(timezone.utc).replace(
                         tzinfo=None
                     )
@@ -1123,6 +1227,15 @@ async def handle_incoming_message(data: dict, db: Session):
             convo.data_json = json.dumps({})
             db.commit()
             # Continue processing as a fresh conversation
+
+        # --- 7b-CITY. Ensure city_locked for single-city tenants on every message ---
+        if _coverage_cities and len(_coverage_cities) == 1:
+            _convo_data = json.loads(convo.data_json or "{}")
+            if not _convo_data.get("city_locked") and not _convo_data.get("location"):
+                _convo_data["city_locked"] = _coverage_cities[0]
+                _convo_data["location"] = _coverage_cities[0]
+                convo.data_json = json.dumps(_convo_data)
+                db.commit()
 
         # --- 7c. COMMITMENT DECLINE ---
         # Buyer said No after inspection offer — offer soft alternative
@@ -3145,18 +3258,132 @@ async def handle_incoming_message(data: dict, db: Session):
                 last_id = prefs.get("last_viewed_id")
                 listing = db.get(Listing, last_id) if last_id else None
                 if listing:
-                    connection_msg = build_inspection_confirmation(
-                        first_name, listing.title, listing.latitude, listing.longitude,
-                        directions=getattr(listing, "directions", None),
+                    # Resolve dedicated agent/admin for this listing
+                    _hs_agent_name = None
+                    _hs_agent_role = None
+                    _hs_agent_phone = None
+                    try:
+                        from app.users.models import User as _HsUser
+                        _hs_agent = None
+                        if listing.assigned_realtor_id:
+                            _hs_agent = (
+                                db.query(_HsUser)
+                                .filter(
+                                    _HsUser.id == listing.assigned_realtor_id,
+                                    _HsUser.is_active == True,
+                                )
+                                .first()
+                            )
+                        if not _hs_agent:
+                            _hs_agent = (
+                                db.query(_HsUser)
+                                .filter(
+                                    _HsUser.tenant_id == tenant_id,
+                                    _HsUser.role == "admin",
+                                    _HsUser.is_active == True,
+                                    _HsUser.phone_number.isnot(None),
+                                )
+                                .first()
+                            )
+                        if _hs_agent:
+                            _hs_agent_name = (
+                                _hs_agent.first_name
+                                or _hs_agent.email.split("@")[0]
+                            )
+                            _hs_agent_role = "Lead Property Consultant"
+                            _hs_agent_phone = _hs_agent.phone_number or None
+                    except Exception:
+                        pass
+
+                    # Message 1 — inspection confirmed + agent details
+                    _hs_msg = (
+                        f"Perfect, {first_name}! 🎯\n\n"
+                        f"Your inspection request for *{listing.title}* "
+                        f"has been received and logged.\n\n"
+                    )
+                    if _hs_agent_name:
+                        _hs_msg += (
+                            f"*Your dedicated consultant:*\n"
+                            f"👤 {_hs_agent_name}\n"
+                        )
+                        if _hs_agent_role:
+                            _hs_msg += f"🏢 {_hs_agent_role}\n"
+                        if _hs_agent_phone:
+                            _hs_msg += f"📱 {_hs_agent_phone}\n"
+                        _hs_msg += "\n"
+                    _hs_msg += (
+                        f"They will call you personally within *2 hours* "
+                        f"to confirm your visit details.\n\n"
+                        f"Please keep your phone available. 📱"
                     )
                     await send_meta_message(
-                        sender_id, connection_msg, phone_number_id=platform_id
+                        sender_id, _hs_msg, phone_number_id=platform_id
+                    )
+
+                    # Message 2 — navigation + directions (if available)
+                    _hs_nav = ""
+                    if listing.latitude and listing.longitude:
+                        _hs_nav = (
+                            f"https://www.google.com/maps/dir/?api=1"
+                            f"&destination={listing.latitude},{listing.longitude}"
+                            f"&travelmode=driving"
+                        )
+                    _hs_dir = getattr(listing, "directions", None)
+                    if _hs_nav or _hs_dir:
+                        _hs_close = ""
+                        if _hs_nav:
+                            _hs_close += f"📍 *Property Location:*\n{_hs_nav}\n\n"
+                        if _hs_dir:
+                            _hs_close += f"🗺️ *How to find us:*\n{_hs_dir}\n\n"
+                        _hs_close += (
+                            f"Thank you for choosing *{biz_name}* — where every "
+                            f"listing is GPS-verified and document-checked. 🛡️"
+                        )
+                        await send_meta_message(
+                            sender_id, _hs_close, phone_number_id=platform_id
+                        )
+
+                    # Alert agent with full buyer brief
+                    _hs_p = listing.price or 0
+                    _hs_p_fmt = (
+                        f"₦{_hs_p/1_000_000:.0f}M"
+                        if _hs_p >= 1_000_000
+                        else f"₦{_hs_p:,}"
+                    )
+                    _hs_alert = (
+                        f"🔔 *NEW INSPECTION REQUEST*\n\n"
+                        f"👤 *Buyer:* {first_name}\n"
+                        f"📱 *WhatsApp:* wa.me/{sender_id}\n\n"
+                        f"🏠 *Property:* {listing.title}\n"
+                        f"📍 *Location:* {(listing.location or '').title()}\n"
+                        f"💰 *Price:* {_hs_p_fmt}\n"
+                        f"🛡️ *Trust Score:* {listing.trust_score or 0}/100\n\n"
+                    )
+                    if _hs_dir:
+                        _hs_alert += f"🗺️ *Directions:*\n{_hs_dir}\n\n"
+                    if listing.latitude and listing.longitude:
+                        _hs_alert += (
+                            f"📍 *Google Maps:*\n"
+                            f"https://www.google.com/maps/dir/?api=1"
+                            f"&destination={listing.latitude},{listing.longitude}\n\n"
+                        )
+                    _hs_alert += (
+                        f"⚡ *Please call this buyer within 2 hours.*\n\n"
+                        f"Tap to open their WhatsApp:\nwa.me/{sender_id}"
                     )
                     await alert_realtor_of_lead(
-                        db, last_id, sender_id, biz_name, phone_number_id=platform_id
+                        db,
+                        last_id,
+                        sender_id,
+                        biz_name,
+                        phone_number_id=platform_id,
+                        custom_message=_hs_alert,
                     )
-                    convo.funnel_stage = "handshake"
-                    convo.lead_score = min((convo.lead_score or 0) + 20, 100)
+
+                    # Close funnel — agent takes over
+                    convo.funnel_stage = "closed"
+                    convo.state = "CLOSED"
+                    convo.lead_score = 90
                     convo.last_active_at = datetime.now(timezone.utc).replace(
                         tzinfo=None
                     )
