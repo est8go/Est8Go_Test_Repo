@@ -108,9 +108,9 @@ def get_next_question(
     purpose → property_type → bedrooms (if residential) → budget → area (guided) → search
     """
 
-    # STEP 1 — Purpose (default to general — never block funnel)
+    # STEP 1 — Purpose (handled by opener, skip if not set)
     if not current_data.get("purpose"):
-        current_data["purpose"] = "general"
+        return None
 
     # STEP 2 — Property type
     if not current_data.get("property_type"):
@@ -160,16 +160,21 @@ def get_next_question(
             f"(e.g. '30M', '20M to 80M', '₦45,000,000'){purpose_hint}"
         )
 
-    # STEP 5 — Area (budget-guided when available; city-generic otherwise)
-    # Fires when location is empty OR is a city/locked-city name (not a specific area)
+    # STEP 5 — Area guided by budget
     location_val = (current_data.get("location") or "").lower().strip()
-    location_is_city = location_val in CITY_TERMS
-    location_is_locked_city = (
-        bool(current_data.get("city_locked"))
-        and location_val == current_data.get("city_locked", "").lower()
+    city_locked = (current_data.get("city_locked") or "").lower().strip()
+
+    # Need a specific area if:
+    # - No location set at all
+    # - Location is a broad city name (too wide to search)
+    # - Location was set to the locked city by city_locked injection (not a real area)
+    needs_area = (
+        not location_val
+        or location_val in CITY_TERMS
+        or (city_locked and location_val == city_locked)
     )
 
-    if not location_val or location_is_city or location_is_locked_city:
+    if needs_area:
         budget = current_data.get("budget_max") or current_data.get("budget") or 0
         budget_fmt = f"₦{int(budget)/1_000_000:.0f}M" if budget else ""
 
@@ -183,29 +188,10 @@ def get_next_question(
                 f"{areas_list}\n\n"
                 f"Which area interests you? Or type a specific area you have in mind. 📍"
             )
-
-        city_locked = current_data.get("city_locked", "")
-        if city_locked:
-            examples = CITY_AREA_EXAMPLES.get(city_locked, "please specify a neighbourhood")
-            return (
-                f"Which area of *{city_locked.title()}* are you targeting? 📍\n\n"
-                f"For example: {examples}\n\n"
-                f"This helps me find the most relevant verified properties."
-            )
-
-        coverage = current_data.get("coverage_cities", [])
-        if coverage:
-            cities_list = ", ".join(c.title() for c in coverage)
-            return (
-                f"Which city are you searching in for your "
-                f"{prop_type.title()}? 🏙️\n\n"
-                f"We cover {cities_list}."
-            )
         else:
             return (
-                f"Which city are you searching in for your "
-                f"{prop_type.title()}? 🏙️\n\n"
-                f"We cover Abuja, Lagos, Port Harcourt, Ibadan, Enugu and more."
+                "Which area are you targeting? 📍\n\n"
+                "Tell me the neighbourhood or estate and I'll search our verified listings."
             )
 
     # All collected — ready to search
