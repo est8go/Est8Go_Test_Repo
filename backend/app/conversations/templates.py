@@ -160,7 +160,23 @@ def get_next_question(
             f"(e.g. '30M', '20M to 80M', '₦45,000,000'){purpose_hint}"
         )
 
-    # STEP 5 — Area guided by budget
+    # STEP 5 — City (locked single-city tenants skip straight to area)
+    city_locked = current_data.get("city_locked")
+    if city_locked:
+        location_val = (current_data.get("location") or "").lower().strip()
+        if not location_val or location_val in CITY_TERMS:
+            current_data["location"] = city_locked
+            examples = CITY_AREA_EXAMPLES.get(
+                city_locked, "please specify a neighbourhood"
+            )
+            city_display = city_locked.title()
+            return (
+                f"Which area of *{city_display}* are you targeting? 📍\n\n"
+                f"For example: {examples}\n\n"
+                f"This helps me find the most relevant verified properties."
+            )
+
+    # STEP 6 — Area guided by budget (or city question for multi-city tenants)
     if not current_data.get("location"):
         budget = current_data.get("budget_max") or current_data.get("budget") or 0
         budget_fmt = f"₦{int(budget)/1_000_000:.0f}M" if budget else ""
@@ -175,10 +191,20 @@ def get_next_question(
                 f"{areas_list}\n\n"
                 f"Which area interests you? Or type a specific area you have in mind. 📍"
             )
+
+        coverage = current_data.get("coverage_cities", [])
+        if coverage:
+            cities_list = ", ".join(c.title() for c in coverage)
+            return (
+                f"Which city are you searching in for your "
+                f"{prop_type.title()}? 🏙️\n\n"
+                f"We cover {cities_list}."
+            )
         else:
             return (
-                "Which area are you targeting? 📍\n\n"
-                "Tell me the neighbourhood or estate and I'll search our verified listings."
+                f"Which city are you searching in for your "
+                f"{prop_type.title()}? 🏙️\n\n"
+                f"We cover Abuja, Lagos, Port Harcourt, Ibadan, Enugu and more."
             )
 
     # All collected — ready to search

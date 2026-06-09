@@ -938,6 +938,11 @@ async def handle_incoming_message(data: dict, db: Session):
         first_name = whatsapp_name.split()[0] if whatsapp_name else "there"
         biz_name = tenant_profile.get("business_name", "our firm")
 
+        # Coverage cities — pre-set city for single-city tenants
+        _coverage_cities = tenant_profile.get("coverage_cities", []) or []
+        _single_city = len(_coverage_cities) == 1
+        _primary_city = _coverage_cities[0] if _coverage_cities else None
+
         # --- 3. CONVERSATION LOOKUP ---
         convo = (
             db.query(Conversation)
@@ -1038,6 +1043,10 @@ async def handle_incoming_message(data: dict, db: Session):
                     # Skip opener — process intent directly
                     _gd = json.loads(convo.data_json or "{}")
                     _gd["purpose"] = "general"
+                    if _coverage_cities:
+                        _gd["coverage_cities"] = _coverage_cities
+                    if _single_city and _primary_city:
+                        _gd["city_locked"] = _primary_city
                     convo.data_json = json.dumps(_gd)
                     convo.state = "ACTIVE"
                     convo.last_active_at = datetime.now(timezone.utc).replace(
@@ -1057,6 +1066,10 @@ async def handle_incoming_message(data: dict, db: Session):
                     )
                     _gd = json.loads(convo.data_json or "{}")
                     _gd["awaiting_purpose"] = True
+                    if _coverage_cities:
+                        _gd["coverage_cities"] = _coverage_cities
+                    if _single_city and _primary_city:
+                        _gd["city_locked"] = _primary_city
                     convo.data_json = json.dumps(_gd)
                     convo.state = "ACTIVE"
                     convo.last_active_at = datetime.now(timezone.utc).replace(

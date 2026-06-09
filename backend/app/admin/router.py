@@ -57,6 +57,7 @@ class CreateTenantRequest(BaseModel):
     whatsapp_phone_number_id: Optional[str] = None
     admin_email: str
     admin_password: str
+    coverage_cities: list = []
 
 
 class TenantListItem(BaseModel):
@@ -309,6 +310,7 @@ def create_tenant(
             plan=payload.plan.lower(),
             whatsapp_phone_number_id=payload.whatsapp_phone_number_id,
             is_active=True,
+            coverage_cities=payload.coverage_cities or [],
         )
         db.add(tenant)
         db.flush()  # get tenant.id before creating user

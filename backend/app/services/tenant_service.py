@@ -38,6 +38,8 @@ def get_tenant_profile(db: Session, tenant_id: int):
             "tone": tenant.tone,
             "emoji": tenant.emoji,
             "slug": tenant.slug or "",
+            "areas_covered": tenant.areas_covered or "Abuja",
+            "coverage_cities": getattr(tenant, "coverage_cities", []) or [],
         }
 
     # Standard fallback if tenant is not found

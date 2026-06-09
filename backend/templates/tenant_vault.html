@@ -13,7 +13,12 @@
 <meta property="og:url" content="{{ base_url }}/public/{{ tenant.slug or (tenant.business_name | lower | replace(' ', '-')) }}">
 <meta name="twitter:card" content="summary">
 
+{% if tenant.coverage_cities %}
+{% set cities_str = tenant.coverage_cities | join(', ') %}
+<meta name="description" content="{{ tenant.business_name }} is a verified real estate partner on Est8Go. Verified properties in {{ cities_str }}. GPS-verified, document-checked listings with trust scores."/>
+{% else %}
 <meta name="description" content="{{ tenant.business_name }} is a verified real estate partner on Est8Go. {{ listings|length }} GPS-verified, document-checked properties available. Trust scores on every listing."/>
+{% endif %}
 <link rel="canonical" href="{{ base_url }}/public/{{ tenant.slug }}"/>
 <script type="application/ld+json">
 {
@@ -259,6 +264,13 @@ html[data-theme="light"] .vault-hero{
         <div class="agency-verified">
           <span>✓</span><span>Est8Go Verified Partner</span>
         </div>
+        {% if tenant.coverage_cities %}
+        <div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.35rem">
+          {% for city in tenant.coverage_cities %}
+          <span style="background:rgba(79,70,229,0.15);color:#4F46E5;border:1px solid rgba(79,70,229,0.3);padding:0.15rem 0.5rem;border-radius:9999px;font-size:0.7rem;font-weight:600;text-transform:capitalize">📍 {{ city }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
       </div>
     </div>
     <div class="header-actions">

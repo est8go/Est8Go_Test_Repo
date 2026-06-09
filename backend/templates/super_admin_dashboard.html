@@ -936,6 +936,19 @@
     <div class="field-group"><label class="field-label">WhatsApp Phone Number ID</label><input type="text" id="nt_wa" class="field-input" placeholder="Meta Phone Number ID" /></div>
     <div class="field-group"><label class="field-label">Admin Email</label><input type="email" id="nt_email" class="field-input" placeholder="admin@company.com" /></div>
     <div class="field-group"><label class="field-label">Admin Password</label><input type="password" id="nt_pass" class="field-input" placeholder="Temporary password" /></div>
+    <div class="field-group">
+      <label class="field-label">Coverage Cities</label>
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;padding:0.75rem;background:var(--bg);border:1px solid var(--border);border-radius:0.5rem" id="citiesCheckboxes">
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.85rem;color:var(--text);padding:0.3rem 0.6rem;border-radius:0.375rem;border:1px solid var(--border);background:var(--surface)"><input type="checkbox" name="coverage_cities" value="abuja"> Abuja</label>
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.85rem;color:var(--text);padding:0.3rem 0.6rem;border-radius:0.375rem;border:1px solid var(--border);background:var(--surface)"><input type="checkbox" name="coverage_cities" value="lagos"> Lagos</label>
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.85rem;color:var(--text);padding:0.3rem 0.6rem;border-radius:0.375rem;border:1px solid var(--border);background:var(--surface)"><input type="checkbox" name="coverage_cities" value="port harcourt"> Port Harcourt</label>
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.85rem;color:var(--text);padding:0.3rem 0.6rem;border-radius:0.375rem;border:1px solid var(--border);background:var(--surface)"><input type="checkbox" name="coverage_cities" value="enugu"> Enugu</label>
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.85rem;color:var(--text);padding:0.3rem 0.6rem;border-radius:0.375rem;border:1px solid var(--border);background:var(--surface)"><input type="checkbox" name="coverage_cities" value="ibadan"> Ibadan</label>
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.85rem;color:var(--text);padding:0.3rem 0.6rem;border-radius:0.375rem;border:1px solid var(--border);background:var(--surface)"><input type="checkbox" name="coverage_cities" value="kano"> Kano</label>
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.85rem;color:var(--text);padding:0.3rem 0.6rem;border-radius:0.375rem;border:1px solid var(--border);background:var(--surface)"><input type="checkbox" name="coverage_cities" value="benin city"> Benin City</label>
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.85rem;color:var(--text);padding:0.3rem 0.6rem;border-radius:0.375rem;border:1px solid var(--border);background:var(--surface)"><input type="checkbox" name="coverage_cities" value="warri"> Warri</label>
+      </div>
+    </div>
     <div style="padding:20px 20px 8px;display:flex;gap:10px">
       <button class="btn-ghost" onclick="closeModal('newTenantModal')" style="flex:1">Cancel</button>
       <button class="btn-em" onclick="createTenant()" style="flex:2">Create Tenant</button>
@@ -1444,11 +1457,14 @@
     const wa    = g('nt_wa').value.trim();
     const email = g('nt_email').value.trim();
     const pass  = g('nt_pass').value;
+    const coverage_cities = Array.from(
+      document.querySelectorAll('input[name="coverage_cities"]:checked')
+    ).map(cb => cb.value);
     if (!name || !email || !pass) { toast('Please fill all required fields', 'var(--risk)'); return; }
     try {
       const res = await Auth.fetch('/admin/tenants', {
         method: 'POST',
-        body: JSON.stringify({ name, tenant_type:type, plan, whatsapp_phone_number_id:wa, admin_email:email, admin_password:pass })
+        body: JSON.stringify({ name, tenant_type:type, plan, whatsapp_phone_number_id:wa, admin_email:email, admin_password:pass, coverage_cities })
       });
       if (!res) return;
       if (res.ok) { toast('✓ Tenant created successfully'); closeModal('newTenantModal'); loadTenants(); }

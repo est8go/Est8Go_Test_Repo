@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Index
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Index, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database.base import Base
@@ -59,6 +59,9 @@ class Tenant(Base):
 
     # --- TIMESTAMPS ---
     created_at = Column(DateTime, default=func.now())
+
+    # --- COVERAGE ---
+    coverage_cities = Column(JSON, default=list, nullable=True)
 
     # --- RETENTION ---
     suspended_at = Column(DateTime, nullable=True)   # set when is_active → False
