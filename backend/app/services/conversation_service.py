@@ -444,32 +444,20 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
         db.commit()
 
     # After budget captured — show tenant areas within budget
-    from app.conversations.templates import CITY_TERMS as _CT
     _extr = intent_result.extracted or {}
-    _cur_loc = (current_data.get("location") or "").lower().strip()
-    _cur_city_locked = (current_data.get("city_locked") or "").lower().strip()
-    _loc_is_city = (
-        _cur_loc in _CT
-        or (_cur_city_locked and _cur_loc == _cur_city_locked)
-    )
     if (
         (_extr.get("budget") or _extr.get("budget_max"))
         and not _extr.get("location")
-        and (not current_data.get("location") or _loc_is_city)
+        and not current_data.get("location")
     ):
         try:
             from app.services.chatbot.search_service import get_tenant_areas_by_budget
-
             _bval = (
-                _extr.get("budget_max")
-                or _extr.get("budget")
-                or current_data.get("budget_max")
-                or current_data.get("budget")
+                _extr.get("budget_max") or _extr.get("budget")
+                or current_data.get("budget_max") or current_data.get("budget")
             )
             _areas = get_tenant_areas_by_budget(
-                db,
-                tenant_id,
-                int(_bval),
+                db, tenant_id, int(_bval),
                 current_data.get("property_type", ""),
             )
             current_data["tenant_areas_in_budget"] = _areas
@@ -484,9 +472,7 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
             get_next_question(
                 current_data,
                 tenant_areas_by_budget=current_data.get("tenant_areas_in_budget", []),
-            )
-            if not intent_result.extracted
-            else None
+            ) if not intent_result.extracted else None
         )
 
         # Handle all known intents without GPT
@@ -620,7 +606,6 @@ async def _no_results_cascade(
 
     # ── LEVEL 1: Nearby areas (real listings) ──────────────────
     from app.services.chatbot.message_builder import NEARBY_AREAS
-
     _nearby = [a for a in NEARBY_AREAS.get(_loc, []) if a not in _searched]
 
     _nearby_results = {}
@@ -678,123 +663,14 @@ async def _no_results_cascade(
 
     # ── LEVEL 2: Tenant cheapest option ────────────────────────
     from app.services.chatbot.search_service import get_tenant_cheapest_listing
-
     _cheapest = get_tenant_cheapest_listing(db, tenant_id, _ptype)
 
     if _cheapest and _cheapest.get("price"):
-        _cheapest_price = _cheapest["price"]
-        _budget_val = int(_budget) if _budget else 0
         _cheap_fmt = _cheapest.get("price_fmt", "")
         _cheap_loc = (_cheapest.get("location") or "").title()
         _cheap_score = _cheapest.get("trust_score", 0)
         _cheap_grade = (_cheapest.get("trust_grade") or "verified").title()
 
-        if _budget_val and _cheapest_price <= _budget_val:
-            # Within budget — location mismatch, not budget mismatch
-            _cheap_loc_lower = (_cheapest.get("location") or "").lower()
-            _same_city_map = {
-                "abuja": {
-                    "apo",
-                    "maitama",
-                    "asokoro",
-                    "guzape",
-                    "wuse",
-                    "garki",
-                    "jabi",
-                    "gwarinpa",
-                    "kubwa",
-                    "lugbe",
-                    "galadimawa",
-                    "lifecamp",
-                    "katampe",
-                    "nbora",
-                    "dawaki",
-                    "gwagwalada",
-                    "kuje",
-                    "bwari",
-                    "wuse 2",
-                    "wuse2",
-                    "central business district",
-                    "cbd",
-                },
-                "lagos": {
-                    "lekki",
-                    "vi",
-                    "victoria island",
-                    "ikoyi",
-                    "ajah",
-                    "surulere",
-                    "yaba",
-                    "ikeja",
-                    "gbagada",
-                    "maryland",
-                    "magodo",
-                    "festac",
-                    "isolo",
-                    "ojodu",
-                    "agege",
-                    "badagry",
-                    "epe",
-                },
-            }
-            _same_city = False
-            for _city_key, _city_areas in _same_city_map.items():
-                _search_in_city = _loc == _city_key or any(
-                    a in _loc for a in _city_areas
-                )
-                _found_in_city = _cheap_loc_lower == _city_key or any(
-                    a in _cheap_loc_lower for a in _city_areas
-                )
-                if _search_in_city and _found_in_city:
-                    _same_city = True
-                    break
-            _location_phrase = (
-                "in a nearby area of the same city"
-                if _same_city
-                else "in a different area"
-            )
-            _areas_in_budget = prefs.get("tenant_areas_in_budget", [])
-            if _areas_in_budget:
-                # FIX 3: Buyer already saw budget-guided areas — remind them instead of showing a card
-                _reminder_lines = "\n".join([
-                    f"📍 *{a['area'].title()}* — from ₦{a['min_price']/1_000_000:.0f}M"
-                    for a in _areas_in_budget[:4]
-                ])
-                await send_meta_message(
-                    sender_id,
-                    f"No verified {_ptype_title} listings found in *{_loc_title}* right now.\n\n"
-                    f"Here are the areas where we have verified options within *{_budget_fmt}*:\n\n"
-                    f"{_reminder_lines}\n\n"
-                    f"Which area works for you? Just reply with the area name. 😊",
-                    phone_number_id=platform_id,
-                )
-                prefs.pop("location", None)
-                convo.data_json = json.dumps(prefs)
-                convo.state = "ACTIVE"
-                convo.funnel_stage = "verification"
-                convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
-                db.commit()
-            else:
-                # FIX 2: Suggest the area only — no full property card
-                await send_meta_message(
-                    sender_id,
-                    f"No verified {_ptype_title} listings in *{_loc_title}* right now.\n\n"
-                    f"We have verified options in *{_cheap_loc}* ({_location_phrase}) "
-                    f"from *{_cheap_fmt}*.\n\n"
-                    f"📍 Would *{_cheap_loc}* work for you?\n\n"
-                    f"Reply *Yes* to see listings there, or *New Search* to start fresh. 😊",
-                    phone_number_id=platform_id,
-                )
-                prefs["awaiting_location_alt"] = True
-                prefs["alt_listing_id"] = _cheapest.get("id")
-                prefs["alt_location"] = (_cheapest.get("location") or "").lower()
-                convo.data_json = json.dumps(prefs)
-                convo.state = "ACTIVE"
-                convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
-                db.commit()
-            return
-
-        # Above budget — show as stretch option
         _stretch_msg = (
             f"Our closest verified {_ptype_title} to your budget is:\n\n"
             f"🏠 *{_cheapest.get('title')}*\n"
@@ -802,20 +678,13 @@ async def _no_results_cascade(
             f"💰 *{_cheap_fmt}* | 🛡️ {_cheap_score}/100 ({_cheap_grade})\n\n"
         )
 
-        if _budget_val:
-            _diff = (_cheapest_price - _budget_val) / 1_000_000
-            if _diff > 0:
-                _stretch_msg += f"That's ₦{_diff:.0f}M above your current budget.\n\n"
-            elif _diff < 0:
-                _stretch_msg += (
-                    f"This is actually ₦{abs(_diff):.0f}M *within* your budget. ✅\n\n"
-                )
-            else:
-                _stretch_msg += f"This matches your budget exactly. ✅\n\n"
+        if _budget:
+            _diff = (_cheapest["price"] - _budget) / 1_000_000
+            _stretch_msg += f"That's ₦{_diff:.0f}M above your current budget.\n\n"
 
         _stretch_msg += (
-            f"Would you like to consider this option? Or shall I show you everything else "
-            f"we have verified right now? 😊"
+            f"Would you like to consider this option? Or shall I check what our "
+            f"verified partner network has within {_budget_fmt}? 🤝"
         )
 
         prefs["awaiting_stretch_choice"] = True
@@ -847,18 +716,14 @@ async def _no_results_cascade(
 
 
 async def _handle_platform_care(
-    db,
-    tenant_id,
-    sender_id,
-    whatsapp_name,
-    first_name,
-    text_body,
-    convo,
-    phone_number_id=None,
+    db, tenant_id, sender_id,
+    whatsapp_name, first_name, text_body, convo,
+    phone_number_id=None
 ):
     if not convo:
         res = start_conversation_service(
-            "whatsapp", sender_id, whatsapp_name, tenant_id, db
+            "whatsapp", sender_id, whatsapp_name,
+            tenant_id, db
         )
         convo = db.get(Conversation, res["conversation_id"])
 
@@ -866,17 +731,14 @@ async def _handle_platform_care(
 
     text_lower = text_body.strip().lower()
     is_greeting = (
-        any(
-            w in text_lower.split()
-            for w in ["hi", "hello", "hey", "start", "menu", "help", "helo", "hy"]
-        )
+        any(w in text_lower.split()
+            for w in ["hi", "hello", "hey", "start",
+                      "menu", "help", "helo", "hy"])
         and len(text_body.strip().split()) <= 4
     ) or not convo_data.get("platform_state")
 
     if is_greeting:
-        await send_meta_message(
-            sender_id, get_welcome(first_name), phone_number_id=phone_number_id
-        )
+        await send_meta_message(sender_id, get_welcome(first_name), phone_number_id=phone_number_id)
         convo_data["platform_state"] = "menu"
     else:
         response, convo_data = get_platform_care_response(
@@ -968,10 +830,8 @@ async def handle_incoming_message(data: dict, db: Session):
         first_name = whatsapp_name.split()[0] if whatsapp_name else "there"
         biz_name = tenant_profile.get("business_name", "our firm")
 
-        # Coverage cities — pre-set city for single-city tenants
+        # Coverage cities — used by templates to skip city question for single-city tenants
         _coverage_cities = tenant_profile.get("coverage_cities", []) or []
-        _single_city = len(_coverage_cities) == 1
-        _primary_city = _coverage_cities[0] if _coverage_cities else None
 
         # --- 3. CONVERSATION LOOKUP ---
         convo = (
@@ -984,14 +844,9 @@ async def handle_incoming_message(data: dict, db: Session):
         # ── PLATFORM TENANT (Est8Go customer care) ──────────────
         if getattr(tenant, "tenant_type", "") == "platform":
             await _handle_platform_care(
-                db,
-                tenant_id,
-                sender_id,
-                whatsapp_name,
-                first_name,
-                text_body,
-                convo,
-                phone_number_id=platform_id,
+                db, tenant_id, sender_id,
+                whatsapp_name, first_name, text_body, convo,
+                phone_number_id=platform_id
             )
             return
 
@@ -1156,7 +1011,6 @@ async def handle_incoming_message(data: dict, db: Session):
 
                 # Check if buyer gave details in greeting (e.g. "hi apt lekki 30M")
                 from app.listings.models import Listing as _LM
-
                 _tenant_locs = [
                     r[0].lower()
                     for r in db.query(_LM.location)
@@ -1167,10 +1021,10 @@ async def handle_incoming_message(data: dict, db: Session):
                 ]
                 _gr = classify_intent(text_body.lower(), {}, _tenant_locs)
                 greeting_has_details = bool(
-                    _gr.extracted.get("property_type")
-                    or _gr.extracted.get("location")
-                    or _gr.extracted.get("budget")
-                    or _gr.extracted.get("budget_max")
+                    _gr.extracted.get("property_type") or
+                    _gr.extracted.get("location") or
+                    _gr.extracted.get("budget") or
+                    _gr.extracted.get("budget_max")
                 )
 
                 if greeting_has_details:
@@ -1179,36 +1033,25 @@ async def handle_incoming_message(data: dict, db: Session):
                     _gd["purpose"] = "general"
                     if _coverage_cities:
                         _gd["coverage_cities"] = _coverage_cities
-                    if _single_city and _primary_city:
-                        _gd["city_locked"] = _primary_city
                     convo.data_json = json.dumps(_gd)
                     convo.state = "ACTIVE"
-                    convo.last_active_at = datetime.now(timezone.utc).replace(
-                        tzinfo=None
-                    )
+                    convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
                     db.commit()
                     _process_as_intent = True
                 else:
                     # New buyer with no details — conversational opener
                     opener = get_conversational_opener(
-                        first_name,
-                        biz_name,
+                        first_name, biz_name,
                         tenant_profile.get("areas_covered", "Abuja"),
                     )
-                    await send_meta_message(
-                        sender_id, opener, phone_number_id=platform_id
-                    )
+                    await send_meta_message(sender_id, opener, phone_number_id=platform_id)
                     _gd = json.loads(convo.data_json or "{}")
                     _gd["awaiting_purpose"] = True
                     if _coverage_cities:
                         _gd["coverage_cities"] = _coverage_cities
-                    if _single_city and _primary_city:
-                        _gd["city_locked"] = _primary_city
                     convo.data_json = json.dumps(_gd)
                     convo.state = "ACTIVE"
-                    convo.last_active_at = datetime.now(timezone.utc).replace(
-                        tzinfo=None
-                    )
+                    convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
                     db.commit()
                     return
 
@@ -1217,12 +1060,8 @@ async def handle_incoming_message(data: dict, db: Session):
                 session_state = get_session_state(convo)
                 convo.session_count = (convo.session_count or 1) + 1
                 db.commit()
-                welcome_msg = build_welcome_back_message(
-                    convo, first_name, session_state, biz_name
-                )
-                await send_meta_message(
-                    sender_id, welcome_msg, phone_number_id=platform_id
-                )
+                welcome_msg = build_welcome_back_message(convo, first_name, session_state, biz_name)
+                await send_meta_message(sender_id, welcome_msg, phone_number_id=platform_id)
 
             else:
                 # Returning user — generic resume message
@@ -1232,9 +1071,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 resume_msg = build_resume_message(
                     session_state, first_name, biz_name, prefs
                 )
-                await send_meta_message(
-                    sender_id, resume_msg, phone_number_id=platform_id
-                )
+                await send_meta_message(sender_id, resume_msg, phone_number_id=platform_id)
 
             if not _process_as_intent:
                 convo.state = "ACTIVE"
@@ -1258,30 +1095,10 @@ async def handle_incoming_message(data: dict, db: Session):
             db.commit()
             # Continue processing as a fresh conversation
 
-        # --- 7b-CITY. Ensure city_locked for single-city tenants on every message ---
-        if _coverage_cities and len(_coverage_cities) == 1:
-            _convo_data = json.loads(convo.data_json or "{}")
-            if not _convo_data.get("city_locked") and not _convo_data.get("location"):
-                _convo_data["city_locked"] = _coverage_cities[0]
-                _convo_data["location"] = _coverage_cities[0]
-                convo.data_json = json.dumps(_convo_data)
-                db.commit()
-
         # --- 7c. COMMITMENT DECLINE ---
         # Buyer said No after inspection offer — offer soft alternative
-        _decline_words = {
-            "no",
-            "not now",
-            "maybe later",
-            "not interested",
-            "no thanks",
-            "nope",
-            "nah",
-        }
-        if (
-            convo.funnel_stage == "commitment"
-            and text_body.lower().strip() in _decline_words
-        ):
+        _decline_words = {"no", "not now", "maybe later", "not interested", "no thanks", "nope", "nah"}
+        if convo.funnel_stage == "commitment" and text_body.lower().strip() in _decline_words:
             _data = json.loads(convo.data_json or "{}")
             _location = (_data.get("location") or "that area").title()
             await send_meta_message(
@@ -1322,12 +1139,9 @@ async def handle_incoming_message(data: dict, db: Session):
                         _sum = build_property_summary(
                             _ms[0], _ms, _sr.get("total_count", 0), first_name
                         )
-                        await send_meta_message(
-                            sender_id, _sum, phone_number_id=platform_id
-                        )
+                        await send_meta_message(sender_id, _sum, phone_number_id=platform_id)
                         await send_meta_carousel(
-                            sender_id,
-                            prepare_meta_carousel(_ms),
+                            sender_id, prepare_meta_carousel(_ms),
                             phone_number_id=platform_id,
                         )
                         _current["last_viewed_id"] = _ms[0].id
@@ -1359,41 +1173,12 @@ async def handle_incoming_message(data: dict, db: Session):
             convo.state = "ACTIVE"
             convo.lead_score = 0
             db.commit()
-            import random as _rand
-
-            _fresh_variants = [
-                (
-                    f"Consider it done, {first_name}. 🔄\n\n"
-                    f"I've cleared your previous search and opened a fresh "
-                    f"connection to our verified vault.\n\n"
-                    f"What are you looking for this time?\n\n"
-                    f"🌱 *Land* — prime plots for development or investment\n"
-                    f"🏠 *House* — fully detached, semi-detached or duplex\n"
-                    f"🏢 *Apartment* — modern flats and studio units\n\n"
-                    f"Or simply describe what you have in mind. 😊"
-                ),
-                (
-                    f"Fresh start, {first_name}. ✨\n\n"
-                    f"Our verified vault is open and ready.\n\n"
-                    f"What type of property are you searching for today?\n\n"
-                    f"🌱 *Land* — build or invest\n"
-                    f"🏠 *House* — move-in ready or off-plan\n"
-                    f"🏢 *Apartment* — city living at its finest\n\n"
-                    f"Just tell me what you need."
-                ),
-                (
-                    f"All cleared, {first_name}. Let's find you something exceptional. 🏡\n\n"
-                    f"Every property I show you is GPS-verified and document-checked — "
-                    f"no fake listings, no wasted trips.\n\n"
-                    f"What are we searching for?\n\n"
-                    f"🌱 *Land*\n"
-                    f"🏠 *House*\n"
-                    f"🏢 *Apartment*"
-                ),
-            ]
             await send_meta_message(
                 sender_id,
-                _rand.choice(_fresh_variants),
+                "Starting fresh. What type of property are you looking for?\n\n"
+                "Land — plots for development\n"
+                "House — detached, semi-detached or duplex\n"
+                "Apartment — flats and studio units",
                 phone_number_id=platform_id,
             )
             return
@@ -1403,35 +1188,14 @@ async def handle_incoming_message(data: dict, db: Session):
         if _saved.get("awaiting_purpose"):
             _pt = text_body.strip().lower()
             investment_words = {
-                "investment",
-                "invest",
-                "roi",
-                "rental",
-                "rent out",
-                "resell",
-                "capital",
-                "yield",
-                "return",
-                "buy to let",
-                "commercial",
-                "income",
-                "profit",
-                "appreciation",
+                "investment", "invest", "roi", "rental", "rent out", "resell",
+                "capital", "yield", "return", "buy to let", "commercial",
+                "income", "profit", "appreciation",
             }
             personal_words = {
-                "personal",
-                "myself",
-                "family",
-                "live in",
-                "living",
-                "home",
-                "residential",
-                "my own",
-                "stay",
-                "house for myself",
-                "move in",
-                "own use",
-                "we want to live",
+                "personal", "myself", "family", "live in", "living", "home",
+                "residential", "my own", "stay", "house for myself",
+                "move in", "own use", "we want to live",
             }
             _pt_words = set(_pt.split())
             if _pt_words & investment_words or any(w in _pt for w in investment_words):
@@ -1457,24 +1221,12 @@ async def handle_incoming_message(data: dict, db: Session):
         if _saved.get("awaiting_bedrooms"):
             _bt = text_body.strip().lower()
             bedroom_map = {
-                "1": "1",
-                "one": "1",
-                "1 bed": "1",
-                "2": "2",
-                "two": "2",
-                "2 bed": "2",
-                "3": "3",
-                "three": "3",
-                "3 bed": "3",
-                "4": "4",
-                "four": "4",
-                "4 bed": "4",
-                "5": "5",
-                "five": "5",
-                "5+": "5+",
-                "any": "any",
-                "flexible": "any",
-                "doesn't matter": "any",
+                "1": "1", "one": "1", "1 bed": "1",
+                "2": "2", "two": "2", "2 bed": "2",
+                "3": "3", "three": "3", "3 bed": "3",
+                "4": "4", "four": "4", "4 bed": "4",
+                "5": "5", "five": "5", "5+": "5+",
+                "any": "any", "flexible": "any", "doesn't matter": "any",
             }
             bedrooms = "any"
             for key, val in bedroom_map.items():
@@ -1482,8 +1234,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     bedrooms = val
                     break
             import re as _re2
-
-            _digit = _re2.search(r"\b(\d)\b", _bt)
+            _digit = _re2.search(r'\b(\d)\b', _bt)
             if _digit:
                 bedrooms = _digit.group(1)
 
@@ -1509,71 +1260,20 @@ async def handle_incoming_message(data: dict, db: Session):
             _saved2.pop("awaiting_stretch_choice", None)
             _stretch_id = _saved2.pop("stretch_listing_id", None)
 
-            _yes_w = {
-                "yes",
-                "ok",
-                "okay",
-                "sure",
-                "consider",
-                "yes please",
-                "i'll consider",
-                "let me see",
-                "show details",
-                "proceed",
-            }
-            _no_w = {
-                "no",
-                "nope",
-                "partner",
-                "check partner",
-                "wider network",
-                "other options",
-                "not interested",
-            }
-            _see_all_triggers_sc = {
-                "everything",
-                "all",
-                "more",
-                "other",
-                "else",
-                "show all",
-                "what else",
-                "see all",
-                "everything else",
-                "show me all",
-                "show me everything",
-                "what do you have",
-                "all options",
-                "full inventory",
-                "yes show me",
-                "show me",
-                "yes show",
-                "show everything",
-                "yes everything",
-                "see everything",
-                "what else do you have",
-                "everything you have",
-            }
+            _yes_w = {"yes", "ok", "okay", "sure", "consider", "show me",
+                      "yes please", "i'll consider", "let me see", "show details", "proceed"}
+            _no_w = {"no", "nope", "partner", "check partner", "wider network",
+                     "other options", "not interested"}
 
-            if any(w in _sc for w in _see_all_triggers_sc):
-                _saved2["awaiting_see_all_tenant"] = True
-                convo.data_json = json.dumps(_saved2)
-                db.commit()
-                text_body = "yes"
-                # Fall through to awaiting_see_all_tenant handler below
-            elif any(w in _sc for w in _yes_w):
+            if any(w in _sc for w in _yes_w):
                 if _stretch_id:
                     _lst = db.get(Listing, _stretch_id)
                     if _lst:
                         _p = _lst.price or 0
-                        _p_fmt = (
-                            f"₦{_p/1_000_000:.0f}M" if _p >= 1_000_000 else f"₦{_p:,}"
-                        )
+                        _p_fmt = f"₦{_p/1_000_000:.0f}M" if _p >= 1_000_000 else f"₦{_p:,}"
                         _score = _lst.trust_score or 0
                         _grade = (_lst.trust_grade or "verified").title()
-                        _base_url = os.getenv(
-                            "BASE_URL", "https://est8go-api.onrender.com"
-                        )
+                        _base_url = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
                         await send_meta_message(
                             sender_id,
                             f"Excellent choice, {first_name}! 🎯\n\n"
@@ -1591,34 +1291,25 @@ async def handle_incoming_message(data: dict, db: Session):
                         convo.funnel_stage = "commitment"
                         convo.state = "HANDOFF"
                         db.commit()
-                return
             else:
-                _saved2["awaiting_see_all_tenant"] = True
+                _saved2["awaiting_referral_permission"] = True
                 convo.data_json = json.dumps(_saved2)
                 db.commit()
                 await send_meta_message(
                     sender_id,
-                    f"No problem, {first_name}. 😊\n\n"
-                    f"Let me pull up our complete verified inventory for you.\n\n"
-                    f"Reply *Yes* to see everything we currently have.",
+                    f"Understood, {first_name}. 🤝\n\n"
+                    f"May I check our verified partner network? "
+                    f"All properties are Est8Go verified.\n\n"
+                    f"Reply *Yes* to search the wider network.",
                     phone_number_id=platform_id,
                 )
-                return
+            return
 
         # ── REFERRAL PERMISSION HANDLER ───────────────────────────────
         if _saved2.get("awaiting_referral_permission"):
             _rpc = text_body.strip().lower()
-            _yes_rp = {
-                "yes",
-                "ok",
-                "sure",
-                "go ahead",
-                "check",
-                "search",
-                "yes please",
-                "proceed",
-                "absolutely",
-            }
+            _yes_rp = {"yes", "ok", "sure", "go ahead", "check", "search",
+                       "yes please", "proceed", "absolutely"}
 
             if any(w in _rpc for w in _yes_rp):
                 _saved2.pop("awaiting_referral_permission", None)
@@ -1626,19 +1317,12 @@ async def handle_incoming_message(data: dict, db: Session):
                 _ref_budget = _saved2.get("budget_max") or _saved2.get("budget")
                 _ref_loc = (_saved2.get("location") or "").lower()
                 _ref_city = None
-                for _city_name in [
-                    "abuja",
-                    "lagos",
-                    "port harcourt",
-                    "enugu",
-                    "ibadan",
-                ]:
+                for _city_name in ["abuja", "lagos", "port harcourt", "enugu", "ibadan"]:
                     if _city_name in _ref_loc:
                         _ref_city = _city_name
                         break
                 try:
                     from app.listings.models import Listing as _RL
-
                     _rq = db.query(_RL).filter(
                         _RL.tenant_id != tenant_id,
                         _RL.status == "verified",
@@ -1656,8 +1340,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         _rp_val = _ref_listing.price or 0
                         _rp_range = (
                             f"₦{(_rp_val * 0.9)/1_000_000:.0f}M – ₦{(_rp_val * 1.1)/1_000_000:.0f}M"
-                            if _rp_val >= 1_000_000
-                            else f"₦{_rp_val:,}"
+                            if _rp_val >= 1_000_000 else f"₦{_rp_val:,}"
                         )
                         _city_show = _ref_city.title() if _ref_city else "same city"
                         _ref_grade = (_ref_listing.trust_grade or "verified").title()
@@ -1675,13 +1358,9 @@ async def handle_incoming_message(data: dict, db: Session):
                         convo.data_json = json.dumps(_saved2)
                         convo.funnel_stage = "commitment"
                         db.commit()
-                        await send_meta_message(
-                            sender_id, _ref_msg, phone_number_id=platform_id
-                        )
+                        await send_meta_message(sender_id, _ref_msg, phone_number_id=platform_id)
                     else:
-                        _base_r = os.getenv(
-                            "BASE_URL", "https://est8go-api.onrender.com"
-                        )
+                        _base_r = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
                         _slug_r = tenant_profile.get("slug", "")
                         await send_meta_message(
                             sender_id,
@@ -1718,32 +1397,18 @@ async def handle_incoming_message(data: dict, db: Session):
         # ── CONSULTANT CONNECTION HANDLER ─────────────────────────────
         if _saved2.get("awaiting_consultant"):
             _cc = text_body.strip().lower()
-            _yes_cc = {
-                "yes",
-                "ok",
-                "sure",
-                "connect",
-                "yes please",
-                "go ahead",
-                "connect me",
-                "absolutely",
-            }
+            _yes_cc = {"yes", "ok", "sure", "connect", "yes please",
+                       "go ahead", "connect me", "absolutely"}
             if any(w in _cc for w in _yes_cc):
                 _saved2.pop("awaiting_consultant", None)
                 _cref_id = _saved2.pop("referral_listing_id", None)
                 _cptype = (_saved2.get("property_type") or "property").title()
                 _cloc = (_saved2.get("location") or "any area").title()
                 _cbudget = _saved2.get("budget_max") or _saved2.get("budget")
-                _cbudget_str = (
-                    f"₦{int(_cbudget)/1_000_000:.0f}M" if _cbudget else "not specified"
-                )
+                _cbudget_str = f"₦{int(_cbudget)/1_000_000:.0f}M" if _cbudget else "not specified"
                 _cbedrooms = _saved2.get("bedrooms", "")
                 _cpurpose = _saved2.get("purpose", "not specified")
-                _cbed_str = (
-                    f"{_cbedrooms} bedrooms"
-                    if _cbedrooms and _cbedrooms != "any"
-                    else ""
-                )
+                _cbed_str = f"{_cbedrooms} bedrooms" if _cbedrooms and _cbedrooms != "any" else ""
 
                 _buyer_brief = (
                     f"🔔 *NEW LEAD — CONSULTANT REQUIRED*\n\n"
@@ -1759,11 +1424,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     _cref_lst = db.get(Listing, _cref_id)
                     if _cref_lst:
                         _crp = _cref_lst.price or 0
-                        _crp_fmt = (
-                            f"₦{_crp/1_000_000:.0f}M"
-                            if _crp >= 1_000_000
-                            else f"₦{_crp:,}"
-                        )
+                        _crp_fmt = f"₦{_crp/1_000_000:.0f}M" if _crp >= 1_000_000 else f"₦{_crp:,}"
                         _buyer_brief += (
                             f"\n🏠 *Matched Listing:*\n"
                             f"{_cref_lst.title}\n"
@@ -1771,16 +1432,11 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"💰 {_crp_fmt}\n"
                             f"🛡️ Trust: {_cref_lst.trust_score}/100\n"
                         )
-                _buyer_brief += (
-                    "\n⚡ Buyer is ready to proceed. Please reach out within 2 hours."
-                )
+                _buyer_brief += "\n⚡ Buyer is ready to proceed. Please reach out within 2 hours."
 
                 try:
                     await alert_realtor_of_lead(
-                        db,
-                        _cref_id or 0,
-                        sender_id,
-                        biz_name,
+                        db, _cref_id or 0, sender_id, biz_name,
                         phone_number_id=platform_id,
                         custom_message=_buyer_brief,
                     )
@@ -1790,9 +1446,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     if _tenant_wa:
                         try:
                             await send_meta_message(
-                                _tenant_wa,
-                                _buyer_brief,
-                                phone_number_id=platform_id,
+                                _tenant_wa, _buyer_brief, phone_number_id=platform_id,
                             )
                         except Exception:
                             pass
@@ -1863,326 +1517,6 @@ async def handle_incoming_message(data: dict, db: Session):
                 )
             return
 
-        # ── LOCATION ALTERNATIVE HANDLER ─────────────────────────────
-        if _saved2.get("awaiting_location_alt"):
-            _lac = text_body.strip().lower()
-            _saved2.pop("awaiting_location_alt", None)
-            _alt_id = _saved2.pop("alt_listing_id", None)
-            _alt_loc = _saved2.pop("alt_location", None)
-
-            _see_all_triggers_la = {
-                "everything",
-                "all",
-                "more",
-                "other",
-                "else",
-                "show all",
-                "what else",
-                "see all",
-                "everything else",
-                "show me all",
-                "show me everything",
-                "what do you have",
-                "all options",
-                "full inventory",
-                "yes show me",
-                "show me",
-                "yes show",
-                "show everything",
-                "yes everything",
-                "see everything",
-                "what else do you have",
-                "everything you have",
-            }
-            _yes_loc_words = {
-                "yes",
-                "ok",
-                "okay",
-                "sure",
-                "works",
-                "that works",
-                "yes please",
-                "interested",
-                "i'll consider",
-                "proceed",
-            }
-
-            if any(w in _lac for w in _see_all_triggers_la):
-                _saved2["awaiting_see_all_tenant"] = True
-                convo.data_json = json.dumps(_saved2)
-                db.commit()
-                text_body = "yes"
-                # Fall through to awaiting_see_all_tenant handler below
-            elif any(w in _lac for w in _yes_loc_words):
-                if _alt_loc:
-                    # Search in the alt area and show proper results
-                    _saved2["location"] = _alt_loc
-                    convo.data_json = json.dumps(_saved2)
-                    convo.state = "ACTIVE"
-                    db.commit()
-                    try:
-                        _ar = execute_premium_search(db, tenant_id, _saved2)
-                        _am = _ar.get("data", [])
-                        _at = _ar.get("total_count", 0)
-                        if _am:
-                            _asum = build_property_summary(
-                                _am[0], _am, _at, first_name
-                            )
-                            try:
-                                from app.listings.models import ListingImage as _LAI
-                                from app.services.notification_service import (
-                                    send_meta_image_message as _sim,
-                                )
-                                _aimg = (
-                                    db.query(_LAI)
-                                    .filter(_LAI.listing_id == _am[0].id)
-                                    .first()
-                                )
-                                if _aimg and _aimg.url:
-                                    await _sim(
-                                        sender_id,
-                                        _aimg.url,
-                                        _asum,
-                                        phone_number_id=platform_id,
-                                    )
-                                else:
-                                    await send_meta_message(
-                                        sender_id, _asum, phone_number_id=platform_id
-                                    )
-                            except Exception:
-                                await send_meta_message(
-                                    sender_id, _asum, phone_number_id=platform_id
-                                )
-                            _saved2["last_viewed_id"] = _am[0].id
-                            _saved2["last_viewed_title"] = _am[0].title or ""
-                            _saved2["last_match_ids"] = [m.id for m in _am]
-                            convo.data_json = json.dumps(_saved2)
-                            convo.funnel_stage = "commitment"
-                            convo.state = "HANDOFF"
-                            convo.last_active_at = datetime.now(timezone.utc).replace(
-                                tzinfo=None
-                            )
-                            db.commit()
-                            carousel_data = prepare_meta_carousel(_am)
-                            await send_meta_carousel(
-                                sender_id, carousel_data, phone_number_id=platform_id
-                            )
-                        else:
-                            await send_meta_message(
-                                sender_id,
-                                f"No verified listings found in *{_alt_loc.title()}* "
-                                f"right now either, {first_name}.\n\n"
-                                f"Would you like to see everything we have? 😊",
-                                phone_number_id=platform_id,
-                            )
-                            _saved2["awaiting_see_all_tenant"] = True
-                            convo.data_json = json.dumps(_saved2)
-                            db.commit()
-                    except Exception as _ale:
-                        logger.error(f"Alt location search failed: {_ale}")
-                elif _alt_id:
-                    # Fallback for legacy stored prefs without alt_location
-                    _lst = db.get(Listing, _alt_id)
-                    if _lst:
-                        _p = _lst.price or 0
-                        _p_fmt = (
-                            f"₦{_p/1_000_000:.0f}M" if _p >= 1_000_000 else f"₦{_p:,}"
-                        )
-                        _base_url = os.getenv(
-                            "BASE_URL", "https://est8go-api.onrender.com"
-                        )
-                        await send_meta_message(
-                            sender_id,
-                            f"Here are the full details, {first_name}:\n\n"
-                            f"*{_lst.title}*\n"
-                            f"📍 {(_lst.location or '').title()}\n"
-                            f"💰 *{_p_fmt}*\n"
-                            f"🛡️ Trust Score: {_lst.trust_score}/100\n\n"
-                            f"🔗 View property:\n{_base_url}/public/property/{_lst.id}\n\n"
-                            f"Would you like to schedule a site inspection? 📅",
-                            phone_number_id=platform_id,
-                        )
-                        _saved2["last_viewed_id"] = _lst.id
-                        _saved2["last_viewed_title"] = _lst.title or ""
-                        convo.data_json = json.dumps(_saved2)
-                        convo.funnel_stage = "commitment"
-                        convo.state = "HANDOFF"
-                        convo.last_active_at = datetime.now(timezone.utc).replace(
-                            tzinfo=None
-                        )
-                        db.commit()
-                return
-            else:
-                _saved2["awaiting_see_all_tenant"] = True
-                convo.data_json = json.dumps(_saved2)
-                db.commit()
-                await send_meta_message(
-                    sender_id,
-                    f"No problem, {first_name}. 😊\n\n"
-                    f"Let me show you our complete verified inventory.\n\n"
-                    f"Reply *Yes* to see everything we currently have.",
-                    phone_number_id=platform_id,
-                )
-                return
-
-        # ── SEE ALL TENANT INVENTORY HANDLER ─────────────────────────
-        if _saved2.get("awaiting_see_all_tenant"):
-            _choice = text_body.strip().lower()
-            _saved2.pop("awaiting_see_all_tenant", None)
-            _ptype = _saved2.get("property_type", "")
-            _budget = _saved2.get("budget_max") or _saved2.get("budget")
-            _last_id = _saved2.get("last_viewed_id")
-
-            _see_all_yes = {
-                "yes",
-                "ok",
-                "okay",
-                "sure",
-                "show me",
-                "show everything",
-                "see all",
-                "what else",
-                "other options",
-                "yes please",
-                "everything",
-                "show all",
-                "see more",
-                "partner network",
-            }
-
-            if any(w in _choice for w in _see_all_yes):
-                if "partner" in _choice or "network" in _choice:
-                    # Buyer explicitly asked for partner — skip inventory
-                    _saved2["awaiting_referral_permission"] = True
-                    convo.data_json = json.dumps(_saved2)
-                    db.commit()
-                    await send_meta_message(
-                        sender_id,
-                        f"Got it, {first_name}. 🤝\n\n"
-                        f"May I check our verified partner network?\n\n"
-                        f"Reply *Yes* to search.",
-                        phone_number_id=platform_id,
-                    )
-                    return
-
-                try:
-                    _base_url = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
-                    _slug = tenant_profile.get("slug", "")
-                    _vault_url = f"{_base_url}/public/{_slug}" if _slug else None
-                    _ptype_title = _ptype.title() if _ptype else "Property"
-
-                    if _vault_url:
-                        await send_meta_message(
-                            sender_id,
-                            f"Here is our full verified {_ptype_title} vault, "
-                            f"{first_name}: 🏠\n\n"
-                            f"👉 {_vault_url}\n\n"
-                            f"Every listing is GPS-verified and document-checked. "
-                            f"Tap any property to view full details and connect "
-                            f"with us directly. 😊",
-                            phone_number_id=platform_id,
-                        )
-                        _saved2["last_match_ids"] = []
-                        convo.data_json = json.dumps(_saved2)
-                        convo.state = "HANDOFF"
-                        convo.funnel_stage = "commitment"
-                        convo.last_active_at = datetime.now(timezone.utc).replace(
-                            tzinfo=None
-                        )
-                        db.commit()
-                        return
-                    from app.listings.models import Listing as _AL
-
-                    _all_q = db.query(_AL).filter(
-                        _AL.tenant_id == tenant_id,
-                        _AL.status == "verified",
-                    )
-                    if _ptype:
-                        _all_q = _all_q.filter(_AL.property_type.ilike(f"%{_ptype}%"))
-                    _all_listings = _all_q.order_by(_AL.price.asc()).limit(8).all()
-                    _all_listings = [
-                        l for l in _all_listings if str(l.id) != str(_last_id)
-                    ]
-
-                    if _all_listings:
-                        _ptype_title = _ptype.title() if _ptype else "Property"
-                        _inv_msg = (
-                            f"Here is everything we currently have verified "
-                            f"for *{_ptype_title}*, {first_name}:\n\n"
-                        )
-                        for _l in _all_listings[:6]:
-                            _p = _l.price or 0
-                            _p_fmt = (
-                                f"₦{_p/1_000_000:.0f}M"
-                                if _p >= 1_000_000
-                                else f"₦{_p:,}"
-                            )
-                            _s = _l.trust_score or 0
-                            _g = (_l.trust_grade or "verified").title()
-                            _loc = (_l.location or "").title()
-                            _inv_msg += (
-                                f"🏠 *{_l.title}*\n"
-                                f"📍 {_loc} | 💰 {_p_fmt} | 🛡️ {_s}/100 ({_g})\n\n"
-                            )
-
-                        _within_budget = [
-                            l
-                            for l in _all_listings
-                            if _budget and (l.price or 0) <= int(_budget)
-                        ]
-                        if _within_budget:
-                            _inv_msg += (
-                                f"✅ *{len(_within_budget)}* of these are within your budget. "
-                                f"Which area interests you most?"
-                            )
-                        else:
-                            _inv_msg += (
-                                f"These are our current verified options. "
-                                f"Which comes closest to what you need? 😊\n\n"
-                                f"Or say *Partner Network* and I'll search our wider verified network."
-                            )
-
-                        _saved2["last_match_ids"] = [l.id for l in _all_listings]
-                        convo.data_json = json.dumps(_saved2)
-                        convo.state = "HANDOFF"
-                        convo.funnel_stage = "commitment"
-                        convo.last_active_at = datetime.now(timezone.utc).replace(
-                            tzinfo=None
-                        )
-                        db.commit()
-                        await send_meta_message(
-                            sender_id, _inv_msg, phone_number_id=platform_id
-                        )
-                    else:
-                        # Truly nothing left — now go to partner
-                        _saved2["awaiting_referral_permission"] = True
-                        convo.data_json = json.dumps(_saved2)
-                        db.commit()
-                        await send_meta_message(
-                            sender_id,
-                            f"I've shown you our complete verified inventory, {first_name}.\n\n"
-                            f"May I check our verified partner network? "
-                            f"All properties are Est8Go verified. 🤝\n\n"
-                            f"Reply *Yes* to search the wider network.",
-                            phone_number_id=platform_id,
-                        )
-                except Exception as _sa_e:
-                    logger.error(f"See all tenant failed: {_sa_e}")
-                return
-            else:
-                # Buyer declined everything — now go to partner
-                _saved2["awaiting_referral_permission"] = True
-                convo.data_json = json.dumps(_saved2)
-                db.commit()
-                await send_meta_message(
-                    sender_id,
-                    f"Understood, {first_name}. 🤝\n\n"
-                    f"May I check our verified partner network?\n\n"
-                    f"Reply *Yes* to search.",
-                    phone_number_id=platform_id,
-                )
-                return
-
         # ── NO RESULTS MENU HANDLER ──────────────────────────────────
         _saved_nr = json.loads(convo.data_json or "{}")
         if _saved_nr.get("awaiting_no_results_choice"):
@@ -2228,12 +1562,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 db.commit()
                 return
 
-            elif _nr_choice in (
-                "2",
-                "adjust my budget",
-                "adjust budget",
-                "change budget",
-            ):
+            elif _nr_choice in ("2", "adjust my budget", "adjust budget", "change budget"):
                 await send_meta_message(
                     sender_id,
                     f"What is your revised budget, {first_name}? 💰\n\n"
@@ -2271,41 +1600,11 @@ async def handle_incoming_message(data: dict, db: Session):
                 convo.state = "ACTIVE"
                 convo.lead_score = 0
                 db.commit()
-                import random as _rand2
-
-                _fresh_variants2 = [
-                    (
-                        f"Consider it done, {first_name}. 🔄\n\n"
-                        f"I've cleared your previous search and opened a fresh "
-                        f"connection to our verified vault.\n\n"
-                        f"What are you looking for this time?\n\n"
-                        f"🌱 *Land* — prime plots for development or investment\n"
-                        f"🏠 *House* — fully detached, semi-detached or duplex\n"
-                        f"🏢 *Apartment* — modern flats and studio units\n\n"
-                        f"Or simply describe what you have in mind. 😊"
-                    ),
-                    (
-                        f"Fresh start, {first_name}. ✨\n\n"
-                        f"Our verified vault is open and ready.\n\n"
-                        f"What type of property are you searching for today?\n\n"
-                        f"🌱 *Land* — build or invest\n"
-                        f"🏠 *House* — move-in ready or off-plan\n"
-                        f"🏢 *Apartment* — city living at its finest\n\n"
-                        f"Just tell me what you need."
-                    ),
-                    (
-                        f"All cleared, {first_name}. Let's find you something exceptional. 🏡\n\n"
-                        f"Every property I show you is GPS-verified and document-checked — "
-                        f"no fake listings, no wasted trips.\n\n"
-                        f"What are we searching for?\n\n"
-                        f"🌱 *Land*\n"
-                        f"🏠 *House*\n"
-                        f"🏢 *Apartment*"
-                    ),
-                ]
                 await send_meta_message(
                     sender_id,
-                    _rand2.choice(_fresh_variants2),
+                    f"Starting fresh, {first_name}. 🔄\n\n"
+                    f"What type of property are you looking for?\n\n"
+                    f"Land · House · Apartment",
                     phone_number_id=platform_id,
                 )
                 return
@@ -2320,165 +1619,6 @@ async def handle_incoming_message(data: dict, db: Session):
                 convo.state = "ACTIVE"
                 db.commit()
                 # Fall through to intent pipeline which will trigger search
-
-        # ── AFTER DECLINE HANDLER ────────────────────────────────────
-        _saved_d = json.loads(convo.data_json or "{}")
-        if _saved_d.get("awaiting_after_decline"):
-            _choice = text_body.strip().lower()
-            _saved_d.pop("awaiting_after_decline", None)
-
-            _yes_words_d = {
-                "yes", "ok", "sure", "show me",
-                "yes please", "other properties",
-                "other options", "show others",
-            }
-
-            if any(w in _choice for w in _yes_words_d):
-                _ptype = _saved_d.get("property_type", "")
-                _budget = (
-                    _saved_d.get("budget_max") or
-                    _saved_d.get("budget")
-                )
-                _last_id = _saved_d.get("last_viewed_id")
-
-                from app.listings.models import Listing as _OL
-
-                _others_q = db.query(_OL).filter(
-                    _OL.tenant_id == tenant_id,
-                    _OL.status == "verified",
-                )
-                if _ptype:
-                    _others_q = _others_q.filter(
-                        _OL.property_type.ilike(f"%{_ptype}%")
-                    )
-                _others = _others_q.order_by(_OL.price.asc()).limit(8).all()
-                _others = [l for l in _others if str(l.id) != str(_last_id)]
-
-                if _others:
-                    _msg = f"Here are our other verified options, {first_name}:\n\n"
-                    for _o in _others[:5]:
-                        _p = _o.price or 0
-                        _p_fmt = (
-                            f"₦{_p/1_000_000:.0f}M"
-                            if _p >= 1_000_000
-                            else f"₦{_p:,}"
-                        )
-                        _s = _o.trust_score or 0
-                        _g = (_o.trust_grade or "verified").title()
-                        _loc = (_o.location or "").title()
-                        _msg += (
-                            f"🏠 *{_o.title}*\n"
-                            f"📍 {_loc} | 💰 {_p_fmt} | 🛡️ {_s}/100 ({_g})\n\n"
-                        )
-
-                    if _budget:
-                        _within = [
-                            o for o in _others if (o.price or 0) <= int(_budget)
-                        ]
-                        if _within:
-                            _msg += (
-                                f"✅ *{len(_within)}* within your budget. "
-                                f"Which interests you most?"
-                            )
-                        else:
-                            _msg += "Which comes closest to what you need? 😊"
-
-                    _saved_d["last_match_ids"] = [o.id for o in _others]
-                    convo.data_json = json.dumps(_saved_d)
-                    convo.funnel_stage = "commitment"
-                    convo.state = "HANDOFF"
-                    db.commit()
-                    await send_meta_message(sender_id, _msg, phone_number_id=platform_id)
-                    # Send carousel for visual browsing
-                    try:
-                        carousel_data = prepare_meta_carousel(_others[:5])
-                        if carousel_data:
-                            await send_meta_carousel(
-                                sender_id, carousel_data, phone_number_id=platform_id
-                            )
-                    except Exception as _ce:
-                        logger.warning(f"After-decline carousel failed: {_ce}")
-                else:
-                    _saved_d["awaiting_referral_permission"] = True
-                    convo.data_json = json.dumps(_saved_d)
-                    db.commit()
-                    await send_meta_message(
-                        sender_id,
-                        f"That's everything we have verified right now, {first_name}.\n\n"
-                        f"May I check our verified partner network? 🤝\n\n"
-                        f"Reply *Yes* to search.",
-                        phone_number_id=platform_id,
-                    )
-                return
-
-            else:
-                _saved_d["awaiting_no_results_choice"] = True
-                convo.data_json = json.dumps(_saved_d)
-                db.commit()
-                await send_meta_message(
-                    sender_id,
-                    f"No problem, {first_name}. 😊\n\n"
-                    f"What would you like to do?\n\n"
-                    f"1️⃣ Try a different area\n"
-                    f"2️⃣ Adjust my budget\n"
-                    f"3️⃣ Change property type\n"
-                    f"4️⃣ Start a new search",
-                    phone_number_id=platform_id,
-                )
-                return
-
-        # ── STANDALONE PURPOSE DETECTION (no awaiting_purpose flag needed) ─
-        # Fires when buyer states purpose as first message without greeting
-        if not _saved.get("purpose"):
-            _txt = text_body.strip().lower()
-            _invest_words = {
-                "invest",
-                "investment",
-                "roi",
-                "rental income",
-                "rent out",
-                "resell",
-                "capital",
-                "yield",
-                "buy to let",
-                "income property",
-                "i want to invest",
-                "for investment",
-                "as investment",
-            }
-            _personal_words = {
-                "personal",
-                "myself",
-                "family",
-                "live in",
-                "living",
-                "my home",
-                "residential",
-                "my own",
-                "move in",
-                "own use",
-                "i want to live",
-            }
-            _is_invest = any(w in _txt for w in _invest_words)
-            _is_personal = any(w in _txt for w in _personal_words)
-
-            if _is_invest or _is_personal:
-                _purpose = "investment" if _is_invest else "personal"
-                _saved["purpose"] = _purpose
-                _saved.pop("awaiting_purpose", None)
-                convo.data_json = json.dumps(_saved)
-                convo.state = "ACTIVE"
-                convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
-                db.commit()
-                _followup = (
-                    get_investment_followup(first_name)
-                    if _is_invest
-                    else get_personal_followup(first_name)
-                )
-                await send_meta_message(
-                    sender_id, _followup, phone_number_id=platform_id
-                )
-                return
 
         # --- 8. INTENT PIPELINE ---
         pipe = add_message_service(convo.id, text_body, tenant_id, db)
@@ -2518,17 +1658,15 @@ async def handle_incoming_message(data: dict, db: Session):
 
                     # Fast-track to COMMITMENT
                     _data = json.loads(convo.data_json or "{}")
-                    _data["last_viewed_id"] = _lst.id
+                    _data["last_viewed_id"]    = _lst.id
                     _data["last_viewed_title"] = _lst.title
-                    _data["location"] = _lst.location
-                    _data["property_type"] = _lst.property_type
-                    _data["budget_max"] = _lst.price
-                    convo.data_json = json.dumps(_data)
-                    convo.funnel_stage = "commitment"
-                    convo.lead_score = 75
-                    convo.last_active_at = datetime.now(timezone.utc).replace(
-                        tzinfo=None
-                    )
+                    _data["location"]          = _lst.location
+                    _data["property_type"]     = _lst.property_type
+                    _data["budget_max"]        = _lst.price
+                    convo.data_json            = json.dumps(_data)
+                    convo.funnel_stage         = "commitment"
+                    convo.lead_score           = 75
+                    convo.last_active_at       = datetime.now(timezone.utc).replace(tzinfo=None)
                     db.commit()
 
                     _price = _lst.price or 0
@@ -2558,13 +1696,9 @@ async def handle_incoming_message(data: dict, db: Session):
 
                     # Alert realtor immediately
                     try:
-                        await alert_realtor_of_lead(
-                            db, _lid, sender_id, biz_name, phone_number_id=platform_id
-                        )
+                        await alert_realtor_of_lead(db, _lid, sender_id, biz_name, phone_number_id=platform_id)
                     except Exception as _ae:
-                        logger.warning(
-                            f"Property page lead realtor alert failed: {_ae}"
-                        )
+                        logger.warning(f"Property page lead realtor alert failed: {_ae}")
 
                 except Exception as _ppe:
                     logger.error(f"Property page lead handler failed: {_ppe}")
@@ -2590,14 +1724,14 @@ async def handle_incoming_message(data: dict, db: Session):
                 )
             else:
                 _cmp_listings = (
-                    db.query(Listing).filter(Listing.id.in_(_match_ids)).all()
+                    db.query(Listing)
+                    .filter(Listing.id.in_(_match_ids))
+                    .all()
                 )
                 # Sort by trust desc so options 1-N are already ranked
                 _cmp_listings.sort(key=lambda x: (x.trust_score or 0), reverse=True)
                 _cmp_text = build_comparison_message(_cmp_listings, first_name)
-                await send_meta_message(
-                    sender_id, _cmp_text, phone_number_id=platform_id
-                )
+                await send_meta_message(sender_id, _cmp_text, phone_number_id=platform_id)
             return
 
         # --- 8c.5 GPT MISS HANDLER ---
@@ -2657,7 +1791,6 @@ async def handle_incoming_message(data: dict, db: Session):
 
             if objection_key == "objection_budget_mismatch":
                 from app.conversations.intent_filter import extract_budget_from_text
-
                 new_budget = extract_budget_from_text(text_body)
                 _data = json.loads(convo.data_json or "{}")
 
@@ -2684,8 +1817,7 @@ async def handle_incoming_message(data: dict, db: Session):
 
                     if matches:
                         summary = build_property_summary(
-                            matches[0],
-                            matches,
+                            matches[0], matches,
                             search_result.get("total_count", 0),
                             first_name,
                         )
@@ -2759,77 +1891,6 @@ async def handle_incoming_message(data: dict, db: Session):
                     db.commit()
                 return
 
-            if objection_key == "objection_more_options":
-                _mo_data = json.loads(convo.data_json or "{}")
-                _mo_ptype = _mo_data.get("property_type", "")
-                _mo_budget = _mo_data.get("budget_max") or _mo_data.get("budget")
-                _mo_last_id = _mo_data.get("last_viewed_id")
-
-                _mo_prefs = {
-                    "property_type": _mo_ptype,
-                    "budget_max": _mo_budget,
-                    "budget": _mo_budget,
-                    # No location — show all tenant listings
-                }
-                try:
-                    _mo_result = execute_premium_search(db, tenant_id, _mo_prefs)
-                    _mo_matches = _mo_result.get("data", [])
-                    _mo_matches = [
-                        m for m in _mo_matches if str(m.id) != str(_mo_last_id)
-                    ]
-
-                    if _mo_matches:
-                        _mo_ptype_title = _mo_ptype.title() if _mo_ptype else "property"
-                        _mo_msg = f"Here are all our verified {_mo_ptype_title} options"
-                        if _mo_budget:
-                            _mo_b_fmt = f"₦{int(_mo_budget)/1_000_000:.0f}M"
-                            _mo_msg += f" within *{_mo_b_fmt}*"
-                        _mo_msg += ":\n\n"
-
-                        for _mm in _mo_matches[:5]:
-                            _mp = _mm.price or 0
-                            _mp_fmt = (
-                                f"₦{_mp/1_000_000:.0f}M"
-                                if _mp >= 1_000_000
-                                else f"₦{_mp:,}"
-                            )
-                            _ms = _mm.trust_score or 0
-                            _mg = (_mm.trust_grade or "verified").title()
-                            _ml = (_mm.location or "").title()
-                            _mo_msg += (
-                                f"🏠 *{_mm.title}*\n"
-                                f"📍 {_ml} | 💰 {_mp_fmt} | 🛡️ {_ms}/100 ({_mg})\n\n"
-                            )
-
-                        _mo_msg += (
-                            f"Which of these interests you most? "
-                            f"Just mention the area and I'll get you the full details. 😊"
-                        )
-
-                        _mo_data["last_match_ids"] = [m.id for m in _mo_matches]
-                        convo.data_json = json.dumps(_mo_data)
-                        db.commit()
-                        await send_meta_message(
-                            sender_id, _mo_msg, phone_number_id=platform_id
-                        )
-                    else:
-                        _mo_data["awaiting_referral_permission"] = True
-                        convo.data_json = json.dumps(_mo_data)
-                        db.commit()
-                        _mo_budget_note = " within your budget" if _mo_budget else ""
-                        await send_meta_message(
-                            sender_id,
-                            f"I've shown you everything we currently have verified"
-                            f"{_mo_budget_note}, {first_name}.\n\n"
-                            f"May I check our verified partner network? "
-                            f"All properties are Est8Go verified. 🤝\n\n"
-                            f"Reply *Yes* to search the wider network.",
-                            phone_number_id=platform_id,
-                        )
-                except Exception as _mo_e:
-                    logger.error(f"More options search failed: {_mo_e}")
-                return
-
             last_id = prefs.get("last_viewed_id")
             trust_grade = "Verified"
             if last_id:
@@ -2837,9 +1898,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 grade_raw = (viewed.trust_grade or "") if viewed else ""
                 if grade_raw and grade_raw != "ungraded":
                     trust_grade = grade_raw.title()
-            response = get_objection_response(
-                objection_key, first_name, biz_name, trust_grade
-            )
+            response = get_objection_response(objection_key, first_name, biz_name, trust_grade)
             await send_meta_message(sender_id, response, phone_number_id=platform_id)
             return
 
@@ -2850,17 +1909,9 @@ async def handle_incoming_message(data: dict, db: Session):
         # --- 10. SEARCH TRIGGER ---
         # Only trigger search if intent is search_ready or unknown
         # Never re-trigger if buyer is objecting or agreeing
-        from app.conversations.templates import CITY_TERMS as _CT2
-        _search_loc = (prefs.get("location") or "").lower().strip()
-        _search_city_locked = (prefs.get("city_locked") or "").lower().strip()
-        _search_loc_is_city = (
-            _search_loc in _CT2
-            or (_search_city_locked and _search_loc == _search_city_locked)
-        )
         if (
             prefs.get("location")
             and prefs.get("budget")
-            and not _search_loc_is_city
             and convo.state != "HANDOFF"
             and intent
             not in (
@@ -2906,14 +1957,11 @@ async def handle_incoming_message(data: dict, db: Session):
                 if not matches:
                     location_lower = (prefs.get("location") or "").lower().strip()
                     from app.services.chatbot.message_builder import NEARBY_AREAS
-
                     nearby_areas = NEARBY_AREAS.get(location_lower, [])
                     for nearby_loc in nearby_areas[:3]:
                         expanded_prefs = {**prefs, "location": nearby_loc}
                         try:
-                            expanded_result = execute_premium_search(
-                                db, tenant_id, expanded_prefs
-                            )
+                            expanded_result = execute_premium_search(db, tenant_id, expanded_prefs)
                             expanded_matches = expanded_result.get("data", [])
                             if expanded_matches:
                                 matches = expanded_matches
@@ -2952,31 +2000,17 @@ async def handle_incoming_message(data: dict, db: Session):
                     # Send image+summary as one card, or fall back to text only
                     try:
                         from app.listings.models import ListingImage
-                        from app.services.notification_service import (
-                            send_meta_image_message,
-                        )
-
-                        _img = (
-                            db.query(ListingImage)
-                            .filter(ListingImage.listing_id == matches[0].id)
-                            .first()
-                        )
+                        from app.services.notification_service import send_meta_image_message
+                        _img = db.query(ListingImage).filter(
+                            ListingImage.listing_id == matches[0].id
+                        ).first()
                         if _img and _img.url:
-                            await send_meta_image_message(
-                                sender_id,
-                                _img.url,
-                                summary,
-                                phone_number_id=platform_id,
-                            )
+                            await send_meta_image_message(sender_id, _img.url, summary, phone_number_id=platform_id)
                         else:
-                            await send_meta_message(
-                                sender_id, summary, phone_number_id=platform_id
-                            )
+                            await send_meta_message(sender_id, summary, phone_number_id=platform_id)
                     except Exception as _img_e:
                         logger.warning(f"Image send failed: {_img_e}")
-                        await send_meta_message(
-                            sender_id, summary, phone_number_id=platform_id
-                        )
+                        await send_meta_message(sender_id, summary, phone_number_id=platform_id)
                     # Lock state to HANDOFF — prevents search re-triggering
                     prefs["last_viewed_id"] = matches[0].id
                     prefs["last_viewed_title"] = matches[0].title or ""
@@ -3000,18 +2034,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     )
                     db.commit()
                     carousel_data = prepare_meta_carousel(matches)
-                    await send_meta_carousel(
-                        sender_id, carousel_data, phone_number_id=platform_id
-                    )
-
-                    if total > 1:
-                        _ptype_c = (prefs.get("property_type") or "property").title()
-                        await send_meta_message(
-                            sender_id,
-                            f"I found *{total}* verified {_ptype_c} listings matching your criteria. "
-                            f"The top match is shown above. Reply *Show all* to see the complete list.",
-                            phone_number_id=platform_id,
-                        )
+                    await send_meta_carousel(sender_id, carousel_data, phone_number_id=platform_id)
 
                     # Advance funnel
                     convo.funnel_stage = "commitment"
@@ -3023,25 +2046,15 @@ async def handle_incoming_message(data: dict, db: Session):
 
                 else:
                     await _no_results_cascade(
-                        prefs,
-                        first_name,
-                        sender_id,
-                        tenant_id,
-                        db,
-                        convo,
-                        platform_id,
-                        tenant_profile,
-                        biz_name,
+                        prefs, first_name, sender_id,
+                        tenant_id, db, convo, platform_id,
+                        tenant_profile, biz_name,
                     )
                     return
 
             except Exception as e:
                 logger.error(f"Search Block Failure: {e}")
-                await send_meta_message(
-                    sender_id,
-                    handle_logic_error("search_failure"),
-                    phone_number_id=platform_id,
-                )
+                await send_meta_message(sender_id, handle_logic_error("search_failure"), phone_number_id=platform_id)
                 return
         # --- 11. KORA PERSONALITY & HANDSHAKE ---
         try:
@@ -3058,76 +2071,24 @@ async def handle_incoming_message(data: dict, db: Session):
                 if convo.funnel_stage == "handshake":
                     msg_lower = text_body.lower()
                     time_keywords = [
-                        "tomorrow",
-                        "today",
-                        "monday",
-                        "tuesday",
-                        "wednesday",
-                        "thursday",
-                        "friday",
-                        "saturday",
-                        "sunday",
-                        "next week",
-                        "morning",
-                        "afternoon",
-                        "evening",
-                        "noon",
-                        "weekend",
-                        "prompt",
-                        "sharp",
-                        "o'clock",
-                        "oclock",
-                        "by",
-                        "around",
-                        "january",
-                        "february",
-                        "march",
-                        "april",
-                        "may",
-                        "june",
-                        "july",
-                        "august",
-                        "september",
-                        "october",
-                        "november",
-                        "december",
-                        "6am",
-                        "7am",
-                        "8am",
-                        "9am",
-                        "10am",
-                        "11am",
-                        "12pm",
-                        "1pm",
-                        "2pm",
-                        "3pm",
-                        "4pm",
-                        "5pm",
-                        "6pm",
-                        "7pm",
-                        "8pm",
-                        "9pm",
+                        "tomorrow", "today", "monday", "tuesday",
+                        "wednesday", "thursday", "friday", "saturday",
+                        "sunday", "next week", "morning", "afternoon",
+                        "evening", "noon", "weekend", "prompt", "sharp",
+                        "o'clock", "oclock", "by", "around",
+                        "january", "february", "march", "april", "may",
+                        "june", "july", "august", "september", "october",
+                        "november", "december",
+                        "6am", "7am", "8am", "9am", "10am", "11am", "12pm",
+                        "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm",
+                        "8pm", "9pm",
                     ]
                     has_time = any(kw in msg_lower for kw in time_keywords)
                     has_time_pattern = (
-                        bool(
-                            re.search(
-                                r"\b\d{1,2}(:\d{2})?\s*(am|pm)\b",
-                                msg_lower,
-                                re.IGNORECASE,
-                            )
-                        )
+                        bool(re.search(r"\b\d{1,2}(:\d{2})?\s*(am|pm)\b", msg_lower, re.IGNORECASE))
                         or bool(re.search(r"\b\d{1,2}:\d{2}\b", msg_lower))
-                        or bool(
-                            re.search(
-                                r"\b\d{1,2}\s*(am|pm)\b", msg_lower, re.IGNORECASE
-                            )
-                        )
-                        or bool(
-                            re.search(
-                                r"\b\d{1,2}\s*o'?clock\b", msg_lower, re.IGNORECASE
-                            )
-                        )
+                        or bool(re.search(r"\b\d{1,2}\s*(am|pm)\b", msg_lower, re.IGNORECASE))
+                        or bool(re.search(r"\b\d{1,2}\s*o'?clock\b", msg_lower, re.IGNORECASE))
                     )
 
                     if has_time or has_time_pattern:
@@ -3148,37 +2109,18 @@ async def handle_incoming_message(data: dict, db: Session):
                                     listing_title = lst.title
                             except Exception as e:
                                 logger.error(f"Listing lookup failed: {e}")
-                        # Build GPS nav link + directions for buyer
-                        _nav_block = ""
-                        _dir_block = ""
-                        if lst and lst.latitude and lst.longitude:
-                            _nav_url = (
-                                f"https://www.google.com/maps/dir/?api=1"
-                                f"&destination={lst.latitude},{lst.longitude}"
-                                f"&travelmode=driving"
-                            )
-                            _nav_block = (
-                                f"\n\n📍 *Navigate to Property:*\n{_nav_url}"
-                            )
-                        if lst and getattr(lst, "directions", None):
-                            _dir_block = (
-                                f"\n\n🗺️ *How to find us:*\n{lst.directions}"
-                            )
                         confirmation = (
                             f"Perfect, {first_name}! ✅\n\n"
-                            f"*Inspection Confirmed* for *{listing_title}* 🏠\n\n"
-                            f"Our lead agent has been notified and will contact you "
-                            f"shortly to confirm the exact meeting point. "
-                            f"Please keep your phone available. 📱"
-                            + _nav_block
-                            + _dir_block
-                            + f"\n\nThank you for choosing *{biz_name}* — "
-                            f"where every listing is GPS-verified and "
-                            f"document-checked. 🛡️"
+                            f"Your inspection for *{listing_title}* "
+                            f"has been noted.\n\n"
+                            f"Our lead agent will reach out shortly "
+                            f"to confirm the exact time and meeting point. "
+                            f"Please keep your phone available. 📱\n\n"
+                            f"Thank you for choosing *{biz_name}* — "
+                            f"where every property is verified before "
+                            f"it reaches you. 🏠"
                         )
-                        await send_meta_message(
-                            sender_id, confirmation, phone_number_id=platform_id
-                        )
+                        await send_meta_message(sender_id, confirmation, phone_number_id=platform_id)
                         return
 
                     else:
@@ -3191,18 +2133,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         )
                         return
 
-                from app.conversations.templates import CITY_TERMS as _CT3
-                _cf_loc = (prefs.get("location") or "").lower().strip()
-                _cf_locked = (prefs.get("city_locked") or "").lower().strip()
-                _cf_is_city = (
-                    _cf_loc in _CT3
-                    or (_cf_locked and _cf_loc == _cf_locked)
-                )
-                if (
-                    prefs.get("location")
-                    and prefs.get("budget")
-                    and not _cf_is_city
-                ):
+                if prefs.get("location") and prefs.get("budget"):
                     try:
                         search_result = execute_premium_search(db, tenant_id, prefs)
                         matches = search_result.get("data", [])
@@ -3210,28 +2141,19 @@ async def handle_incoming_message(data: dict, db: Session):
                         source = search_result.get("source", "none")
                         # Auto-expand: if no results, silently search nearby areas
                         if not matches:
-                            location_lower = (
-                                (prefs.get("location") or "").lower().strip()
-                            )
-                            from app.services.chatbot.message_builder import (
-                                NEARBY_AREAS,
-                            )
-
+                            location_lower = (prefs.get("location") or "").lower().strip()
+                            from app.services.chatbot.message_builder import NEARBY_AREAS
                             nearby_areas = NEARBY_AREAS.get(location_lower, [])
                             for nearby_loc in nearby_areas[:3]:
                                 expanded_prefs = {**prefs, "location": nearby_loc}
                                 try:
-                                    expanded_result = execute_premium_search(
-                                        db, tenant_id, expanded_prefs
-                                    )
+                                    expanded_result = execute_premium_search(db, tenant_id, expanded_prefs)
                                     expanded_matches = expanded_result.get("data", [])
                                     if expanded_matches:
                                         matches = expanded_matches
                                         total = expanded_result.get("total_count", 0)
                                         source = expanded_result.get("source", "none")
-                                        prefs["_expanded_from"] = prefs.get(
-                                            "location", ""
-                                        )
+                                        prefs["_expanded_from"] = prefs.get("location", "")
                                         prefs["_expanded_to"] = nearby_loc
                                         break
                                 except Exception:
@@ -3244,9 +2166,7 @@ async def handle_incoming_message(data: dict, db: Session):
                                     matches[0], matches, total, first_name
                                 )
                             # Prepend expansion note if we searched a nearby area
-                            if prefs.get("_expanded_from") and prefs.get(
-                                "_expanded_to"
-                            ):
+                            if prefs.get("_expanded_from") and prefs.get("_expanded_to"):
                                 expansion_note = (
                                     f"No verified listings found in "
                                     f"*{prefs['_expanded_from'].title()}* right now — "
@@ -3263,47 +2183,19 @@ async def handle_incoming_message(data: dict, db: Session):
                             # Send image+summary as one card, or fall back to text only
                             try:
                                 from app.listings.models import ListingImage
-                                from app.services.notification_service import (
-                                    send_meta_image_message,
-                                )
-
-                                _img2 = (
-                                    db.query(ListingImage)
-                                    .filter(ListingImage.listing_id == matches[0].id)
-                                    .first()
-                                )
+                                from app.services.notification_service import send_meta_image_message
+                                _img2 = db.query(ListingImage).filter(
+                                    ListingImage.listing_id == matches[0].id
+                                ).first()
                                 if _img2 and _img2.url:
-                                    await send_meta_image_message(
-                                        sender_id,
-                                        _img2.url,
-                                        summary,
-                                        phone_number_id=platform_id,
-                                    )
+                                    await send_meta_image_message(sender_id, _img2.url, summary, phone_number_id=platform_id)
                                 else:
-                                    await send_meta_message(
-                                        sender_id, summary, phone_number_id=platform_id
-                                    )
+                                    await send_meta_message(sender_id, summary, phone_number_id=platform_id)
                             except Exception as _img2_e:
                                 logger.warning(f"Image send failed: {_img2_e}")
-                                await send_meta_message(
-                                    sender_id, summary, phone_number_id=platform_id
-                                )
+                                await send_meta_message(sender_id, summary, phone_number_id=platform_id)
                             carousel_data = prepare_meta_carousel(matches)
-                            await send_meta_carousel(
-                                sender_id, carousel_data, phone_number_id=platform_id
-                            )
-
-                            if total > 1:
-                                _ptype_c2 = (
-                                    prefs.get("property_type") or "property"
-                                ).title()
-                                await send_meta_message(
-                                    sender_id,
-                                    f"I found *{total}* verified {_ptype_c2} listings matching your criteria. "
-                                    f"The top match is shown above. Reply *Show all* to see the complete list.",
-                                    phone_number_id=platform_id,
-                                )
-
+                            await send_meta_carousel(sender_id, carousel_data, phone_number_id=platform_id)
                             prefs["last_viewed_id"] = matches[0].id
                             prefs["last_viewed_title"] = matches[0].title or ""
                             prefs["last_match_ids"] = [m.id for m in matches]
@@ -3317,21 +2209,14 @@ async def handle_incoming_message(data: dict, db: Session):
                             logger.info(f"Saved last_viewed_id: {matches[0].id}")
                         else:
                             await _no_results_cascade(
-                                prefs,
-                                first_name,
-                                sender_id,
-                                tenant_id,
-                                db,
-                                convo,
-                                platform_id,
-                                tenant_profile,
-                                biz_name,
+                                prefs, first_name, sender_id,
+                                tenant_id, db, convo, platform_id,
+                                tenant_profile, biz_name,
                             )
                     except Exception as e:
                         logger.error(f"Search from completed_flag failed: {e}")
                         await send_meta_message(
-                            sender_id,
-                            handle_logic_error("search_failure"),
+                            sender_id, handle_logic_error("search_failure"),
                             phone_number_id=platform_id,
                         )
                     return
@@ -3353,14 +2238,8 @@ async def handle_incoming_message(data: dict, db: Session):
                         search_result.get("total_count"),
                         first_name,
                     )
-                    await send_meta_message(
-                        sender_id, summary, phone_number_id=platform_id
-                    )
-                    await send_meta_carousel(
-                        sender_id,
-                        prepare_meta_carousel(matches),
-                        phone_number_id=platform_id,
-                    )
+                    await send_meta_message(sender_id, summary, phone_number_id=platform_id)
+                    await send_meta_carousel(sender_id, prepare_meta_carousel(matches), phone_number_id=platform_id)
                 return
 
             # Handshake trigger
@@ -3375,132 +2254,13 @@ async def handle_incoming_message(data: dict, db: Session):
                 last_id = prefs.get("last_viewed_id")
                 listing = db.get(Listing, last_id) if last_id else None
                 if listing:
-                    # Resolve dedicated agent/admin for this listing
-                    _hs_agent_name = None
-                    _hs_agent_role = None
-                    _hs_agent_phone = None
-                    try:
-                        from app.users.models import User as _HsUser
-                        _hs_agent = None
-                        if listing.assigned_realtor_id:
-                            _hs_agent = (
-                                db.query(_HsUser)
-                                .filter(
-                                    _HsUser.id == listing.assigned_realtor_id,
-                                    _HsUser.is_active == True,
-                                )
-                                .first()
-                            )
-                        if not _hs_agent:
-                            _hs_agent = (
-                                db.query(_HsUser)
-                                .filter(
-                                    _HsUser.tenant_id == tenant_id,
-                                    _HsUser.role == "admin",
-                                    _HsUser.is_active == True,
-                                    _HsUser.phone_number.isnot(None),
-                                )
-                                .first()
-                            )
-                        if _hs_agent:
-                            _hs_agent_name = (
-                                _hs_agent.first_name
-                                or _hs_agent.email.split("@")[0]
-                            )
-                            _hs_agent_role = "Lead Property Consultant"
-                            _hs_agent_phone = _hs_agent.phone_number or None
-                    except Exception:
-                        pass
-
-                    # Message 1 — inspection confirmed + agent details
-                    _hs_msg = (
-                        f"Perfect, {first_name}! 🎯\n\n"
-                        f"Your inspection request for *{listing.title}* "
-                        f"has been received and logged.\n\n"
+                    connection_msg = build_inspection_confirmation(
+                        first_name, listing.title, listing.latitude, listing.longitude
                     )
-                    if _hs_agent_name:
-                        _hs_msg += (
-                            f"*Your dedicated consultant:*\n"
-                            f"👤 {_hs_agent_name}\n"
-                        )
-                        if _hs_agent_role:
-                            _hs_msg += f"🏢 {_hs_agent_role}\n"
-                        if _hs_agent_phone:
-                            _hs_msg += f"📱 {_hs_agent_phone}\n"
-                        _hs_msg += "\n"
-                    _hs_msg += (
-                        f"They will call you personally within *2 hours* "
-                        f"to confirm your visit details.\n\n"
-                        f"Please keep your phone available. 📱"
-                    )
-                    await send_meta_message(
-                        sender_id, _hs_msg, phone_number_id=platform_id
-                    )
-
-                    # Message 2 — navigation + directions (if available)
-                    _hs_nav = ""
-                    if listing.latitude and listing.longitude:
-                        _hs_nav = (
-                            f"https://www.google.com/maps/dir/?api=1"
-                            f"&destination={listing.latitude},{listing.longitude}"
-                            f"&travelmode=driving"
-                        )
-                    _hs_dir = getattr(listing, "directions", None)
-                    if _hs_nav or _hs_dir:
-                        _hs_close = ""
-                        if _hs_nav:
-                            _hs_close += f"📍 *Property Location:*\n{_hs_nav}\n\n"
-                        if _hs_dir:
-                            _hs_close += f"🗺️ *How to find us:*\n{_hs_dir}\n\n"
-                        _hs_close += (
-                            f"Thank you for choosing *{biz_name}* — where every "
-                            f"listing is GPS-verified and document-checked. 🛡️"
-                        )
-                        await send_meta_message(
-                            sender_id, _hs_close, phone_number_id=platform_id
-                        )
-
-                    # Alert agent with full buyer brief
-                    _hs_p = listing.price or 0
-                    _hs_p_fmt = (
-                        f"₦{_hs_p/1_000_000:.0f}M"
-                        if _hs_p >= 1_000_000
-                        else f"₦{_hs_p:,}"
-                    )
-                    _hs_alert = (
-                        f"🔔 *NEW INSPECTION REQUEST*\n\n"
-                        f"👤 *Buyer:* {first_name}\n"
-                        f"📱 *WhatsApp:* wa.me/{sender_id}\n\n"
-                        f"🏠 *Property:* {listing.title}\n"
-                        f"📍 *Location:* {(listing.location or '').title()}\n"
-                        f"💰 *Price:* {_hs_p_fmt}\n"
-                        f"🛡️ *Trust Score:* {listing.trust_score or 0}/100\n\n"
-                    )
-                    if _hs_dir:
-                        _hs_alert += f"🗺️ *Directions:*\n{_hs_dir}\n\n"
-                    if listing.latitude and listing.longitude:
-                        _hs_alert += (
-                            f"📍 *Google Maps:*\n"
-                            f"https://www.google.com/maps/dir/?api=1"
-                            f"&destination={listing.latitude},{listing.longitude}\n\n"
-                        )
-                    _hs_alert += (
-                        f"⚡ *Please call this buyer within 2 hours.*\n\n"
-                        f"Tap to open their WhatsApp:\nwa.me/{sender_id}"
-                    )
-                    await alert_realtor_of_lead(
-                        db,
-                        last_id,
-                        sender_id,
-                        biz_name,
-                        phone_number_id=platform_id,
-                        custom_message=_hs_alert,
-                    )
-
-                    # Close funnel — agent takes over
-                    convo.funnel_stage = "closed"
-                    convo.state = "CLOSED"
-                    convo.lead_score = 90
+                    await send_meta_message(sender_id, connection_msg, phone_number_id=platform_id)
+                    await alert_realtor_of_lead(db, last_id, sender_id, biz_name, phone_number_id=platform_id)
+                    convo.funnel_stage = "handshake"
+                    convo.lead_score = min((convo.lead_score or 0) + 20, 100)
                     convo.last_active_at = datetime.now(timezone.utc).replace(
                         tzinfo=None
                     )
@@ -3519,11 +2279,11 @@ async def handle_incoming_message(data: dict, db: Session):
             if intent == "media_request" and prefs.get("last_viewed_id"):
                 listing = db.get(Listing, prefs.get("last_viewed_id"))
                 if listing:
-                    showroom_link = f"{os.getenv('BASE_URL', 'https://est8go-api.onrender.com')}/public/property/{listing.id}"
-                    response = build_media_redirect(first_name, biz_name, showroom_link)
-                    await send_meta_message(
-                        sender_id, response, phone_number_id=platform_id
+                    showroom_link = (
+                        f"https://est8go-api.onrender.com/public/property/{listing.id}"
                     )
+                    response = build_media_redirect(first_name, biz_name, showroom_link)
+                    await send_meta_message(sender_id, response, phone_number_id=platform_id)
                     return
 
             # Never send raw flag strings or generic fallback
@@ -3533,9 +2293,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     tenant_areas_by_budget=prefs.get("tenant_areas_in_budget", []),
                 )
                 if next_q:
-                    await send_meta_message(
-                        sender_id, next_q, phone_number_id=platform_id
-                    )
+                    await send_meta_message(sender_id, next_q, phone_number_id=platform_id)
                 return
 
             # Default voice deliver

@@ -188,11 +188,37 @@ def get_next_question(
                 f"{areas_list}\n\n"
                 f"Which area interests you? Or type a specific area you have in mind. 📍"
             )
-        else:
-            return (
-                "Which area are you targeting? 📍\n\n"
-                "Tell me the neighbourhood or estate and I'll search our verified listings."
+
+        # No budget-guided areas — ask for area with city-aware examples
+        coverage = current_data.get("coverage_cities", [])
+
+        # Single-city tenant — skip city question, ask for area directly
+        if len(coverage) == 1:
+            city = coverage[0]
+            examples = CITY_AREA_EXAMPLES.get(
+                city, "please specify a neighbourhood"
             )
+            return (
+                f"Which area of *{city.title()}* are you targeting? 📍\n\n"
+                f"For example: {examples}\n\n"
+                f"This helps me find the most relevant verified properties."
+            )
+
+        # Multi-city tenant — ask which city
+        if coverage:
+            cities_list = ", ".join(c.title() for c in coverage)
+            return (
+                f"Which city are you searching in for your "
+                f"{prop_type.title()}? 🏙️\n\n"
+                f"We cover {cities_list}."
+            )
+
+        # Fallback — generic
+        return (
+            f"Which city are you searching in for your "
+            f"{prop_type.title()}? 🏙️\n\n"
+            f"We cover Abuja, Lagos, Port Harcourt, Ibadan, Enugu and more."
+        )
 
     # All collected — ready to search
     return None
