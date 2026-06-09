@@ -1173,12 +1173,52 @@ async def handle_incoming_message(data: dict, db: Session):
             convo.state = "ACTIVE"
             convo.lead_score = 0
             db.commit()
+            import random as _rand
+            _fresh_variants = [
+                (
+                    f"Consider it done, {first_name}. 🔄\n\n"
+                    f"I've cleared your previous search "
+                    f"and opened a fresh connection to "
+                    f"our verified vault.\n\n"
+                    f"What are you looking for this time?\n\n"
+                    f"🌱 *Land* — prime plots for "
+                    f"development or investment\n"
+                    f"🏠 *House* — fully detached, "
+                    f"semi-detached or duplex\n"
+                    f"🏢 *Apartment* — modern flats "
+                    f"and studio units\n\n"
+                    f"Or simply describe what you "
+                    f"have in mind. 😊"
+                ),
+                (
+                    f"Fresh start, {first_name}. ✨\n\n"
+                    f"Our verified vault is open "
+                    f"and ready.\n\n"
+                    f"What type of property are you "
+                    f"searching for today?\n\n"
+                    f"🌱 *Land* — build or invest\n"
+                    f"🏠 *House* — move-in ready "
+                    f"or off-plan\n"
+                    f"🏢 *Apartment* — city living "
+                    f"at its finest\n\n"
+                    f"Just tell me what you need."
+                ),
+                (
+                    f"All cleared, {first_name}. "
+                    f"Let's find you something "
+                    f"exceptional. 🏡\n\n"
+                    f"Every property I show you is "
+                    f"GPS-verified and document-checked "
+                    f"— no fake listings, no wasted trips.\n\n"
+                    f"What are we searching for?\n\n"
+                    f"🌱 *Land*\n"
+                    f"🏠 *House*\n"
+                    f"🏢 *Apartment*"
+                ),
+            ]
             await send_meta_message(
                 sender_id,
-                "Starting fresh. What type of property are you looking for?\n\n"
-                "Land — plots for development\n"
-                "House — detached, semi-detached or duplex\n"
-                "Apartment — flats and studio units",
+                _rand.choice(_fresh_variants),
                 phone_number_id=platform_id,
             )
             return
@@ -1600,11 +1640,52 @@ async def handle_incoming_message(data: dict, db: Session):
                 convo.state = "ACTIVE"
                 convo.lead_score = 0
                 db.commit()
+                import random as _rand2
+                _fresh_variants2 = [
+                    (
+                        f"Consider it done, {first_name}. 🔄\n\n"
+                        f"I've cleared your previous search "
+                        f"and opened a fresh connection to "
+                        f"our verified vault.\n\n"
+                        f"What are you looking for this time?\n\n"
+                        f"🌱 *Land* — prime plots for "
+                        f"development or investment\n"
+                        f"🏠 *House* — fully detached, "
+                        f"semi-detached or duplex\n"
+                        f"🏢 *Apartment* — modern flats "
+                        f"and studio units\n\n"
+                        f"Or simply describe what you "
+                        f"have in mind. 😊"
+                    ),
+                    (
+                        f"Fresh start, {first_name}. ✨\n\n"
+                        f"Our verified vault is open "
+                        f"and ready.\n\n"
+                        f"What type of property are you "
+                        f"searching for today?\n\n"
+                        f"🌱 *Land* — build or invest\n"
+                        f"🏠 *House* — move-in ready "
+                        f"or off-plan\n"
+                        f"🏢 *Apartment* — city living "
+                        f"at its finest\n\n"
+                        f"Just tell me what you need."
+                    ),
+                    (
+                        f"All cleared, {first_name}. "
+                        f"Let's find you something "
+                        f"exceptional. 🏡\n\n"
+                        f"Every property I show you is "
+                        f"GPS-verified and document-checked "
+                        f"— no fake listings, no wasted trips.\n\n"
+                        f"What are we searching for?\n\n"
+                        f"🌱 *Land*\n"
+                        f"🏠 *House*\n"
+                        f"🏢 *Apartment*"
+                    ),
+                ]
                 await send_meta_message(
                     sender_id,
-                    f"Starting fresh, {first_name}. 🔄\n\n"
-                    f"What type of property are you looking for?\n\n"
-                    f"Land · House · Apartment",
+                    _rand2.choice(_fresh_variants2),
                     phone_number_id=platform_id,
                 )
                 return
@@ -2254,23 +2335,169 @@ async def handle_incoming_message(data: dict, db: Session):
                 last_id = prefs.get("last_viewed_id")
                 listing = db.get(Listing, last_id) if last_id else None
                 if listing:
-                    connection_msg = build_inspection_confirmation(
-                        first_name, listing.title, listing.latitude, listing.longitude
+                    # Get agent details
+                    _hs_agent_name = None
+                    _hs_agent_role = None
+                    _hs_agent_phone = None
+                    try:
+                        from app.users.models import User as _HsUser
+                        _hs_agent = None
+                        if listing.assigned_realtor_id:
+                            _hs_agent = (
+                                db.query(_HsUser)
+                                .filter(
+                                    _HsUser.id == listing.assigned_realtor_id,
+                                    _HsUser.is_active == True,
+                                )
+                                .first()
+                            )
+                        if not _hs_agent:
+                            _hs_agent = (
+                                db.query(_HsUser)
+                                .filter(
+                                    _HsUser.tenant_id == tenant_id,
+                                    _HsUser.role == "admin",
+                                    _HsUser.is_active == True,
+                                    _HsUser.phone_number.isnot(None),
+                                )
+                                .first()
+                            )
+                        if _hs_agent:
+                            _hs_agent_name = (
+                                _hs_agent.first_name
+                                or _hs_agent.email.split("@")[0]
+                            )
+                            _hs_agent_role = "Lead Property Consultant"
+                            _hs_agent_phone = _hs_agent.phone_number or None
+                    except Exception:
+                        pass
+
+                    # Message 1 — inspection confirmed + agent details
+                    _hs_msg = (
+                        f"Perfect, {first_name}! 🎯\n\n"
+                        f"Your inspection request for "
+                        f"*{listing.title}* has been "
+                        f"received and logged.\n\n"
                     )
-                    await send_meta_message(sender_id, connection_msg, phone_number_id=platform_id)
-                    await alert_realtor_of_lead(db, last_id, sender_id, biz_name, phone_number_id=platform_id)
-                    convo.funnel_stage = "handshake"
-                    convo.lead_score = min((convo.lead_score or 0) + 20, 100)
-                    convo.last_active_at = datetime.now(timezone.utc).replace(
-                        tzinfo=None
+                    if _hs_agent_name:
+                        _hs_msg += (
+                            f"*Your dedicated consultant:*\n"
+                            f"👤 {_hs_agent_name}\n"
+                        )
+                        if _hs_agent_role:
+                            _hs_msg += f"🏢 {_hs_agent_role}\n"
+                        if _hs_agent_phone:
+                            _hs_msg += f"📱 {_hs_agent_phone}\n"
+                        _hs_msg += "\n"
+                    _hs_msg += (
+                        f"They will call you personally "
+                        f"within *2 hours* to confirm "
+                        f"your visit details.\n\n"
+                        f"Please keep your phone "
+                        f"available. 📱"
+                    )
+                    await send_meta_message(
+                        sender_id, _hs_msg,
+                        phone_number_id=platform_id,
+                    )
+
+                    # Message 2 — navigation + directions
+                    _hs_nav = ""
+                    if listing.latitude and listing.longitude:
+                        _hs_nav = (
+                            f"https://www.google.com/maps"
+                            f"/dir/?api=1&destination="
+                            f"{listing.latitude},"
+                            f"{listing.longitude}"
+                            f"&travelmode=driving"
+                        )
+                    _hs_dir = getattr(listing, "directions", None)
+                    if _hs_nav or _hs_dir:
+                        _hs_close = ""
+                        if _hs_nav:
+                            _hs_close += (
+                                f"📍 *Property Location:*\n"
+                                f"{_hs_nav}\n\n"
+                            )
+                        if _hs_dir:
+                            _hs_close += (
+                                f"🗺️ *How to find us:*\n"
+                                f"{_hs_dir}\n\n"
+                            )
+                        _hs_close += (
+                            f"Thank you for choosing "
+                            f"*{biz_name}* — where every "
+                            f"listing is GPS-verified and "
+                            f"document-checked. 🛡️"
+                        )
+                        await send_meta_message(
+                            sender_id, _hs_close,
+                            phone_number_id=platform_id,
+                        )
+
+                    # Alert agent with full buyer brief
+                    _hs_p = listing.price or 0
+                    _hs_p_fmt = (
+                        f"₦{_hs_p/1_000_000:.0f}M"
+                        if _hs_p >= 1_000_000
+                        else f"₦{_hs_p:,}"
+                    )
+                    _hs_alert = (
+                        f"🔔 *NEW INSPECTION REQUEST*\n\n"
+                        f"👤 *Buyer:* {first_name}\n"
+                        f"📱 *WhatsApp:* wa.me/{sender_id}\n\n"
+                        f"🏠 *Property:* {listing.title}\n"
+                        f"📍 *Location:* "
+                        f"{(listing.location or '').title()}\n"
+                        f"💰 *Price:* {_hs_p_fmt}\n"
+                        f"🛡️ *Trust Score:* "
+                        f"{listing.trust_score or 0}/100\n\n"
+                    )
+                    if _hs_dir:
+                        _hs_alert += (
+                            f"🗺️ *Directions:*\n{_hs_dir}\n\n"
+                        )
+                    if listing.latitude and listing.longitude:
+                        _hs_alert += (
+                            f"📍 *Google Maps:*\n"
+                            f"https://www.google.com/maps"
+                            f"/dir/?api=1&destination="
+                            f"{listing.latitude},"
+                            f"{listing.longitude}\n\n"
+                        )
+                    _hs_alert += (
+                        f"⚡ *Please call this buyer "
+                        f"within 2 hours.*\n\n"
+                        f"Tap to open their WhatsApp:\n"
+                        f"wa.me/{sender_id}"
+                    )
+                    await alert_realtor_of_lead(
+                        db,
+                        last_id,
+                        sender_id,
+                        biz_name,
+                        phone_number_id=platform_id,
+                        custom_message=_hs_alert,
+                    )
+
+                    # Close funnel — agent takes over
+                    convo.funnel_stage = "closed"
+                    convo.state = "CLOSED"
+                    convo.lead_score = 90
+                    convo.last_active_at = (
+                        datetime.now(timezone.utc)
+                        .replace(tzinfo=None)
                     )
                     db.commit()
                     return
                 else:
-                    # No listing viewed yet — ask what they want
                     await send_meta_message(
                         sender_id,
-                        get_executive_response("intent_location", first_name, biz_name),
+                        get_executive_response(
+                            "intent_location",
+                            first_name,
+                            biz_name,
+                        ),
                         phone_number_id=platform_id,
                     )
                     return
