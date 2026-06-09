@@ -444,11 +444,18 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
         db.commit()
 
     # After budget captured — show tenant areas within budget
+    from app.conversations.templates import CITY_TERMS as _CT
     _extr = intent_result.extracted or {}
+    _cur_loc = (current_data.get("location") or "").lower().strip()
+    _cur_city_locked = (current_data.get("city_locked") or "").lower().strip()
+    _loc_is_city = (
+        _cur_loc in _CT
+        or (_cur_city_locked and _cur_loc == _cur_city_locked)
+    )
     if (
         (_extr.get("budget") or _extr.get("budget_max"))
         and not _extr.get("location")
-        and not current_data.get("location")
+        and (not current_data.get("location") or _loc_is_city)
     ):
         try:
             from app.services.chatbot.search_service import get_tenant_areas_by_budget
@@ -2843,9 +2850,17 @@ async def handle_incoming_message(data: dict, db: Session):
         # --- 10. SEARCH TRIGGER ---
         # Only trigger search if intent is search_ready or unknown
         # Never re-trigger if buyer is objecting or agreeing
+        from app.conversations.templates import CITY_TERMS as _CT2
+        _search_loc = (prefs.get("location") or "").lower().strip()
+        _search_city_locked = (prefs.get("city_locked") or "").lower().strip()
+        _search_loc_is_city = (
+            _search_loc in _CT2
+            or (_search_city_locked and _search_loc == _search_city_locked)
+        )
         if (
             prefs.get("location")
             and prefs.get("budget")
+            and not _search_loc_is_city
             and convo.state != "HANDOFF"
             and intent
             not in (
@@ -3176,7 +3191,18 @@ async def handle_incoming_message(data: dict, db: Session):
                         )
                         return
 
-                if prefs.get("location") and prefs.get("budget"):
+                from app.conversations.templates import CITY_TERMS as _CT3
+                _cf_loc = (prefs.get("location") or "").lower().strip()
+                _cf_locked = (prefs.get("city_locked") or "").lower().strip()
+                _cf_is_city = (
+                    _cf_loc in _CT3
+                    or (_cf_locked and _cf_loc == _cf_locked)
+                )
+                if (
+                    prefs.get("location")
+                    and prefs.get("budget")
+                    and not _cf_is_city
+                ):
                     try:
                         search_result = execute_premium_search(db, tenant_id, prefs)
                         matches = search_result.get("data", [])
