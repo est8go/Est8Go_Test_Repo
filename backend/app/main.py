@@ -193,7 +193,7 @@ def _sitemap_xml_inner(db):
         _Listing.trust_score > 0,
     ).all()
     for lst in listings:
-        lastmod = lst.updated_at.strftime("%Y-%m-%d") if lst.updated_at else today
+        lastmod = lst.created_at.strftime("%Y-%m-%d") if lst.created_at else today
         urls.append(
             f"  <url>\n    <loc>{base_url}/public/property/{lst.id}</loc>\n"
             f"    <lastmod>{lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n"
