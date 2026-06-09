@@ -465,6 +465,14 @@ html[data-theme="light"] .action-bar{background:#fff}
     </div>
     {% endif %}
 
+    <!-- DIRECTIONS -->
+    {% if listing.directions %}
+    <div class="map-section">
+      <div class="section-hd">How to Find This Property</div>
+      <div style="background:var(--surface,#111827);border:1px solid var(--border,rgba(255,255,255,0.07));border-radius:10px;padding:1rem 1.1rem;line-height:1.6;font-size:0.875rem;color:var(--text,#F8FAFC);white-space:pre-line">🗺️ {{ listing.directions }}</div>
+    </div>
+    {% endif %}
+
     <!-- AGENT CARD -->
     {% if listing.tenant %}
     <div class="agent-section">

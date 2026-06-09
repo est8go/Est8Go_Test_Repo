@@ -108,6 +108,7 @@ async def realtor_upload_property(
     prop_type: str = Form(...),
     latitude: float = Form(...),
     longitude: float = Form(...),
+    directions: Optional[str] = Form(None),
     images: List[UploadFile] = File(...),
     current_user: User = Depends(get_current_user),
 ):
@@ -127,6 +128,7 @@ async def realtor_upload_property(
             property_type=prop_type,
             latitude=latitude,
             longitude=longitude,
+            directions=directions,
             status="pending_review",
             source="realtor_portal",
         )

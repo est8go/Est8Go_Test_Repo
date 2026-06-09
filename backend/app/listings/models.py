@@ -87,6 +87,7 @@ class Listing(Base):
     title = Column(String(255), nullable=False)
     location = Column(String(255), nullable=False)
     description = Column(Text)
+    directions = Column(Text, nullable=True)
     price = Column(Integer, nullable=False)
     property_type = Column(String(50))
 

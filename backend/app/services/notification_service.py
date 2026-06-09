@@ -61,6 +61,7 @@ async def alert_realtor_of_lead(
     user_phone: str,
     biz_name: str,
     phone_number_id: str = None,
+    custom_message: str = None,
 ):
     """
     Alert priority:
@@ -131,39 +132,49 @@ async def alert_realtor_of_lead(
             digits = "234" + digits[1:]
         alert_phone = digits
 
-        # Build Google Maps nav link for agent
-        nav_link = ""
-        if listing.latitude and listing.longitude:
-            nav_link = (
-                f"https://www.google.com/maps/dir/?api=1"
-                f"&destination={listing.latitude},{listing.longitude}"
-                f"&travelmode=driving"
-            )
+        if custom_message:
+            alert_text = custom_message
+        else:
+            # Build Google Maps nav link for agent
+            nav_link = ""
+            if listing.latitude and listing.longitude:
+                nav_link = (
+                    f"https://www.google.com/maps/dir/?api=1"
+                    f"&destination={listing.latitude},{listing.longitude}"
+                    f"&travelmode=driving"
+                )
 
-        alert_text = (
-            f"🔔 *INSPECTION ALERT — ACTION REQUIRED*\n\n"
-            f"Hi {alert_name}, a buyer has confirmed interest "
-            f"in a property you manage:\n\n"
-            f"🏠 *{listing.title}*\n"
-            f"📍 {(listing.location or '').title()}\n"
-            f"💰 ₦{listing.price:,}\n"
-            f"🛡️ Trust Score: {listing.trust_score or 0}/100\n\n"
-            f"👤 *Buyer Details:*\n"
-            f"📱 Contact: +{user_phone}\n\n"
-            f"⚡ *Your Action:*\n"
-            f"Please reach out to the buyer immediately to "
-            f"confirm the inspection date and time.\n\n"
-            + (
-                f"📍 *Navigate to Property:*\n" f"{nav_link}\n\n"
-                if nav_link
-                else f"📍 *Location:* {(listing.location or '').title()} "
-                f"— GPS coordinates pending verification.\n\n"
+            directions_block = ""
+            if getattr(listing, "directions", None):
+                directions_block = (
+                    f"🗺️ *Directions to Gate:*\n{listing.directions}\n\n"
+                )
+
+            alert_text = (
+                f"🔔 *INSPECTION ALERT — ACTION REQUIRED*\n\n"
+                f"Hi {alert_name}, a buyer has confirmed interest "
+                f"in a property you manage:\n\n"
+                f"🏠 *{listing.title}*\n"
+                f"📍 {(listing.location or '').title()}\n"
+                f"💰 ₦{listing.price:,}\n"
+                f"🛡️ Trust Score: {listing.trust_score or 0}/100\n\n"
+                f"👤 *Buyer Details:*\n"
+                f"📱 Contact: +{user_phone}\n\n"
+                f"⚡ *Your Action:*\n"
+                f"Please reach out to the buyer immediately to "
+                f"confirm the inspection date and time.\n\n"
+                + (
+                    f"📍 *Navigate to Property:*\n{nav_link}\n\n"
+                    if nav_link
+                    else f"📍 *Location:* {(listing.location or '').title()} "
+                    f"— GPS coordinates pending verification.\n\n"
+                )
+                + directions_block
+                + f"You are required to be *physically present* "
+                f"at the property gate to receive the buyer. 🤝\n\n"
+                f"Please confirm your attendance by calling "
+                f"the buyer directly."
             )
-            + f"You are required to be *physically present* "
-            f"at the property gate to receive the buyer. 🤝\n\n"
-            f"Please confirm your attendance by calling "
-            f"the buyer directly."
-        )
 
         await send_meta_text_message(
             alert_phone, alert_text, phone_number_id=phone_number_id

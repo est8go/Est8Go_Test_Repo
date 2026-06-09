@@ -246,9 +246,14 @@ def build_navigation_link(latitude: float, longitude: float, title: str) -> str:
 
 
 def build_inspection_confirmation(
-    first_name: str, prop_title: str, lat: float, lng: float
+    first_name: str, prop_title: str, lat: float, lng: float,
+    directions: str = None,
 ) -> str:
     """The final handshake message with a Safety Guard for missing GPS."""
+
+    directions_block = (
+        f"\n\n🗺️ *How to find us:*\n{directions}" if directions else ""
+    )
 
     # 🔹 SOCKET: Safety Guard
     if lat is None or lng is None:
@@ -257,8 +262,9 @@ def build_inspection_confirmation(
             f"I've shared your interest with the lead agent for *{prop_title}*. \n\n"
             "📍 *Site Location:* \n"
             "This property is currently undergoing its final GPS audit. "
-            "The agent will send you a direct WhatsApp location pin once you connect.\n\n"
-            "What time works best for your arrival? 🚗"
+            "The agent will send you a direct WhatsApp location pin once you connect."
+            + directions_block
+            + "\n\nWhat time works best for your arrival? 🚗"
         )
 
     # Standard logic if GPS exists
@@ -268,6 +274,7 @@ def build_inspection_confirmation(
         f"I've shared your interest with the lead agent for *{prop_title}*. \n\n"
         f"📍 *Site Navigation:* \n"
         f"Tap below to open Google Maps and get live directions to the property gate:\n"
-        f"{nav_link}\n\n"
-        f"What time works best for your arrival? 🚗"
+        f"{nav_link}"
+        + directions_block
+        + "\n\nWhat time works best for your arrival? 🚗"
     )

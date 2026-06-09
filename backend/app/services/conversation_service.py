@@ -2929,16 +2929,33 @@ async def handle_incoming_message(data: dict, db: Session):
                                     listing_title = lst.title
                             except Exception as e:
                                 logger.error(f"Listing lookup failed: {e}")
+                        # Build GPS nav link + directions for buyer
+                        _nav_block = ""
+                        _dir_block = ""
+                        if lst and lst.latitude and lst.longitude:
+                            _nav_url = (
+                                f"https://www.google.com/maps/dir/?api=1"
+                                f"&destination={lst.latitude},{lst.longitude}"
+                                f"&travelmode=driving"
+                            )
+                            _nav_block = (
+                                f"\n\n📍 *Navigate to Property:*\n{_nav_url}"
+                            )
+                        if lst and getattr(lst, "directions", None):
+                            _dir_block = (
+                                f"\n\n🗺️ *How to find us:*\n{lst.directions}"
+                            )
                         confirmation = (
                             f"Perfect, {first_name}! ✅\n\n"
-                            f"Your inspection for *{listing_title}* "
-                            f"has been noted.\n\n"
-                            f"Our lead agent will reach out shortly "
-                            f"to confirm the exact time and meeting point. "
-                            f"Please keep your phone available. 📱\n\n"
-                            f"Thank you for choosing *{biz_name}* — "
-                            f"where every property is verified before "
-                            f"it reaches you. 🏠"
+                            f"*Inspection Confirmed* for *{listing_title}* 🏠\n\n"
+                            f"Our lead agent has been notified and will contact you "
+                            f"shortly to confirm the exact meeting point. "
+                            f"Please keep your phone available. 📱"
+                            + _nav_block
+                            + _dir_block
+                            + f"\n\nThank you for choosing *{biz_name}* — "
+                            f"where every listing is GPS-verified and "
+                            f"document-checked. 🛡️"
                         )
                         await send_meta_message(
                             sender_id, confirmation, phone_number_id=platform_id
@@ -3129,7 +3146,8 @@ async def handle_incoming_message(data: dict, db: Session):
                 listing = db.get(Listing, last_id) if last_id else None
                 if listing:
                     connection_msg = build_inspection_confirmation(
-                        first_name, listing.title, listing.latitude, listing.longitude
+                        first_name, listing.title, listing.latitude, listing.longitude,
+                        directions=getattr(listing, "directions", None),
                     )
                     await send_meta_message(
                         sender_id, connection_msg, phone_number_id=platform_id

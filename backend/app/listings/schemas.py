@@ -17,6 +17,7 @@ class ListingImageOut(BaseModel):
 class ListingBase(BaseModel):
     title: str = Field(..., example="4 Bedroom Duplex")
     description: Optional[str] = None
+    directions: Optional[str] = None
     location: str = Field(..., example="Guzape, Abuja")
     price: int = Field(..., example=50000000)
     property_type: str = Field(..., example="house")
@@ -75,6 +76,7 @@ class ListingOut(ListingBase):
 class ListingUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
+    directions: Optional[str] = None
     location: Optional[str] = None
     price: Optional[int] = None
     property_type: Optional[str] = None
