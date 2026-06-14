@@ -87,6 +87,62 @@ _processed_messages: set = set()
 logger = logging.getLogger(__name__)
 
 
+def universal_fallback(
+    prefs: dict,
+    first_name: str,
+    biz_name: str = "our team",
+) -> str:
+    """
+    Never-fail response. Called whenever
+    a reply would otherwise be empty or
+    a raw *_flag string. Always returns
+    something useful — never a dead end.
+    """
+    try:
+        from app.conversations.templates import (
+            get_next_question
+        )
+        nq = get_next_question(
+            prefs,
+            tenant_areas_by_budget=prefs.get(
+                "tenant_areas_in_budget", []
+            ),
+        )
+        if nq:
+            return nq
+    except Exception:
+        pass
+
+    # Location + budget known but stuck —
+    # offer re-search
+    if prefs.get("location") and (
+        prefs.get("budget")
+        or prefs.get("budget_max")
+    ):
+        _loc = (prefs.get("location") or "").title()
+        _pt = prefs.get("property_type", "properties")
+        return (
+            f"Want me to pull up verified "
+            f"{_pt} in {_loc} again, "
+            f"{first_name}? Reply *Yes* "
+            f"and I'll search now. 😊"
+        )
+
+    # Cold fallback — guided menu,
+    # never a dead end
+    return (
+        f"I want to get this right, "
+        f"{first_name}. 😊\n\n"
+        f"Let's find you a verified property:\n\n"
+        f"Just tell me:\n"
+        f"🏠 *Property type* — Land, House "
+        f"or Apartment\n"
+        f"💰 *Budget* — e.g. 30M, 50M\n"
+        f"📍 *Area* — e.g. Lekki, Guzape, GRA\n\n"
+        f"Or say *New Search* to start fresh."
+    )
+
+
 def _get_negotiation_note(listing, db: Session) -> str:
     """
     Returns a negotiation hint string (or empty string) for a listing.
@@ -543,7 +599,12 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
         }
 
     # Unknown intent — escalate to GPT
-    updated_data = extract_preferences(text_clean, current_data)
+    try:
+        updated_data = extract_preferences(text_clean, current_data)
+    except Exception as _gpt_err:
+        logging.warning(f"GPT extract failed: {_gpt_err}")
+        # GPT failed — fall back to rules
+        updated_data = current_data
     # Track consecutive GPT misses — if GPT also extracts nothing,
     # increment miss counter. At 2 consecutive misses, force guided reset.
     if not updated_data or updated_data == current_data:
@@ -2302,6 +2363,21 @@ async def handle_incoming_message(data: dict, db: Session):
                         )
                     return
 
+                elif not (
+                    prefs.get("location")
+                    and prefs.get("budget")
+                ):
+                    # Funnel incomplete — ask next question
+                    # instead of sending raw completed_flag
+                    _fb = universal_fallback(
+                        prefs, first_name, biz_name
+                    )
+                    await send_meta_message(
+                        sender_id, _fb,
+                        phone_number_id=platform_id,
+                    )
+                    return
+
             # Global search trigger
             if final_reply == "trigger_global_search":
                 search_result = execute_premium_search(
@@ -2523,8 +2599,35 @@ async def handle_incoming_message(data: dict, db: Session):
                     await send_meta_message(sender_id, next_q, phone_number_id=platform_id)
                 return
 
-            # Default voice deliver
-            await send_meta_message(sender_id, final_reply, phone_number_id=platform_id)
+            # Default voice deliver —
+            # NEVER send raw flag strings
+            if (
+                not final_reply
+                or final_reply.endswith("_flag")
+                or final_reply.strip() in (
+                    "completed_flag",
+                    "handshake_flag",
+                    "fresh_start_flag",
+                    "filler_flag",
+                    "resume_flag",
+                    "trigger_global_search",
+                    "property_page_lead_flag",
+                )
+            ):
+                # Send universal fallback
+                # instead of broken flag text
+                _fb = universal_fallback(
+                    prefs, first_name, biz_name
+                )
+                await send_meta_message(
+                    sender_id, _fb,
+                    phone_number_id=platform_id,
+                )
+            else:
+                await send_meta_message(
+                    sender_id, final_reply,
+                    phone_number_id=platform_id,
+                )
 
         except Exception as e:
             logger.error(f"❌ PERSONALITY ERROR: {e}")
@@ -2537,3 +2640,40 @@ async def handle_incoming_message(data: dict, db: Session):
 
     except Exception as e:
         logger.error(f"❌ CRITICAL MASTER ERROR: {e}", exc_info=True)
+        # Best-effort fallback — never
+        # leave the buyer in silence
+        try:
+            _fb_sender = None
+            _fb_pid = None
+            # Recover sender_id and platform_id
+            # if they were resolved
+            try:
+                _fb_sender = sender_id
+            except Exception:
+                _fb_sender = None
+            try:
+                _fb_pid = platform_id
+            except Exception:
+                _fb_pid = None
+            try:
+                _fb_name = first_name
+            except Exception:
+                _fb_name = "there"
+
+            if _fb_sender:
+                await send_meta_message(
+                    _fb_sender,
+                    f"I'm still here, {_fb_name}! 🙏\n\n"
+                    f"I had a brief glitch. "
+                    f"Could you tell me again what "
+                    f"you're looking for?\n\n"
+                    f"Just share the *area* and "
+                    f"*budget* and I'll find you "
+                    f"verified options.",
+                    phone_number_id=_fb_pid,
+                )
+        except Exception as _fb_err:
+            logger.error(
+                f"Fallback send also failed: "
+                f"{_fb_err}"
+            )
