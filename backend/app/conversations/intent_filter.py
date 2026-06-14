@@ -573,15 +573,20 @@ def extract_budget_from_text(text: str) -> Optional[int]:
                 return val
 
     # Pattern: range like "5m to 1b" or "5m - 50m" → take upper bound
-    range_pattern = r"(\d+\.?\d*)\s*(?:m\b|million)?\s*(?:to|-)\s*(\d+\.?\d*)\s*(?:b\b|billion|m\b|million)"
+    range_pattern = r"(\d+\.?\d*)\s*(?:m\b|million|k\b)?\s*(?:to|-)\s*(\d+\.?\d*)\s*(?:b\b|billion|m\b|million)?"
     range_match = re.search(range_pattern, text)
     if range_match:
         val1 = float(range_match.group(1))
         val2 = float(range_match.group(2))
         after_val2 = text[range_match.end(2):]
+        # Both numbers must be plausible
+        # budget values (avoid matching
+        # things like dates or counts)
         if "b" in after_val2[:8] or "billion" in after_val2[:12]:
             return int(val2 * 1_000_000_000)
         else:
+            # Default to millions for
+            # bare ranges (Nigerian RE context)
             return int(val2 * 1_000_000)
 
     # Pattern: number + k (thousands)
