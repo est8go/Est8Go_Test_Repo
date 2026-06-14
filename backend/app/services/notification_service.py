@@ -76,7 +76,7 @@ async def alert_realtor_of_lead(
         listing = db.query(Listing).filter(Listing.id == listing_id).first()
         if not listing:
             logger.warning(f"⚠️ Alert failed: Listing {listing_id} not found.")
-            return
+            return False
 
         alert_phone = None
         alert_name = None
@@ -124,7 +124,7 @@ async def alert_realtor_of_lead(
             logger.warning(
                 f"⚠️ No alert phone found: listing={listing_id} tenant={listing.tenant_id}"
             )
-            return
+            return False
 
         # Normalize phone — strip leading 0, ensure 234 prefix
         digits = _re.sub(r"\D", "", alert_phone)

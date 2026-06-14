@@ -893,6 +893,8 @@ async def handle_incoming_message(data: dict, db: Session):
 
         # Coverage cities — used by templates to skip city question for single-city tenants
         _coverage_cities = tenant_profile.get("coverage_cities", []) or []
+        _single_city = len(_coverage_cities) == 1
+        _primary_city = _coverage_cities[0] if _coverage_cities else None
 
         # --- 3. CONVERSATION LOOKUP ---
         convo = (
@@ -1029,7 +1031,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"⚡ *Please call this buyer within 2 hours.*\n\n"
                     f"Tap to open their WhatsApp:\nwa.me/{sender_id}"
                 )
-                await alert_realtor_of_lead(
+                _alert_ok = await alert_realtor_of_lead(
                     db,
                     list_id,
                     sender_id,
@@ -1037,6 +1039,38 @@ async def handle_incoming_message(data: dict, db: Session):
                     phone_number_id=platform_id,
                     custom_message=_alert,
                 )
+                if not _alert_ok:
+                    # Escalate to super-admin —
+                    # buyer was promised a call
+                    try:
+                        from app.tenants.models import Tenant as _ET
+                        _esc_msg = (
+                            f"⚠️ *AGENT ALERT FAILED*\n\n"
+                            f"Tenant: {biz_name} (ID {tenant_id})\n"
+                            f"Buyer: {first_name} — wa.me/{sender_id}\n"
+                            f"Listing ID: {list_id}\n\n"
+                            f"The buyer was told an agent would "
+                            f"call within 2 hours but the agent "
+                            f"alert could not be delivered. "
+                            f"Please follow up manually."
+                        )
+                        _super = os.getenv(
+                            "SUPER_ADMIN_WHATSAPP", ""
+                        )
+                        if _super:
+                            await send_meta_message(
+                                _super, _esc_msg,
+                                phone_number_id=platform_id,
+                            )
+                        logger.error(
+                            f"AGENT ALERT FAILED for tenant "
+                            f"{tenant_id}, buyer {sender_id}, "
+                            f"listing {list_id}"
+                        )
+                    except Exception as _esc_e:
+                        logger.error(
+                            f"Escalation also failed: {_esc_e}"
+                        )
 
                 # Close funnel — agent takes over
                 if convo:
@@ -1155,6 +1189,19 @@ async def handle_incoming_message(data: dict, db: Session):
             convo.data_json = json.dumps({})
             db.commit()
             # Continue processing as a fresh conversation
+
+        # --- 7-COVERAGE: Ensure coverage_cities
+        # is in convo data for ALL buyers ---
+        # (not just greeting-first buyers; placed after
+        # 7b so the closed-state reset cannot wipe it)
+        _cov_data = json.loads(convo.data_json or "{}")
+        _cov_changed = False
+        if _coverage_cities and not _cov_data.get("coverage_cities"):
+            _cov_data["coverage_cities"] = _coverage_cities
+            _cov_changed = True
+        if _cov_changed:
+            convo.data_json = json.dumps(_cov_data)
+            db.commit()
 
         # --- 7c. COMMITMENT DECLINE ---
         # Buyer said No after inspection offer — offer soft alternative
@@ -2637,7 +2684,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         f"Tap to open their WhatsApp:\n"
                         f"wa.me/{sender_id}"
                     )
-                    await alert_realtor_of_lead(
+                    _hs_alert_ok = await alert_realtor_of_lead(
                         db,
                         last_id,
                         sender_id,
@@ -2645,6 +2692,38 @@ async def handle_incoming_message(data: dict, db: Session):
                         phone_number_id=platform_id,
                         custom_message=_hs_alert,
                     )
+                    if not _hs_alert_ok:
+                        # Escalate to super-admin —
+                        # buyer was promised a call
+                        try:
+                            from app.tenants.models import Tenant as _ET
+                            _esc_msg = (
+                                f"⚠️ *AGENT ALERT FAILED*\n\n"
+                                f"Tenant: {biz_name} (ID {tenant_id})\n"
+                                f"Buyer: {first_name} — wa.me/{sender_id}\n"
+                                f"Listing ID: {last_id}\n\n"
+                                f"The buyer was told an agent would "
+                                f"call within 2 hours but the agent "
+                                f"alert could not be delivered. "
+                                f"Please follow up manually."
+                            )
+                            _super = os.getenv(
+                                "SUPER_ADMIN_WHATSAPP", ""
+                            )
+                            if _super:
+                                await send_meta_message(
+                                    _super, _esc_msg,
+                                    phone_number_id=platform_id,
+                                )
+                            logger.error(
+                                f"AGENT ALERT FAILED for tenant "
+                                f"{tenant_id}, buyer {sender_id}, "
+                                f"listing {last_id}"
+                            )
+                        except Exception as _esc_e:
+                            logger.error(
+                                f"Escalation also failed: {_esc_e}"
+                            )
 
                     # Close funnel — agent takes over
                     convo.funnel_stage = "closed"
