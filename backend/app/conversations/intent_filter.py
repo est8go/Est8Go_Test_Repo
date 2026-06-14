@@ -624,8 +624,21 @@ def extract_budget_from_text(text: str) -> Optional[int]:
 
     # Bare small number — implies millions if between 1 and 999
     # e.g. "I have 15" → 15M, "budget is 80" → 80M
+    # BUT NOT when message shows call/contact
+    # intent (e.g. "call me on 8", "reach me", "my number")
+    _call_intent_words = [
+        "call", "reach", "ring", "phone",
+        "number", "contact", "dial",
+        "whatsapp me", "text me", "reach me",
+        "call me", "get back", "callback",
+        "call back",
+    ]
+    _has_call_intent = any(
+        _w in text for _w in _call_intent_words
+    )
+
     bare_match = re.search(r"\b(\d{1,3})\b", text)
-    if bare_match:
+    if bare_match and not _has_call_intent:
         val = int(bare_match.group(1))
         if 1 <= val <= 999:
             return val * 1_000_000
