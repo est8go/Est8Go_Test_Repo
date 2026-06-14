@@ -838,11 +838,21 @@ async def handle_incoming_message(data: dict, db: Session):
         whatsapp_name = "there"
         channel = "whatsapp"
 
+        _msg_type = "text"
+        _loc_lat = None
+        _loc_lng = None
+
         # Path A: WhatsApp
         if "messages" in value:
             msg_obj = value["messages"][0]
             sender_id = msg_obj.get("from")
             text_body = msg_obj.get("text", {}).get("body", "")
+            _msg_type = msg_obj.get("type", "text")
+            # Capture location pin coordinates
+            if _msg_type == "location":
+                _loc = msg_obj.get("location", {})
+                _loc_lat = _loc.get("latitude")
+                _loc_lng = _loc.get("longitude")
             btn_payload = msg_obj.get("button", {}).get("payload", "") or msg_obj.get(
                 "interactive", {}
             ).get("button_reply", {}).get("id", "")
@@ -1202,6 +1212,97 @@ async def handle_incoming_message(data: dict, db: Session):
         if _cov_changed:
             convo.data_json = json.dumps(_cov_data)
             db.commit()
+
+        # --- 7-MEDIA: Handle non-text
+        # message types ---
+        if _msg_type in (
+            "audio", "voice", "image",
+            "video", "document", "sticker",
+            "location"
+        ):
+            _first = first_name
+
+            if _msg_type == "location" and _loc_lat and _loc_lng:
+                # Location pin — acknowledge and
+                # ask for area + budget
+                # (reverse geocoding optional later)
+                await send_meta_message(
+                    sender_id,
+                    f"Thanks for sharing your "
+                    f"location, {_first}! 📍\n\n"
+                    f"To find you the best verified "
+                    f"properties nearby, could you "
+                    f"tell me:\n\n"
+                    f"🏠 *Property type* — Land, "
+                    f"House or Apartment\n"
+                    f"💰 *Budget* — e.g. 30M, 50M\n\n"
+                    f"I'll search the closest "
+                    f"verified options.",
+                    phone_number_id=platform_id,
+                )
+                return
+
+            elif _msg_type in ("audio", "voice"):
+                await send_meta_message(
+                    sender_id,
+                    f"I can't open voice notes "
+                    f"yet, {_first}. 🎙️\n\n"
+                    f"Could you type your message "
+                    f"instead? Just tell me the "
+                    f"*area* and *budget* you're "
+                    f"looking for and I'll find "
+                    f"verified properties for you. 😊",
+                    phone_number_id=platform_id,
+                )
+                return
+
+            elif _msg_type in ("image", "video", "sticker"):
+                await send_meta_message(
+                    sender_id,
+                    f"Thanks, {_first}! 📷\n\n"
+                    f"I can't view media yet, but "
+                    f"I'd love to help you find a "
+                    f"property.\n\n"
+                    f"Just tell me the *type*, "
+                    f"*area* and *budget* you're "
+                    f"after — e.g. \"3 bed house "
+                    f"in Lekki, 80M\" — and I'll "
+                    f"pull up verified listings. 😊",
+                    phone_number_id=platform_id,
+                )
+                return
+
+            elif _msg_type == "document":
+                await send_meta_message(
+                    sender_id,
+                    f"Thanks for the document, "
+                    f"{_first}. 📄\n\n"
+                    f"I can't open files here, but "
+                    f"our consultant can review it "
+                    f"with you directly.\n\n"
+                    f"In the meantime, tell me the "
+                    f"*area* and *budget* you're "
+                    f"looking for and I'll find "
+                    f"verified properties. 😊",
+                    phone_number_id=platform_id,
+                )
+                return
+
+        # Guard: empty text after media
+        # handling — send gentle prompt
+        # (placed after 7-MEDIA so handled
+        # media types are not pre-empted)
+        if not text_body or not text_body.strip():
+            await send_meta_message(
+                sender_id,
+                f"I didn't catch that, {first_name}. 😊\n\n"
+                f"Tell me what you're looking for — "
+                f"the *area* and *budget* — and I'll "
+                f"find you verified properties.\n\n"
+                f"Or say *New Search* to start fresh.",
+                phone_number_id=platform_id,
+            )
+            return
 
         # --- 7c. COMMITMENT DECLINE ---
         # Buyer said No after inspection offer — offer soft alternative
