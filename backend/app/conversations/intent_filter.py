@@ -574,8 +574,27 @@ def extract_budget_from_text(text: str) -> Optional[int]:
 
     # Pattern: range like "5m to 1b" or "5m - 50m" → take upper bound
     range_pattern = r"(\d+\.?\d*)\s*(?:m\b|million|k\b)?\s*(?:to|-)\s*(\d+\.?\d*)\s*(?:b\b|billion|m\b|million)?"
+    # Guard: skip range parsing when the
+    # message shows call/contact intent or
+    # contains a time window (am/pm) —
+    # prevents "call me 8 to 9pm" → ₦9M
+    _call_intent_words_r = [
+        "call", "reach", "ring", "phone",
+        "number", "contact", "dial",
+        "whatsapp", "text me", "available",
+        "call me", "get back", "callback",
+        "call back", "free", "busy",
+    ]
+    _has_call_intent_r = any(
+        _w in text for _w in _call_intent_words_r
+    )
+    _has_time_marker = bool(
+        re.search(r"\d{1,2}\s*(am|pm)\b", text, re.IGNORECASE)
+        or re.search(r"\d{1,2}:\d{2}", text)
+    )
+
     range_match = re.search(range_pattern, text)
-    if range_match:
+    if range_match and not _has_call_intent_r and not _has_time_marker:
         val1 = float(range_match.group(1))
         val2 = float(range_match.group(2))
         after_val2 = text[range_match.end(2):]
@@ -642,8 +661,17 @@ def extract_budget_from_text(text: str) -> Optional[int]:
         _w in text for _w in _call_intent_words
     )
 
+    # Also respect the broader call-intent / time-window
+    # signals computed for the range guard above, so a bare
+    # number left over from a skipped range (e.g. the "9" in
+    # "available 9 to 5") is not re-parsed as a budget.
     bare_match = re.search(r"\b(\d{1,3})\b", text)
-    if bare_match and not _has_call_intent:
+    if (
+        bare_match
+        and not _has_call_intent
+        and not _has_call_intent_r
+        and not _has_time_marker
+    ):
         val = int(bare_match.group(1))
         if 1 <= val <= 999:
             return val * 1_000_000
