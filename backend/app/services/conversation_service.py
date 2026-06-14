@@ -1224,6 +1224,20 @@ async def handle_incoming_message(data: dict, db: Session):
                             ),
                             phone_number_id=platform_id,
                         )
+                        # Activate no-results menu handler so
+                        # "1/2/3/4" are read as menu choices not budgets
+                        _nr = json.loads(convo.data_json or "{}")
+                        _nr["awaiting_no_results_choice"] = True
+                        _nr["no_results_location"] = _current.get("location", "")
+                        _nr["no_results_type"] = _current.get("property_type", "")
+                        _nr["no_results_budget"] = (
+                            _current.get("budget_max") or _current.get("budget")
+                        )
+                        from app.services.chatbot.message_builder import NEARBY_AREAS
+                        _nr_loc = (_current.get("location") or "").lower().strip()
+                        _nr["no_results_nearby"] = NEARBY_AREAS.get(_nr_loc, [])[:3]
+                        convo.data_json = json.dumps(_nr)
+                        db.commit()
                 except Exception as _e:
                     logger.error(f"Continue search failed: {_e}")
             return
@@ -2598,6 +2612,16 @@ async def handle_incoming_message(data: dict, db: Session):
                 if next_q:
                     await send_meta_message(sender_id, next_q, phone_number_id=platform_id)
                 return
+
+            # Detect bedrooms question and set flag
+            # so the buyer's reply ("3") is captured as
+            # bedrooms by the awaiting_bedrooms handler,
+            # not mis-parsed as a ₦3M budget
+            if final_reply and "how many bedrooms" in final_reply.lower():
+                _bd = json.loads(convo.data_json or "{}")
+                _bd["awaiting_bedrooms"] = True
+                convo.data_json = json.dumps(_bd)
+                db.commit()
 
             # Default voice deliver —
             # NEVER send raw flag strings
