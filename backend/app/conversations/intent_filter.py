@@ -502,6 +502,21 @@ OBJECTION_MAP = {
 # ================================================================
 
 
+PHONE_PATTERN = re.compile(
+    r'(\+?234\d{10}|0\d{10}|0\d{3}\s?\d{3}\s?\d{4})'
+)
+
+
+def detect_phone_number(text: str):
+    """Returns the phone number if the
+    message contains one, else None."""
+    _clean = text.replace("-", "").replace("(", "").replace(")", "")
+    match = PHONE_PATTERN.search(_clean)
+    if match:
+        return match.group(0).strip()
+    return None
+
+
 def extract_budget_from_text(text: str) -> Optional[int]:
     """
     Extracts budget from Nigerian RE messages.
@@ -514,6 +529,21 @@ def extract_budget_from_text(text: str) -> Optional[int]:
         - Plain large numbers (7+ digits)
         - "I have 15" (bare number, millions implied when < 1000)
     """
+    import re as _re_phone
+
+    # GUARD: Nigerian phone numbers must
+    # NEVER be parsed as budget
+    _phone_patterns = [
+        r'\b0\d{10}\b',        # 08012345678
+        r'\b\+234\d{10}\b',    # +2348012345678
+        r'\b234\d{10}\b',      # 2348012345678
+        r'\b0\d{3}\s?\d{3}\s?\d{4}\b',  # 0801 234 5678
+    ]
+    _text_check = text.replace("-", "").replace("(", "").replace(")", "")
+    for _pat in _phone_patterns:
+        if _re_phone.search(_pat, _text_check):
+            return None  # It's a phone number, not a budget
+
     text = text.lower().replace(",", "").replace("₦", "").replace("naira", "").strip()
 
     # Word number map (Nigerian RE common ranges)

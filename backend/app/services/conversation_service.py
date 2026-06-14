@@ -1776,6 +1776,82 @@ async def handle_incoming_message(data: dict, db: Session):
                 db.commit()
                 # Fall through to intent pipeline which will trigger search
 
+        # ── PHONE NUMBER HANDLER ─────────────
+        from app.conversations.intent_filter import (
+            detect_phone_number
+        )
+        _phone = detect_phone_number(text_body)
+        if _phone:
+            _ph_data = json.loads(convo.data_json or "{}")
+            _ph_data["buyer_phone"] = _phone
+            convo.data_json = json.dumps(_ph_data)
+            db.commit()
+
+            # Check if buyer has viewed a listing
+            _ph_listing_id = _ph_data.get("last_viewed_id")
+
+            if _ph_listing_id:
+                # Buyer shared number on a property
+                # — alert agent to call them
+                try:
+                    _ph_listing = db.get(
+                        Listing, _ph_listing_id
+                    )
+                    _ph_title = (
+                        _ph_listing.title
+                        if _ph_listing
+                        else "the property"
+                    )
+                    await alert_realtor_of_lead(
+                        db,
+                        _ph_listing_id,
+                        sender_id,
+                        biz_name,
+                        phone_number_id=platform_id,
+                        custom_message=(
+                            f"🔔 *CALLBACK REQUEST*\n\n"
+                            f"👤 Buyer: {first_name}\n"
+                            f"📱 They shared: {_phone}\n"
+                            f"📱 WhatsApp: wa.me/{sender_id}\n\n"
+                            f"🏠 Property: {_ph_title}\n\n"
+                            f"⚡ Buyer wants a callback. "
+                            f"Please call within 2 hours."
+                        ),
+                    )
+                except Exception as _phe:
+                    logger.warning(
+                        f"Phone callback alert failed: {_phe}"
+                    )
+
+                await send_meta_message(
+                    sender_id,
+                    f"Got it, {first_name}! 📱\n\n"
+                    f"I've passed your number to our "
+                    f"consultant. They will call you "
+                    f"within *2 hours*.\n\n"
+                    f"In the meantime, is there anything "
+                    f"else you'd like to know about "
+                    f"the property?",
+                    phone_number_id=platform_id,
+                )
+                return
+            else:
+                # No listing viewed yet — acknowledge
+                # and continue qualifying
+                await send_meta_message(
+                    sender_id,
+                    f"Thanks, {first_name}! 📱\n\n"
+                    f"I've noted your number. To help "
+                    f"our consultant prepare before "
+                    f"they call, let me quickly find "
+                    f"you the right property.\n\n"
+                    f"What type of property are you "
+                    f"looking for — Land, House, "
+                    f"or Apartment?",
+                    phone_number_id=platform_id,
+                )
+                return
+
         # --- 8. INTENT PIPELINE ---
         pipe = add_message_service(convo.id, text_body, tenant_id, db)
         # Merge pipe prefs with saved conversation prefs
