@@ -1094,12 +1094,10 @@ async def handle_incoming_message(data: dict, db: Session):
                         )
                         if _super:
                             # Super-admin escalation: intentionally
-                            # stays on the GLOBAL token (no per-tenant
-                            # access_token) so it reaches the number
-                            # you control, not the tenant's WABA.
+                            # global number + global token (matched
+                            # pair). Goes to super-admin, not buyer.
                             await send_meta_message(
                                 _super, _esc_msg,
-                                phone_number_id=platform_id,
                             )
                         logger.error(
                             f"AGENT ALERT FAILED for tenant "
@@ -2866,12 +2864,10 @@ async def handle_incoming_message(data: dict, db: Session):
                             )
                             if _super:
                                 # Super-admin escalation: intentionally
-                                # stays on the GLOBAL token (no per-tenant
-                                # access_token) so it reaches the number
-                                # you control, not the tenant's WABA.
+                                # global number + global token (matched
+                                # pair). Goes to super-admin, not buyer.
                                 await send_meta_message(
                                     _super, _esc_msg,
-                                    phone_number_id=platform_id,
                                 )
                             logger.error(
                                 f"AGENT ALERT FAILED for tenant "
