@@ -1607,6 +1607,99 @@ async def handle_incoming_message(data: dict, db: Session):
             )
             return
 
+        # ── SEE-ALL-TENANT HANDLER ──────────
+        _sa = json.loads(convo.data_json or "{}")
+        if _sa.get("awaiting_see_all_tenant"):
+            _sa_reply = text_body.strip().lower()
+            _sa.pop("awaiting_see_all_tenant", None)
+
+            _sa_yes = {
+                "yes", "yeah", "yep", "sure", "ok",
+                "okay", "show me", "see all", "everything",
+                "show everything", "yes please",
+            }
+
+            if any(w in _sa_reply for w in _sa_yes):
+                _sa_ptype = _sa.get("property_type", "")
+                from app.listings.models import Listing as _SAL
+                _sa_q = db.query(_SAL).filter(
+                    _SAL.tenant_id == tenant_id,
+                    _SAL.status == "verified",
+                )
+                if _sa_ptype:
+                    _sa_q = _sa_q.filter(
+                        _SAL.property_type.ilike(f"%{_sa_ptype}%")
+                    )
+                _sa_listings = _sa_q.order_by(
+                    _SAL.price.asc()
+                ).limit(8).all()
+
+                if _sa_listings:
+                    _sa_pt = _sa_ptype.title() if _sa_ptype else "Property"
+                    _sa_msg = (
+                        f"Here's everything we currently "
+                        f"have verified for *{_sa_pt}*, "
+                        f"{first_name}:\n\n"
+                    )
+                    for _l in _sa_listings[:6]:
+                        _p = _l.price or 0
+                        _p_fmt = (
+                            f"₦{_p/1_000_000:.0f}M"
+                            if _p >= 1_000_000
+                            else f"₦{_p:,}"
+                        )
+                        _s = _l.trust_score or 0
+                        _g = (_l.trust_grade or "verified").title()
+                        _loc = (_l.location or "").title()
+                        _sa_msg += (
+                            f"🏠 *{_l.title}*\n"
+                            f"📍 {_loc} | 💰 {_p_fmt} | "
+                            f"🛡️ {_s}/100 ({_g})\n\n"
+                        )
+                    _sa_msg += (
+                        f"Which area interests you most? "
+                        f"Just tell me and I'll get you "
+                        f"the full details. 😊"
+                    )
+                    _sa["last_match_ids"] = [l.id for l in _sa_listings]
+                    convo.data_json = json.dumps(_sa)
+                    convo.funnel_stage = "commitment"
+                    convo.state = "HANDOFF"
+                    db.commit()
+                    await send_meta_message(
+                        sender_id, _sa_msg,
+                        phone_number_id=_send_pid,
+                        access_token=_send_token,
+                    )
+                else:
+                    convo.data_json = json.dumps(_sa)
+                    db.commit()
+                    await send_meta_message(
+                        sender_id,
+                        f"We don't have other verified "
+                        f"{_sa_ptype or 'properties'} right "
+                        f"now, {first_name}. Would you like "
+                        f"to try a different property type "
+                        f"or area? Say *New Search* to start "
+                        f"fresh.",
+                        phone_number_id=_send_pid,
+                        access_token=_send_token,
+                    )
+                return
+            else:
+                # Not a yes — gentle redirect, no loop
+                convo.data_json = json.dumps(_sa)
+                db.commit()
+                await send_meta_message(
+                    sender_id,
+                    f"No problem, {first_name}. 😊 Tell me "
+                    f"an area and budget and I'll find you "
+                    f"verified options, or say *New Search*.",
+                    phone_number_id=_send_pid,
+                    access_token=_send_token,
+                )
+                return
+
         # ── PURPOSE HANDLER ──────────────────────────────────────────
         _saved = json.loads(convo.data_json or "{}")
         if _saved.get("awaiting_purpose"):
