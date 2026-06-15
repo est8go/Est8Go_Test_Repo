@@ -21,17 +21,18 @@ BUSINESS_PHONE_ID = os.getenv("WHATSAPP_PHONE_ID")
 
 
 async def send_meta_text_message(
-    recipient_id: str, text: str, phone_number_id: str = None
+    recipient_id: str, text: str, phone_number_id: str = None, access_token: str = None
 ):
     """Low-level service to push text messages to WhatsApp/Instagram."""
     pid = phone_number_id or BUSINESS_PHONE_ID
-    if not META_ACCESS_TOKEN or not pid:
+    _token = access_token or META_ACCESS_TOKEN
+    if not _token or not pid:
         logger.error("❌ Meta Credentials missing in .env. Cannot send message.")
         return
 
     url = f"https://graph.facebook.com/v19.0/{pid}/messages"
     headers = {
-        "Authorization": f"Bearer {META_ACCESS_TOKEN}",
+        "Authorization": f"Bearer {_token}",
         "Content-Type": "application/json",
     }
     payload = {
@@ -231,9 +232,10 @@ async def send_meta_image_message(
     image_url: str,
     caption: str,
     phone_number_id: str = None,
+    access_token: str = None,
 ) -> bool:
     """Sends a WhatsApp image message with optional caption."""
-    token = META_ACCESS_TOKEN
+    token = access_token or META_ACCESS_TOKEN
     pid = phone_number_id or BUSINESS_PHONE_ID
     if not token or not pid:
         logger.warning("Meta credentials missing — image message not sent")
