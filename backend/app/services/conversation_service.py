@@ -491,9 +491,26 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
 
     # ALWAYS merge extracted data immediately — before get_next_question
     if intent_result.extracted:
+        # Belt-and-braces: never let a unit-less "budget" extracted alongside
+        # a location overwrite an established budget — that's almost always a
+        # digit from an area name ("Wuse 2") rather than money. A budget with
+        # an explicit unit (₦, m, million, b, k) is always honoured.
+        _has_money_unit = bool(
+            re.search(r"\d\s*(?:m\b|million|k\b|b\b|billion)", text_clean)
+            or "₦" in text_clean
+            or "naira" in text_clean
+        )
         for k, v in intent_result.extracted.items():
-            if v:  # only update if value is not None/empty
-                current_data[k] = v
+            if not v:  # only update if value is not None/empty
+                continue
+            if (
+                k == "budget"
+                and intent_result.extracted.get("location")
+                and current_data.get("budget")
+                and not _has_money_unit
+            ):
+                continue  # keep the established budget
+            current_data[k] = v
         if current_data.get("location"):
             current_data["location"] = normalise_location(current_data["location"])
         convo.data_json = json.dumps(current_data)

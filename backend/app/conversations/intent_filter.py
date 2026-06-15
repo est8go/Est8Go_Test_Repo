@@ -517,9 +517,12 @@ def detect_phone_number(text: str):
     return None
 
 
-def extract_budget_from_text(text: str) -> Optional[int]:
+def extract_budget_from_text(text: str, allow_bare: bool = True) -> Optional[int]:
     """
     Extracts budget from Nigerian RE messages.
+    allow_bare=False disables the bare 1-999→millions fallback (used when
+    a digit in the message belongs to an area name / count, e.g. "Wuse 2").
+    Explicit-unit budgets ("50m", "₦45,000,000", ranges) still extract.
     Handles:
         - "50m", "50 million" → 50,000,000
         - "5m to 1b" → takes UPPER bound
@@ -667,7 +670,8 @@ def extract_budget_from_text(text: str) -> Optional[int]:
     # "available 9 to 5") is not re-parsed as a budget.
     bare_match = re.search(r"\b(\d{1,3})\b", text)
     if (
-        bare_match
+        allow_bare
+        and bare_match
         and not _has_call_intent
         and not _has_call_intent_r
         and not _has_time_marker
@@ -764,9 +768,37 @@ def extract_property_type(text: str) -> Optional[str]:
 
 def extract_intent_keywords(text: str, dynamic_locations: list = None) -> dict:
     result = {}
-    budget = extract_budget_from_text(text)
+
+    # Location/type first — they may CONTAIN digits that are not money.
     location = extract_location_from_text(text, dynamic_locations or [])
     prop_type = extract_property_type(text)
+
+    # Build the text used for BUDGET extraction by removing digits that
+    # belong to an AREA NAME ("Wuse 2", "Lekki 1") or a non-money count
+    # ("2 bedroom", "Phase 1") so they are never read as ₦Xm.
+    budget_text = text.lower()
+    _stripped = False
+    if location:
+        _bt = re.sub(re.escape(location.lower()), " ", budget_text)
+        if _bt != budget_text:
+            budget_text = _bt
+            _stripped = True
+    _digit_context_patterns = [
+        r"\b\d+\s*(?:bed(?:room)?s?|br)\b",
+        r"\b(?:phase|block|plot|unit|flat|apt|apartment|wing|zone)\s*\d+\b",
+        r"\b\d+\s*(?:phase|block|plot|unit)\b",
+    ]
+    for _pat in _digit_context_patterns:
+        _bt = re.sub(_pat, " ", budget_text)
+        if _bt != budget_text:
+            budget_text = _bt
+            _stripped = True
+
+    # If a digit was part of an area/count, suppress the bare
+    # 1-999→millions fallback. Explicit-unit budgets still extract,
+    # so "wuse 2 for 50m" still yields ₦50M.
+    budget = extract_budget_from_text(budget_text, allow_bare=not _stripped)
+
     if budget:
         result["budget"] = budget
     if location:
