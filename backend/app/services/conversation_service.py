@@ -702,7 +702,7 @@ async def _no_results_cascade(
     _budget = prefs.get("budget_max") or prefs.get("budget")
     _budget_fmt = f"₦{int(_budget)/1_000_000:.0f}M" if _budget else ""
     _loc_title = _loc.title()
-    _ptype_title = _ptype.title()
+    _ptype_title = (_ptype or "property").title()
 
     _searched = set(prefs.get("_searched_areas", []))
     _searched.add(_loc)
@@ -1491,7 +1491,8 @@ async def handle_incoming_message(data: dict, db: Session):
                     logger.error(f"Continue search failed: {_e}")
             return
 
-        if _text_lower in ("new search", "start fresh", "fresh start"):
+        _clean_lower = re.sub(r'[^a-z0-9 ]', '', _text_lower).strip()
+        if _clean_lower in ("new search", "start fresh", "fresh start"):
             convo.data_json = json.dumps({})
             convo.funnel_stage = "awareness"
             convo.state = "ACTIVE"
@@ -2058,6 +2059,7 @@ async def handle_incoming_message(data: dict, db: Session):
         _saved_nr = json.loads(convo.data_json or "{}")
         if _saved_nr.get("awaiting_no_results_choice"):
             _nr_choice = text_body.strip().lower()
+            _nr_clean = re.sub(r'[^a-z0-9 ]', '', _nr_choice).strip()
             _nr_nearby_list = _saved_nr.get("no_results_nearby", [])
             _nr_orig_loc = _saved_nr.get("no_results_location", "")
             _nr_orig_type = _saved_nr.get("no_results_type", "")
@@ -2131,7 +2133,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 db.commit()
                 return
 
-            elif _nr_choice in ("4", "start a new search", "new search", "start fresh"):
+            elif _nr_clean in ("4", "start a new search", "new search", "start fresh"):
                 convo.data_json = json.dumps({})
                 convo.funnel_stage = "awareness"
                 convo.state = "ACTIVE"
