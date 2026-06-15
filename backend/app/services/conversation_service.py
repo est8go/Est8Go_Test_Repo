@@ -598,6 +598,28 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
             "intent": intent_result.intent,
         }
 
+    # Hard cap — stop calling GPT after
+    # N misses in one conversation to
+    # prevent cost runaway on gibberish
+    _gpt_calls = current_data.get("gpt_call_count", 0)
+    if _gpt_calls >= 5:
+        # Don't call GPT — return a guided
+        # fallback via rules
+        current_data["gpt_call_count"] = _gpt_calls
+        next_q = get_next_question(
+            current_data,
+            tenant_areas_by_budget=current_data.get(
+                "tenant_areas_in_budget", []
+            ),
+        )
+        if not next_q:
+            next_q = "completed_flag"
+        return {
+            "reply": next_q,
+            "prefs": current_data,
+            "intent": "gpt_capped",
+        }
+
     # Unknown intent — escalate to GPT
     try:
         updated_data = extract_preferences(text_clean, current_data)
@@ -612,6 +634,9 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
         updated_data["gpt_miss_count"] = miss_count
     else:
         updated_data["gpt_miss_count"] = 0
+    # Count this GPT call against the per-conversation cap
+    # (after the miss comparison so it doesn't affect equality)
+    updated_data["gpt_call_count"] = _gpt_calls + 1
     # Preserve internal tracking keys GPT strips out
     for key in (
         "last_viewed_id",
@@ -2211,6 +2236,80 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"What works best for you?"
                 )
             await send_meta_message(sender_id, _guidance, phone_number_id=_send_pid, access_token=_send_token)
+            return
+
+        # --- 8e. AVAILABILITY QUESTION ---
+        if intent == "availability":
+            _av_data = json.loads(convo.data_json or "{}")
+            _av_id = _av_data.get("last_viewed_id")
+            if _av_id:
+                _av_lst = db.get(Listing, int(_av_id)) if str(_av_id).isdigit() else None
+                if _av_lst:
+                    await send_meta_message(
+                        sender_id,
+                        f"Yes, {first_name}! *{_av_lst.title}* "
+                        f"is still available and verified. ✅\n\n"
+                        f"Would you like to schedule a site "
+                        f"inspection? Just say *Yes*. 📅",
+                        phone_number_id=_send_pid,
+                        access_token=_send_token,
+                    )
+                    convo.last_active_at = datetime.now(
+                        timezone.utc
+                    ).replace(tzinfo=None)
+                    db.commit()
+                    return
+            # No property in view — guide them
+            await send_meta_message(
+                sender_id,
+                f"Happy to check availability, {first_name}! "
+                f"Which property are you asking about? "
+                f"Tell me the area and budget and I'll "
+                f"pull up verified options. 😊",
+                phone_number_id=_send_pid,
+                access_token=_send_token,
+            )
+            return
+
+        # --- 8f. MEDIA REQUEST ---
+        if intent == "media_request":
+            _md_data = json.loads(convo.data_json or "{}")
+            _md_id = _md_data.get("last_viewed_id")
+            if _md_id:
+                _md_lst = db.get(Listing, int(_md_id)) if str(_md_id).isdigit() else None
+                if _md_lst:
+                    _base = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+                    _link = f"{_base}/public/property/{_md_lst.id}"
+                    try:
+                        from app.services.chatbot.message_builder import build_media_redirect
+                        _md_msg = build_media_redirect(first_name, biz_name, _link)
+                    except Exception:
+                        _md_msg = (
+                            f"All verified photos for "
+                            f"*{_md_lst.title}* are here, "
+                            f"{first_name}: 📸\n\n{_link}\n\n"
+                            f"Would you like to schedule a "
+                            f"site inspection? 📅"
+                        )
+                    await send_meta_message(
+                        sender_id, _md_msg,
+                        phone_number_id=_send_pid,
+                        access_token=_send_token,
+                    )
+                    convo.last_active_at = datetime.now(
+                        timezone.utc
+                    ).replace(tzinfo=None)
+                    db.commit()
+                    return
+            await send_meta_message(
+                sender_id,
+                f"I'd love to show you photos, {first_name}! "
+                f"Which property? Tell me the area and budget "
+                f"and I'll find verified listings with full "
+                f"photos. 😊",
+                phone_number_id=_send_pid,
+                access_token=_send_token,
+            )
             return
 
         # --- 9. OBJECTION HANDLER ---

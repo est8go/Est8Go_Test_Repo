@@ -839,8 +839,28 @@ def classify_intent(
         )
 
     # ── 3. OBJECTION ────────────────────────────────────
+    _property_signal_words = [
+        "house", "land", "apartment", "flat",
+        "duplex", "bedroom", "bungalow", "plot",
+        "buy", "rent", "price", "cost", "how much",
+        "budget", "available", "inspect", "view",
+        "m", "million", "naira",
+    ]
+    _has_property_signal = any(
+        _w in text_lower for _w in _property_signal_words
+    )
     for phrase, response_key in OBJECTION_MAP.items():
         if phrase in text_lower:
+            # Casual Nigerian filler (e.g. "abeg") should only be
+            # treated as an objection when there is NO property /
+            # price / location signal in the message. With a signal
+            # (e.g. "abeg how much for the land"), let it fall through
+            # to normal price/property intent classification.
+            if (
+                response_key == "objection_nigerian_casual"
+                and _has_property_signal
+            ):
+                continue
             return IntentResult(
                 intent="objection",
                 confidence="high",
