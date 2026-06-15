@@ -87,8 +87,14 @@ def is_filler(text: str) -> bool:
 def normalise_location(loc: str) -> str:
     if not loc:
         return loc
+    import re
     loc_lower = loc.lower().strip()
-    return LOCATION_ALIASES.get(loc_lower, loc_lower)
+    loc_norm = LOCATION_ALIASES.get(loc_lower, loc_lower)
+    # Insert a space between a letter and a trailing digit so no-space
+    # sub-areas match the DB form ("wuse2" -> "wuse 2", "lekki1" -> "lekki 1").
+    # Runs AFTER the alias lookup so typo aliases still resolve.
+    loc_norm = re.sub(r'([a-z])(\d)', r'\1 \2', loc_norm)
+    return loc_norm
 
 
 # ================================================================
