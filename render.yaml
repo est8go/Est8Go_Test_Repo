@@ -35,6 +35,8 @@ services:
         sync: false
       - key: PUBLIC_API_KEY
         sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
     healthCheckPath: /
     autoDeploy: true
 
@@ -58,6 +60,8 @@ services:
         sync: false
       - key: SUPABASE_KEY
         sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
 
   # Hourly Reminder Cron Job
   - type: cron
@@ -79,6 +83,8 @@ services:
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_KEY
+        sync: false
+      - key: ENCRYPTION_KEY
         sync: false
 
   # 15-Minute Platform Health Monitor
