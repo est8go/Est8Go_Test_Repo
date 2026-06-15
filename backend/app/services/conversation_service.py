@@ -948,7 +948,14 @@ async def handle_incoming_message(data: dict, db: Session):
         # --- 5. BUTTON HANDLER ---
         if btn_payload and "INTERESTED_IN_" in btn_payload:
             list_id = int(btn_payload.split("_")[-1])
-            listing = db.get(Listing, list_id)
+            listing = (
+                db.query(Listing)
+                .filter(
+                    Listing.id == list_id,
+                    Listing.tenant_id == tenant_id,
+                )
+                .first()
+            )
             if listing:
                 # Resolve dedicated agent/admin for this listing
                 _agent_name = None
@@ -1108,6 +1115,23 @@ async def handle_incoming_message(data: dict, db: Session):
                         tzinfo=None
                     )
                     db.commit()
+                return
+            else:
+                # Listing not found or not owned by this
+                # tenant — never leave the buyer in silence
+                # (mirrors property_page_lead not-found path)
+                await send_meta_message(
+                    sender_id,
+                    f"Hi {first_name}! 👋\n\n"
+                    f"That listing is no longer available "
+                    f"or may have been removed.\n\n"
+                    f"What are you looking for? I can help "
+                    f"you find verified options in our "
+                    f"vault — just tell me the *area* and "
+                    f"*budget*. 🏠",
+                    phone_number_id=_send_pid,
+                    access_token=_send_token,
+                )
                 return
 
         # --- 6. GREETING HANDLER WITH SESSION MEMORY ---
