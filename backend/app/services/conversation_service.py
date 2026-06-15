@@ -652,6 +652,7 @@ async def _no_results_cascade(
     platform_id: str,
     tenant_profile: dict,
     biz_name: str,
+    access_token=None,
 ):
     """6-level no-results cascade: nearby → cheapest → referral permission."""
     _loc = (prefs.get("location") or "").lower()
@@ -719,7 +720,7 @@ async def _no_results_cascade(
         convo.funnel_stage = "commitment"
         convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
         db.commit()
-        await send_meta_message(sender_id, _msg, phone_number_id=platform_id)
+        await send_meta_message(sender_id, _msg, phone_number_id=platform_id, access_token=access_token)
         return
 
     # ── LEVEL 2: Tenant cheapest option ────────────────────────
@@ -753,7 +754,7 @@ async def _no_results_cascade(
         convo.data_json = json.dumps(prefs)
         convo.state = "ACTIVE"
         db.commit()
-        await send_meta_message(sender_id, _stretch_msg, phone_number_id=platform_id)
+        await send_meta_message(sender_id, _stretch_msg, phone_number_id=platform_id, access_token=access_token)
         return
 
     # ── LEVEL 3: Partner referral permission ───────────────────
@@ -768,7 +769,7 @@ async def _no_results_cascade(
     convo.data_json = json.dumps(prefs)
     convo.state = "ACTIVE"
     db.commit()
-    await send_meta_message(sender_id, _referral_perm_msg, phone_number_id=platform_id)
+    await send_meta_message(sender_id, _referral_perm_msg, phone_number_id=platform_id, access_token=access_token)
 
 
 # ================================================================
@@ -901,6 +902,22 @@ async def handle_incoming_message(data: dict, db: Session):
         first_name = whatsapp_name.split()[0] if whatsapp_name else "there"
         biz_name = tenant_profile.get("business_name", "our firm")
 
+        # Resolve this tenant's WhatsApp
+        # credentials (per-tenant token +
+        # number). Falls back to global env
+        # token if tenant has none stored.
+        from app.services.meta_sender_service import (
+            get_tenant_whatsapp_credentials
+        )
+        _tenant_pid, _tenant_token, _tenant_waba = (
+            get_tenant_whatsapp_credentials(db, tenant_id)
+        )
+        # Use resolved number if present, else
+        # keep the platform_id from the webhook
+        _send_pid = _tenant_pid or platform_id
+        _send_token = _tenant_token  # may be None →
+                                     # senders fall back to env
+
         # Coverage cities — used by templates to skip city question for single-city tenants
         _coverage_cities = tenant_profile.get("coverage_cities", []) or []
         _single_city = len(_coverage_cities) == 1
@@ -989,7 +1006,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"Please keep your phone available. 📱"
                 )
                 await send_meta_message(
-                    sender_id, _insp_msg, phone_number_id=platform_id
+                    sender_id, _insp_msg, phone_number_id=_send_pid, access_token=_send_token
                 )
 
                 # Message 2 — navigation + directions (if available)
@@ -1012,7 +1029,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         f"listing is GPS-verified and document-checked. 🛡️"
                     )
                     await send_meta_message(
-                        sender_id, _close_msg, phone_number_id=platform_id
+                        sender_id, _close_msg, phone_number_id=_send_pid, access_token=_send_token
                     )
 
                 # Alert agent with full buyer brief
@@ -1149,7 +1166,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         first_name, biz_name,
                         tenant_profile.get("areas_covered", "Abuja"),
                     )
-                    await send_meta_message(sender_id, opener, phone_number_id=platform_id)
+                    await send_meta_message(sender_id, opener, phone_number_id=_send_pid, access_token=_send_token)
                     _gd = json.loads(convo.data_json or "{}")
                     _gd["awaiting_purpose"] = True
                     if _coverage_cities:
@@ -1166,7 +1183,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 convo.session_count = (convo.session_count or 1) + 1
                 db.commit()
                 welcome_msg = build_welcome_back_message(convo, first_name, session_state, biz_name)
-                await send_meta_message(sender_id, welcome_msg, phone_number_id=platform_id)
+                await send_meta_message(sender_id, welcome_msg, phone_number_id=_send_pid, access_token=_send_token)
 
             else:
                 # Returning user — generic resume message
@@ -1176,7 +1193,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 resume_msg = build_resume_message(
                     session_state, first_name, biz_name, prefs
                 )
-                await send_meta_message(sender_id, resume_msg, phone_number_id=platform_id)
+                await send_meta_message(sender_id, resume_msg, phone_number_id=_send_pid, access_token=_send_token)
 
             if not _process_as_intent:
                 convo.state = "ACTIVE"
@@ -1238,7 +1255,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"💰 *Budget* — e.g. 30M, 50M\n\n"
                     f"I'll search the closest "
                     f"verified options.",
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
                 return
 
@@ -1252,7 +1269,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"*area* and *budget* you're "
                     f"looking for and I'll find "
                     f"verified properties for you. 😊",
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
                 return
 
@@ -1268,7 +1285,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"after — e.g. \"3 bed house "
                     f"in Lekki, 80M\" — and I'll "
                     f"pull up verified listings. 😊",
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
                 return
 
@@ -1284,7 +1301,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"*area* and *budget* you're "
                     f"looking for and I'll find "
                     f"verified properties. 😊",
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
                 return
 
@@ -1300,7 +1317,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 f"the *area* and *budget* — and I'll "
                 f"find you verified properties.\n\n"
                 f"Or say *New Search* to start fresh.",
-                phone_number_id=platform_id,
+                phone_number_id=_send_pid, access_token=_send_token,
             )
             return
 
@@ -1317,7 +1334,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 f"the inspection immediately.\n\n"
                 f"In the meantime, would you like to see other verified "
                 f"properties in {_location}, or explore a different area?",
-                phone_number_id=platform_id,
+                phone_number_id=_send_pid, access_token=_send_token,
             )
             _data["awaiting_after_decline"] = True
             convo.data_json = json.dumps(_data)
@@ -1335,7 +1352,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 tenant_areas_by_budget=_current.get("tenant_areas_in_budget", []),
             )
             if _next_q:
-                await send_meta_message(sender_id, _next_q, phone_number_id=platform_id)
+                await send_meta_message(sender_id, _next_q, phone_number_id=_send_pid, access_token=_send_token)
                 return
             # All data collected — run search immediately
             if _current.get("location") and (
@@ -1348,10 +1365,10 @@ async def handle_incoming_message(data: dict, db: Session):
                         _sum = build_property_summary(
                             _ms[0], _ms, _sr.get("total_count", 0), first_name
                         )
-                        await send_meta_message(sender_id, _sum, phone_number_id=platform_id)
+                        await send_meta_message(sender_id, _sum, phone_number_id=_send_pid, access_token=_send_token)
                         await send_meta_carousel(
                             sender_id, prepare_meta_carousel(_ms),
-                            phone_number_id=platform_id,
+                            phone_number_id=_send_pid, access_token=_send_token,
                         )
                         _current["last_viewed_id"] = _ms[0].id
                         _current["last_viewed_title"] = _ms[0].title or ""
@@ -1370,7 +1387,7 @@ async def handle_incoming_message(data: dict, db: Session):
                                 _current.get("property_type", ""),
                                 _current.get("budget_max") or _current.get("budget"),
                             ),
-                            phone_number_id=platform_id,
+                            phone_number_id=_send_pid, access_token=_send_token,
                         )
                         # Activate no-results menu handler so
                         # "1/2/3/4" are read as menu choices not budgets
@@ -1442,7 +1459,7 @@ async def handle_incoming_message(data: dict, db: Session):
             await send_meta_message(
                 sender_id,
                 _rand.choice(_fresh_variants),
-                phone_number_id=platform_id,
+                phone_number_id=_send_pid, access_token=_send_token,
             )
             return
 
@@ -1477,7 +1494,7 @@ async def handle_incoming_message(data: dict, db: Session):
             convo.state = "ACTIVE"
             convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
             db.commit()
-            await send_meta_message(sender_id, followup, phone_number_id=platform_id)
+            await send_meta_message(sender_id, followup, phone_number_id=_send_pid, access_token=_send_token)
             return
 
         # ── BEDROOMS HANDLER ──────────────────────────────────────────
@@ -1512,7 +1529,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 sender_id,
                 f"Perfect. What is your budget for a {_bed_str}{_prop_type}? 💰\n\n"
                 f"(e.g. '30M', '20M to 80M', '₦45,000,000')",
-                phone_number_id=platform_id,
+                phone_number_id=_send_pid, access_token=_send_token,
             )
             return
 
@@ -1546,7 +1563,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"🛡️ Trust Score: *{_score}/100 ({_grade})*\n\n"
                             f"🔗 View full details:\n{_base_url}/public/property/{_lst.id}\n\n"
                             f"Would you like to schedule a site inspection? 📅",
-                            phone_number_id=platform_id,
+                            phone_number_id=_send_pid, access_token=_send_token,
                         )
                         _saved2["last_viewed_id"] = _lst.id
                         _saved2["last_viewed_title"] = _lst.title or ""
@@ -1564,7 +1581,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"May I check our verified partner network? "
                     f"All properties are Est8Go verified.\n\n"
                     f"Reply *Yes* to search the wider network.",
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
             return
 
@@ -1621,7 +1638,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         convo.data_json = json.dumps(_saved2)
                         convo.funnel_stage = "commitment"
                         db.commit()
-                        await send_meta_message(sender_id, _ref_msg, phone_number_id=platform_id)
+                        await send_meta_message(sender_id, _ref_msg, phone_number_id=_send_pid, access_token=_send_token)
                     else:
                         _base_r = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
                         _slug_r = tenant_profile.get("slug", "")
@@ -1634,7 +1651,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"2️⃣ *Speak to a consultant* — they have access to off-market "
                             f"verified deals not yet listed online.\n\n"
                             f"Which would you prefer?",
-                            phone_number_id=platform_id,
+                            phone_number_id=_send_pid, access_token=_send_token,
                         )
                         _saved2["awaiting_last_resort"] = True
                         convo.data_json = json.dumps(_saved2)
@@ -1653,7 +1670,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"2️⃣ *Adjust your budget* — tell me your new range\n"
                     f"3️⃣ *Change property type* — Land · House · Apartment\n"
                     f"4️⃣ *Start fresh* — say *New Search*",
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
             return
 
@@ -1725,7 +1742,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"Please keep your phone available. 📱\n\n"
                     f"Thank you for choosing *{biz_name}* — where every property is verified "
                     f"before it reaches you. 🛡️",
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
                 convo.data_json = json.dumps(_saved2)
                 convo.funnel_stage = "closed"
@@ -1744,7 +1761,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"Is there anything else I can help you with?\n\n"
                     f"Say *New Search* to search for a different property, "
                     f"or *Menu* to see all options.",
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
             return
 
@@ -1764,7 +1781,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"Every listing is GPS-verified and document-checked. "
                     f"Take your time browsing. 😊\n\n"
                     f"Reply *I'm interested* on any listing and I'll connect you immediately.",
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
             else:
                 _saved2["awaiting_consultant"] = True
@@ -1776,7 +1793,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"Our property consultants have access to off-market verified deals "
                     f"not yet listed online.\n\n"
                     f"Shall I connect you now?",
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
             return
 
@@ -1808,14 +1825,14 @@ async def handle_incoming_message(data: dict, db: Session):
                         f"{first_name}? 📍\n\n"
                         f"{nearby_list_str}\n\n"
                         f"Just reply with the area name.",
-                        phone_number_id=platform_id,
+                        phone_number_id=_send_pid, access_token=_send_token,
                     )
                 else:
                     await send_meta_message(
                         sender_id,
                         f"Which area would you like to search instead, "
                         f"{first_name}? Tell me the neighbourhood.",
-                        phone_number_id=platform_id,
+                        phone_number_id=_send_pid, access_token=_send_token,
                     )
                 _saved_nr["property_type"] = _nr_orig_type
                 _saved_nr["budget"] = _nr_orig_budget
@@ -1830,7 +1847,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     sender_id,
                     f"What is your revised budget, {first_name}? 💰\n\n"
                     f"(e.g. '40M', '50M to 80M', '₦45,000,000')",
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
                 _saved_nr["property_type"] = _nr_orig_type
                 _saved_nr["location"] = _nr_orig_loc
@@ -1846,7 +1863,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     sender_id,
                     f"What type of property are you open to, {first_name}? 🏠\n\n"
                     f"Land · House · Apartment",
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
                 _saved_nr["location"] = _nr_orig_loc
                 _saved_nr["budget"] = _nr_orig_budget
@@ -1909,7 +1926,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 await send_meta_message(
                     sender_id,
                     _rand2.choice(_fresh_variants2),
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
                 return
 
@@ -1980,7 +1997,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"In the meantime, is there anything "
                     f"else you'd like to know about "
                     f"the property?",
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
                 return
             else:
@@ -1996,7 +2013,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"What type of property are you "
                     f"looking for — Land, House, "
                     f"or Apartment?",
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
                 return
 
@@ -2032,7 +2049,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"It may have been removed or is no longer available.\n\n"
                             f"What property are you looking for? "
                             f"I can help you find verified options.",
-                            phone_number_id=platform_id,
+                            phone_number_id=_send_pid, access_token=_send_token,
                         )
                         return
 
@@ -2071,7 +2088,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         f"This property has been GPS-verified and is ready for inspection.\n\n"
                         f"Would you like to schedule a site visit? "
                         f"Just give me a preferred time and our agent will confirm. 📅",
-                        phone_number_id=platform_id,
+                        phone_number_id=_send_pid, access_token=_send_token,
                     )
 
                     # Alert realtor immediately
@@ -2093,14 +2110,14 @@ async def handle_incoming_message(data: dict, db: Session):
                     sender_id,
                     f"Please run a property search first, {first_name}, "
                     f"and I'll compare the results for you.",
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
             elif len(_match_ids) == 1:
                 await send_meta_message(
                     sender_id,
                     "There is only one property in your last search. "
                     "Would you like more details about it?",
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
             else:
                 _cmp_listings = (
@@ -2111,7 +2128,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 # Sort by trust desc so options 1-N are already ranked
                 _cmp_listings.sort(key=lambda x: (x.trust_score or 0), reverse=True)
                 _cmp_text = build_comparison_message(_cmp_listings, first_name)
-                await send_meta_message(sender_id, _cmp_text, phone_number_id=platform_id)
+                await send_meta_message(sender_id, _cmp_text, phone_number_id=_send_pid, access_token=_send_token)
             return
 
         # --- 8c.5 GPT MISS HANDLER ---
@@ -2128,7 +2145,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 f"   e.g. Lekki, Guzape, GRA, Maitama\n\n"
                 f"2️⃣ *What is your budget?*\n"
                 f"   e.g. 50M, 80M, 120M",
-                phone_number_id=platform_id,
+                phone_number_id=_send_pid, access_token=_send_token,
             )
             return
 
@@ -2162,7 +2179,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"4️⃣ *Start fresh* — say *New Search*\n\n"
                     f"What works best for you?"
                 )
-            await send_meta_message(sender_id, _guidance, phone_number_id=platform_id)
+            await send_meta_message(sender_id, _guidance, phone_number_id=_send_pid, access_token=_send_token)
             return
 
         # --- 9. OBJECTION HANDLER ---
@@ -2189,7 +2206,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         f"Understood, {first_name}. "
                         f"Let me search within *{budget_fmt}* "
                         f"for you in *{_bm_location}*. 🔍",
-                        phone_number_id=platform_id,
+                        phone_number_id=_send_pid, access_token=_send_token,
                     )
 
                     search_result = execute_premium_search(db, tenant_id, _data)
@@ -2202,11 +2219,11 @@ async def handle_incoming_message(data: dict, db: Session):
                             first_name,
                         )
                         await send_meta_message(
-                            sender_id, summary, phone_number_id=platform_id
+                            sender_id, summary, phone_number_id=_send_pid, access_token=_send_token
                         )
                         carousel_data = prepare_meta_carousel(matches)
                         await send_meta_carousel(
-                            sender_id, carousel_data, phone_number_id=platform_id
+                            sender_id, carousel_data, phone_number_id=_send_pid, access_token=_send_token
                         )
                         _data["last_viewed_id"] = matches[0].id
                         _data["last_viewed_title"] = matches[0].title
@@ -2233,7 +2250,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"3️⃣ *Change property type* — "
                             f"Land is often more affordable\n\n"
                             f"What would you prefer?",
-                            phone_number_id=platform_id,
+                            phone_number_id=_send_pid, access_token=_send_token,
                         )
                         _data.pop("location", None)
                         convo.data_json = json.dumps(_data)
@@ -2262,7 +2279,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         f"I'll find you the best verified options "
                         f"within that figure. 💰\n\n"
                         f"(e.g. '30M', '₦45,000,000', '20M to 50M')",
-                        phone_number_id=platform_id,
+                        phone_number_id=_send_pid, access_token=_send_token,
                     )
                     _data.pop("budget", None)
                     _data.pop("budget_max", None)
@@ -2279,7 +2296,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 if grade_raw and grade_raw != "ungraded":
                     trust_grade = grade_raw.title()
             response = get_objection_response(objection_key, first_name, biz_name, trust_grade)
-            await send_meta_message(sender_id, response, phone_number_id=platform_id)
+            await send_meta_message(sender_id, response, phone_number_id=_send_pid, access_token=_send_token)
             return
 
         # Also trigger search if intent is search_ready
@@ -2325,7 +2342,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         f"Perfect, {first_name}. "
                         f"Searching for *{_btype}* in "
                         f"*{_bloc}* within *{_bfmt}*. 🔍",
-                        phone_number_id=platform_id,
+                        phone_number_id=_send_pid, access_token=_send_token,
                     )
 
                 search_result = execute_premium_search(db, tenant_id, prefs)
@@ -2385,12 +2402,12 @@ async def handle_incoming_message(data: dict, db: Session):
                             ListingImage.listing_id == matches[0].id
                         ).first()
                         if _img and _img.url:
-                            await send_meta_image_message(sender_id, _img.url, summary, phone_number_id=platform_id)
+                            await send_meta_image_message(sender_id, _img.url, summary, phone_number_id=_send_pid, access_token=_send_token)
                         else:
-                            await send_meta_message(sender_id, summary, phone_number_id=platform_id)
+                            await send_meta_message(sender_id, summary, phone_number_id=_send_pid, access_token=_send_token)
                     except Exception as _img_e:
                         logger.warning(f"Image send failed: {_img_e}")
-                        await send_meta_message(sender_id, summary, phone_number_id=platform_id)
+                        await send_meta_message(sender_id, summary, phone_number_id=_send_pid, access_token=_send_token)
                     # Lock state to HANDOFF — prevents search re-triggering
                     prefs["last_viewed_id"] = matches[0].id
                     prefs["last_viewed_title"] = matches[0].title or ""
@@ -2414,7 +2431,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     )
                     db.commit()
                     carousel_data = prepare_meta_carousel(matches)
-                    await send_meta_carousel(sender_id, carousel_data, phone_number_id=platform_id)
+                    await send_meta_carousel(sender_id, carousel_data, phone_number_id=_send_pid, access_token=_send_token)
 
                     # Advance funnel
                     convo.funnel_stage = "commitment"
@@ -2429,12 +2446,13 @@ async def handle_incoming_message(data: dict, db: Session):
                         prefs, first_name, sender_id,
                         tenant_id, db, convo, platform_id,
                         tenant_profile, biz_name,
+                        access_token=_send_token,
                     )
                     return
 
             except Exception as e:
                 logger.error(f"Search Block Failure: {e}")
-                await send_meta_message(sender_id, handle_logic_error("search_failure"), phone_number_id=platform_id)
+                await send_meta_message(sender_id, handle_logic_error("search_failure"), phone_number_id=_send_pid, access_token=_send_token)
                 return
         # --- 11. KORA PERSONALITY & HANDSHAKE ---
         try:
@@ -2500,7 +2518,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"where every property is verified before "
                             f"it reaches you. 🏠"
                         )
-                        await send_meta_message(sender_id, confirmation, phone_number_id=platform_id)
+                        await send_meta_message(sender_id, confirmation, phone_number_id=_send_pid, access_token=_send_token)
                         return
 
                     else:
@@ -2509,7 +2527,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"What time works best for your inspection, "
                             f"{first_name}? "
                             f"(e.g. Tomorrow 10am, Friday afternoon) 📅",
-                            phone_number_id=platform_id,
+                            phone_number_id=_send_pid, access_token=_send_token,
                         )
                         return
 
@@ -2568,14 +2586,14 @@ async def handle_incoming_message(data: dict, db: Session):
                                     ListingImage.listing_id == matches[0].id
                                 ).first()
                                 if _img2 and _img2.url:
-                                    await send_meta_image_message(sender_id, _img2.url, summary, phone_number_id=platform_id)
+                                    await send_meta_image_message(sender_id, _img2.url, summary, phone_number_id=_send_pid, access_token=_send_token)
                                 else:
-                                    await send_meta_message(sender_id, summary, phone_number_id=platform_id)
+                                    await send_meta_message(sender_id, summary, phone_number_id=_send_pid, access_token=_send_token)
                             except Exception as _img2_e:
                                 logger.warning(f"Image send failed: {_img2_e}")
-                                await send_meta_message(sender_id, summary, phone_number_id=platform_id)
+                                await send_meta_message(sender_id, summary, phone_number_id=_send_pid, access_token=_send_token)
                             carousel_data = prepare_meta_carousel(matches)
-                            await send_meta_carousel(sender_id, carousel_data, phone_number_id=platform_id)
+                            await send_meta_carousel(sender_id, carousel_data, phone_number_id=_send_pid, access_token=_send_token)
                             prefs["last_viewed_id"] = matches[0].id
                             prefs["last_viewed_title"] = matches[0].title or ""
                             prefs["last_match_ids"] = [m.id for m in matches]
@@ -2592,12 +2610,13 @@ async def handle_incoming_message(data: dict, db: Session):
                                 prefs, first_name, sender_id,
                                 tenant_id, db, convo, platform_id,
                                 tenant_profile, biz_name,
+                                access_token=_send_token,
                             )
                     except Exception as e:
                         logger.error(f"Search from completed_flag failed: {e}")
                         await send_meta_message(
                             sender_id, handle_logic_error("search_failure"),
-                            phone_number_id=platform_id,
+                            phone_number_id=_send_pid, access_token=_send_token,
                         )
                     return
 
@@ -2612,7 +2631,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     )
                     await send_meta_message(
                         sender_id, _fb,
-                        phone_number_id=platform_id,
+                        phone_number_id=_send_pid, access_token=_send_token,
                     )
                     return
 
@@ -2633,8 +2652,8 @@ async def handle_incoming_message(data: dict, db: Session):
                         search_result.get("total_count"),
                         first_name,
                     )
-                    await send_meta_message(sender_id, summary, phone_number_id=platform_id)
-                    await send_meta_carousel(sender_id, prepare_meta_carousel(matches), phone_number_id=platform_id)
+                    await send_meta_message(sender_id, summary, phone_number_id=_send_pid, access_token=_send_token)
+                    await send_meta_carousel(sender_id, prepare_meta_carousel(matches), phone_number_id=_send_pid, access_token=_send_token)
                 return
 
             # Handshake trigger
@@ -2642,7 +2661,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 await send_meta_message(
                     sender_id,
                     get_executive_response("intent_location", first_name, biz_name),
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
                 return
             if final_reply == "handshake_flag" or intent == "agreement":
@@ -2712,7 +2731,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     )
                     await send_meta_message(
                         sender_id, _hs_msg,
-                        phone_number_id=platform_id,
+                        phone_number_id=_send_pid, access_token=_send_token,
                     )
 
                     # Message 2 — navigation + directions
@@ -2746,7 +2765,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         )
                         await send_meta_message(
                             sender_id, _hs_close,
-                            phone_number_id=platform_id,
+                            phone_number_id=_send_pid, access_token=_send_token,
                         )
 
                     # Alert agent with full buyer brief
@@ -2844,7 +2863,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             first_name,
                             biz_name,
                         ),
-                        phone_number_id=platform_id,
+                        phone_number_id=_send_pid, access_token=_send_token,
                     )
                     return
 
@@ -2856,7 +2875,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         f"https://est8go-api.onrender.com/public/property/{listing.id}"
                     )
                     response = build_media_redirect(first_name, biz_name, showroom_link)
-                    await send_meta_message(sender_id, response, phone_number_id=platform_id)
+                    await send_meta_message(sender_id, response, phone_number_id=_send_pid, access_token=_send_token)
                     return
 
             # Never send raw flag strings or generic fallback
@@ -2866,7 +2885,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     tenant_areas_by_budget=prefs.get("tenant_areas_in_budget", []),
                 )
                 if next_q:
-                    await send_meta_message(sender_id, next_q, phone_number_id=platform_id)
+                    await send_meta_message(sender_id, next_q, phone_number_id=_send_pid, access_token=_send_token)
                 return
 
             # Detect bedrooms question and set flag
@@ -2901,12 +2920,12 @@ async def handle_incoming_message(data: dict, db: Session):
                 )
                 await send_meta_message(
                     sender_id, _fb,
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
             else:
                 await send_meta_message(
                     sender_id, final_reply,
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid, access_token=_send_token,
                 )
 
         except Exception as e:
@@ -2915,7 +2934,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 sender_id,
                 "I'm still here! I had a small glitch — could you please "
                 "say that again? 🙏",
-                phone_number_id=platform_id,
+                phone_number_id=_send_pid, access_token=_send_token,
             )
 
     except Exception as e:
