@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Index, JSON
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Index, JSON, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database.base import Base
@@ -127,6 +127,11 @@ class TenantChannel(Base):
     platform_id = Column(String(100), nullable=False, unique=True)  # Meta platform ID
     label = Column(String(100), nullable=True)  # e.g. "Sales Line", "Rentals Line"
     is_active = Column(Boolean, default=True)
+
+    # --- PER-TENANT META CREDENTIALS (Scenario B) ---
+    waba_id = Column(String(100), nullable=True)
+    access_token_encrypted = Column(Text, nullable=True)
+    token_expires_at = Column(DateTime, nullable=True)
 
     # --- TIMESTAMPS ---
     created_at = Column(DateTime, default=func.now())
