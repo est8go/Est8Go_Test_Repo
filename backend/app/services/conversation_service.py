@@ -1572,6 +1572,11 @@ async def handle_incoming_message(data: dict, db: Session):
             # Buyer wants other options in SAME area
             # → show all tenant listings of that type
             if any(w in _ad_reply for w in _same_area_words):
+                # Safety net: clear the declined listing so a
+                # follow-on "yes" can't fall through to handshake
+                # and book the property the buyer just declined.
+                _ad.pop("last_viewed_id", None)
+                _ad.pop("last_viewed_title", None)
                 _ad["awaiting_see_all_tenant"] = True
                 convo.data_json = json.dumps(_ad)
                 db.commit()
