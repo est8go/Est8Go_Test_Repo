@@ -1070,8 +1070,9 @@ async def handle_incoming_message(data: dict, db: Session):
                     list_id,
                     sender_id,
                     biz_name,
-                    phone_number_id=platform_id,
+                    phone_number_id=_send_pid,
                     custom_message=_alert,
+                    access_token=_send_token,
                 )
                 if not _alert_ok:
                     # Escalate to super-admin —
@@ -1092,6 +1093,10 @@ async def handle_incoming_message(data: dict, db: Session):
                             "SUPER_ADMIN_WHATSAPP", ""
                         )
                         if _super:
+                            # Super-admin escalation: intentionally
+                            # stays on the GLOBAL token (no per-tenant
+                            # access_token) so it reaches the number
+                            # you control, not the tenant's WABA.
                             await send_meta_message(
                                 _super, _esc_msg,
                                 phone_number_id=platform_id,
@@ -1741,8 +1746,9 @@ async def handle_incoming_message(data: dict, db: Session):
                 try:
                     await alert_realtor_of_lead(
                         db, _cref_id or 0, sender_id, biz_name,
-                        phone_number_id=platform_id,
+                        phone_number_id=_send_pid,
                         custom_message=_buyer_brief,
+                        access_token=_send_token,
                     )
                 except Exception as _cae:
                     logger.warning(f"Consultant alert failed: {_cae}")
@@ -1750,7 +1756,9 @@ async def handle_incoming_message(data: dict, db: Session):
                     if _tenant_wa:
                         try:
                             await send_meta_message(
-                                _tenant_wa, _buyer_brief, phone_number_id=platform_id,
+                                _tenant_wa, _buyer_brief,
+                                phone_number_id=_send_pid,
+                                access_token=_send_token,
                             )
                         except Exception:
                             pass
@@ -1996,7 +2004,8 @@ async def handle_incoming_message(data: dict, db: Session):
                         _ph_listing_id,
                         sender_id,
                         biz_name,
-                        phone_number_id=platform_id,
+                        phone_number_id=_send_pid,
+                        access_token=_send_token,
                         custom_message=(
                             f"🔔 *CALLBACK REQUEST*\n\n"
                             f"👤 Buyer: {first_name}\n"
@@ -2117,7 +2126,7 @@ async def handle_incoming_message(data: dict, db: Session):
 
                     # Alert realtor immediately
                     try:
-                        await alert_realtor_of_lead(db, _lid, sender_id, biz_name, phone_number_id=platform_id)
+                        await alert_realtor_of_lead(db, _lid, sender_id, biz_name, phone_number_id=_send_pid, access_token=_send_token)
                     except Exception as _ae:
                         logger.warning(f"Property page lead realtor alert failed: {_ae}")
 
@@ -2833,8 +2842,9 @@ async def handle_incoming_message(data: dict, db: Session):
                         last_id,
                         sender_id,
                         biz_name,
-                        phone_number_id=platform_id,
+                        phone_number_id=_send_pid,
                         custom_message=_hs_alert,
+                        access_token=_send_token,
                     )
                     if not _hs_alert_ok:
                         # Escalate to super-admin —
@@ -2855,6 +2865,10 @@ async def handle_incoming_message(data: dict, db: Session):
                                 "SUPER_ADMIN_WHATSAPP", ""
                             )
                             if _super:
+                                # Super-admin escalation: intentionally
+                                # stays on the GLOBAL token (no per-tenant
+                                # access_token) so it reaches the number
+                                # you control, not the tenant's WABA.
                                 await send_meta_message(
                                     _super, _esc_msg,
                                     phone_number_id=platform_id,

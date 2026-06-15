@@ -63,6 +63,7 @@ async def alert_realtor_of_lead(
     biz_name: str,
     phone_number_id: str = None,
     custom_message: str = None,
+    access_token: str = None,
 ):
     """
     Alert priority:
@@ -178,7 +179,9 @@ async def alert_realtor_of_lead(
             )
 
         await send_meta_text_message(
-            alert_phone, alert_text, phone_number_id=phone_number_id
+            alert_phone, alert_text,
+            phone_number_id=phone_number_id,
+            access_token=access_token,
         )
         logger.info(f"✅ Lead alert sent to {alert_phone} for listing {listing_id}")
         return True
