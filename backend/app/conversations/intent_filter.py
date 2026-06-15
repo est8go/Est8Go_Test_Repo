@@ -839,16 +839,22 @@ def classify_intent(
         )
 
     # ── 3. OBJECTION ────────────────────────────────────
+    import re as _re_sig
     _property_signal_words = [
         "house", "land", "apartment", "flat",
         "duplex", "bedroom", "bungalow", "plot",
         "buy", "rent", "price", "cost", "how much",
         "budget", "available", "inspect", "view",
-        "m", "million", "naira",
+        "million", "naira",
     ]
     _has_property_signal = any(
         _w in text_lower for _w in _property_signal_words
     )
+    # Budget shorthand: digit followed by 'm'
+    # (e.g. 50m, 20 m) — word-boundary, not bare 'm'
+    if not _has_property_signal:
+        if _re_sig.search(r"\d+\s*m\b", text_lower) or _re_sig.search(r"₦", text_lower):
+            _has_property_signal = True
     for phrase, response_key in OBJECTION_MAP.items():
         if phrase in text_lower:
             # Casual Nigerian filler (e.g. "abeg") should only be
