@@ -750,7 +750,7 @@ async def _no_results_cascade(
 
     # ── LEVEL 2: Tenant cheapest option ────────────────────────
     from app.services.chatbot.search_service import get_tenant_cheapest_listing
-    _cheapest = get_tenant_cheapest_listing(db, tenant_id, _ptype)
+    _cheapest = get_tenant_cheapest_listing(db, tenant_id, _ptype, budget=_budget)
 
     if _cheapest and _cheapest.get("price"):
         _cheap_fmt = _cheapest.get("price_fmt", "")
@@ -766,8 +766,23 @@ async def _no_results_cascade(
         )
 
         if _budget:
-            _diff = (_cheapest["price"] - _budget) / 1_000_000
-            _stretch_msg += f"That's ₦{_diff:.0f}M above your current budget.\n\n"
+            _delta = _cheapest["price"] - _budget
+            _delta_m = abs(_delta) / 1_000_000
+            if _delta > 0:
+                _stretch_msg += (
+                    f"That's ₦{_delta_m:.0f}M above "
+                    f"your budget, but it's our closest "
+                    f"verified match.\n\n"
+                )
+            elif _delta < 0:
+                _stretch_msg += (
+                    f"Good news — it's ₦{_delta_m:.0f}M "
+                    f"*within* your budget. ✅\n\n"
+                )
+            else:
+                _stretch_msg += (
+                    f"It's right at your budget. ✅\n\n"
+                )
 
         _stretch_msg += (
             f"Would you like to consider this option? Or shall I check what our "
@@ -1512,6 +1527,78 @@ async def handle_incoming_message(data: dict, db: Session):
                 sender_id,
                 _rand.choice(_fresh_variants),
                 phone_number_id=_send_pid, access_token=_send_token,
+            )
+            return
+
+        # ── AFTER-DECLINE HANDLER ──────────
+        _ad = json.loads(convo.data_json or "{}")
+        if _ad.get("awaiting_after_decline"):
+            _ad_reply = text_body.strip().lower()
+            _ad.pop("awaiting_after_decline", None)
+
+            _same_area_words = {
+                "same", "this area", "same area",
+                "yes", "show others", "other properties",
+                "others here",
+            }
+            _diff_area_words = {
+                "different", "another", "different area",
+                "another area", "explore", "other area",
+                "change area", "elsewhere",
+            }
+
+            # Buyer wants a DIFFERENT area → clear
+            # location + last_viewed, ask which area
+            if any(w in _ad_reply for w in _diff_area_words):
+                _ad.pop("location", None)
+                _ad.pop("last_viewed_id", None)
+                _ad.pop("last_viewed_title", None)
+                convo.data_json = json.dumps(_ad)
+                convo.funnel_stage = "verification"
+                convo.state = "ACTIVE"
+                db.commit()
+                await send_meta_message(
+                    sender_id,
+                    f"Of course, {first_name}! 📍\n\n"
+                    f"Which area would you like to "
+                    f"explore? Just tell me the "
+                    f"neighbourhood and I'll search "
+                    f"our verified listings there.",
+                    phone_number_id=_send_pid,
+                    access_token=_send_token,
+                )
+                return
+
+            # Buyer wants other options in SAME area
+            # → show all tenant listings of that type
+            if any(w in _ad_reply for w in _same_area_words):
+                _ad["awaiting_see_all_tenant"] = True
+                convo.data_json = json.dumps(_ad)
+                db.commit()
+                await send_meta_message(
+                    sender_id,
+                    f"Let me pull up our other verified "
+                    f"options, {first_name}.\n\n"
+                    f"Reply *Yes* to see everything we "
+                    f"have.",
+                    phone_number_id=_send_pid,
+                    access_token=_send_token,
+                )
+                return
+
+            # Unexpected reply → guided menu, no loop
+            _ad["awaiting_no_results_choice"] = True
+            convo.data_json = json.dumps(_ad)
+            db.commit()
+            await send_meta_message(
+                sender_id,
+                f"No problem, {first_name}. 😊\n\n"
+                f"1️⃣ Try a different area\n"
+                f"2️⃣ Adjust my budget\n"
+                f"3️⃣ Change property type\n"
+                f"4️⃣ Start a new search",
+                phone_number_id=_send_pid,
+                access_token=_send_token,
             )
             return
 

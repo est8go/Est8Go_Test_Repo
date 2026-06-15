@@ -145,12 +145,15 @@ def get_tenant_cheapest_listing(
     db,
     tenant_id: int,
     property_type: str = None,
+    budget: int = None,
 ) -> dict:
     """
-    Returns the cheapest verified listing for this tenant.
-    Used when buyer budget is too low.
+    Returns the verified listing CLOSEST to the buyer's budget
+    (by absolute price distance) when budget is provided, else
+    the absolute cheapest. Used as a no-results fallback.
     """
     from app.listings.models import Listing
+    from sqlalchemy import func
 
     query = db.query(Listing).filter(
         Listing.tenant_id == tenant_id,
@@ -162,7 +165,13 @@ def get_tenant_cheapest_listing(
             Listing.property_type.ilike(f"%{property_type}%")
         )
 
-    listing = query.order_by(Listing.price.asc()).first()
+    if budget:
+        # Closest to budget — smallest absolute distance
+        query = query.order_by(func.abs(Listing.price - budget).asc())
+    else:
+        query = query.order_by(Listing.price.asc())
+
+    listing = query.first()
 
     if not listing:
         return {}

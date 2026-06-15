@@ -44,17 +44,14 @@ LOCATION_ALIASES = {
     "gwarimpa":          "gwarinpa",
     "gwariampa":         "gwarinpa",
     "maitamma":          "maitama",
-    "wuse2":             "wuse",
-    "wuse 2":            "wuse",
     "wi":                "wuse",
     # Lagos
-    "lekki 1":           "lekki",
-    "lekki phase 1":     "lekki",
-    "lekki phase1":      "lekki",
+    # NOTE: sub-area aliases (wuse 2→wuse, lekki phase 1→lekki,
+    # ikeja gra→ikeja) intentionally removed — they merge
+    # genuinely distinct areas and broke picked-area search.
     "v.i":               "victoria island",
     "vi":                "victoria island",
     "v/i":               "victoria island",
-    "ikeja gra":         "ikeja",
     # Port Harcourt
     "p.h":               "port harcourt",
     # General
