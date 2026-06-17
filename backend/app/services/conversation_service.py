@@ -1795,38 +1795,59 @@ async def handle_incoming_message(data: dict, db: Session):
             _saved2.pop("awaiting_stretch_choice", None)
             _stretch_id = _saved2.pop("stretch_listing_id", None)
 
-            _yes_w = {"yes", "ok", "okay", "sure", "consider", "show me",
-                      "yes please", "i'll consider", "let me see", "show details", "proceed"}
-            _no_w = {"no", "nope", "partner", "check partner", "wider network",
-                     "other options", "not interested"}
+            # Look up the offered listing so NAMING its area counts as acceptance
+            _lst = db.get(Listing, _stretch_id) if _stretch_id else None
+            _stretch_loc = (_lst.location or "").lower() if _lst else ""
 
-            if any(w in _sc for w in _yes_w):
-                if _stretch_id:
-                    _lst = db.get(Listing, _stretch_id)
-                    if _lst:
-                        _p = _lst.price or 0
-                        _p_fmt = f"₦{_p/1_000_000:.0f}M" if _p >= 1_000_000 else f"₦{_p:,}"
-                        _score = _lst.trust_score or 0
-                        _grade = (_lst.trust_grade or "verified").title()
-                        _base_url = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
-                        await send_meta_message(
-                            sender_id,
-                            f"Excellent choice, {first_name}! 🎯\n\n"
-                            f"*{_lst.title}*\n"
-                            f"📍 {(_lst.location or '').title()}\n"
-                            f"💰 *{_p_fmt}*\n"
-                            f"🛡️ Trust Score: *{_score}/100 ({_grade})*\n\n"
-                            f"🔗 View full details:\n{_base_url}/public/property/{_lst.id}\n\n"
-                            f"Would you like to schedule a site inspection? 📅",
-                            phone_number_id=_send_pid, access_token=_send_token,
-                        )
-                        _saved2["last_viewed_id"] = _lst.id
-                        _saved2["last_viewed_title"] = _lst.title or ""
-                        convo.data_json = json.dumps(_saved2)
-                        convo.funnel_stage = "commitment"
-                        convo.state = "HANDOFF"
-                        db.commit()
-            else:
+            _seeall_phrases = {
+                "see all", "see everything", "show everything",
+                "show all", "everything", "all options", "see all options",
+            }
+            _decline_w = {
+                "nope", "partner", "check partner", "wider network",
+                "other options", "not interested",
+            }
+            _yes_w = {
+                "yes", "ok", "okay", "sure", "consider", "show me",
+                "yes please", "i'll consider", "let me see",
+                "show details", "proceed",
+            }
+            _accept_phrases = {
+                "fine", "works", "that works", "okay", "ok",
+                "good", "perfect", "go with", "take it",
+                "i'll take", "ill take", "that one", "this one",
+                "sounds good", "is fine", "go ahead", "alright", "sure",
+            }
+
+            _is_seeall = any(p in _sc for p in _seeall_phrases)
+            # "no" matched as a whole word so "now"/"another" don't false-decline
+            _is_decline = (
+                bool(re.search(r"\bno\b", _sc))
+                or any(w in _sc for w in _decline_w)
+            )
+            _named_offered_area = bool(_stretch_loc and _stretch_loc in _sc)
+            _accepts = (
+                _named_offered_area
+                or any(p in _sc for p in _accept_phrases)
+                or any(w in _sc for w in _yes_w)
+            )
+
+            # 1. Explicit "see all" → hand to the see-all-tenant flow
+            if _is_seeall:
+                _saved2["awaiting_see_all_tenant"] = True
+                convo.data_json = json.dumps(_saved2)
+                db.commit()
+                await send_meta_message(
+                    sender_id,
+                    f"Let me pull up our other verified "
+                    f"options, {first_name}.\n\n"
+                    f"Reply *Yes* to see everything we have.",
+                    phone_number_id=_send_pid, access_token=_send_token,
+                )
+                return
+
+            # 2. Explicit decline → partner-network referral
+            if _is_decline:
                 _saved2["awaiting_referral_permission"] = True
                 convo.data_json = json.dumps(_saved2)
                 db.commit()
@@ -1838,6 +1859,46 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"Reply *Yes* to search the wider network.",
                     phone_number_id=_send_pid, access_token=_send_token,
                 )
+                return
+
+            # 3. Acceptance (named area / natural phrase / yes-word) → show listing
+            if _accepts and _lst:
+                _p = _lst.price or 0
+                _p_fmt = f"₦{_p/1_000_000:.0f}M" if _p >= 1_000_000 else f"₦{_p:,}"
+                _score = _lst.trust_score or 0
+                _grade = (_lst.trust_grade or "verified").title()
+                _base_url = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+                await send_meta_message(
+                    sender_id,
+                    f"Excellent choice, {first_name}! 🎯\n\n"
+                    f"*{_lst.title}*\n"
+                    f"📍 {(_lst.location or '').title()}\n"
+                    f"💰 *{_p_fmt}*\n"
+                    f"🛡️ Trust Score: *{_score}/100 ({_grade})*\n\n"
+                    f"🔗 View full details:\n{_base_url}/public/property/{_lst.id}\n\n"
+                    f"Would you like to schedule a site inspection? 📅",
+                    phone_number_id=_send_pid, access_token=_send_token,
+                )
+                _saved2["last_viewed_id"] = _lst.id
+                _saved2["last_viewed_title"] = _lst.title or ""
+                convo.data_json = json.dumps(_saved2)
+                convo.funnel_stage = "commitment"
+                convo.state = "HANDOFF"
+                db.commit()
+                return
+
+            # 4. Fallback → partner-network referral
+            _saved2["awaiting_referral_permission"] = True
+            convo.data_json = json.dumps(_saved2)
+            db.commit()
+            await send_meta_message(
+                sender_id,
+                f"Understood, {first_name}. 🤝\n\n"
+                f"May I check our verified partner network? "
+                f"All properties are Est8Go verified.\n\n"
+                f"Reply *Yes* to search the wider network.",
+                phone_number_id=_send_pid, access_token=_send_token,
+            )
             return
 
         # ── REFERRAL PERMISSION HANDLER ───────────────────────────────
