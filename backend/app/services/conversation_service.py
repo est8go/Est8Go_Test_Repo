@@ -511,6 +511,22 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
             ):
                 continue  # keep the established budget
             current_data[k] = v
+        # B5: when a fresh SINGLE budget is entered (no range), sync
+        # budget_max to match it — so a stale budget_max (seeded by a
+        # property-page entry or a no-results restore) can't override
+        # the new ceiling in execute_premium_search (budget_max wins).
+        # A genuine range supplies its own budget_max and is left alone.
+        _new_budget = intent_result.extracted.get("budget")
+        _new_budget_max = intent_result.extracted.get("budget_max")
+        if _new_budget and not _new_budget_max:
+            # honour the belt-and-braces guard: if the unit-less budget was
+            # rejected above (digit from an area name), don't sync either
+            if not (
+                intent_result.extracted.get("location")
+                and current_data.get("budget") != _new_budget
+                and not _has_money_unit
+            ):
+                current_data["budget_max"] = current_data.get("budget")
         if current_data.get("location"):
             current_data["location"] = normalise_location(current_data["location"])
         convo.data_json = json.dumps(current_data)

@@ -308,16 +308,13 @@ LOCATION_WORDS = [
     "zaria",
     "sokoto",
     "ilorin",
-    # Generic location words
-    "axis",
-    "area",
-    "estate",
-    "zone",
-    "district",
-    "around",
-    "near",
-    "close to",
-    "beside",
+    # NOTE: generic tokens (axis, area, estate, zone, district, around,
+    # near, close to, beside) intentionally removed — they are
+    # search-useless (cannot ilike "%area%") and leaked through both the
+    # single-word loop and the fuzzy pool, extracting phantom locations
+    # like "this area" -> "area". With them gone, such phrases return
+    # None, which preserves any prior location (deictic) or lets the
+    # funnel ask "which area?".
 ]
 
 # Property type keywords
