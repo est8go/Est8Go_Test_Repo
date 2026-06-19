@@ -1314,6 +1314,72 @@ async def handle_incoming_message(data: dict, db: Session):
             )
             convo = db.get(Conversation, res["conversation_id"])
 
+        # ── POST-BOOKING GRACE (before 7b wipe) ──────────────────────
+        # After a booking the funnel is "closed". The very next message is
+        # often a courtesy ("you're welcome") or a booking question — not a
+        # new search. Intercept those for a warm sign-off BEFORE the 7b reset
+        # wipes the completed state. Only fires for a PURE courtesy/question
+        # with no property signal — a genuine new search falls through to 7b.
+        if convo.funnel_stage == "closed":
+            _pb = json.loads(convo.data_json or "{}")
+            _pb_text = text_body.strip().lower()
+
+            from app.conversations.intent_filter import (
+                extract_property_type,
+                extract_location_from_text,
+                extract_budget_from_text,
+            )
+            _has_signal = bool(
+                extract_property_type(_pb_text)
+                or extract_location_from_text(_pb_text)
+                or extract_budget_from_text(_pb_text)
+            )
+            _new_search = "new search" in re.sub(
+                r"[^a-z0-9 ]", "", _pb_text
+            )
+
+            from app.conversations.templates import is_closing_phrase
+            _booking_q = any(
+                w in _pb_text for w in
+                ("when", "what time", "call me", "they call",
+                 "how long", "who will")
+            ) and not _has_signal
+
+            if not _has_signal and not _new_search:
+                if is_closing_phrase(text_body):
+                    if not _pb.get("post_booking_acked"):
+                        _pb["post_booking_acked"] = True
+                        convo.data_json = json.dumps(_pb)
+                        db.commit()
+                        await send_meta_message(
+                            sender_id,
+                            f"My pleasure, {first_name}! 🤝 "
+                            f"Your consultant will be in touch "
+                            f"shortly. I'm here whenever you'd "
+                            f"like to explore more verified "
+                            f"properties. 😊",
+                            phone_number_id=_send_pid,
+                            access_token=_send_token,
+                        )
+                        return
+                    else:
+                        return
+                if _booking_q:
+                    convo.data_json = json.dumps(_pb)
+                    db.commit()
+                    await send_meta_message(
+                        sender_id,
+                        f"Your dedicated consultant will call "
+                        f"you within 2 hours, {first_name}, to "
+                        f"confirm your inspection details. Please "
+                        f"keep your phone handy. 📱",
+                        phone_number_id=_send_pid,
+                        access_token=_send_token,
+                    )
+                    return
+            # else: property signal OR new search → fall through to the
+            # existing 7b reset (unchanged)
+
         # --- 7b. CLOSED STATE RESET ---
         # If buyer sends any message after a closed funnel, start fresh
         if convo.funnel_stage == "closed":

@@ -84,6 +84,28 @@ def is_filler(text: str) -> bool:
     return text.strip().lower() in FILLER_WORDS
 
 
+# Pure courtesy / closing phrases — used ONLY in the post-booking grace
+# window to route a warm sign-off instead of a funnel re-prompt. Never
+# applied mid-funnel.
+CLOSING_PHRASES = {
+    "you're welcome", "youre welcome", "your welcome",
+    "thanks", "thank you", "thank u", "thanks a lot",
+    "ok thanks", "okay thanks", "great", "great thanks",
+    "appreciate it", "i appreciate it", "much appreciated",
+    "perfect", "awesome", "nice", "good", "cool",
+    "bye", "goodbye", "take care", "cheers", "noted",
+    "👍", "🙏", "👌", "ok", "okay", "alright",
+}
+
+import re as _re_close
+
+
+def is_closing_phrase(text):
+    t = (text or "").strip().lower()
+    t_clean = _re_close.sub(r"[^a-z0-9' ]", "", t).strip()
+    return t_clean in CLOSING_PHRASES or t in CLOSING_PHRASES
+
+
 def normalise_location(loc: str) -> str:
     if not loc:
         return loc
