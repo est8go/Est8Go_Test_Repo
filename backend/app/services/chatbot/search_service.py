@@ -105,6 +105,12 @@ def get_tenant_areas_by_budget(
     Returns areas from tenant listings that have at least one property
     within the given budget. Sorted by min_price ascending.
     """
+    # Defensive guard: SQLAlchemy raises ArgumentError on `price <= None`.
+    # Return empty gracefully so any caller that passes a missing budget
+    # degrades to "no areas" instead of crashing.
+    if not budget:
+        return []
+
     from app.listings.models import Listing
     from sqlalchemy import func
 

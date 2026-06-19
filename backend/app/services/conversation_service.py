@@ -1281,6 +1281,12 @@ async def handle_incoming_message(data: dict, db: Session):
                 # Returning buyer with active search — show memory recap
                 session_state = get_session_state(convo)
                 convo.session_count = (convo.session_count or 1) + 1
+                # Flag the next reply so Continue/Yes resumes and No/anything
+                # else starts fresh — instead of falling through to the
+                # pipeline and silently re-running the old search.
+                _wb = json.loads(convo.data_json or "{}")
+                _wb["awaiting_welcome_choice"] = True
+                convo.data_json = json.dumps(_wb)
                 db.commit()
                 welcome_msg = build_welcome_back_message(convo, first_name, session_state, biz_name)
                 await send_meta_message(sender_id, welcome_msg, phone_number_id=_send_pid, access_token=_send_token)
@@ -1420,6 +1426,121 @@ async def handle_incoming_message(data: dict, db: Session):
                 phone_number_id=_send_pid, access_token=_send_token,
             )
             return
+
+        # ── WELCOME-BACK CHOICE HANDLER ──────────────────────────────
+        # Returning buyer greeted, got "Continue or New Search?". This reply
+        # decides: resume (keep prefs) vs start fresh (clear prefs). Without
+        # it, "No" fell through and re-ran the old search, and bare "Yes"
+        # only worked by accident. Runs BEFORE the pipeline and the
+        # commitment-decline handler so it owns the welcome reply.
+        _wc = json.loads(convo.data_json or "{}")
+        if _wc.get("awaiting_welcome_choice"):
+            _wc_reply = text_body.strip().lower()
+            _wc.pop("awaiting_welcome_choice", None)
+
+            _continue_words = {
+                "continue", "yes", "yeah", "yep", "sure",
+                "ok", "okay", "yes continue", "resume",
+                "pick up", "carry on", "go on",
+            }
+
+            if any(w in _wc_reply for w in _continue_words):
+                # Resume — keep prefs, continue funnel
+                convo.data_json = json.dumps(_wc)
+                db.commit()
+                _wc_next = get_next_question(
+                    _wc,
+                    tenant_areas_by_budget=_wc.get(
+                        "tenant_areas_in_budget", []
+                    ),
+                )
+                if _wc_next:
+                    await send_meta_message(
+                        sender_id, _wc_next,
+                        phone_number_id=_send_pid,
+                        access_token=_send_token,
+                    )
+                    return
+                # All data collected → run the search explicitly (safer than
+                # falling through — the line-1451 Continue handler doesn't
+                # match bare "yes", so fall-through could drop the resume).
+                if _wc.get("location") and (
+                    _wc.get("budget") or _wc.get("budget_max")
+                ):
+                    try:
+                        _wsr = execute_premium_search(db, tenant_id, _wc)
+                        _wms = _wsr.get("data", [])
+                        if _wms:
+                            _wsum = build_property_summary(
+                                _wms[0], _wms,
+                                _wsr.get("total_count", 0), first_name,
+                            )
+                            await send_meta_message(
+                                sender_id, _wsum,
+                                phone_number_id=_send_pid,
+                                access_token=_send_token,
+                            )
+                            await send_meta_carousel(
+                                sender_id, prepare_meta_carousel(_wms),
+                                phone_number_id=_send_pid,
+                                access_token=_send_token,
+                            )
+                            _wc["last_viewed_id"] = _wms[0].id
+                            _wc["last_viewed_title"] = _wms[0].title or ""
+                            convo.data_json = json.dumps(_wc)
+                            convo.state = "HANDOFF"
+                            convo.funnel_stage = "commitment"
+                            convo.last_active_at = datetime.now(
+                                timezone.utc
+                            ).replace(tzinfo=None)
+                            db.commit()
+                        else:
+                            await send_meta_message(
+                                sender_id,
+                                build_no_results_message(
+                                    _wc.get("location", ""),
+                                    _wc.get("property_type", ""),
+                                    _wc.get("budget_max") or _wc.get("budget"),
+                                ),
+                                phone_number_id=_send_pid,
+                                access_token=_send_token,
+                            )
+                            _wc["awaiting_no_results_choice"] = True
+                            _wc["no_results_location"] = _wc.get("location", "")
+                            _wc["no_results_type"] = _wc.get("property_type", "")
+                            _wc["no_results_budget"] = (
+                                _wc.get("budget_max") or _wc.get("budget")
+                            )
+                            from app.services.chatbot.message_builder import NEARBY_AREAS
+                            _wnr_loc = (_wc.get("location") or "").lower().strip()
+                            _wc["no_results_nearby"] = NEARBY_AREAS.get(_wnr_loc, [])[:3]
+                            convo.data_json = json.dumps(_wc)
+                            db.commit()
+                    except Exception as _we:
+                        logger.error(f"Welcome-back resume search failed: {_we}")
+                return
+            else:
+                # "No" / anything else → clear search prefs, start fresh
+                _keep = {
+                    k: _wc[k] for k in (
+                        "coverage_cities", "city_locked",
+                        "purpose",
+                    ) if k in _wc
+                }
+                convo.data_json = json.dumps(_keep)
+                convo.funnel_stage = "awareness"
+                convo.state = "ACTIVE"
+                db.commit()
+                await send_meta_message(
+                    sender_id,
+                    f"No problem, {first_name}. Let's start "
+                    f"fresh. 🏡\n\nWhat type of property are "
+                    f"you looking for?\n\n🌱 Land\n🏠 House\n"
+                    f"🏢 Apartment",
+                    phone_number_id=_send_pid,
+                    access_token=_send_token,
+                )
+                return
 
         # --- 7c. COMMITMENT DECLINE ---
         # Buyer said No after inspection offer — offer soft alternative
@@ -1897,6 +2018,11 @@ async def handle_incoming_message(data: dict, db: Session):
                 )
                 _saved2["last_viewed_id"] = _lst.id
                 _saved2["last_viewed_title"] = _lst.title or ""
+                # Accepting a stretch option in a DIFFERENT area must update
+                # location so the consultant brief, inspection alert and any
+                # re-search reflect what the buyer actually chose — not the
+                # original failed-search area.
+                _saved2["location"] = (_lst.location or _saved2.get("location"))
                 convo.data_json = json.dumps(_saved2)
                 convo.funnel_stage = "commitment"
                 convo.state = "HANDOFF"
@@ -1992,6 +2118,14 @@ async def handle_incoming_message(data: dict, db: Session):
                     logger.error(f"Referral search failed: {_re_err}")
             else:
                 _saved2.pop("awaiting_referral_permission", None)
+                # Route the 1-4 menu through the existing no-results handler
+                # so "1" is read as a menu choice, not parsed as a ₦1M budget.
+                _saved2["awaiting_no_results_choice"] = True
+                _saved2["no_results_location"] = _saved2.get("location", "")
+                _saved2["no_results_type"] = _saved2.get("property_type", "")
+                _saved2["no_results_budget"] = (
+                    _saved2.get("budget_max") or _saved2.get("budget")
+                )
                 convo.data_json = json.dumps(_saved2)
                 db.commit()
                 await send_meta_message(
