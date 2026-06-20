@@ -28,6 +28,10 @@ from sqlalchemy.orm import Session
 from app.conversations.models import Conversation
 from app.services.notification_service import send_meta_text_message
 from app.services.tenant_service import get_tenant_profile
+from app.services.meta_sender_service import (
+    send_meta_template,
+    get_tenant_whatsapp_credentials,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -509,45 +513,53 @@ async def run_dropoff_recovery(db: Session):
                     skipped += 1
                     continue
 
-                # Get tenant profile for branded messaging
-                tenant_profile = get_tenant_profile(db, convo.tenant_id)
-                biz_name = tenant_profile.get("business_name", "our firm")
-                name = (convo.display_name or "there").split()[0]
+                # Choose the right APPROVED template (precedence +
+                # no-stock-image fallback; None = skip this conversation)
+                score = convo.lead_score or 0
+                _spec = choose_recovery_template(convo, score, db)
+                if not _spec:
+                    skipped += 1
+                    continue
 
-                # Build personalised message
-                message = build_reminder_message(convo, nudge_index, name, biz_name)
-
-                # Send via Meta
-                await send_meta_text_message(convo.external_user_id, message)
-
-                # Update conversation
-                convo.reminder_count = (convo.reminder_count or 0) + 1
-                convo.last_reminder_sent_at = datetime.now(timezone.utc)
-                db.commit()
-
-                # Deduct 1 credit per recovery message sent
-                try:
-                    from app.credits.service import deduct_credits
-                    deduct_credits(
-                        tenant_id = convo.tenant_id,
-                        action    = "BROADCAST_100",
-                        tier      = "ACCESS",
-                        reference = f"recovery_{convo.id}_{convo.reminder_count}",
-                        db        = db,
-                    )
-                except Exception as credit_err:
-                    logger.warning(
-                        f"Credit deduction failed for recovery "
-                        f"message: {credit_err}"
-                    )
-
-                sent += 1
-                logger.info(
-                    f"✅ RECOVERY: Sent to {convo.external_user_id} | "
-                    f"Stage={convo.funnel_stage} | "
-                    f"Score={convo.lead_score} | "
-                    f"Nudge={nudge_index} | {reason}"
+                # Per-tenant credentials — send from the tenant's OWN
+                # number/token, never the global number.
+                _pid, _token, _ = get_tenant_whatsapp_credentials(
+                    db, convo.tenant_id
                 )
+
+                _ok = await send_meta_template(
+                    convo.external_user_id,
+                    _spec["name"],
+                    body_params=_spec.get("body_params"),
+                    header_image_url=_spec.get("header_image_url"),
+                    language="en",
+                    phone_number_id=_pid,
+                    access_token=_token,
+                )
+
+                if _ok:
+                    # Honest SENT counter for visibility only — NOT billing
+                    # (flat monthly model). Advance the nudge solely on a
+                    # confirmed 200. (Item 6 will stop the onupdate bump of
+                    # last_active_at that this commit may still trigger.)
+                    convo.reminder_count = (convo.reminder_count or 0) + 1
+                    convo.last_reminder_sent_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                    db.commit()
+                    sent += 1
+                    logger.info(
+                        f"✅ RECOVERY: Sent to {convo.external_user_id} | "
+                        f"Template={_spec['name']} | "
+                        f"Stage={convo.funnel_stage} | "
+                        f"Score={score} | {reason}"
+                    )
+                else:
+                    # Send failed — do NOT count as sent, do NOT advance
+                    # the nudge (so it can be retried next eligible run).
+                    errors += 1
+                    logger.error(
+                        f"❌ RECOVERY: Template send FAILED for "
+                        f"{convo.external_user_id} | Template={_spec['name']}"
+                    )
 
             except Exception as e:
                 errors += 1
