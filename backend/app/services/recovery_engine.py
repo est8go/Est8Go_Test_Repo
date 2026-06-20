@@ -368,6 +368,15 @@ async def run_dropoff_recovery(db: Session):
     Scans all active conversations, identifies drop-offs,
     sends personalised recovery messages per funnel stage.
     """
+    # ── CODE-LEVEL KILL SWITCH (default OFF) ──────────────────────
+    # Recovery stays paused unless RECOVERY_ENABLED is EXPLICITLY "true".
+    # Missing/malformed env, or any redeploy, leaves it OFF — safe by
+    # default. Must be before any DB query or send.
+    import os
+    if os.getenv("RECOVERY_ENABLED", "false").lower() != "true":
+        print("[recovery] RECOVERY_ENABLED is not 'true' — skipping (code-level pause).")
+        return {"sent": 0, "skipped": 0, "errors": 0}
+
     logger.info("🔄 DROP-OFF RECOVERY: Scanning conversations...")
 
     try:
@@ -481,6 +490,15 @@ async def escalate_high_value_leads(db: Session):
     and alerts the Realtor directly.
     Runs alongside the standard recovery engine.
     """
+    # ── CODE-LEVEL KILL SWITCH (default OFF) ──────────────────────
+    # This path also sends (realtor alerts) → gated identically. Stays
+    # paused unless RECOVERY_ENABLED is EXPLICITLY "true". Before any
+    # DB query or send.
+    import os
+    if os.getenv("RECOVERY_ENABLED", "false").lower() != "true":
+        print("[recovery] RECOVERY_ENABLED is not 'true' — skipping (code-level pause).")
+        return 0
+
     from app.services.notification_service import alert_realtor_of_lead
     import json
 
