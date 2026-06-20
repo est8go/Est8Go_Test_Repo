@@ -5,7 +5,7 @@ from sqlalchemy.orm import configure_mappers
 from app.tenants.models import Tenant
 from app.company_profiles.models import CompanyProfile
 from app.users.models import User
-from app.listings.models import Listing
+from app.listings.models import Listing, ListingDocument
 from app.conversations.models import Conversation, ConversationMessage
 from app.messages.models import Message
 from app.database.audit import AuditLog  # EST8GO AUDIT TRAIL
@@ -41,6 +41,7 @@ def register_all_models():
             CompanyProfile,
             User,
             Listing,
+            ListingDocument,
             Conversation,
             ConversationMessage,
             Message,
