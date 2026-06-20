@@ -333,6 +333,94 @@ def build_reminder_message(
 
 
 # ================================================================
+# APPROVED-TEMPLATE SELECTOR
+# Maps a conversation to one of the 5 approved reengaged_* templates.
+# Precedence: properties_images > high_values > stage.
+# Never uses a stock image — drops to a name-only template instead.
+# ================================================================
+
+
+def choose_recovery_template(convo, score, db) -> dict:
+    """
+    Returns {"name", "body_params", "header_image_url"} for the approved
+    template to send, or None to skip this conversation.
+
+    Precedence:
+      1. reengaged_properties_images — needs last_viewed_id + area + a REAL
+         listing image. Missing any of the three → fall through (never a
+         stock image).
+      2. reengaged_high_values — score >= 70 (any stage).
+      3. stage template — awareness / verification / commitment.
+      handshake / closed / unknown → None (no recovery).
+    """
+    import json
+    from app.listings.models import Listing
+
+    # Only these three stages are recoverable. Guard FIRST so a high-value
+    # (score>=70) closed/handshake/unknown conversation can't slip through
+    # the high_value branch below. (Decisions: drop handshake; closed → None.)
+    if convo.funnel_stage not in ("awareness", "verification", "commitment"):
+        return None
+
+    _data = {}
+    try:
+        _data = json.loads(convo.data_json or "{}")
+    except Exception:
+        _data = {}
+
+    _name = (convo.display_name or "there").split()[0] if convo.display_name else "there"
+    _area = (_data.get("location") or "").title()
+    _last_id = _data.get("last_viewed_id")
+
+    # 1. properties_images — needs last_viewed_id + area + a real image
+    if _last_id and _area:
+        _img_url = None
+        try:
+            _lst = db.get(Listing, int(_last_id))
+            if _lst:
+                _img = next(
+                    (i for i in _lst.images if getattr(i, "is_main", False)),
+                    None,
+                ) or (_lst.images[0] if _lst.images else None)
+                if _img and _img.url:
+                    _img_url = _img.url
+        except Exception:
+            _img_url = None
+        if _img_url:
+            return {
+                "name": "reengaged_properties_images",
+                "body_params": [_name, _area],
+                "header_image_url": _img_url,
+            }
+        # no real image → fall through (NEVER a stock image)
+
+    # 2. high_value — score >= 70
+    if score and score >= 70:
+        return {
+            "name": "reengaged_high_values",
+            "body_params": [_name],
+            "header_image_url": None,
+        }
+
+    # 3. stage template
+    _stage_map = {
+        "awareness": "reengaged_awareness",
+        "verification": "reengaged_verifications",
+        "commitment": "reengaged_commitments",
+    }
+    _tmpl = _stage_map.get(convo.funnel_stage)
+    if _tmpl:
+        return {
+            "name": _tmpl,
+            "body_params": [_name],
+            "header_image_url": None,
+        }
+
+    # handshake / closed / unknown → no recovery
+    return None
+
+
+# ================================================================
 # MAIN RECOVERY ENGINE
 # ================================================================
 

@@ -174,6 +174,95 @@ def prepare_meta_carousel(listings: list) -> list:
 
 
 # ================================================================
+# TEMPLATE MESSAGE SENDER (re-engagement beyond 24h window)
+# ================================================================
+
+
+async def send_meta_template(
+    recipient_id: str,
+    template_name: str,
+    body_params: list = None,
+    header_image_url: str = None,
+    language: str = "en",
+    phone_number_id: str = None,
+    access_token: str = None,
+) -> bool:
+    """
+    Sends an APPROVED Meta template message (the only message type Meta
+    permits outside the 24h customer-care window — i.e. recovery sends).
+
+    Components are built conditionally: a header only when an image URL is
+    given (template 5), a body only when body_params are given. All approved
+    buttons are static Quick-Reply → NO button component is sent.
+
+    Credential handling mirrors send_meta_message: per-tenant
+    phone_number_id + access_token when supplied, global env fallback.
+
+    Returns True ONLY on HTTP 200. Non-200 / exception → logs and returns
+    False (this bool gates billing in Item 7 — it must be honest).
+    """
+    pid = phone_number_id or PHONE_NUMBER_ID
+    _token = access_token or ACCESS_TOKEN
+    if not _token or not pid:
+        logger.error("❌ META ERROR: Credentials missing — template not sent")
+        return False
+    if not recipient_id:
+        logger.error("❌ META ERROR: Cannot send template, recipient_id is empty!")
+        return False
+
+    components = []
+    if header_image_url:
+        components.append({
+            "type": "header",
+            "parameters": [
+                {"type": "image", "image": {"link": header_image_url}}
+            ],
+        })
+    if body_params:
+        components.append({
+            "type": "body",
+            "parameters": [
+                {"type": "text", "text": str(p)} for p in body_params
+            ],
+        })
+
+    url = f"https://graph.facebook.com/v19.0/{pid}/messages"
+    headers = {
+        "Authorization": f"Bearer {_token}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": str(recipient_id),
+        "type": "template",
+        "template": {
+            "name": template_name,
+            "language": {"code": language},
+            "components": components,
+        },
+    }
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(url, json=payload, headers=headers)
+            if response.status_code != 200:
+                logger.error(
+                    f"❌ Meta Template Error ({response.status_code}): "
+                    f"{response.text} | template={template_name} | to={recipient_id}"
+                )
+                return False
+            logger.info(
+                f"✅ Template '{template_name}' sent to {recipient_id}"
+            )
+            return True
+        except Exception as e:
+            logger.error(
+                f"❌ Connection error sending template '{template_name}': {e}"
+            )
+            return False
+
+
+# ================================================================
 # PER-TENANT CREDENTIAL RESOLVER (Scenario B)
 # ================================================================
 
