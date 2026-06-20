@@ -40,28 +40,31 @@ services:
     healthCheckPath: /
     autoDeploy: true
 
-  # Reminder Worker (Background Process)
-  - type: worker
-    name: est8go-reminder-worker
-    runtime: python
-    rootDir: backend
-    buildCommand: chmod +x build.sh && ./build.sh
-    startCommand: python run_reminders.py
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.0
-      - key: DATABASE_URL
-        sync: false
-      - key: WHATSAPP_ACCESS_TOKEN
-        sync: false
-      - key: WHATSAPP_PHONE_ID
-        sync: false
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_KEY
-        sync: false
-      - key: ENCRYPTION_KEY
-        sync: false
+  # DISABLED: duplicate scheduler — cron is the single runner for recovery (Audit #8)
+  # The hourly cron (run_reminders_once.py) is the sole recovery runner.
+  # This long-running worker (while True + sleep) double-fired recovery.
+  # Re-enable ONLY if the cron is removed — never both at once.
+  # - type: worker
+  #   name: est8go-reminder-worker
+  #   runtime: python
+  #   rootDir: backend
+  #   buildCommand: chmod +x build.sh && ./build.sh
+  #   startCommand: python run_reminders.py
+  #   envVars:
+  #     - key: PYTHON_VERSION
+  #       value: 3.11.0
+  #     - key: DATABASE_URL
+  #       sync: false
+  #     - key: WHATSAPP_ACCESS_TOKEN
+  #       sync: false
+  #     - key: WHATSAPP_PHONE_ID
+  #       sync: false
+  #     - key: SUPABASE_URL
+  #       sync: false
+  #     - key: SUPABASE_KEY
+  #       sync: false
+  #     - key: ENCRYPTION_KEY
+  #       sync: false
 
   # Hourly Reminder Cron Job
   - type: cron
