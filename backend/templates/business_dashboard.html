@@ -3340,7 +3340,7 @@
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
             <div class="trust-status text-warn" id="docScore">+40</div>
-            <button class="trust-action-btn" onclick="openModal('docUploadModal')">Upload Doc</button>
+            <button class="trust-action-btn" onclick="openDocUpload()">Upload Doc</button>
           </div>
         </div>
         <div class="trust-item">
@@ -4129,14 +4129,23 @@
       <div class="modal-body">
         <label class="field-label">Document Type</label>
         <select class="field" id="docType">
-          <option value="cof">Certificate of Occupancy (C of O)</option>
-          <option value="deed">Deed of Assignment</option>
-          <option value="survey">Survey Plan</option>
-          <option value="other">Other Document</option>
+          <option value="c_of_o">Certificate of Occupancy (C of O)</option>
+          <option value="deed_of_assignment">Deed of Assignment</option>
+          <option value="survey_plan">Survey Plan</option>
+          <option value="governors_consent">Governor's Consent</option>
+          <option value="gazette">Gazette</option>
         </select>
         <label class="field-label">Document File (PDF or Image)</label>
         <input class="field" type="file" id="docFile" accept=".pdf,image/*" style="padding:10px">
-        <button class="btn btn-ind btn-md btn-full" style="margin-top:18px" onclick="toast('Document upload coming soon — backend endpoint not yet wired','info');closeModal('docUploadModal')">Upload Document →</button>
+        <button class="btn btn-ind btn-md btn-full" style="margin-top:18px" onclick="uploadDocument()">Upload Document →</button>
+
+        <div style="margin-top:22px;border-top:1px solid var(--border);padding-top:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <span class="field-label" style="margin:0">Uploaded Documents</span>
+            <span class="text-xs text-muted" id="docStatusHeadline"></span>
+          </div>
+          <div id="docList" style="margin-top:10px"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -4170,6 +4179,9 @@
         reactivate: id => `/pipeline/reactivate/${id}`,
         alert: id => `/pipeline/alert/${id}`,
         trustDash: id => `/listings/${id}/trust-dashboard`,
+        docs: id => `/listings/${id}/documents`,
+        docVisibility: (id, docId) => `/listings/${id}/documents/${docId}/visibility`,
+        docUpload: id => `/listings/${id}/upload-document`,
         upload: '/listings/realtor/upload',
         reelOpts: id => `/reels/options/${id}`,
         reelGen: id => `/reels/generate/${id}`,
@@ -5738,6 +5750,120 @@
             <button class="btn btn-em btn-sm" onclick="generateReel(${listingId},'${o.id || i}')">Generate</button>
           </div>`).join('');
       } catch (_) { }
+    }
+
+    /* ── DOCUMENT MANAGEMENT (A4) ──────────────── */
+    function openDocUpload() {
+      openModal('docUploadModal');
+      loadListingDocuments();
+    }
+
+    async function loadListingDocuments() {
+      const id = CFG._currentListingId;
+      const listEl = g('docList');
+      const headEl = g('docStatusHeadline');
+      if (!id) {
+        if (listEl) listEl.innerHTML =
+          '<div class="text-xs text-muted">Open a property from the Trust tab to manage its documents.</div>';
+        if (headEl) headEl.textContent = '';
+        return;
+      }
+      if (listEl) listEl.innerHTML = '<div class="text-xs text-muted">Loading documents…</div>';
+      try {
+        const r = await fetch(CFG.API.docs(id), { headers: CFG.H });
+        if (!r.ok) {
+          if (listEl) listEl.innerHTML = '<div class="text-xs text-muted">Could not load documents.</div>';
+          return;
+        }
+        renderDocList(await r.json());
+      } catch (_) {
+        if (listEl) listEl.innerHTML = '<div class="text-xs text-muted">Could not load documents.</div>';
+      }
+    }
+
+    function renderDocList(data) {
+      const listEl = g('docList');
+      const headEl = g('docStatusHeadline');
+      const docs = (data && data.documents) || [];
+      const status = (data && data.documents_status) || 'none';
+      if (headEl) {
+        const map = { none: 'No documents', on_request: 'Private', viewable: 'Viewable to buyers' };
+        headEl.textContent = map[status] || status;
+      }
+      if (!docs.length) {
+        if (listEl) listEl.innerHTML =
+          '<div class="text-xs text-muted">No documents uploaded yet.</div>';
+        return;
+      }
+      listEl.innerHTML = docs.map(d => {
+        const label = sanitise(d.label || d.doc_type || 'Document');
+        const isViewable = d.visibility === 'viewable';
+        // viewable but the proxy will not serve it until the listing is verified
+        const pendingNote = (isViewable && !d.is_viewable)
+          ? '<div class="text-xs mt-1" style="color:var(--warn)">Will be viewable once listing is verified</div>'
+          : '';
+        const badge = isViewable
+          ? '<span class="text-xs" style="color:var(--em)">● Viewable</span>'
+          : '<span class="text-xs text-muted">● Private</span>';
+        const nextVis = isViewable ? 'on_request' : 'viewable';
+        const btnLabel = isViewable ? 'Make private' : 'Make viewable';
+        const btnClass = isViewable ? 'btn-ghost' : 'btn-em';
+        return `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+            <div style="flex:1;min-width:0">
+              <div class="text-sm font-bold">${label}</div>
+              <div class="mt-1">${badge}</div>
+              ${pendingNote}
+            </div>
+            <button class="btn ${btnClass} btn-sm" onclick="toggleDocVisibility(${parseInt(d.id, 10)}, '${nextVis}')">${btnLabel}</button>
+          </div>`;
+      }).join('');
+    }
+
+    async function toggleDocVisibility(docId, visibility) {
+      const id = CFG._currentListingId;
+      if (!id) return;
+      try {
+        const r = await fetch(CFG.API.docVisibility(id, docId), {
+          method: 'PATCH', headers: CFG.JH,
+          body: JSON.stringify({ visibility })
+        });
+        if (r.ok) {
+          toast(visibility === 'viewable' ? 'Document is now viewable' : 'Document set to private');
+          loadListingDocuments();
+        } else {
+          let msg = 'Update failed';
+          try { const j = await r.json(); if (j && typeof j.detail === 'string') msg = j.detail; } catch (_) {}
+          toast(msg, 'error');
+        }
+      } catch (_) { toast('Update error', 'error'); }
+    }
+
+    async function uploadDocument() {
+      const id = CFG._currentListingId;
+      if (!id) { toast('Open a property from the Trust tab first', 'error'); return; }
+      const type = g('docType') ? g('docType').value : '';
+      const fileEl = g('docFile');
+      const file = fileEl && fileEl.files && fileEl.files[0];
+      if (!file) { toast('Choose a document file first', 'error'); return; }
+      const fd = new FormData();
+      fd.append('document_type', type);
+      fd.append('document', file);
+      toast('Uploading document…', 'info');
+      try {
+        // multipart: CFG.H ONLY (X-Tenant-Id + Authorization) — never a JSON
+        // content-type, so the browser sets the multipart boundary itself.
+        const r = await fetch(CFG.API.docUpload(id), { method: 'POST', headers: CFG.H, body: fd });
+        if (r.ok) {
+          toast('Document uploaded ✓');
+          if (fileEl) fileEl.value = '';
+          loadListingDocuments();
+        } else {
+          let msg = 'Upload failed';
+          try { const j = await r.json(); if (j && typeof j.detail === 'string') msg = j.detail; } catch (_) {}
+          toast(msg, 'error');
+        }
+      } catch (_) { toast('Upload error', 'error'); }
     }
 
     async function generateReel(listingId, optId) {
