@@ -1,39 +1,36 @@
 <!DOCTYPE html>
 {% set doc_count = (1 if listing.cof_uploaded else 0) + (1 if listing.deed_uploaded else 0) + (1 if listing.survey_uploaded else 0) %}
-{% set ring_hex = '#10B981' if trust_color == 'emerald' else ('#F59E0B' if trust_color in ('gold','amber') else ('#F43F5E' if trust_color == 'rose' else '#64748B')) %}
-{% set ring_end = ((1 - trust_score / 100) * 283) | round(2) %}
 {% set img_count = listing.images | length if listing.images else 0 %}
 {% set has_gps = listing.latitude and listing.longitude %}
 {% set agent_name = listing.tenant.business_name if listing.tenant and listing.tenant.business_name else 'Est8Go Agent' %}
 {% set name_parts = agent_name.split() %}
 {% set initials = (name_parts[0][0] + name_parts[1][0]) | upper if name_parts | length >= 2 else (agent_name[:2]) | upper %}
-{% set grade_label = trust_text.split('—')[0].strip() if '—' in trust_text else trust_text %}
 <html lang="en">
 <head>
 <script>(function(){var t=localStorage.getItem('est8go-theme')||((window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark');document.documentElement.setAttribute('data-theme',t);})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0F172A" id="themeColorMeta">
-<title>{{ listing.title }} | Est8Go Verified Property</title>
+<title>{{ listing.title }}, {{ listing.location|title if listing.location else 'Nigeria' }}</title>
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Est8Go">
-<meta property="og:title" content="{{ listing.title }} — Est8Go Verified Property">
-<meta property="og:description" content="{{ (listing.description or 'GPS-verified, AI-audited Nigerian real estate on Est8Go.')[:160] }}">
+<meta property="og:title" content="{{ listing.title }}, {{ listing.location|title if listing.location else 'Nigeria' }}">
+<meta property="og:description" content="{{ (listing.description or ((listing.property_type|title if listing.property_type else 'Property') ~ ' for sale in ' ~ (listing.location|title if listing.location else 'Nigeria')))[:160] }}">
 {% if listing.images %}<meta property="og:image" content="{{ listing.images[0].url }}">{% endif %}
 <meta property="og:url" content="{{ request.url }}">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{{ listing.title }} — Est8Go">
+<meta name="twitter:title" content="{{ listing.title }}, {{ listing.location|title if listing.location else 'Nigeria' }}">
 {% if listing.images %}<meta name="twitter:image" content="{{ listing.images[0].url }}">{% endif %}
 
-<meta name="description" content="{{ listing.property_type|title if listing.property_type else 'Property' }} for sale in {{ listing.location|title if listing.location else 'Nigeria' }}. ₦{{ '{:,.0f}'.format(listing.price) if listing.price else 'Price on request' }}. GPS verified, document checked. Trust Score {{ listing.trust_score or 0 }}/100 ({{ listing.trust_grade|title if listing.trust_grade else 'Ungraded' }}). Listed by {{ tenant.business_name if tenant else 'Est8Go Partner' }}."/>
+<meta name="description" content="{{ listing.property_type|title if listing.property_type else 'Property' }} for sale in {{ listing.location|title if listing.location else 'Nigeria' }}. ₦{{ '{:,.0f}'.format(listing.price) if listing.price else 'Price on request' }}. Listed by {{ tenant.business_name if tenant else 'Est8Go Partner' }}."/>
 <link rel="canonical" href="{{ base_url }}/public/property/{{ listing.id }}"/>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "RealEstateListing",
   "name": "{{ listing.title }}",
-  "description": "{{ listing.description or listing.title }} — GPS verified and document checked by Est8Go. Trust Score: {{ listing.trust_score }}/100.",
+  "description": "{{ listing.description or listing.title }}",
   "url": "{{ base_url }}/public/property/{{ listing.id }}",
   "offers": {
     "@type": "Offer",
@@ -66,17 +63,7 @@
   "additionalProperty": [
     {
       "@type": "PropertyValue",
-      "name": "Trust Score",
-      "value": "{{ listing.trust_score or 0 }}/100"
-    },
-    {
-      "@type": "PropertyValue",
-      "name": "Trust Grade",
-      "value": "{{ listing.trust_grade or 'ungraded' }}"
-    },
-    {
-      "@type": "PropertyValue",
-      "name": "GPS Verified",
+      "name": "GPS Coordinates Recorded",
       "value": "{{ 'Yes' if listing.gps_verified_at else 'No' }}"
     },
     {
@@ -254,12 +241,6 @@ html[data-theme="light"] .action-bar{background:#fff}
 }
 </style>
 
-<style>
-.ring-arc{stroke:{{ ring_hex }};animation:ring-fill 1.4s cubic-bezier(.4,0,.2,1) .35s forwards}
-@keyframes ring-fill{from{stroke-dashoffset:283}to{stroke-dashoffset:{{ ring_end }}}}
-.trust-text-big{color:{{ ring_hex }}}
-</style>
-
 </head>
 <body>
 
@@ -338,69 +319,52 @@ html[data-theme="light"] .action-bar{background:#fff}
       {% endif %}
     </div>
 
-    <!-- TRUST RING -->
+    <!-- VERIFICATION DETAILS -->
     <div class="trust-section anim-2">
-      <div class="trust-ring-wrap">
-        <svg viewBox="0 0 100 100">
-          <circle class="ring-track" cx="50" cy="50" r="45"/>
-          <circle class="ring-arc" cx="50" cy="50" r="45" transform="rotate(-90 50 50)"/>
-          <text class="ring-score" x="50" y="45" fill="{{ ring_hex }}">{{ trust_score }}</text>
-          <text class="ring-sublabel" x="50" y="60" fill="#94A3B8">/100 TRUST</text>
-        </svg>
-      </div>
       <div class="trust-info">
-        <div class="trust-grade-label">Verification Score</div>
-        <div class="trust-text-big">{{ grade_label }}</div>
+        <div class="trust-grade-label">Verification details</div>
         <div class="trust-pills">
-          {% if listing.gps_verified_at %}<span class="t-pill done">📍 GPS</span>{% else %}<span class="t-pill pending">📍 Pending</span>{% endif %}
-          {% if listing.ai_verified_real %}<span class="t-pill done">🤖 AI Audited</span>{% else %}<span class="t-pill pending">🤖 AI Pending</span>{% endif %}
-          {% if doc_count >= 2 %}<span class="t-pill done">📄 {{ doc_count }} Docs</span>{% elif doc_count == 1 %}<span class="t-pill partial">📄 1 Doc</span>{% else %}<span class="t-pill pending">📄 No Docs</span>{% endif %}
-          {% if listing.witness_count >= 1 %}<span class="t-pill done">👥 {{ listing.witness_count }} Witness{{ 'es' if listing.witness_count > 1 else '' }}</span>{% else %}<span class="t-pill pending">👥 No Witnesses</span>{% endif %}
+          {% if listing.gps_verified_at %}<span class="t-pill done">📍 GPS coordinates recorded</span>{% endif %}
+          {% if doc_count >= 1 %}<span class="t-pill done">📄 {{ doc_count }} document{{ 's' if doc_count > 1 else '' }} on file</span>{% endif %}
+          {% if listing.witness_count and listing.witness_count >= 1 %}<span class="t-pill done">👥 {{ listing.witness_count }} site visit{{ 's' if listing.witness_count > 1 else '' }}</span>{% endif %}
+          {% if not listing.gps_verified_at and doc_count == 0 and not (listing.witness_count and listing.witness_count >= 1) %}<span class="t-pill pending">Verification details being added</span>{% endif %}
         </div>
       </div>
     </div>
 
-    <!-- VERIFICATION TIMELINE -->
+    <!-- VERIFICATION DETAILS -->
     <div class="verify-section anim-3">
-      <div class="section-hd">Verification Timeline</div>
+      <div class="section-hd">Verification Details</div>
       <div>
         <div class="vt-item">
           <div class="vt-icon {{ 'done' if listing.gps_verified_at else 'pending' }}">📍</div>
           <div class="vt-body">
-            <div class="vt-name">GPS Verification</div>
-            <div class="vt-val">{% if listing.gps_verified_at %}Verified {{ listing.gps_verified_at.strftime('%b %d, %Y') }}{% if listing.gps_location_match %} · Coordinates match address{% endif %}{% else %}Coordinates not yet captured{% endif %}</div>
+            <div class="vt-name">GPS Location</div>
+            <div class="vt-val">{% if listing.gps_verified_at %}Coordinates recorded {{ listing.gps_verified_at.strftime('%b %d, %Y') }}{% else %}Coordinates not yet recorded{% endif %}</div>
           </div>
           <div class="vt-badge">{{ '✅' if listing.gps_verified_at else '○' }}</div>
         </div>
         <div class="vt-item">
-          <div class="vt-icon {{ 'done' if listing.ai_verified_real else 'pending' }}">🤖</div>
+          <div class="vt-icon {{ 'done' if doc_count >= 1 else 'pending' }}">📄</div>
           <div class="vt-body">
-            <div class="vt-name">AI Vision Audit</div>
-            <div class="vt-val">{% if listing.ai_verified_real %}Photos verified as authentic by AI{% else %}AI audit not yet run{% endif %}</div>
-          </div>
-          <div class="vt-badge">{{ '✅' if listing.ai_verified_real else '○' }}</div>
-        </div>
-        <div class="vt-item">
-          <div class="vt-icon {{ 'done' if doc_count >= 2 else ('partial' if doc_count == 1 else 'pending') }}">📄</div>
-          <div class="vt-body">
-            <div class="vt-name">Legal Documents</div>
+            <div class="vt-name">Documents</div>
             <div class="vt-val">
               {% set doc_parts = [] %}
               {% if listing.cof_uploaded %}{% set _ = doc_parts.append('C of O') %}{% endif %}
               {% if listing.deed_uploaded %}{% set _ = doc_parts.append('Deed of Assignment') %}{% endif %}
               {% if listing.survey_uploaded %}{% set _ = doc_parts.append('Survey Plan') %}{% endif %}
-              {{ doc_parts | join(' · ') if doc_parts else 'No documents uploaded' }}
+              {% if doc_parts %}Documents on file: {{ doc_parts | join(', ') }}{% else %}No documents on file yet{% endif %}
             </div>
           </div>
-          <div class="vt-badge">{{ '✅' if doc_count >= 2 else ('⚠️' if doc_count == 1 else '○') }}</div>
+          <div class="vt-badge">{{ '✅' if doc_count >= 1 else '○' }}</div>
         </div>
         <div class="vt-item">
-          <div class="vt-icon {{ 'done' if listing.witness_count >= 2 else ('partial' if listing.witness_count == 1 else 'pending') }}">👥</div>
+          <div class="vt-icon {{ 'done' if listing.witness_count and listing.witness_count >= 2 else ('partial' if listing.witness_count == 1 else 'pending') }}">👥</div>
           <div class="vt-body">
-            <div class="vt-name">Site Visit Witnesses</div>
-            <div class="vt-val">{% if listing.witness_count >= 2 %}{{ listing.witness_count }} buyers confirmed on-site visit{% elif listing.witness_count == 1 %}1 site visit confirmed{% else %}No site visit witnesses yet{% endif %}</div>
+            <div class="vt-name">Site Visits</div>
+            <div class="vt-val">{% if listing.witness_count and listing.witness_count >= 2 %}{{ listing.witness_count }} buyers recorded a site visit{% elif listing.witness_count == 1 %}1 site visit recorded{% else %}No site visits recorded yet{% endif %}</div>
           </div>
-          <div class="vt-badge">{{ '✅' if listing.witness_count >= 2 else ('⚠️' if listing.witness_count == 1 else '○') }}</div>
+          <div class="vt-badge">{{ '✅' if listing.witness_count and listing.witness_count >= 2 else ('⚠️' if listing.witness_count == 1 else '○') }}</div>
         </div>
       </div>
     </div>
@@ -412,17 +376,12 @@ html[data-theme="light"] .action-bar{background:#fff}
         <div class="detail-card">
           <div class="detail-icon">🏠</div>
           <div class="detail-label">Type</div>
-          <div class="detail-value">{{ listing.property_type | title if listing.property_type else '—' }}</div>
+          <div class="detail-value">{{ listing.property_type | title if listing.property_type else 'Not specified' }}</div>
         </div>
         <div class="detail-card">
           <div class="detail-icon">📋</div>
           <div class="detail-label">Status</div>
           <div class="detail-value">{{ (listing.property_status or 'built') | replace('_',' ') | title }}</div>
-        </div>
-        <div class="detail-card">
-          <div class="detail-icon">🏅</div>
-          <div class="detail-label">Grade</div>
-          <div class="detail-value" style="color:{{ ring_hex }}">{{ grade_label }}</div>
         </div>
         <div class="detail-card">
           <div class="detail-icon">📍</div>
@@ -483,7 +442,7 @@ html[data-theme="light"] .action-bar{background:#fff}
           <div class="agent-name">{{ agent_name }}</div>
           <div class="agent-meta">
             <span class="agent-plan">{{ (listing.tenant.plan or 'pilot') | title }} Plan</span>
-            {% if listing.status == 'verified' %}<span class="verified-badge">✓ Est8Go Verified</span>{% endif %}
+            {% if listing.status == 'verified' %}<span class="verified-badge">Listed on Est8Go</span>{% endif %}
           </div>
         </div>
       </div>
@@ -501,7 +460,7 @@ html[data-theme="light"] .action-bar{background:#fff}
 
     <!-- DOWNLOAD TRUST CERTIFICATE -->
     <div class="cert-section">
-      <button class="cert-btn" onclick="showToast('Trust Certificate available from your agent — coming soon')">
+      <button class="cert-btn" onclick="showToast('Trust Certificate available from your agent, coming soon')">
         <div class="cert-btn-left">
           <span class="cert-icon">📜</span>
           <div>
