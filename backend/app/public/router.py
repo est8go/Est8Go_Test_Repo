@@ -95,11 +95,24 @@ def _wa_url(wa_number: str, listing_id: int, title: str = "") -> str:
 # --- 3. ROUTES ---
 
 
+# Render-time CSS-injection guard (defense-in-depth). brand_color is already
+# hex-validated on write (C2), but we re-validate before it reaches a <style>
+# block: only a strict #RRGGBB is emitted, otherwise the default indigo.
+_BRAND_HEX_RE = _re.compile(r"^#[0-9A-Fa-f]{6}$")
+_DEFAULT_ACCENT = "#4F46E5"
+
+
+def _safe_accent(listing) -> str:
+    raw = getattr(listing.tenant, "brand_color", None) if getattr(listing, "tenant", None) else None
+    return raw if (raw and _BRAND_HEX_RE.match(raw)) else _DEFAULT_ACCENT
+
+
 def _property_context(listing, db: Session) -> dict:
     score = calculate_confidence_score(listing)
     trust = get_trust_label(score)
     wa_number = _get_wa_number(listing, db)
     wa_link = _wa_url(wa_number, listing.id, listing.title or "")
+    accent_color = _safe_accent(listing)
 
     # Real listing documents for the page. A view-link is offered ONLY when the
     # proxy would actually serve the file: visibility=="viewable" AND the
@@ -127,6 +140,7 @@ def _property_context(listing, db: Session) -> dict:
         "tenant": listing.tenant,
         "documents": documents,
         "documents_count": len(documents),
+        "accent_color": accent_color,
     }
 
 

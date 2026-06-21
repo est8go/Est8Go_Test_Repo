@@ -93,6 +93,10 @@
   --font-head:'Syne','Inter',sans-serif;
   --r:16px; --r-sm:10px; --max-w:480px;
 }
+/* Agency accent (Workstream C4). accent_color is server-validated #RRGGBB
+   (render-time CSS-injection guard in router); defaults to indigo when unset.
+   Overrides --indigo so every accent recolours to the agency's brand. */
+:root{ --indigo: {{ accent_color | default('#4F46E5') }}; }
 html[data-theme="light"] {
   --bg:#F8FAFC; --surface:#FFFFFF; --surface2:#EEF2F7;
   --border:rgba(15,23,42,0.08); --border2:rgba(15,23,42,0.14);
@@ -116,6 +120,13 @@ html[data-theme="light"] .fh-btn{background:rgba(248,250,252,.88);border:1px sol
 .fh-chat-btn{width:auto;padding:0 14px;border-radius:20px;background:#25D366;border-color:#25D366;font-size:13px;font-weight:700;gap:4px;text-decoration:none}
 .fh-chat-btn:hover,.fh-chat-btn:active{background:#1ebe5d}
 html[data-theme="light"] .fh-chat-btn{background:#25D366;border-color:#25D366;color:#fff}
+.fh-brand{display:flex;align-items:center;min-width:0;max-width:52%}
+.fh-logo{height:32px;width:auto;max-width:150px;object-fit:contain;background:rgba(15,23,42,.55);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:3px 8px}
+html[data-theme="light"] .fh-logo{background:rgba(248,250,252,.88);border-color:rgba(15,23,42,.14)}
+.fh-name{font-family:var(--font-head);font-weight:800;font-size:14px;color:#fff;background:rgba(15,23,42,.55);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:6px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+html[data-theme="light"] .fh-name{background:rgba(248,250,252,.88);border-color:rgba(15,23,42,.14);color:#0F172A}
+.powered-by{text-align:center;font-size:11px;color:var(--muted);margin:22px 0 96px;letter-spacing:.3px}
+.powered-by a{color:var(--muted);font-weight:600;text-decoration:underline}
 
 /* ── Carousel ── */
 .carousel-outer{position:relative;width:100%;height:310px;overflow:hidden;background:var(--surface2)}
@@ -271,6 +282,13 @@ html[data-theme="light"] .action-bar{background:#fff}
 " aria-label="Go back">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
     </button>
+    <div class="fh-brand">
+      {% if listing.tenant and listing.tenant.logo_url %}
+      <img class="fh-logo" src="{{ listing.tenant.logo_url }}" alt="{{ listing.tenant.business_name or 'Agency' }}">
+      {% else %}
+      <span class="fh-name">{{ listing.tenant.business_name if listing.tenant and listing.tenant.business_name else 'Est8Go' }}</span>
+      {% endif %}
+    </div>
     <div class="fh-right">
       <button class="fh-btn" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle theme">🌙</button>
       <button class="fh-btn" onclick="shareProperty()" aria-label="Share property">
@@ -483,6 +501,9 @@ html[data-theme="light"] .action-bar{background:#fff}
         <span class="cert-cost">20 Credits</span>
       </button>
     </div>
+
+    <!-- POWERED BY EST8GO (agency-primary, Est8Go-secondary) -->
+    <div class="powered-by">Powered by <a href="https://est8go.com" target="_blank" rel="noopener">Est8Go</a></div>
 
   </div><!-- /content -->
 
