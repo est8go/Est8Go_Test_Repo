@@ -45,6 +45,13 @@ class Tenant(Base):
     plan = Column(String(50), default="pilot")
     is_active = Column(Boolean, default=True)
 
+    # --- BRANDING (Workstream C: agency co-branding on the property page) ---
+    # logo_url: public URL of the agency logo (non-sensitive, public bucket).
+    # brand_color: validated hex like #4F46E5 — accent on the property page.
+    # Both nullable: no logo/colour falls back to Est8Go-neutral styling.
+    logo_url = Column(String(500), nullable=True)
+    brand_color = Column(String(7), nullable=True)
+
     # --- BOT PERSONA ---
     tone = Column(String(20), default="friendly")
     emoji = Column(String(10), default="🏠")
