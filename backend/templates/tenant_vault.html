@@ -5,19 +5,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0F172A" id="vaultThemeColor">
-<title>{{ tenant.business_name }} — Verified Properties | Est8Go</title>
+<title>{{ tenant.business_name }} Properties | Est8Go</title>
 
 <meta property="og:type" content="website">
-<meta property="og:title" content="{{ tenant.business_name }} Verified Properties">
-<meta property="og:description" content="GPS-verified, AI-audited properties from {{ tenant.business_name }}. Powered by Est8Go Trust Infrastructure.">
+<meta property="og:title" content="{{ tenant.business_name }} Properties">
+<meta property="og:description" content="Property listings from {{ tenant.business_name }}, each showing its verification details. Powered by Est8Go.">
 <meta property="og:url" content="{{ base_url }}/public/{{ tenant.slug or (tenant.business_name | lower | replace(' ', '-')) }}">
 <meta name="twitter:card" content="summary">
 
 {% if tenant.coverage_cities %}
 {% set cities_str = tenant.coverage_cities | join(', ') %}
-<meta name="description" content="{{ tenant.business_name }} is a verified real estate partner on Est8Go. Verified properties in {{ cities_str }}. GPS-verified, document-checked listings with trust scores."/>
+<meta name="description" content="{{ tenant.business_name }} on Est8Go. Property listings in {{ cities_str }}, each showing its verification details."/>
 {% else %}
-<meta name="description" content="{{ tenant.business_name }} is a verified real estate partner on Est8Go. {{ listings|length }} GPS-verified, document-checked properties available. Trust scores on every listing."/>
+<meta name="description" content="{{ tenant.business_name }} on Est8Go. {{ listings|length }} property listings, each showing its verification details."/>
 {% endif %}
 <link rel="canonical" href="{{ base_url }}/public/{{ tenant.slug }}"/>
 <script type="application/ld+json">
@@ -26,19 +26,19 @@
   "@type": "RealEstateAgent",
   "name": "{{ tenant.business_name }}",
   "url": "{{ base_url }}/public/{{ tenant.slug }}",
-  "description": "Verified real estate agency on Est8Go. GPS-verified listings with trust scores. {{ listings|length }} verified properties available.",
+  "description": "Real estate agency on Est8Go. {{ listings|length }} property listings.",
   "address": {
     "@type": "PostalAddress",
     "addressCountry": "NG"
   },
   "memberOf": {
     "@type": "Organization",
-    "name": "Est8Go Verified Partner Network",
+    "name": "Est8Go Partner Network",
     "url": "https://est8go.com"
   },
   "hasOfferCatalog": {
     "@type": "OfferCatalog",
-    "name": "Verified Properties",
+    "name": "Properties",
     "numberOfItems": "{{ listings|length }}"
   }
 }
@@ -271,7 +271,7 @@ html[data-theme="light"] .vault-hero{
       <div>
         <div class="agency-name">{{ tenant.business_name or 'Est8Go Agency' }}</div>
         <div class="agency-verified">
-          <span>✓</span><span>Est8Go Verified Partner</span>
+          <span>✓</span><span>Est8Go Partner</span>
         </div>
         {% if tenant.coverage_cities %}
         <div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.35rem">
@@ -293,10 +293,9 @@ html[data-theme="light"] .vault-hero{
 
 <!-- HERO BANNER -->
 {% set gps_count = listings | selectattr('gps_verified_at') | list | length %}
-{% set ai_count  = listings | selectattr('ai_verified_real') | list | length %}
 <div class="vault-hero">
   <div class="vault-hero-inner">
-    <div class="est8go-badge">🛡️ Est8Go Verified Vault</div>
+    <div class="est8go-badge">🛡️ {{ tenant.business_name or 'Property' }} Vault</div>
     <div class="vault-stats">
       <div class="vault-stat">
         <div class="vault-stat-number">{{ listings | length }}</div>
@@ -304,11 +303,7 @@ html[data-theme="light"] .vault-hero{
       </div>
       <div class="vault-stat">
         <div class="vault-stat-number" style="color:var(--em)">{{ gps_count }}</div>
-        <div class="vault-stat-label">GPS Verified</div>
-      </div>
-      <div class="vault-stat">
-        <div class="vault-stat-number" style="color:{{ 'var(--em)' if ai_count > 0 else 'var(--muted)' }}">{{ ai_count if ai_count > 0 else '—' }}</div>
-        <div class="vault-stat-label">AI Audited</div>
+        <div class="vault-stat-label">GPS Recorded</div>
       </div>
     </div>
   </div>
@@ -335,9 +330,9 @@ html[data-theme="light"] .vault-hero{
 <div class="listings-container">
   <div class="listings-header">
     <span class="listings-count">
-      {{ listings | length }} verified propert{{ 'y' if listings | length == 1 else 'ies' }}
+      {{ listings | length }} propert{{ 'y' if listings | length == 1 else 'ies' }}
     </span>
-    <span style="font-size:11px;color:var(--muted)">Sorted by trust score</span>
+    <span style="font-size:11px;color:var(--muted)">Sorted by verification details</span>
   </div>
 
   {% if listings %}
@@ -358,7 +353,7 @@ html[data-theme="light"] .vault-hero{
     {% else %}
       {% set price_fmt = 'Price on Request' %}
     {% endif %}
-    {% set wa_text = 'Hi, I am interested in Est8Go property #' + listing.id | string + ' — ' + listing.title %}
+    {% set wa_text = 'Hi, I am interested in Est8Go property #' + listing.id | string + ': ' + listing.title %}
 
     <div class="prop-card">
       <div class="card-image">
@@ -374,7 +369,7 @@ html[data-theme="light"] .vault-hero{
         </div>
 
         {% if listing.gps_verified_at %}
-        <div class="gps-tag">📍 GPS Verified</div>
+        <div class="gps-tag">📍 GPS Recorded</div>
         {% endif %}
       </div>
 
@@ -382,7 +377,7 @@ html[data-theme="light"] .vault-hero{
         <div class="card-title">{{ listing.title }}</div>
         <div class="card-location">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          {{ listing.location.title() if listing.location else '—' }}
+          {{ listing.location.title() if listing.location else 'Location not set' }}
           {% if listing.property_type %} · {{ listing.property_type | title }}{% endif %}
         </div>
         <div class="card-price">{{ price_fmt }}</div>
@@ -396,12 +391,12 @@ html[data-theme="light"] .vault-hero{
   {% else %}
     <div class="empty-state">
       <div class="empty-icon">🏠</div>
-      <div class="empty-title">No verified listings yet</div>
+      <div class="empty-title">No listings yet</div>
       <div class="empty-sub">
         {% if selected_type or selected_location %}
-          No properties match this filter — <a href="?" style="color:var(--indigo)">clear filters</a>
+          No properties match this filter. <a href="?" style="color:var(--indigo)">Clear filters</a>
         {% else %}
-          Check back soon — new verified properties are added regularly.
+          Check back soon, new properties are added regularly.
         {% endif %}
       </div>
     </div>
@@ -411,7 +406,7 @@ html[data-theme="light"] .vault-hero{
 <!-- FOOTER -->
 <div class="vault-footer">
   <a class="powered-by" href="{{ base_url }}" target="_blank" rel="noopener noreferrer">
-    Verified by <strong>Est8Go</strong> · Truth as a Service
+    Powered by <strong>Est8Go</strong>
   </a>
 </div>
 
