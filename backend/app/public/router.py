@@ -12,11 +12,41 @@ from sqlalchemy.orm import Session, joinedload
 
 # Database & Models
 from app.database.db import get_db
-from app.listings.models import Listing
+from app.listings.models import Listing, ListingDocument
 from app.listings.schemas import ListingOut
 from app.services.trust_engine import calculate_confidence_score, get_trust_label
 
 logger = logging.getLogger(__name__)
+
+# --- Supabase client (service-role) for PRIVATE document streaming ---
+# Documents live in a private bucket; the ONLY read path is the guarded
+# proxy route below, which streams bytes — never a storage URL.
+_DOC_SUPABASE = None
+try:
+    from supabase import create_client as _create_client
+
+    _SB_URL = os.getenv("SUPABASE_URL")
+    _SB_KEY = os.getenv("SUPABASE_KEY")
+    if _SB_URL and _SB_KEY:
+        _DOC_SUPABASE = _create_client(_SB_URL, _SB_KEY)
+except Exception:  # storage optional at import time
+    _DOC_SUPABASE = None
+
+
+def _doc_content_type(storage_path: str) -> str:
+    """Best-effort content type from the object-path extension."""
+    p = (storage_path or "").lower()
+    if p.endswith(".pdf"):
+        return "application/pdf"
+    if p.endswith((".jpg", ".jpeg")):
+        return "image/jpeg"
+    if p.endswith(".png"):
+        return "image/png"
+    if p.endswith(".webp"):
+        return "image/webp"
+    if p.endswith((".tif", ".tiff")):
+        return "image/tiff"
+    return "application/octet-stream"
 
 # --- 1. ROBUST PATH HANDLING ---
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -130,6 +160,68 @@ async def get_property_page(
         return HTMLResponse(
             content="Internal Server Error: Check Render Logs", status_code=500
         )
+
+
+@router.get("/property/{listing_id}/document/{doc_id}")
+async def serve_document(
+    listing_id: int, doc_id: int, db: Session = Depends(get_db)
+):
+    """
+    The ONLY read path for a private listing document.
+
+    Streams the file bytes — NEVER a storage URL. Every guard failure
+    returns a uniform 404 (not 403, no descriptive reason) so the
+    endpoint never leaks which documents exist or why access was denied,
+    matching the cross-tenant "404 not 403" isolation convention.
+    """
+    _DENY = HTTPException(status_code=404, detail="Not found")
+
+    # 1. Document must exist AND belong to this listing.
+    doc = (
+        db.query(ListingDocument)
+        .filter(
+            ListingDocument.id == doc_id,
+            ListingDocument.listing_id == listing_id,
+        )
+        .first()
+    )
+    if not doc:
+        raise _DENY
+
+    # 2. Visibility — NEVER serve an on_request (private) document.
+    if doc.visibility != "viewable":
+        raise _DENY
+
+    # 3. Listing must exist, the doc must be the same tenant's, and the
+    #    listing must be verified (don't expose pending/rejected docs).
+    listing = db.query(Listing).filter(Listing.id == listing_id).first()
+    if not listing:
+        raise _DENY
+    if doc.tenant_id != listing.tenant_id:
+        raise _DENY
+    if listing.status != "verified":
+        raise _DENY
+
+    # 4. Stream from the PRIVATE bucket. Any storage failure → 404.
+    if not _DOC_SUPABASE or not doc.storage_path:
+        raise _DENY
+    _bytes = None
+    try:
+        _bytes = (
+            _DOC_SUPABASE.storage.from_("property-documents").download(
+                doc.storage_path
+            )
+        )
+    except Exception:
+        _bytes = None
+    if not _bytes:
+        raise _DENY
+
+    return Response(
+        content=_bytes,
+        media_type=_doc_content_type(doc.storage_path),
+        headers={"Content-Disposition": "inline"},
+    )
 
 
 @router.get("/realtor-portal", response_class=HTMLResponse)
