@@ -37,7 +37,7 @@ from supabase import create_client, Client
 from app.database.db import get_db
 from app.auth.deps import get_current_user
 from app.users.models import User
-from app.listings.models import Listing, ListingImage
+from app.listings.models import Listing, ListingImage, ListingDocument
 from app.services.trust_engine import (
     verify_gps_proximity,
     calculate_confidence_score,
@@ -220,17 +220,24 @@ async def upload_listing_document(
     doc_hash = hash_document(content)
     doc_info = DOCUMENT_SCORES[document_type]
 
-    # Upload to Supabase
-    file_path = (
+    # Upload to the PRIVATE property-documents bucket. We deliberately do NOT
+    # call get_public_url for documents — they are served ONLY via the
+    # access-controlled proxy route (A2.2), never a public URL. We keep the
+    # object path (storage_path), which is exactly what the proxy's
+    # download(doc.storage_path) reads back.
+    if not supabase_client:
+        raise HTTPException(status_code=503, detail="Storage service unavailable")
+    storage_path = (
         f"documents/{listing_id}/"
         f"{document_type}_{os.urandom(4).hex()}_{document.filename}"
     )
     try:
-        doc_url = upload_to_supabase(
-            content,
-            file_path,
-            document.content_type or "application/pdf",
-            bucket="property-documents",
+        supabase_client.storage.from_("property-documents").upload(
+            path=storage_path,
+            file=content,
+            file_options={
+                "content-type": document.content_type or "application/pdf"
+            },
         )
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Document upload failed: {str(e)}")
@@ -247,18 +254,32 @@ async def upload_listing_document(
     if flag:
         setattr(listing, flag, True)
 
-    # Store document metadata in meta_json if available
-    # (extend this to a documents table in Stage D)
-    doc_meta = {
-        "type": document_type,
-        "label": doc_info["label"],
-        "hash": doc_hash,
-        "url": doc_url,
-        "uploaded_at": datetime.utcnow().isoformat(),
-        "uploaded_by": current_user.email,
-        "tier": doc_info["tier"],
-        "score_value": doc_info["score"],
-    }
+    # Persist the document record — this row is now the SOURCE OF TRUTH.
+    # tenant_id comes from the validated listing (never user input).
+    # visibility is safe-by-default ("on_request") — private until the agency
+    # opts a document into "viewable" via A4. storage_path is the object path
+    # the proxy route downloads.
+    new_doc = ListingDocument(
+        listing_id=listing.id,
+        tenant_id=listing.tenant_id,
+        doc_type=document_type,
+        label=doc_info["label"],
+        tier=doc_info["tier"],
+        score_value=doc_info["score"],
+        storage_path=storage_path,
+        file_url=None,            # NEVER a public URL for a document
+        file_hash=doc_hash,
+        visibility="on_request",  # safe-by-default
+        uploaded_by_id=current_user.id,
+        uploaded_by_email=current_user.email,
+        uploaded_at=datetime.utcnow(),
+    )
+    db.add(new_doc)
+
+    # Documents now exist for this listing — flip none -> on_request on the
+    # first upload. Never downgrade an already-"viewable" listing.
+    if (getattr(listing, "documents_status", None) or "none") == "none":
+        listing.documents_status = "on_request"
 
     # Collect all uploaded doc keys
     uploaded_keys = _get_uploaded_doc_keys(listing)
@@ -298,7 +319,7 @@ async def upload_listing_document(
         "document_tier": f"Tier {doc_info['tier']}",
         "points_awarded": doc_info["score"],
         "document_hash": doc_hash[:16] + "...",  # partial hash for display
-        "document_url": doc_url,
+        "document_id": new_doc.id,  # use the guarded proxy route to view
         "document_score": doc_result.final_score,
         "trust_score": new_score,
         "trust_label": label["text"],
