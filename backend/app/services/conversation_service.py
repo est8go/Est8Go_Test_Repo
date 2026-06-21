@@ -61,6 +61,7 @@ from app.services.chatbot.message_builder import (
     build_no_results_message,
     build_referral_summary,
     build_inspection_confirmation,
+    _factual_badges,
 )
 from app.services.chatbot.kora_behavior import (
     determine_bot_voice,
@@ -122,7 +123,7 @@ def universal_fallback(
         _loc = (prefs.get("location") or "").title()
         _pt = prefs.get("property_type", "properties")
         return (
-            f"Want me to pull up verified "
+            f"Want me to pull up "
             f"{_pt} in {_loc} again, "
             f"{first_name}? Reply *Yes* "
             f"and I'll search now. 😊"
@@ -133,12 +134,12 @@ def universal_fallback(
     return (
         f"I want to get this right, "
         f"{first_name}. 😊\n\n"
-        f"Let's find you a verified property:\n\n"
+        f"Let's find you a property:\n\n"
         f"Just tell me:\n"
-        f"🏠 *Property type* — Land, House "
+        f"🏠 *Property type*: Land, House "
         f"or Apartment\n"
-        f"💰 *Budget* — e.g. 30M, 50M\n"
-        f"📍 *Area* — e.g. Lekki, Guzape, GRA\n\n"
+        f"💰 *Budget*: e.g. 30M, 50M\n"
+        f"📍 *Area*: e.g. Lekki, Guzape, GRA\n\n"
         f"Or say *New Search* to start fresh."
     )
 
@@ -158,11 +159,11 @@ def _get_negotiation_note(listing, db: Session) -> str:
             days = (datetime.utcnow() - listing.created_at).days
             if days > 90:
                 notes.append(
-                    f"⏰ *Listed for {days} days* — the seller may be open to negotiation."
+                    f"⏰ *Listed for {days} days*, the seller may be open to negotiation."
                 )
             elif days > 45:
                 notes.append(
-                    f"⏰ On market for {days} days — worth discussing price with the agent."
+                    f"⏰ On market for {days} days, worth discussing price with the agent."
                 )
     except Exception:
         pass
@@ -192,8 +193,8 @@ def _get_negotiation_note(listing, db: Session) -> str:
                     )
                 elif diff_pct < -10:
                     notes.append(
-                        f"✅ *Below area average* (₦{avg_m:.0f}M) — this is good value "
-                        f"for a verified property here."
+                        f"✅ *Below area average* (₦{avg_m:.0f}M), this is good value "
+                        f"for a property here."
                     )
     except Exception:
         pass
@@ -267,7 +268,7 @@ def build_resume_message(
         return (
             f"Good to have you back, {name}. 👋\n\n"
             f"It's been a few days since we last spoke. "
-            f"The verified inventory at *{biz_name}* has been updated since then.\n\n"
+            f"The inventory at *{biz_name}* has been updated since then.\n\n"
             f"Would you like to continue your previous search or explore fresh options?"
         )
 
@@ -275,8 +276,8 @@ def build_resume_message(
         # Cold — near full re-qualify
         return (
             f"Welcome back to *{biz_name}*, {name}! 🏠\n\n"
-            f"It's been a while — the market has moved and we have "
-            f"exciting new verified listings available.\n\n"
+            f"It's been a while, the market has moved and we have "
+            f"exciting new listings available.\n\n"
             f"Shall we start fresh, or would you like me to recall your "
             f"previous preferences?"
         )
@@ -348,7 +349,7 @@ def build_welcome_back_message(
             purpose_note = " The market has seen some movement — good time to act."
         return (
             f"Good to have you back, {display_name}! 👋\n\n"
-            f"It's been a few days since we last spoke. The verified inventory at "
+            f"It's been a few days since we last spoke. The inventory at "
             f"*{biz_name}* has been updated.{purpose_note}\n\n"
             f"You were looking for *{search_summary}*.\n\n"
             f"Continue your search or start fresh?\n\n"
@@ -358,7 +359,7 @@ def build_welcome_back_message(
     else:
         return (
             f"Welcome back to *{biz_name}*, {display_name}! 🏡\n\n"
-            f"It's been a while — we have exciting new verified listings since your last visit.\n\n"
+            f"It's been a while, we have exciting new listings since your last visit.\n\n"
             f"Last time you searched for *{search_summary}*.\n\n"
             f"Shall we start fresh or continue from where you left?\n\n"
             f"Reply *Continue* or *New Search*."
@@ -739,19 +740,19 @@ async def _no_results_cascade(
             continue
 
     if _nearby_results:
-        _msg = f"No verified {_ptype_title} listings in *{_loc_title}*"
+        _msg = f"No {_ptype_title} listings in *{_loc_title}*"
         if _budget_fmt:
             _msg += f" within *{_budget_fmt}*"
-        _msg += " — but I found verified options close by:\n\n"
+        _msg += ", but I found some close options nearby:\n\n"
 
         _best = None
         for _area, _area_listings in _nearby_results.items():
             _l = _area_listings[0]
             _p = _l.price or 0
             _p_fmt = f"₦{_p/1_000_000:.0f}M" if _p >= 1_000_000 else f"₦{_p:,}"
-            _s = _l.trust_score or 0
-            _g = (_l.trust_grade or "verified").title()
-            _msg += f"📍 *{_area.title()}*\n🏠 {_l.title}\n💰 {_p_fmt} | 🛡️ {_s}/100 ({_g})\n\n"
+            _b = _factual_badges(_l)
+            _b_line = " · ".join(_b) if _b else "Verification details on the listing"
+            _msg += f"📍 *{_area.title()}*\n🏠 {_l.title}\n💰 {_p_fmt}\n🛡️ {_b_line}\n\n"
             if _best is None:
                 _best = _l
 
@@ -764,7 +765,7 @@ async def _no_results_cascade(
                 f"💡 These are above your {_budget_fmt} budget. "
                 f"Closest option is *{_min_fmt}*.\n\n"
                 f"Would you like to adjust your budget to match? "
-                f"Or shall I check our wider verified network? 🤝"
+                f"Or shall I check our wider partner network? 🤝"
             )
         else:
             _msg += "Would any of these work for you? Just say the area name to search further. 😊"
@@ -788,14 +789,11 @@ async def _no_results_cascade(
     if _cheapest and _cheapest.get("price"):
         _cheap_fmt = _cheapest.get("price_fmt", "")
         _cheap_loc = (_cheapest.get("location") or "").title()
-        _cheap_score = _cheapest.get("trust_score", 0)
-        _cheap_grade = (_cheapest.get("trust_grade") or "verified").title()
-
         _stretch_msg = (
-            f"Our closest verified {_ptype_title} to your budget is:\n\n"
+            f"Our closest {_ptype_title} to your budget is:\n\n"
             f"🏠 *{_cheapest.get('title')}*\n"
             f"📍 {_cheap_loc}\n"
-            f"💰 *{_cheap_fmt}* | 🛡️ {_cheap_score}/100 ({_cheap_grade})\n\n"
+            f"💰 *{_cheap_fmt}*\n\n"
         )
 
         if _budget:
@@ -805,11 +803,11 @@ async def _no_results_cascade(
                 _stretch_msg += (
                     f"That's ₦{_delta_m:.0f}M above "
                     f"your budget, but it's our closest "
-                    f"verified match.\n\n"
+                    f"match.\n\n"
                 )
             elif _delta < 0:
                 _stretch_msg += (
-                    f"Good news — it's ₦{_delta_m:.0f}M "
+                    f"Good news, it's ₦{_delta_m:.0f}M "
                     f"*within* your budget. ✅\n\n"
                 )
             else:
@@ -819,7 +817,7 @@ async def _no_results_cascade(
 
         _stretch_msg += (
             f"Would you like to consider this option? Or shall I check what our "
-            f"verified partner network has within {_budget_fmt}? 🤝"
+            f"partner network has within {_budget_fmt}? 🤝"
         )
 
         prefs["awaiting_stretch_choice"] = True
@@ -833,8 +831,8 @@ async def _no_results_cascade(
     # ── LEVEL 3: Partner referral permission ───────────────────
     _referral_perm_msg = (
         f"I've searched thoroughly in *{_loc_title}* and nearby areas, {first_name}.\n\n"
-        f"May I check our verified partner network in the same city? 🤝\n\n"
-        f"All properties are Est8Go verified — GPS confirmed and document checked.\n\n"
+        f"May I check our partner network in the same city? 🤝\n\n"
+        f"Every listing shows its verification details, so you can see exactly what has been recorded.\n\n"
         f"Reply *Yes* to search the wider network."
     )
 
@@ -1105,8 +1103,8 @@ async def handle_incoming_message(data: dict, db: Session):
                     if _lst_dir:
                         _close_msg += f"🗺️ *How to find us:*\n{_lst_dir}\n\n"
                     _close_msg += (
-                        f"Thank you for choosing *{biz_name}* — where every "
-                        f"listing is GPS-verified and document-checked. 🛡️"
+                        f"Thank you for choosing *{biz_name}*, where every "
+                        f"listing shows its verification details. 🛡️"
                     )
                     await send_meta_message(
                         sender_id, _close_msg, phone_number_id=_send_pid, access_token=_send_token
@@ -1202,8 +1200,8 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"That listing is no longer available "
                     f"or may have been removed.\n\n"
                     f"What are you looking for? I can help "
-                    f"you find verified options in our "
-                    f"vault — just tell me the *area* and "
+                    f"you find options in our "
+                    f"vault, just tell me the *area* and "
                     f"*budget*. 🏠",
                     phone_number_id=_send_pid,
                     access_token=_send_token,
@@ -1356,7 +1354,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"My pleasure, {first_name}! 🤝 "
                             f"Your consultant will be in touch "
                             f"shortly. I'm here whenever you'd "
-                            f"like to explore more verified "
+                            f"like to explore more "
                             f"properties. 😊",
                             phone_number_id=_send_pid,
                             access_token=_send_token,
@@ -1419,14 +1417,14 @@ async def handle_incoming_message(data: dict, db: Session):
                     sender_id,
                     f"Thanks for sharing your "
                     f"location, {_first}! 📍\n\n"
-                    f"To find you the best verified "
+                    f"To find you the best "
                     f"properties nearby, could you "
                     f"tell me:\n\n"
-                    f"🏠 *Property type* — Land, "
+                    f"🏠 *Property type*: Land, "
                     f"House or Apartment\n"
-                    f"💰 *Budget* — e.g. 30M, 50M\n\n"
+                    f"💰 *Budget*: e.g. 30M, 50M\n\n"
                     f"I'll search the closest "
-                    f"verified options.",
+                    f"options.",
                     phone_number_id=_send_pid, access_token=_send_token,
                 )
                 return
@@ -1440,7 +1438,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"instead? Just tell me the "
                     f"*area* and *budget* you're "
                     f"looking for and I'll find "
-                    f"verified properties for you. 😊",
+                    f"properties for you. 😊",
                     phone_number_id=_send_pid, access_token=_send_token,
                 )
                 return
@@ -1454,9 +1452,9 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"property.\n\n"
                     f"Just tell me the *type*, "
                     f"*area* and *budget* you're "
-                    f"after — e.g. \"3 bed house "
-                    f"in Lekki, 80M\" — and I'll "
-                    f"pull up verified listings. 😊",
+                    f"after, e.g. \"3 bed house "
+                    f"in Lekki, 80M\", and I'll "
+                    f"pull up listings. 😊",
                     phone_number_id=_send_pid, access_token=_send_token,
                 )
                 return
@@ -1472,7 +1470,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"In the meantime, tell me the "
                     f"*area* and *budget* you're "
                     f"looking for and I'll find "
-                    f"verified properties. 😊",
+                    f"properties. 😊",
                     phone_number_id=_send_pid, access_token=_send_token,
                 )
                 return
@@ -1485,9 +1483,9 @@ async def handle_incoming_message(data: dict, db: Session):
             await send_meta_message(
                 sender_id,
                 f"I didn't catch that, {first_name}. 😊\n\n"
-                f"Tell me what you're looking for — "
-                f"the *area* and *budget* — and I'll "
-                f"find you verified properties.\n\n"
+                f"Tell me what you're looking for, "
+                f"the *area* and *budget*, and I'll "
+                f"find you properties.\n\n"
                 f"Or say *New Search* to start fresh.",
                 phone_number_id=_send_pid, access_token=_send_token,
             )
@@ -1619,7 +1617,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 f"No problem at all, {first_name}. 😊\n\n"
                 f"When you're ready, just say Yes and we'll arrange "
                 f"the inspection immediately.\n\n"
-                f"In the meantime, would you like to see other verified "
+                f"In the meantime, would you like to see other "
                 f"properties in {_location}, or explore a different area?",
                 phone_number_id=_send_pid, access_token=_send_token,
             )
@@ -1707,27 +1705,27 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"Consider it done, {first_name}. 🔄\n\n"
                     f"I've cleared your previous search "
                     f"and opened a fresh connection to "
-                    f"our verified vault.\n\n"
+                    f"our vault.\n\n"
                     f"What are you looking for this time?\n\n"
-                    f"🌱 *Land* — prime plots for "
+                    f"🌱 *Land*: prime plots for "
                     f"development or investment\n"
-                    f"🏠 *House* — fully detached, "
+                    f"🏠 *House*: fully detached, "
                     f"semi-detached or duplex\n"
-                    f"🏢 *Apartment* — modern flats "
+                    f"🏢 *Apartment*: modern flats "
                     f"and studio units\n\n"
                     f"Or simply describe what you "
                     f"have in mind. 😊"
                 ),
                 (
                     f"Fresh start, {first_name}. ✨\n\n"
-                    f"Our verified vault is open "
+                    f"Our vault is open "
                     f"and ready.\n\n"
                     f"What type of property are you "
                     f"searching for today?\n\n"
-                    f"🌱 *Land* — build or invest\n"
-                    f"🏠 *House* — move-in ready "
+                    f"🌱 *Land*: build or invest\n"
+                    f"🏠 *House*: move-in ready "
                     f"or off-plan\n"
-                    f"🏢 *Apartment* — city living "
+                    f"🏢 *Apartment*: city living "
                     f"at its finest\n\n"
                     f"Just tell me what you need."
                 ),
@@ -1735,9 +1733,9 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"All cleared, {first_name}. "
                     f"Let's find you something "
                     f"exceptional. 🏡\n\n"
-                    f"Every property I show you is "
-                    f"GPS-verified and document-checked "
-                    f"— no fake listings, no wasted trips.\n\n"
+                    f"Every property I show you comes with "
+                    f"its verification details on file, "
+                    f"so no fake listings and no wasted trips.\n\n"
                     f"What are we searching for?\n\n"
                     f"🌱 *Land*\n"
                     f"🏠 *House*\n"
@@ -1784,7 +1782,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"Which area would you like to "
                     f"explore? Just tell me the "
                     f"neighbourhood and I'll search "
-                    f"our verified listings there.",
+                    f"our listings there.",
                     phone_number_id=_send_pid,
                     access_token=_send_token,
                 )
@@ -1803,7 +1801,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 db.commit()
                 await send_meta_message(
                     sender_id,
-                    f"Let me pull up our other verified "
+                    f"Let me pull up our other "
                     f"options, {first_name}.\n\n"
                     f"Reply *Yes* to see everything we "
                     f"have.",
@@ -1859,7 +1857,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     _sa_pt = _sa_ptype.title() if _sa_ptype else "Property"
                     _sa_msg = (
                         f"Here's everything we currently "
-                        f"have verified for *{_sa_pt}*, "
+                        f"have for *{_sa_pt}*, "
                         f"{first_name}:\n\n"
                     )
                     for _l in _sa_listings[:6]:
@@ -1869,13 +1867,13 @@ async def handle_incoming_message(data: dict, db: Session):
                             if _p >= 1_000_000
                             else f"₦{_p:,}"
                         )
-                        _s = _l.trust_score or 0
-                        _g = (_l.trust_grade or "verified").title()
+                        _b = _factual_badges(_l)
+                        _b_line = " · ".join(_b) if _b else "Verification details on the listing"
                         _loc = (_l.location or "").title()
                         _sa_msg += (
                             f"🏠 *{_l.title}*\n"
-                            f"📍 {_loc} | 💰 {_p_fmt} | "
-                            f"🛡️ {_s}/100 ({_g})\n\n"
+                            f"📍 {_loc} | 💰 {_p_fmt}\n"
+                            f"🛡️ {_b_line}\n\n"
                         )
                     _sa_msg += (
                         f"Which area interests you most? "
@@ -1897,7 +1895,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     db.commit()
                     await send_meta_message(
                         sender_id,
-                        f"We don't have other verified "
+                        f"We don't have other "
                         f"{_sa_ptype or 'properties'} right "
                         f"now, {first_name}. Would you like "
                         f"to try a different property type "
@@ -1915,7 +1913,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     sender_id,
                     f"No problem, {first_name}. 😊 Tell me "
                     f"an area and budget and I'll find you "
-                    f"verified options, or say *New Search*.",
+                    f"options, or say *New Search*.",
                     phone_number_id=_send_pid,
                     access_token=_send_token,
                 )
@@ -2042,7 +2040,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 db.commit()
                 await send_meta_message(
                     sender_id,
-                    f"Let me pull up our other verified "
+                    f"Let me pull up our other "
                     f"options, {first_name}.\n\n"
                     f"Reply *Yes* to see everything we have.",
                     phone_number_id=_send_pid, access_token=_send_token,
@@ -2057,8 +2055,8 @@ async def handle_incoming_message(data: dict, db: Session):
                 await send_meta_message(
                     sender_id,
                     f"Understood, {first_name}. 🤝\n\n"
-                    f"May I check our verified partner network? "
-                    f"All properties are Est8Go verified.\n\n"
+                    f"May I check our partner network? "
+                    f"Every listing shows its verification details.\n\n"
                     f"Reply *Yes* to search the wider network.",
                     phone_number_id=_send_pid, access_token=_send_token,
                 )
@@ -2068,8 +2066,8 @@ async def handle_incoming_message(data: dict, db: Session):
             if _accepts and _lst:
                 _p = _lst.price or 0
                 _p_fmt = f"₦{_p/1_000_000:.0f}M" if _p >= 1_000_000 else f"₦{_p:,}"
-                _score = _lst.trust_score or 0
-                _grade = (_lst.trust_grade or "verified").title()
+                _b = _factual_badges(_lst)
+                _b_line = " · ".join(_b) if _b else "Verification details on the listing"
                 _base_url = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
                 await send_meta_message(
                     sender_id,
@@ -2077,7 +2075,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"*{_lst.title}*\n"
                     f"📍 {(_lst.location or '').title()}\n"
                     f"💰 *{_p_fmt}*\n"
-                    f"🛡️ Trust Score: *{_score}/100 ({_grade})*\n\n"
+                    f"🛡️ {_b_line}\n\n"
                     f"🔗 View full details:\n{_base_url}/public/property/{_lst.id}\n\n"
                     f"Would you like to schedule a site inspection? 📅",
                     phone_number_id=_send_pid, access_token=_send_token,
@@ -2102,8 +2100,8 @@ async def handle_incoming_message(data: dict, db: Session):
             await send_meta_message(
                 sender_id,
                 f"Understood, {first_name}. 🤝\n\n"
-                f"May I check our verified partner network? "
-                f"All properties are Est8Go verified.\n\n"
+                f"May I check our partner network? "
+                f"Every listing shows its verification details.\n\n"
                 f"Reply *Yes* to search the wider network.",
                 phone_number_id=_send_pid, access_token=_send_token,
             )
@@ -2147,13 +2145,14 @@ async def handle_incoming_message(data: dict, db: Session):
                             if _rp_val >= 1_000_000 else f"₦{_rp_val:,}"
                         )
                         _city_show = _ref_city.title() if _ref_city else "same city"
-                        _ref_grade = (_ref_listing.trust_grade or "verified").title()
+                        _ref_badges = _factual_badges(_ref_listing)
+                        _ref_b_line = " · ".join(_ref_badges) if _ref_badges else "Verification details on the listing"
                         _ref_msg = (
                             f"Good news, {first_name}! 🎯\n\n"
-                            f"I found a verified match in our wider network:\n\n"
-                            f"🏠 {(_ref_listing.property_type or 'Property').title()} — {_city_show}\n"
+                            f"I found a match in our wider network:\n\n"
+                            f"🏠 {(_ref_listing.property_type or 'Property').title()} in {_city_show}\n"
                             f"💰 Around {_rp_range}\n"
-                            f"🛡️ Est8Go Verified ({_ref_grade} grade) ✓\n\n"
+                            f"🛡️ {_ref_b_line}\n\n"
                             f"A consultant will share the full details with you directly.\n\n"
                             f"Shall I connect you now? 📞"
                         )
@@ -2168,12 +2167,12 @@ async def handle_incoming_message(data: dict, db: Session):
                         _slug_r = tenant_profile.get("slug", "")
                         await send_meta_message(
                             sender_id,
-                            f"I've searched our entire verified network, {first_name}.\n\n"
+                            f"I've searched our entire network, {first_name}.\n\n"
                             f"Two options:\n\n"
-                            f"1️⃣ *Browse our full vault* — you may find something I missed:\n"
+                            f"1️⃣ *Browse our full vault*, you may find something I missed:\n"
                             f"👉 {_base_r}/public/{_slug_r}\n\n"
-                            f"2️⃣ *Speak to a consultant* — they have access to off-market "
-                            f"verified deals not yet listed online.\n\n"
+                            f"2️⃣ *Speak to a consultant*, they have access to off-market "
+                            f"deals not yet listed online.\n\n"
                             f"Which would you prefer?",
                             phone_number_id=_send_pid, access_token=_send_token,
                         )
@@ -2198,10 +2197,10 @@ async def handle_incoming_message(data: dict, db: Session):
                     sender_id,
                     f"No problem, {first_name}. 😊\n\n"
                     f"Would you like to:\n\n"
-                    f"1️⃣ *Try a different area* — tell me another location\n"
-                    f"2️⃣ *Adjust your budget* — tell me your new range\n"
-                    f"3️⃣ *Change property type* — Land · House · Apartment\n"
-                    f"4️⃣ *Start fresh* — say *New Search*",
+                    f"1️⃣ *Try a different area*, tell me another location\n"
+                    f"2️⃣ *Adjust your budget*, tell me your new range\n"
+                    f"3️⃣ *Change property type*: Land · House · Apartment\n"
+                    f"4️⃣ *Start fresh*, say *New Search*",
                     phone_number_id=_send_pid, access_token=_send_token,
                 )
             return
@@ -2272,11 +2271,11 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"Your search brief has been sent to our consultant:\n\n"
                     f"📋 *{_cptype}* in *{_cloc}*\n"
                     f"💰 Budget: *{_cbudget_str}*\n\n"
-                    f"They will reach out within *2 hours* with full details on verified options "
+                    f"They will reach out within *2 hours* with full details on the options "
                     f"that match your exact requirements.\n\n"
                     f"Please keep your phone available. 📱\n\n"
-                    f"Thank you for choosing *{biz_name}* — where every property is verified "
-                    f"before it reaches you. 🛡️",
+                    f"Thank you for choosing *{biz_name}*, where every listing shows its "
+                    f"verification details before it reaches you. 🛡️",
                     phone_number_id=_send_pid, access_token=_send_token,
                 )
                 convo.data_json = json.dumps(_saved2)
@@ -2311,9 +2310,9 @@ async def handle_incoming_message(data: dict, db: Session):
                 db.commit()
                 await send_meta_message(
                     sender_id,
-                    f"Here's our full verified property vault, {first_name}:\n\n"
+                    f"Here's our full property vault, {first_name}:\n\n"
                     f"👉 {_base_lr}/public/{_slug_lr}\n\n"
-                    f"Every listing is GPS-verified and document-checked. "
+                    f"Every listing shows its verification details. "
                     f"Take your time browsing. 😊\n\n"
                     f"Reply *I'm interested* on any listing and I'll connect you immediately.",
                     phone_number_id=_send_pid, access_token=_send_token,
@@ -2325,7 +2324,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 await send_meta_message(
                     sender_id,
                     f"Great choice, {first_name}. 📞\n\n"
-                    f"Our property consultants have access to off-market verified deals "
+                    f"Our property consultants have access to off-market deals "
                     f"not yet listed online.\n\n"
                     f"Shall I connect you now?",
                     phone_number_id=_send_pid, access_token=_send_token,
@@ -2422,27 +2421,27 @@ async def handle_incoming_message(data: dict, db: Session):
                         f"Consider it done, {first_name}. 🔄\n\n"
                         f"I've cleared your previous search "
                         f"and opened a fresh connection to "
-                        f"our verified vault.\n\n"
+                        f"our vault.\n\n"
                         f"What are you looking for this time?\n\n"
-                        f"🌱 *Land* — prime plots for "
+                        f"🌱 *Land*: prime plots for "
                         f"development or investment\n"
-                        f"🏠 *House* — fully detached, "
+                        f"🏠 *House*: fully detached, "
                         f"semi-detached or duplex\n"
-                        f"🏢 *Apartment* — modern flats "
+                        f"🏢 *Apartment*: modern flats "
                         f"and studio units\n\n"
                         f"Or simply describe what you "
                         f"have in mind. 😊"
                     ),
                     (
                         f"Fresh start, {first_name}. ✨\n\n"
-                        f"Our verified vault is open "
+                        f"Our vault is open "
                         f"and ready.\n\n"
                         f"What type of property are you "
                         f"searching for today?\n\n"
-                        f"🌱 *Land* — build or invest\n"
-                        f"🏠 *House* — move-in ready "
+                        f"🌱 *Land*: build or invest\n"
+                        f"🏠 *House*: move-in ready "
                         f"or off-plan\n"
-                        f"🏢 *Apartment* — city living "
+                        f"🏢 *Apartment*: city living "
                         f"at its finest\n\n"
                         f"Just tell me what you need."
                     ),
@@ -2450,9 +2449,9 @@ async def handle_incoming_message(data: dict, db: Session):
                         f"All cleared, {first_name}. "
                         f"Let's find you something "
                         f"exceptional. 🏡\n\n"
-                        f"Every property I show you is "
-                        f"GPS-verified and document-checked "
-                        f"— no fake listings, no wasted trips.\n\n"
+                        f"Every property I show you comes with "
+                        f"its verification details on file, "
+                        f"so no fake listings and no wasted trips.\n\n"
                         f"What are we searching for?\n\n"
                         f"🌱 *Land*\n"
                         f"🏠 *House*\n"
@@ -2548,7 +2547,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"they call, let me quickly find "
                     f"you the right property.\n\n"
                     f"What type of property are you "
-                    f"looking for — Land, House, "
+                    f"looking for: Land, House, "
                     f"or Apartment?",
                     phone_number_id=_send_pid, access_token=_send_token,
                 )
@@ -2585,7 +2584,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"I could not find that listing. "
                             f"It may have been removed or is no longer available.\n\n"
                             f"What property are you looking for? "
-                            f"I can help you find verified options.",
+                            f"I can help you find options.",
                             phone_number_id=_send_pid, access_token=_send_token,
                         )
                         return
@@ -2611,18 +2610,18 @@ async def handle_incoming_message(data: dict, db: Session):
                     else:
                         _price_fmt = f"₦{_price:,}"
 
-                    _score = _lst.trust_score or 0
-                    _grade = (_lst.trust_grade or "ungraded").title()
+                    _b = _factual_badges(_lst)
+                    _b_line = " · ".join(_b) if _b else "Verification details on the listing"
 
                     await send_meta_message(
                         sender_id,
                         f"Hi {first_name}! 👋\n\n"
-                        f"Excellent choice. You have selected a verified Est8Go listing:\n\n"
+                        f"Excellent choice. You have selected an Est8Go listing:\n\n"
                         f"*{_lst.title}*\n"
                         f"📍 {(_lst.location or '').title()}\n"
                         f"💰 *{_price_fmt}*\n"
-                        f"🛡️ Trust Score: *{_score}/100 ({_grade})*\n\n"
-                        f"This property has been GPS-verified and is ready for inspection.\n\n"
+                        f"🛡️ {_b_line}\n\n"
+                        f"This property's verification details are on file. Ready to arrange your inspection.\n\n"
                         f"Would you like to schedule a site visit? "
                         f"Just give me a preferred time and our agent will confirm. 📅",
                         phone_number_id=_send_pid, access_token=_send_token,
@@ -2710,10 +2709,10 @@ async def handle_incoming_message(data: dict, db: Session):
             else:
                 _guidance = (
                     f"Here's what you can do, {first_name}:\n\n"
-                    f"1️⃣ *Try a nearby area* — e.g. Asokoro, Apo, Maitama\n"
-                    f"2️⃣ *Adjust your budget* — tell me a new range\n"
-                    f"3️⃣ *Change property type* — Land, House or Apartment\n"
-                    f"4️⃣ *Start fresh* — say *New Search*\n\n"
+                    f"1️⃣ *Try a nearby area*: e.g. Asokoro, Apo, Maitama\n"
+                    f"2️⃣ *Adjust your budget*, tell me a new range\n"
+                    f"3️⃣ *Change property type*: Land, House or Apartment\n"
+                    f"4️⃣ *Start fresh*, say *New Search*\n\n"
                     f"What works best for you?"
                 )
             await send_meta_message(sender_id, _guidance, phone_number_id=_send_pid, access_token=_send_token)
@@ -2729,7 +2728,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     await send_meta_message(
                         sender_id,
                         f"Yes, {first_name}! *{_av_lst.title}* "
-                        f"is still available and verified. ✅\n\n"
+                        f"is still available. ✅\n\n"
                         f"Would you like to schedule a site "
                         f"inspection? Just say *Yes*. 📅",
                         phone_number_id=_send_pid,
@@ -2746,7 +2745,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 f"Happy to check availability, {first_name}! "
                 f"Which property are you asking about? "
                 f"Tell me the area and budget and I'll "
-                f"pull up verified options. 😊",
+                f"pull up options. 😊",
                 phone_number_id=_send_pid,
                 access_token=_send_token,
             )
@@ -2766,7 +2765,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         _md_msg = build_media_redirect(first_name, biz_name, _link)
                     except Exception:
                         _md_msg = (
-                            f"All verified photos for "
+                            f"All photos for "
                             f"*{_md_lst.title}* are here, "
                             f"{first_name}: 📸\n\n{_link}\n\n"
                             f"Would you like to schedule a "
@@ -2786,7 +2785,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 sender_id,
                 f"I'd love to show you photos, {first_name}! "
                 f"Which property? Tell me the area and budget "
-                f"and I'll find verified listings with full "
+                f"and I'll find listings with full "
                 f"photos. 😊",
                 phone_number_id=_send_pid,
                 access_token=_send_token,
@@ -2850,15 +2849,15 @@ async def handle_incoming_message(data: dict, db: Session):
                         await send_meta_message(
                             sender_id,
                             f"I searched thoroughly, {first_name}, "
-                            f"but there are no verified listings "
+                            f"but there are no listings "
                             f"in *{_bm_location}* within *{budget_fmt}* "
                             f"right now.\n\n"
                             f"A few options:\n\n"
-                            f"1️⃣ *Expand your search area* — "
+                            f"1️⃣ *Expand your search area*, "
                             f"nearby areas may have options\n"
-                            f"2️⃣ *Adjust your budget slightly* — "
+                            f"2️⃣ *Adjust your budget slightly*, "
                             f"tell me your maximum stretch\n"
-                            f"3️⃣ *Change property type* — "
+                            f"3️⃣ *Change property type*, "
                             f"Land is often more affordable\n\n"
                             f"What would you prefer?",
                             phone_number_id=_send_pid, access_token=_send_token,
@@ -2887,7 +2886,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         f"I understand, {first_name}. "
                         f"{price_fmt} may be above your range.\n\n"
                         f"What is your maximum budget? "
-                        f"I'll find you the best verified options "
+                        f"I'll find you the best options "
                         f"within that figure. 💰\n\n"
                         f"(e.g. '30M', '₦45,000,000', '20M to 50M')",
                         phone_number_id=_send_pid, access_token=_send_token,
@@ -2991,9 +2990,9 @@ async def handle_incoming_message(data: dict, db: Session):
                     # Prepend expansion note if we searched a nearby area
                     if prefs.get("_expanded_from") and prefs.get("_expanded_to"):
                         expansion_note = (
-                            f"No verified listings found in "
-                            f"*{prefs['_expanded_from'].title()}* right now — "
-                            f"but I found verified options in nearby "
+                            f"No listings found in "
+                            f"*{prefs['_expanded_from'].title()}* right now, "
+                            f"but I found options in nearby "
                             f"*{prefs['_expanded_to'].title()}*:\n\n"
                         )
                         summary = expansion_note + summary
@@ -3125,9 +3124,9 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"Our lead agent will reach out shortly "
                             f"to confirm the exact time and meeting point. "
                             f"Please keep your phone available. 📱\n\n"
-                            f"Thank you for choosing *{biz_name}* — "
-                            f"where every property is verified before "
-                            f"it reaches you. 🏠"
+                            f"Thank you for choosing *{biz_name}*, "
+                            f"where every listing shows its verification "
+                            f"details before it reaches you. 🏠"
                         )
                         await send_meta_message(sender_id, confirmation, phone_number_id=_send_pid, access_token=_send_token)
                         return
@@ -3177,9 +3176,9 @@ async def handle_incoming_message(data: dict, db: Session):
                             # Prepend expansion note if we searched a nearby area
                             if prefs.get("_expanded_from") and prefs.get("_expanded_to"):
                                 expansion_note = (
-                                    f"No verified listings found in "
-                                    f"*{prefs['_expanded_from'].title()}* right now — "
-                                    f"but I found verified options in nearby "
+                                    f"No listings found in "
+                                    f"*{prefs['_expanded_from'].title()}* right now, "
+                                    f"but I found options in nearby "
                                     f"*{prefs['_expanded_to'].title()}*:\n\n"
                                 )
                                 summary = expansion_note + summary
@@ -3370,9 +3369,9 @@ async def handle_incoming_message(data: dict, db: Session):
                             )
                         _hs_close += (
                             f"Thank you for choosing "
-                            f"*{biz_name}* — where every "
-                            f"listing is GPS-verified and "
-                            f"document-checked. 🛡️"
+                            f"*{biz_name}*, where every "
+                            f"listing shows its "
+                            f"verification details. 🛡️"
                         )
                         await send_meta_message(
                             sender_id, _hs_close,
@@ -3546,7 +3545,7 @@ async def handle_incoming_message(data: dict, db: Session):
             logger.error(f"❌ PERSONALITY ERROR: {e}")
             await send_meta_message(
                 sender_id,
-                "I'm still here! I had a small glitch — could you please "
+                "I'm still here! I had a small glitch, could you please "
                 "say that again? 🙏",
                 phone_number_id=_send_pid, access_token=_send_token,
             )
@@ -3582,7 +3581,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"you're looking for?\n\n"
                     f"Just share the *area* and "
                     f"*budget* and I'll find you "
-                    f"verified options.",
+                    f"options.",
                     phone_number_id=_fb_pid,
                 )
         except Exception as _fb_err:
