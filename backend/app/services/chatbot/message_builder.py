@@ -72,6 +72,29 @@ def _trust_grade(score) -> str:
     return "Unrated"
 
 
+def _factual_badges(prop) -> list:
+    """Buyer-facing verification badges built ONLY from real fields.
+    No score, no grade, no AI. Each badge is a fact we can stand behind."""
+    badges = []
+    if getattr(prop, "latitude", None) or getattr(prop, "gps_location_match", False):
+        badges.append("GPS recorded")
+    doc_count = sum(
+        1
+        for f in (
+            getattr(prop, "cof_uploaded", False),
+            getattr(prop, "deed_uploaded", False),
+            getattr(prop, "survey_uploaded", False),
+        )
+        if f
+    )
+    if doc_count:
+        badges.append(f"{doc_count} document{'s' if doc_count != 1 else ''} on file")
+    visits = getattr(prop, "witness_count", 0) or 0
+    if visits:
+        badges.append(f"{visits} site visit{'s' if visits != 1 else ''}")
+    return badges
+
+
 # 🔹 SOCKET: Update build_property_summary in message_builder.py
 
 
@@ -86,22 +109,23 @@ def build_property_summary(
 
     price = f"₦{int(prop.price):,}" if prop.price else "Price on request"
     location = (prop.location or "Abuja").title()
-    trust = prop.trust_score or 0
+    _badges = _factual_badges(prop)
+    badge_line = " · ".join(_badges) if _badges else "Verification details on the listing"
 
     count = len(matches) - 1
     options_text = "other option" if count == 1 else f"{count} other options"
     boutique_section = (
-        f"🛍️ Browse {options_text} in our verified vault:\n{boutique_link}\n\n"
+        f"🛍️ Browse {options_text} in our property vault:\n{boutique_link}\n\n"
         if len(matches) > 1
         else ""
     )
 
     return (
-        f"✨ *Verified Match Found for {first_name}!* \n\n"
+        f"✨ *Match Found for {first_name}!* \n\n"
         f"🏠 *{prop.title}*\n"
         f"📍 Location: {location}\n"
         f"💰 Price: *{price}*\n"
-        f"🛡️ Trust Score: *{trust}/100 ({_trust_grade(trust)})*\n\n"
+        f"🛡️ {badge_line}\n\n"
         f"🔗 *View Property Details & Photos:* \n{showroom_link}\n\n"
         f"{boutique_section}"
         f"Would you like to schedule a physical site inspection for this property? Just say the word and we will arrange it. 📅"
@@ -123,7 +147,7 @@ def build_no_results_message(
     if nearby_min_price:
         try:
             budget_note = (
-                f"\n\n💡 Verified {ptype}s in nearby areas start from "
+                f"\n\n💡 {ptype}s in nearby areas start from "
                 f"₦{nearby_min_price / 1_000_000:.0f}M."
             )
         except (ValueError, TypeError):
@@ -155,7 +179,7 @@ def build_no_results_message(
     )
 
     return (
-        f"No verified {ptype} listings found in *{loc}* right now. 🔍"
+        f"I could not find any {ptype} listings in *{loc}* right now. 🔍"
         f"{nearby_text}"
         f"{budget_note}"
         f"{next_steps}"
@@ -175,41 +199,33 @@ def build_comparison_message(listings: list, first_name: str) -> str:
     for i, l in enumerate(listings, 1):
         price = f"₦{int(l.price) / 1_000_000:.0f}M" if l.price else "POA"
         location = (l.location or "").title()
-        score = l.trust_score or 0
-        grade = _trust_grade(score)
         ptype = (l.property_type or "Property").title()
 
-        # Verification badges
-        badges = []
-        if l.latitude or l.gps_location_match:
-            badges.append("GPS ✅")
-        if l.cof_uploaded or l.deed_uploaded or l.survey_uploaded:
-            badges.append("Docs ✅")
-        if l.ai_verified_real:
-            badges.append("Smart Verified ✅")
-        badge_str = " · ".join(badges) if badges else "Pending Verification"
+        # Verification badges: real fields only, no score, no AI
+        _badges = _factual_badges(l)
+        badge_str = " · ".join(_badges) if _badges else "Verification details on the listing"
 
         lines.append(
-            f"*Option {i} — {l.title}*\n"
-            f"📍 {location}  |  💰 {price}  |  🛡️ {score}/100 ({grade})\n"
+            f"*Option {i}: {l.title}*\n"
+            f"📍 {location}  |  💰 {price}\n"
             f"🏠 {ptype}  ·  {badge_str}"
         )
 
-    # Best pick: highest trust, then lowest price
+    # Best pick: most complete verification record, then lowest price.
+    # Ranking still uses the internal trust_score; it is never shown to the buyer.
     best = max(listings, key=lambda x: (x.trust_score or 0, -(x.price or 999_999_999)))
     best_idx = listings.index(best) + 1
-    best_price = best.price or 0
     all_same_trust = len(set(l.trust_score or 0 for l in listings)) == 1
     reason = (
-        "lowest price among equal-trust options"
+        "lowest price among similar listings"
         if all_same_trust
-        else "highest trust score — most verified by Est8Go"
+        else "most complete verification record"
     )
 
     sep = "─" * 28
     lines.append(
         f"\n{sep}\n"
-        f"💡 *Best pick:* Option {best_idx} — {reason}.\n\n"
+        f"💡 *Best pick:* Option {best_idx}, {reason}.\n\n"
         f"Reply *{best_idx}* to view full details and book a site visit. 📅"
     )
 
@@ -222,16 +238,17 @@ def build_referral_summary(prop, original_biz_name: str) -> str:
     direct_link = f"{_base}/public/property/{prop.id}"
     price = f"₦{int(prop.price):,}" if prop.price else "Price on request"
     location = (prop.location or "Abuja").title()
-    trust = prop.trust_score or 0
+    _badges = _factual_badges(prop)
+    badge_line = " · ".join(_badges) if _badges else "Verification details on the listing"
 
     return (
         f"I searched the vault for *{original_biz_name}*, but they don't have a direct match today. 🔍\n\n"
-        f"However, Est8Go has found a verified alternative from our network:\n\n"
+        f"However, Est8Go has found an alternative from our network:\n\n"
         f"🏠 *{prop.title}*\n"
         f"📍 Location: {location}\n"
         f"💰 Price: {price}\n"
-        f"🛡️ Trust Score: {trust}/100 ({_trust_grade(trust)})\n\n"
-        f"🔗 *Tap to view photos and GPS Audit:* \n{direct_link}\n\n"
+        f"🛡️ {badge_line}\n\n"
+        f"🔗 *Tap to view photos and location details:* \n{direct_link}\n\n"
         f"Would you like me to connect you with the lead agent for an inspection?"
     )
 
@@ -261,7 +278,7 @@ def build_inspection_confirmation(
             f"Excellent, {first_name}! 🤝\n\n"
             f"I've shared your interest with the lead agent for *{prop_title}*. \n\n"
             "📍 *Site Location:* \n"
-            "This property is currently undergoing its final GPS audit. "
+            "We are still confirming this property's GPS location. "
             "The agent will send you a direct WhatsApp location pin once you connect."
             + directions_block
             + "\n\nWhat time works best for your arrival? 🚗"
