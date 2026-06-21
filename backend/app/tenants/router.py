@@ -81,6 +81,23 @@ class BrandColorPayload(BaseModel):
     brand_color: Optional[str] = None
 
 
+@router.get("/me/branding")
+def get_my_branding(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return the agency's current logo + accent colour (for the dashboard
+    Brand section to pre-fill). Tenant derived from the authenticated user."""
+    tenant = db.get(Tenant, current_user.tenant_id)
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+    return {
+        "tenant_id": tenant.id,
+        "logo_url": tenant.logo_url,
+        "brand_color": tenant.brand_color,
+    }
+
+
 @router.patch("/me/branding")
 def update_my_branding(
     payload: BrandColorPayload,

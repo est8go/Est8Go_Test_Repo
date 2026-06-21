@@ -3706,6 +3706,59 @@
         style="margin-bottom:24px">
         Save Settings
       </button>
+
+      <!-- ─────────────── BRAND (Workstream C3) ─────────────── -->
+      <div class="sep">Brand</div>
+
+      <!-- Logo -->
+      <div style="background:var(--surface);border:1px solid var(--border);
+                  border-radius:var(--r-lg);padding:20px;margin-bottom:14px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;
+                    text-transform:uppercase;color:var(--muted);margin-bottom:14px">
+          Agency Logo
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+          Shown on your property pages. PNG, JPG or WEBP, up to 2 MB.
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+          <img id="brandLogoPreview" alt="Agency logo"
+            style="display:none;width:56px;height:56px;border-radius:10px;
+                   object-fit:contain;background:var(--surface2);
+                   border:1px solid var(--border)">
+          <span id="brandLogoEmpty" style="font-size:12px;color:var(--muted)">No logo uploaded yet.</span>
+        </div>
+        <input class="field" type="file" id="brandLogoFile"
+          accept="image/png,image/jpeg,image/webp" style="padding:10px">
+        <button id="brandLogoBtn" onclick="uploadBrandLogo()"
+          class="btn btn-ind btn-md btn-full" style="margin-top:14px">
+          Upload Logo
+        </button>
+      </div>
+
+      <!-- Accent colour -->
+      <div style="background:var(--surface);border:1px solid var(--border);
+                  border-radius:var(--r-lg);padding:20px;margin-bottom:24px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;
+                    text-transform:uppercase;color:var(--muted);margin-bottom:14px">
+          Accent Colour
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+          The highlight colour on your property pages. Leave unset to use the
+          default Est8Go styling.
+        </div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <input type="color" id="brandColorInput" value="#4F46E5"
+            style="width:52px;height:40px;padding:0;border:1px solid var(--border);
+                   border-radius:8px;background:var(--surface2);cursor:pointer">
+          <span id="brandColorValue" style="font-size:13px;font-weight:600;color:var(--text)">#4F46E5</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:16px">
+          <button id="brandColorBtn" onclick="saveBrandColor()"
+            class="btn btn-ind btn-md">Save Colour</button>
+          <button onclick="clearBrandColor()"
+            class="btn btn-ghost btn-md">Reset to default</button>
+        </div>
+      </div>
     </div>
 
     <!-- ══════════════════════════════════════
@@ -4182,6 +4235,8 @@
         docs: id => `/listings/${id}/documents`,
         docVisibility: (id, docId) => `/listings/${id}/documents/${docId}/visibility`,
         docUpload: id => `/listings/${id}/upload-document`,
+        tenantBranding: '/tenants/me/branding',
+        tenantLogo: '/tenants/me/logo',
         upload: '/listings/realtor/upload',
         reelOpts: id => `/reels/options/${id}`,
         reelGen: id => `/reels/generate/${id}`,
@@ -5407,6 +5462,7 @@
         _buildHourOptions(g('windowStart'), 7);
         _buildHourOptions(g('windowEnd'), 21);
       }
+      loadBranding();  // populate the Brand section (logo + accent colour)
     }
 
     async function saveRecoverySettings() {
@@ -5436,6 +5492,100 @@
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = 'Save Settings'; }
       }
+    }
+
+    /* ── BRAND (Workstream C3) ───────────────── */
+    // All values are written to XSS-safe sinks only: image .src, input .value,
+    // and textContent — never innerHTML. sanitise() is applied to the echoed
+    // colour label as belt-and-braces.
+    function _setLogoPreview(url) {
+      const img = g('brandLogoPreview');
+      const empty = g('brandLogoEmpty');
+      if (url) {
+        if (img) { img.src = url + (url.includes('?') ? '&' : '?') + 't=' + Date.now(); img.style.display = 'block'; }
+        if (empty) empty.style.display = 'none';
+      } else {
+        if (img) { img.removeAttribute('src'); img.style.display = 'none'; }
+        if (empty) empty.style.display = '';
+      }
+    }
+
+    function _reflectBrandColor(color) {
+      const inp = g('brandColorInput');
+      const lbl = g('brandColorValue');
+      if (color) {
+        if (inp) inp.value = color;
+        if (lbl) lbl.textContent = sanitise(color);
+      } else {
+        if (inp) inp.value = '#4F46E5';
+        if (lbl) lbl.textContent = 'Default';
+      }
+    }
+
+    async function loadBranding() {
+      try {
+        const res = await fetch(CFG.API.tenantBranding, { headers: CFG.H });
+        if (res.ok) {
+          const d = await res.json();
+          _setLogoPreview(d.logo_url);
+          _reflectBrandColor(d.brand_color);
+        }
+      } catch (e) { /* keep defaults on failure */ }
+      // Live-update the swatch label as the picker moves.
+      const inp = g('brandColorInput');
+      if (inp) inp.oninput = () => { const lbl = g('brandColorValue'); if (lbl) lbl.textContent = inp.value; };
+    }
+
+    async function uploadBrandLogo() {
+      const fileEl = g('brandLogoFile');
+      const file = fileEl && fileEl.files && fileEl.files[0];
+      if (!file) { toast('Choose a logo file first', 'warn'); return; }
+      const fd = new FormData();
+      fd.append('file', file);  // C2 endpoint param is `file`
+      const btn = g('brandLogoBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Uploading…'; }
+      try {
+        // multipart: CFG.H ONLY (no JSON content-type) so the browser sets the boundary
+        const res = await fetch(CFG.API.tenantLogo, { method: 'POST', headers: CFG.H, body: fd });
+        if (res.ok) {
+          const d = await res.json().catch(() => ({}));
+          _setLogoPreview(d.logo_url);
+          if (fileEl) fileEl.value = '';
+          toast('Logo uploaded ✓', 'success');
+        } else {
+          const d = await res.json().catch(() => ({}));
+          toast(d.detail || 'Logo upload failed', 'warn');
+        }
+      } catch (e) { toast('Network error', 'warn'); }
+      finally { if (btn) { btn.disabled = false; btn.textContent = 'Upload Logo'; } }
+    }
+
+    async function _patchBrandColor(brand_color, okMsg) {
+      const btn = g('brandColorBtn');
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch(CFG.API.tenantBranding, {
+          method: 'PATCH', headers: CFG.JH, body: JSON.stringify({ brand_color })
+        });
+        if (res.ok) {
+          const d = await res.json().catch(() => ({}));
+          _reflectBrandColor(d.brand_color);
+          toast(okMsg, 'success');
+        } else {
+          const d = await res.json().catch(() => ({}));
+          toast(d.detail || 'Save failed', 'warn');
+        }
+      } catch (e) { toast('Network error', 'warn'); }
+      finally { if (btn) btn.disabled = false; }
+    }
+
+    function saveBrandColor() {
+      const val = (g('brandColorInput')?.value || '').trim();  // <input type=color> -> #rrggbb
+      return _patchBrandColor(val, 'Colour saved ✓');
+    }
+
+    function clearBrandColor() {
+      return _patchBrandColor('', 'Colour reset to default ✓');  // empty -> NULL
     }
 
     /* ── MENU DRAWER ─────────────────────────── */
