@@ -61,6 +61,9 @@
   --font-head:'Syne','Inter',sans-serif;
   --r:16px; --r-sm:10px; --max-w:480px;
 }
+/* Agency accent (Workstream C6). accent_color is server-validated #RRGGBB
+   (render-time CSS-injection guard); defaults to indigo when unset. */
+:root{ --indigo: {{ accent_color | default('#4F46E5') }}; }
 html[data-theme="light"]{
   --bg:#F8FAFC; --surface:#FFFFFF; --surface2:#EEF2F7;
   --border:rgba(15,23,42,0.08); --border2:rgba(15,23,42,0.14);
@@ -86,11 +89,13 @@ button{cursor:pointer;font-family:inherit}
 .agency-identity{display:flex;align-items:center;gap:10px}
 .agency-logo{
   width:40px;height:40px;border-radius:12px;
-  background:linear-gradient(135deg,#4338CA,#4F46E5);
+  background:var(--indigo);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--indigo) 80%,black),var(--indigo));
   display:flex;align-items:center;justify-content:center;
   font-family:var(--font-head);font-size:16px;font-weight:800;
   color:#fff;flex-shrink:0;letter-spacing:-1px;
 }
+.agency-logo-img{background:var(--surface2);object-fit:contain;padding:3px}
 .agency-name{font-size:15px;font-weight:700;color:var(--text)}
 .agency-verified{
   display:flex;align-items:center;gap:4px;
@@ -258,7 +263,11 @@ html[data-theme="light"] .vault-hero{
 <header class="vault-header">
   <div class="vault-header-inner">
     <div class="agency-identity">
+      {% if tenant.logo_url %}
+      <img class="agency-logo agency-logo-img" src="{{ tenant.logo_url }}" alt="{{ tenant.business_name or 'Agency' }}">
+      {% else %}
       <div class="agency-logo">{{ (tenant.business_name or 'E')[0] | upper }}</div>
+      {% endif %}
       <div>
         <div class="agency-name">{{ tenant.business_name or 'Est8Go Agency' }}</div>
         <div class="agency-verified">
@@ -267,7 +276,7 @@ html[data-theme="light"] .vault-hero{
         {% if tenant.coverage_cities %}
         <div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.35rem">
           {% for city in tenant.coverage_cities %}
-          <span style="background:rgba(79,70,229,0.15);color:#4F46E5;border:1px solid rgba(79,70,229,0.3);padding:0.15rem 0.5rem;border-radius:9999px;font-size:0.7rem;font-weight:600;text-transform:capitalize">📍 {{ city }}</span>
+          <span style="background:rgba(79,70,229,0.15);background:color-mix(in srgb,var(--indigo) 15%,transparent);color:var(--indigo);border:1px solid rgba(79,70,229,0.3);border-color:color-mix(in srgb,var(--indigo) 30%,transparent);padding:0.15rem 0.5rem;border-radius:9999px;font-size:0.7rem;font-weight:600;text-transform:capitalize">📍 {{ city }}</span>
           {% endfor %}
         </div>
         {% endif %}

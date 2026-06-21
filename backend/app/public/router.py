@@ -102,9 +102,15 @@ _BRAND_HEX_RE = _re.compile(r"^#[0-9A-Fa-f]{6}$")
 _DEFAULT_ACCENT = "#4F46E5"
 
 
+def _validated_accent(raw) -> str:
+    """Re-validate a stored brand colour before it reaches a <style> block.
+    Only a strict #RRGGBB is returned, otherwise the default indigo."""
+    return raw if (raw and _BRAND_HEX_RE.match(raw)) else _DEFAULT_ACCENT
+
+
 def _safe_accent(listing) -> str:
     raw = getattr(listing.tenant, "brand_color", None) if getattr(listing, "tenant", None) else None
-    return raw if (raw and _BRAND_HEX_RE.match(raw)) else _DEFAULT_ACCENT
+    return _validated_accent(raw)
 
 
 def _property_context(listing, db: Session) -> dict:
@@ -744,6 +750,8 @@ async def tenant_public_vault(
                 "base_url": os.getenv("BASE_URL", "https://est8go-api.onrender.com"),
                 "selected_type": property_type,
                 "selected_location": location,
+                # Render-time CSS-injection guard (same as the property page).
+                "accent_color": _validated_accent(getattr(tenant, "brand_color", None)),
             },
         )
     except HTTPException:
