@@ -8,12 +8,18 @@ url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 client = create_client(url, key)
 
-buckets_needed = ["property-documents", "property-reels"]
+# property-documents is PRIVATE — sensitive title docs (C of O, deeds) are
+# served only via the access-controlled proxy, never a public URL (A2).
+# property-reels stays public (non-sensitive marketing videos).
+buckets_needed = {
+    "property-documents": False,
+    "property-reels": True,
+}
 
-for bucket in buckets_needed:
+for bucket, is_public in buckets_needed.items():
     try:
-        client.storage.create_bucket(bucket, options={"public": True})
-        print(f"✅ Created: {bucket}")
+        client.storage.create_bucket(bucket, options={"public": is_public})
+        print(f"✅ Created: {bucket} (public={is_public})")
     except Exception as e:
         print(f"⏭️  {bucket}: {e}")
 
