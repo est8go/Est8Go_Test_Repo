@@ -33,10 +33,11 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 from supabase import create_client, Client
+from pydantic import BaseModel
 
 from app.database.db import get_db
 from app.auth.deps import get_current_user
-from app.users.models import User
+from app.users.models import User, PLATFORM_ROLES
 from app.listings.models import Listing, ListingImage, ListingDocument
 from app.services.trust_engine import (
     verify_gps_proximity,
@@ -101,6 +102,26 @@ def get_listing_or_404(listing_id: int, tenant_id: int, db: Session) -> Listing:
             status_code=404, detail="Listing not found or access denied"
         )
     return listing
+
+
+def _is_platform(user: User) -> bool:
+    """Platform users (superuser/super_staff) are cross-tenant by design."""
+    return bool(getattr(user, "is_platform_user", False)) or (
+        getattr(user, "effective_role", None) in PLATFORM_ROLES
+    )
+
+
+def _effective_tenant_id(user: User, x_tenant_id: int) -> int:
+    """Resolve the tenant to scope by.
+
+    Tenant users: ALWAYS their own ``current_user.tenant_id`` — never the raw
+    header (defense-in-depth; the header is also enforced by get_current_user).
+    Platform users have no tenant_id of their own, so they scope by the
+    X-Tenant-Id header (cross-tenant access is intentional for them).
+    """
+    if _is_platform(user):
+        return x_tenant_id
+    return user.tenant_id
 
 
 # ================================================================
@@ -330,6 +351,157 @@ async def upload_listing_document(
         "missing_for_emerald": [
             DOCUMENT_SCORES[k]["label"] for k in doc_result.missing_emerald_docs
         ],
+    }
+
+
+# ================================================================
+# 2b. DOCUMENT MANAGEMENT (A4) — list + per-doc visibility control
+# ================================================================
+# Safe-by-default: documents are uploaded as "on_request" (private). An
+# agency must explicitly opt a document into "viewable" before the public
+# proxy route will serve it. documents_status is DERIVED from per-doc
+# visibility (single source of truth) so the listing headline can never
+# claim "viewable" while every document is still private.
+
+
+_VISIBILITY_VALUES = {"viewable", "on_request"}
+
+
+class VisibilityUpdate(BaseModel):
+    visibility: str
+
+
+def _doc_metadata(doc: ListingDocument, is_verified: bool) -> dict:
+    """Browser-safe document metadata. NEVER includes storage_path/file_url —
+    the file is reachable only through the access-controlled proxy route."""
+    return {
+        "id": doc.id,
+        "doc_type": doc.doc_type,
+        "label": doc.label,
+        "tier": doc.tier,
+        "visibility": doc.visibility,
+        "uploaded_at": doc.uploaded_at.isoformat() if doc.uploaded_at else None,
+        # is_viewable tells the UI when a view-link would ACTUALLY resolve:
+        # the proxy requires BOTH visibility=="viewable" AND a verified listing.
+        "is_viewable": (doc.visibility == "viewable" and is_verified),
+    }
+
+
+def _derive_documents_status(listing: Listing, db: Session) -> str:
+    """Recompute the listing headline from per-doc visibility.
+    any viewable -> "viewable"; else any doc -> "on_request"; else "none"."""
+    docs = (
+        db.query(ListingDocument)
+        .filter(
+            ListingDocument.listing_id == listing.id,
+            ListingDocument.tenant_id == listing.tenant_id,
+        )
+        .all()
+    )
+    if any(d.visibility == "viewable" for d in docs):
+        status = "viewable"
+    elif docs:
+        status = "on_request"
+    else:
+        status = "none"
+    listing.documents_status = status
+    return status
+
+
+@router.get("/{listing_id}/documents", tags=["Realtor Portal"])
+async def list_listing_documents(
+    listing_id: int,
+    x_tenant_id: int = Header(..., alias="X-Tenant-Id"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """List a listing's documents (metadata only) for the agency dashboard.
+
+    Tenant-scoped: a tenant user can only ever see its OWN listings' docs.
+    Never returns storage_path/file_url.
+    """
+    tenant_id = _effective_tenant_id(current_user, x_tenant_id)
+    listing = get_listing_or_404(listing_id, tenant_id, db)
+
+    # Defense-in-depth: re-verify ownership for tenant users (404, never 403).
+    if not _is_platform(current_user) and listing.tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=404, detail="Listing not found or access denied")
+
+    is_verified = listing.status == "verified"
+    docs = (
+        db.query(ListingDocument)
+        .filter(
+            ListingDocument.listing_id == listing.id,
+            ListingDocument.tenant_id == listing.tenant_id,
+        )
+        .order_by(ListingDocument.uploaded_at.asc())
+        .all()
+    )
+
+    return {
+        "listing_id": listing.id,
+        "documents_status": getattr(listing, "documents_status", None) or "none",
+        "documents": [_doc_metadata(d, is_verified) for d in docs],
+    }
+
+
+@router.patch(
+    "/{listing_id}/documents/{doc_id}/visibility", tags=["Realtor Portal"]
+)
+async def set_document_visibility(
+    listing_id: int,
+    doc_id: int,
+    payload: VisibilityUpdate,
+    x_tenant_id: int = Header(..., alias="X-Tenant-Id"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Flip a single document between "viewable" and "on_request".
+
+    The doc is fetched scoped by id AND listing_id AND tenant — never doc_id
+    alone — so tenant A can never toggle tenant B's doc via its own URL.
+    """
+    # Strict enum validation — reject anything else.
+    if payload.visibility not in _VISIBILITY_VALUES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid visibility. Allowed: {sorted(_VISIBILITY_VALUES)}",
+        )
+
+    tenant_id = _effective_tenant_id(current_user, x_tenant_id)
+    listing = get_listing_or_404(listing_id, tenant_id, db)
+
+    if not _is_platform(current_user) and listing.tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=404, detail="Listing not found or access denied")
+
+    # Scope by id + listing_id + tenant. 404 (not 403) on any mismatch.
+    doc = (
+        db.query(ListingDocument)
+        .filter(
+            ListingDocument.id == doc_id,
+            ListingDocument.listing_id == listing.id,
+            ListingDocument.tenant_id == listing.tenant_id,
+        )
+        .first()
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    doc.visibility = payload.visibility
+
+    # Re-derive the listing headline from per-doc visibility (autoflush makes
+    # the just-set value visible to the query inside the helper).
+    new_status = _derive_documents_status(listing, db)
+
+    db.commit()
+    db.refresh(doc)
+    db.refresh(listing)
+
+    is_verified = listing.status == "verified"
+    return {
+        "listing_id": listing.id,
+        "documents_status": new_status,
+        "document": _doc_metadata(doc, is_verified),
     }
 
 
