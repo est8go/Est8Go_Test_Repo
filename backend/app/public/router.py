@@ -88,7 +88,7 @@ def _wa_url(wa_number: str, listing_id: int, title: str = "") -> str:
     """Builds a pre-filled wa.me URL with property reference."""
     text = f"Hi, I am interested in Est8Go property #{listing_id}"
     if title:
-        text += f" — {title}"
+        text += f": {title}"
     return f"https://wa.me/{wa_number}?text={urllib.parse.quote(text)}"
 
 
@@ -100,6 +100,21 @@ def _property_context(listing, db: Session) -> dict:
     trust = get_trust_label(score)
     wa_number = _get_wa_number(listing, db)
     wa_link = _wa_url(wa_number, listing.id, listing.title or "")
+
+    # Real listing documents for the page. A view-link is offered ONLY when the
+    # proxy would actually serve the file: visibility=="viewable" AND the
+    # listing is verified — identical to the proxy's own gate, so a link can
+    # never dead-end in a 404. Everything else is "Available on request".
+    is_verified = listing.status == "verified"
+    documents = [
+        {
+            "label": d.label or d.doc_type,
+            "is_viewable": (d.visibility == "viewable" and is_verified),
+            "view_url": f"/public/property/{listing.id}/document/{d.id}",
+        }
+        for d in (listing.documents or [])
+    ]
+
     return {
         "listing": listing,
         "trust_score": score,
@@ -110,13 +125,19 @@ def _property_context(listing, db: Session) -> dict:
         "wa_number": wa_number,
         "base_url": os.getenv("BASE_URL", "https://api.est8go.com"),
         "tenant": listing.tenant,
+        "documents": documents,
+        "documents_count": len(documents),
     }
 
 
 def _fetch_listing(listing_id: int, db: Session):
     return (
         db.query(Listing)
-        .options(joinedload(Listing.images), joinedload(Listing.tenant))
+        .options(
+            joinedload(Listing.images),
+            joinedload(Listing.tenant),
+            joinedload(Listing.documents),
+        )
         .filter(Listing.id == listing_id)
         .first()
     )

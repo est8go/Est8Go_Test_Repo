@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-{% set doc_count = (1 if listing.cof_uploaded else 0) + (1 if listing.deed_uploaded else 0) + (1 if listing.survey_uploaded else 0) %}
+{% set doc_count = documents_count | default(0) %}
 {% set img_count = listing.images | length if listing.images else 0 %}
 {% set has_gps = listing.latitude and listing.longitude %}
 {% set agent_name = listing.tenant.business_name if listing.tenant and listing.tenant.business_name else 'Est8Go Agent' %}
@@ -173,6 +173,11 @@ html[data-theme="light"] .carousel-fade{background:linear-gradient(transparent,#
 .vt-name{font-size:13px;font-weight:600;color:var(--text)}
 .vt-val{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
 .vt-badge{font-size:15px;flex-shrink:0}
+.doc-line{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 0}
+.doc-line+.doc-line{border-top:1px solid var(--border)}
+.doc-label{font-size:12px;color:var(--text);font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-link{flex-shrink:0;font-size:11px;font-weight:700;color:var(--indigo);border:1px solid rgba(79,70,229,.25);background:rgba(79,70,229,.10);border-radius:14px;padding:3px 10px}
+.doc-note{flex-shrink:0;font-size:11px;color:var(--muted)}
 
 /* ── Details grid ── */
 .details-section{margin-top:24px}
@@ -349,11 +354,18 @@ html[data-theme="light"] .action-bar{background:#fff}
           <div class="vt-body">
             <div class="vt-name">Documents</div>
             <div class="vt-val">
-              {% set doc_parts = [] %}
-              {% if listing.cof_uploaded %}{% set _ = doc_parts.append('C of O') %}{% endif %}
-              {% if listing.deed_uploaded %}{% set _ = doc_parts.append('Deed of Assignment') %}{% endif %}
-              {% if listing.survey_uploaded %}{% set _ = doc_parts.append('Survey Plan') %}{% endif %}
-              {% if doc_parts %}Documents on file: {{ doc_parts | join(', ') }}{% else %}No documents on file yet{% endif %}
+              {% if documents %}
+                {% for doc in documents %}
+                <div class="doc-line">
+                  <span class="doc-label">{{ doc.label }}</span>
+                  {% if doc.is_viewable %}
+                  <a class="doc-link" href="{{ doc.view_url }}" target="_blank" rel="noopener">View document</a>
+                  {% else %}
+                  <span class="doc-note">Available on request</span>
+                  {% endif %}
+                </div>
+                {% endfor %}
+              {% else %}No documents on file yet{% endif %}
             </div>
           </div>
           <div class="vt-badge">{{ '✅' if doc_count >= 1 else '○' }}</div>
