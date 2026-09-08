@@ -699,6 +699,52 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
 # ================================================================
 
 
+async def _send_property_card(
+    db: Session,
+    sender_id: str,
+    listing,
+    summary: str,
+    phone_number_id: str = None,
+    access_token: str = None,
+) -> None:
+    """
+    Sends property results as an image card (photo + summary caption),
+    falling back to plain text when the listing has no usable image or
+    the image send fails.
+
+    This is a plain WhatsApp type:"image" message — free-form, no Meta
+    template involved, so it works inside the 24h window like any reply.
+
+    Extracted from the two copies previously inlined on the main search
+    path so every results path can deliver the same card. Text is never
+    lost: a buyer always receives the summary, image or not.
+    """
+    try:
+        from app.listings.models import ListingImage
+        from app.services.notification_service import send_meta_image_message
+        _img = (
+            db.query(ListingImage)
+            .filter(ListingImage.listing_id == listing.id)
+            .order_by(ListingImage.is_main.desc().nullslast())
+            .first()
+        )
+        if _img and _img.url:
+            await send_meta_image_message(
+                sender_id, _img.url, summary,
+                phone_number_id=phone_number_id,
+                access_token=access_token,
+            )
+            return
+    except Exception as _e:
+        logger.warning(f"Image card send failed, falling back to text: {_e}")
+
+    await send_meta_message(
+        sender_id, summary,
+        phone_number_id=phone_number_id,
+        access_token=access_token,
+    )
+
+
 async def _no_results_cascade(
     prefs: dict,
     first_name: str,
@@ -1537,8 +1583,8 @@ async def handle_incoming_message(data: dict, db: Session):
                                 _wms[0], _wms,
                                 _wsr.get("total_count", 0), first_name,
                             )
-                            await send_meta_message(
-                                sender_id, _wsum,
+                            await _send_property_card(
+                                db, sender_id, _wms[0], _wsum,
                                 phone_number_id=_send_pid,
                                 access_token=_send_token,
                             )
@@ -1643,7 +1689,10 @@ async def handle_incoming_message(data: dict, db: Session):
                         _sum = build_property_summary(
                             _ms[0], _ms, _sr.get("total_count", 0), first_name
                         )
-                        await send_meta_message(sender_id, _sum, phone_number_id=_send_pid, access_token=_send_token)
+                        await _send_property_card(
+                            db, sender_id, _ms[0], _sum,
+                            phone_number_id=_send_pid, access_token=_send_token,
+                        )
                         _current["last_viewed_id"] = _ms[0].id
                         _current["last_viewed_title"] = _ms[0].title or ""
                         convo.data_json = json.dumps(_current)
@@ -2817,8 +2866,9 @@ async def handle_incoming_message(data: dict, db: Session):
                             search_result.get("total_count", 0),
                             first_name,
                         )
-                        await send_meta_message(
-                            sender_id, summary, phone_number_id=_send_pid, access_token=_send_token
+                        await _send_property_card(
+                            db, sender_id, matches[0], summary,
+                            phone_number_id=_send_pid, access_token=_send_token,
                         )
                         _data["last_viewed_id"] = matches[0].id
                         _data["last_viewed_title"] = matches[0].title
@@ -2989,20 +3039,10 @@ async def handle_incoming_message(data: dict, db: Session):
                     if _neg_note:
                         summary += f"\n\n{_neg_note}"
 
-                    # Send image+summary as one card, or fall back to text only
-                    try:
-                        from app.listings.models import ListingImage
-                        from app.services.notification_service import send_meta_image_message
-                        _img = db.query(ListingImage).filter(
-                            ListingImage.listing_id == matches[0].id
-                        ).first()
-                        if _img and _img.url:
-                            await send_meta_image_message(sender_id, _img.url, summary, phone_number_id=_send_pid, access_token=_send_token)
-                        else:
-                            await send_meta_message(sender_id, summary, phone_number_id=_send_pid, access_token=_send_token)
-                    except Exception as _img_e:
-                        logger.warning(f"Image send failed: {_img_e}")
-                        await send_meta_message(sender_id, summary, phone_number_id=_send_pid, access_token=_send_token)
+                    await _send_property_card(
+                        db, sender_id, matches[0], summary,
+                        phone_number_id=_send_pid, access_token=_send_token,
+                    )
                     # Lock state to HANDOFF — prevents search re-triggering
                     prefs["last_viewed_id"] = matches[0].id
                     prefs["last_viewed_title"] = matches[0].title or ""
@@ -3154,20 +3194,10 @@ async def handle_incoming_message(data: dict, db: Session):
                             _neg_note2 = _get_negotiation_note(matches[0], db)
                             if _neg_note2:
                                 summary += f"\n\n{_neg_note2}"
-                            # Send image+summary as one card, or fall back to text only
-                            try:
-                                from app.listings.models import ListingImage
-                                from app.services.notification_service import send_meta_image_message
-                                _img2 = db.query(ListingImage).filter(
-                                    ListingImage.listing_id == matches[0].id
-                                ).first()
-                                if _img2 and _img2.url:
-                                    await send_meta_image_message(sender_id, _img2.url, summary, phone_number_id=_send_pid, access_token=_send_token)
-                                else:
-                                    await send_meta_message(sender_id, summary, phone_number_id=_send_pid, access_token=_send_token)
-                            except Exception as _img2_e:
-                                logger.warning(f"Image send failed: {_img2_e}")
-                                await send_meta_message(sender_id, summary, phone_number_id=_send_pid, access_token=_send_token)
+                            await _send_property_card(
+                                db, sender_id, matches[0], summary,
+                                phone_number_id=_send_pid, access_token=_send_token,
+                            )
                             prefs["last_viewed_id"] = matches[0].id
                             prefs["last_viewed_title"] = matches[0].title or ""
                             prefs["last_match_ids"] = [m.id for m in matches]
