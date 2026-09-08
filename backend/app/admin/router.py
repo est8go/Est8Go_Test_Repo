@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, timezone, timedelta
 
+from app.core.validators import validate_meta_phone_number_id
 from app.database.db import get_db
 from app.users.models import User, PLATFORM_ROLES
 from app.tenants.models import Tenant
@@ -242,9 +243,16 @@ def create_tenant(
         if existing_user:
             raise HTTPException(status_code=400, detail=f"Email {payload.admin_email} is already registered.")
 
-    # ── STEP 3: WhatsApp number uniqueness ───────────────────────
+    # ── STEP 3: WhatsApp number format + uniqueness ──────────────
     if payload.whatsapp_phone_number_id:
         wa = str(payload.whatsapp_phone_number_id).strip()
+        # Format first. This column is unique=True AND the webhook
+        # routing key (resolve_tenant_from_webhook matches an incoming
+        # payload's metadata.phone_number_id against it), so junk here
+        # occupies a routing slot that a real id then cannot claim.
+        _ok, _err = validate_meta_phone_number_id(wa)
+        if not _ok:
+            raise HTTPException(status_code=400, detail=_err)
         existing_wa = db.query(Tenant).filter(
             Tenant.whatsapp_phone_number_id == wa,
             Tenant.is_active == True,
@@ -421,6 +429,11 @@ def update_tenant(
     if payload.whatsapp_phone_number_id is not None:
         wa_id = payload.whatsapp_phone_number_id.strip()
         if wa_id:
+            # Same rule as the create path — see validate_meta_phone_number_id.
+            # An empty string still means "clear the field" and skips this.
+            _ok, _err = validate_meta_phone_number_id(wa_id)
+            if not _ok:
+                raise HTTPException(status_code=400, detail=_err)
             dup = db.query(Tenant).filter(
                 Tenant.whatsapp_phone_number_id == wa_id,
                 Tenant.id != tenant_id,

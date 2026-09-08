@@ -11,8 +11,11 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
 
 # Database & Models
+from app.core.crypto import encrypt_secret
+from app.core.validators import validate_meta_phone_number_id
 from app.database.db import get_db
 from app.listings.models import Listing, ListingDocument
+from app.tenants.models import TenantChannel
 from app.listings.schemas import ListingOut
 from app.services.trust_engine import calculate_confidence_score, get_trust_label
 
@@ -480,13 +483,91 @@ async def submit_onboarding(
     wa_phone = body.get("whatsapp_phone_number")
     wa_id = body.get("whatsapp_phone_number_id")
     wa_token = body.get("whatsapp_token")
+    wa_waba = body.get("whatsapp_waba_id")
 
     if setup_option == "B" and wa_id:
+        # Option B = self-managed. The agency supplies its own Meta
+        # phone_number_id, WABA id and access token.
+        #
+        # Previously wa_token was read and silently dropped, and no
+        # tenant_channels row was created — so a self-service tenant
+        # could never send from its own number and fell through to the
+        # platform's global token. Both are fixed here.
         try:
+            wa_id = str(wa_id).strip()
+            _ok, _err = validate_meta_phone_number_id(wa_id)
+            if not _ok:
+                raise HTTPException(status_code=400, detail=_err)
+
+            # Reject a number already claimed by another tenant before
+            # writing anything — platform_id is a unique routing key.
+            _clash = (
+                db.query(TenantChannel)
+                .filter(
+                    TenantChannel.platform_id == wa_id,
+                    TenantChannel.tenant_id != tenant.id,
+                )
+                .first()
+            )
+            if _clash:
+                raise HTTPException(
+                    status_code=400,
+                    detail="That WhatsApp Phone Number ID is already registered.",
+                )
+
             tenant.whatsapp_phone_number_id = wa_id
+
+            # Encrypt before storage. encrypt_secret returns None when
+            # ENCRYPTION_KEY is unset — store None rather than a
+            # plaintext token, and say so loudly.
+            _enc_token = None
+            if wa_token:
+                _enc_token = encrypt_secret(str(wa_token).strip())
+                if _enc_token is None:
+                    logger.error(
+                        "❌ ONBOARDING: ENCRYPTION_KEY unavailable — refusing "
+                        "to store the access token in plaintext. Tenant "
+                        f"{tenant.id} channel created WITHOUT a token."
+                    )
+
+            _chan = (
+                db.query(TenantChannel)
+                .filter(
+                    TenantChannel.tenant_id == tenant.id,
+                    TenantChannel.platform == "whatsapp",
+                )
+                .first()
+            )
+            if _chan:
+                _chan.platform_id = wa_id
+                _chan.waba_id = (str(wa_waba).strip() or None) if wa_waba else None
+                if _enc_token:
+                    _chan.access_token_encrypted = _enc_token
+                _chan.is_active = True
+            else:
+                _chan = TenantChannel(
+                    tenant_id=tenant.id,
+                    platform="whatsapp",
+                    platform_id=wa_id,
+                    waba_id=(str(wa_waba).strip() or None) if wa_waba else None,
+                    access_token_encrypted=_enc_token,
+                    is_active=True,
+                    label="WhatsApp",
+                )
+                db.add(_chan)
+
             db.commit()
+            logger.info(
+                f"✅ ONBOARDING: tenant {tenant.id} WhatsApp channel stored "
+                f"(pid={wa_id}, waba={'set' if wa_waba else 'none'}, "
+                f"token={'encrypted' if _enc_token else 'MISSING'})"
+            )
+        except HTTPException:
+            db.rollback()
+            raise
         except Exception as _wbe:
-            logger.warning(f"WhatsApp phone_number_id storage failed: {_wbe}")
+            db.rollback()
+            logger.error(f"WhatsApp channel storage failed: {_wbe}", exc_info=True)
 
     if setup_option == "A" and wa_phone:
         try:

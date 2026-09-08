@@ -332,7 +332,10 @@
                    border-top:1px solid rgba(255,255,255,0.08)">
             <label class="field-label">WhatsApp Phone Number ID</label>
             <input type="text" id="s3_waid" class="field-input" placeholder="e.g. 123456789012345"/>
-            <p class="help-text">Meta Business Suite → WhatsApp → Settings</p>
+            <p class="help-text">Meta Business Suite → WhatsApp → Settings. Digits only — this is not your +234 number.</p>
+            <label class="field-label" style="margin-top:4px">WhatsApp Business Account ID</label>
+            <input type="text" id="s3_waba" class="field-input" placeholder="e.g. 152285080942806"/>
+            <p class="help-text">Meta Business Suite → WhatsApp → API Setup (labelled WABA ID)</p>
             <label class="field-label" style="margin-top:4px">WhatsApp Access Token</label>
             <input type="text" id="s3_token" class="field-input" placeholder="EAAxxxx..."/>
             <p class="help-text">Meta Developer Portal → App → WhatsApp → API Setup</p>
@@ -607,6 +610,7 @@
 
       const s3Phone = document.getElementById('s3_phone')?.value.trim();
       const s3WaId  = document.getElementById('s3_waid')?.value.trim();
+      const s3Waba  = document.getElementById('s3_waba')?.value.trim();
       const s3Token = document.getElementById('s3_token')?.value.trim();
       const payload = {
         business_name:            document.getElementById('s1_name').value.trim(),
@@ -619,6 +623,7 @@
         whatsapp_setup_option:    _waOption,
         whatsapp_phone_number:    _waOption === 'A' ? '+234' + s3Phone : null,
         whatsapp_phone_number_id: _waOption === 'B' ? s3WaId : null,
+        whatsapp_waba_id:         _waOption === 'B' ? s3Waba : null,
         whatsapp_token:           _waOption === 'B' ? s3Token : null,
         whatsapp_setup_pending:   _waOption === 'A',
         areas_covered:            document.getElementById('s4_areas').value.trim(),
