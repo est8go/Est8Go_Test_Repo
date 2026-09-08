@@ -745,7 +745,13 @@ async def embed_demo_page(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="embed_demo.html",
-        context={"base_url": os.getenv("BASE_URL", "https://est8go-api.onrender.com")},
+        context={
+            "base_url": os.getenv("BASE_URL", "https://est8go-api.onrender.com"),
+            # Slug of an agency that has consented to their public vault being
+            # used as the live demo. Unset means the page renders a preview
+            # placeholder instead of any real agency inventory.
+            "demo_tenant": os.getenv("EMBED_DEMO_TENANT", "").strip(),
+        },
     )
 
 

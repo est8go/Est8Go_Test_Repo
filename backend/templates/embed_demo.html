@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Est8Go Embed Widget — Developer Docs</title>
-<meta name="description" content="Add GPS-verified property listings to any website with a single script tag.">
+<meta name="description" content="Add your agency's live property listings to any website with a single script tag.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -168,8 +168,8 @@ pre{margin:0;padding:20px;overflow-x:auto;font-family:var(--font-mono);font-size
 
   <!-- HERO -->
   <section class="hero">
-    <div class="hero-badge">🛡️ Est8Go Trust Infrastructure</div>
-    <h1 class="hero-title">One script tag.<br><span>Verified properties.</span><br>Any website.</h1>
+    <div class="hero-badge">🧩 Est8Go Embed Widget</div>
+    <h1 class="hero-title">One script tag.<br><span>Your listings.</span><br>Any website.</h1>
     <p class="hero-sub">Add a live, auto-refreshing property grid to your WordPress, Wix, or custom website — no login, no API keys, no backend required.</p>
     <div class="hero-tags">
       <span class="hero-tag">Zero dependencies</span>
@@ -212,7 +212,7 @@ pre{margin:0;padding:20px;overflow-x:auto;font-family:var(--font-mono);font-size
         <div class="step-num">1</div>
         <div class="step-body">
           <div class="step-title">Find your agency slug</div>
-          <div class="step-desc">Your slug is the last part of your vault URL — e.g. if your vault is <code style="font-family:var(--font-mono);font-size:12px;color:var(--indigo)">/public/bravieshomz-limited</code> then your slug is <code style="font-family:var(--font-mono);font-size:12px;color:var(--indigo)">bravieshomz-limited</code>.</div>
+          <div class="step-desc">Your slug is the last part of your vault URL — e.g. if your vault is <code style="font-family:var(--font-mono);font-size:12px;color:var(--indigo)">/public/your-agency</code> then your slug is <code style="font-family:var(--font-mono);font-size:12px;color:var(--indigo)">your-agency</code>.</div>
         </div>
       </div>
       <div class="step">
@@ -226,7 +226,7 @@ pre{margin:0;padding:20px;overflow-x:auto;font-family:var(--font-mono);font-size
         <div class="step-num">3</div>
         <div class="step-body">
           <div class="step-title">Listings appear instantly</div>
-          <div class="step-desc">The widget fetches your verified listings, renders them inside an isolated Shadow DOM, and auto-refreshes every 30 minutes.</div>
+          <div class="step-desc">The widget fetches your published listings, renders them inside an isolated Shadow DOM, and auto-refreshes every 30 minutes.</div>
         </div>
       </div>
     </div>
@@ -287,17 +287,27 @@ pre{margin:0;padding:20px;overflow-x:auto;font-family:var(--font-mono);font-size
 
     <!-- Widget container -->
     <div id="demo-container" class="demo-box">
-      <div class="demo-live-badge">● LIVE — Bravieshomz Limited</div>
+      {% if demo_tenant %}
+      <div class="demo-live-badge">● LIVE</div>
       <script
         id="demo-script"
         src="{{ base_url }}/static/embed.js"
-        data-tenant="bravieshomz-limited"
+        data-tenant="{{ demo_tenant }}"
         data-theme="dark"
         data-limit="6"
         data-columns="3"
         data-accent="#4F46E5"
         data-radius="16">
       </script>
+      {% else %}
+      <div class="demo-live-badge">● PREVIEW</div>
+      <div style="padding:40px 20px;text-align:center;color:var(--muted);font-size:13px;line-height:1.7">
+        The live demo runs against a consenting agency&#39;s public vault.<br>
+        Set <code style="font-family:var(--font-mono);font-size:12px;color:var(--indigo)">EMBED_DEMO_TENANT</code>
+        to that agency&#39;s slug to enable it here.<br><br>
+        The controls above still show the exact script tag you would paste.
+      </div>
+      {% endif %}
     </div>
   </section>
 
@@ -338,7 +348,7 @@ pre{margin:0;padding:20px;overflow-x:auto;font-family:var(--font-mono);font-size
             <td style="color:var(--muted);font-size:12px">1 – 24</td>
             <td><span class="attr-default">6</span></td>
             <td><span class="plan-badge plan-all">All</span></td>
-            <td class="attr-desc">Max properties to show. Sorted by trust score, highest first.</td>
+            <td class="attr-desc">Max properties to show. Listings with the most complete records appear first.</td>
           </tr>
           <tr>
             <td><span class="attr-name">data-type</span></td>
@@ -390,18 +400,18 @@ pre{margin:0;padding:20px;overflow-x:auto;font-family:var(--font-mono);font-size
             <td class="attr-desc">Set to <code style="font-size:11px;font-family:var(--font-mono)">false</code> to hide the WhatsApp button on each card.</td>
           </tr>
           <tr>
-            <td><span class="attr-name">data-show-trust</span></td>
+            <td><span class="attr-name">data-show-facts</span></td>
             <td style="color:var(--muted);font-size:12px">true · false</td>
             <td><span class="attr-default">true</span></td>
             <td><span class="plan-badge plan-growth">Growth+</span></td>
-            <td class="attr-desc">Set to <code style="font-size:11px;font-family:var(--font-mono)">false</code> to hide the trust score overlay on images.</td>
+            <td class="attr-desc">Set to <code style="font-size:11px;font-family:var(--font-mono)">false</code> to hide the record chip (e.g. &ldquo;Coordinates recorded&rdquo;) on images. <strong>Legacy:</strong> <code style="font-size:11px;font-family:var(--font-mono)">data-show-trust</code> is still honoured for embeds already live, and does the same thing.</td>
           </tr>
           <tr>
             <td><span class="attr-name">data-show-branding</span></td>
             <td style="color:var(--muted);font-size:12px">true · false</td>
             <td><span class="attr-default">true</span></td>
             <td><span class="plan-badge plan-pro">Pro only</span></td>
-            <td class="attr-desc">Set to <code style="font-size:11px;font-family:var(--font-mono)">false</code> to hide the "Verified by Est8Go" text (shield icon always shown).</td>
+            <td class="attr-desc">Set to <code style="font-size:11px;font-family:var(--font-mono)">false</code> to hide the &ldquo;Powered by Est8Go&rdquo; attribution.</td>
           </tr>
         </tbody>
       </table>
@@ -484,7 +494,7 @@ pre{margin:0;padding:20px;overflow-x:auto;font-family:var(--font-mono);font-size
       </div>
       <div class="faq">
         <div class="faq-q">Do I need an API key or login?</div>
-        <div class="faq-a">No. Your agency slug is all that's needed. The API only returns verified public listings — no private data is ever exposed.</div>
+        <div class="faq-a">No. Your agency slug is all that's needed. The API only returns listings your agency has published — no private data is ever exposed.</div>
       </div>
       <div class="faq">
         <div class="faq-q">Can I embed multiple widgets on the same page?</div>
@@ -496,7 +506,7 @@ pre{margin:0;padding:20px;overflow-x:auto;font-family:var(--font-mono);font-size
       </div>
       <div class="faq">
         <div class="faq-q">What happens when I add new listings?</div>
-        <div class="faq-a">The widget auto-refreshes every 30 minutes. New verified listings appear automatically — no changes to your site code required.</div>
+        <div class="faq-a">The widget auto-refreshes every 30 minutes. New listings appear automatically — no changes to your site code required.</div>
       </div>
     </div>
   </section>
@@ -506,7 +516,7 @@ pre{margin:0;padding:20px;overflow-x:auto;font-family:var(--font-mono);font-size
 <!-- FOOTER -->
 <div class="footer">
   <div class="footer-seal">
-    🛡️ <strong>Est8Go</strong> — Truth as a Service · Nigeria's Trust Infrastructure for Real Estate
+    <strong>Est8Go</strong> — Your agents sell. Kora coordinates. You stay in control.
   </div>
 </div>
 
@@ -560,7 +570,7 @@ function fallbackCopy(text) {
 var EMBED_SRC = '{{ base_url }}/static/embed.js';
 
 var demoConfig = {
-  tenant: 'bravieshomz-limited',
+  tenant: '{{ demo_tenant }}',
   theme: 'dark',
   limit: '6',
   columns: '3',
@@ -570,6 +580,7 @@ var demoConfig = {
 
 function updateDemo(attr, value) {
   demoConfig[attr] = value;
+  if (!demoConfig.tenant) return;   // no consenting demo tenant configured
 
   // Remove old script tag
   var oldScript = document.getElementById('demo-script');
