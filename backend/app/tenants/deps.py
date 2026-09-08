@@ -1,7 +1,7 @@
 from fastapi import Header, HTTPException, status, Request
 from jose import jwt, JWTError
 
-from app.core.config import settings
+from app.core.security import SECRET_KEY, ALGORITHM
 
 from fastapi import Header, HTTPException
 
@@ -38,8 +38,8 @@ def get_tenant_id(
     try:
         payload = jwt.decode(
             token,
-            settings.JWT_SECRET,
-            algorithms=[settings.JWT_ALGORITHM],
+            SECRET_KEY,
+            algorithms=[ALGORITHM],
         )
         token_tenant_id = payload.get("tenant_id")
     except JWTError:

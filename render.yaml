@@ -13,21 +13,23 @@ services:
         value: Est8Go Service Limited
       - key: DATABASE_URL
         sync: false
-      - key: JWT_SECRET
+      # JWT signing key. app/core/security.py raises at import if unset.
+      # (Replaces JWT_SECRET, which no code path reads any more.)
+      - key: SECRET_KEY
         sync: false
-      - key: JWT_ALGORITHM
-        value: HS256
       - key: OPENAI_API_KEY
         sync: false
       - key: OPENAI_MODEL
         value: gpt-4o-mini
       - key: META_VERIFY_TOKEN
         sync: false
-      - key: WHATSAPP_VERIFY_TOKEN
-        sync: false
       - key: WHATSAPP_ACCESS_TOKEN
         sync: false
       - key: WHATSAPP_PHONE_ID
+        sync: false
+      # Public property/vault pages fall back to this when a tenant has no
+      # WhatsApp number of its own (app/public/router.py).
+      - key: WHATSAPP_BUSINESS_NUMBER
         sync: false
       - key: SUPABASE_URL
         sync: false
@@ -35,8 +37,31 @@ services:
         sync: false
       - key: PUBLIC_API_KEY
         sync: false
+      # Fernet key for tenant WhatsApp credentials (app/core/crypto.py).
       - key: ENCRYPTION_KEY
         sync: false
+      # Paystack: also used as the HMAC key for webhook signature checks.
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      # Transactional email (Resend).
+      - key: RESEND_API_KEY
+        sync: false
+      - key: FROM_EMAIL
+        sync: false
+      # Absolute base URL used to build links in outbound email.
+      - key: BASE_URL
+        sync: false
+      # Health-monitor escalation recipient (app/services/health_service.py).
+      - key: SUPERADMIN_EMAIL
+        sync: false
+      # Reserved for authenticating internal cron/webhook calls. NOTE: no
+      # code path reads this yet - declared here so the value set on Render
+      # is documented rather than orphaned.
+      - key: INTERNAL_CRON_KEY
+        sync: false
+      # NOT declared, deliberately - no code path reads them:
+      #   JWT_SECRET, JWT_ALGORITHM, WHATSAPP_VERIFY_TOKEN,
+      #   PAYSTACK_PUBLIC_KEY, PAYSTACK_WEBHOOK_SECRET
     healthCheckPath: /
     autoDeploy: true
 
@@ -79,6 +104,10 @@ services:
         value: 3.11.0
       - key: DATABASE_URL
         sync: false
+      # KILL SWITCH. recovery_engine.py no-ops unless this is exactly "true"
+      # (case-insensitive). This is why the engine has never sent a message.
+      - key: RECOVERY_ENABLED
+        value: "false"
       - key: WHATSAPP_ACCESS_TOKEN
         sync: false
       - key: WHATSAPP_PHONE_ID
@@ -102,6 +131,8 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: DATABASE_URL
+        sync: false
+      - key: SUPERADMIN_EMAIL
         sync: false
       - key: OPENAI_API_KEY
         sync: false

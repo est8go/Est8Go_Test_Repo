@@ -21,12 +21,29 @@ import os
 import hashlib
 from datetime import datetime, timedelta
 from typing import Optional
+from dotenv import load_dotenv
 from jose import jwt
 from passlib.context import CryptContext
 
+# Entrypoints other than app.main (scripts, workers) may import this module
+# before any dotenv call. Load here so the check below sees backend/.env.
+load_dotenv()
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-SECRET_KEY = os.getenv("SECRET_KEY", "est8go_ultra_secret_2024")
+# ── JWT SIGNING KEY — NO FALLBACK ────────────────────────────────
+# A hardcoded default silently signs every token in production with a
+# value that is in the git history. Fail loudly at import time instead:
+# app.main imports this module at startup, so an unset SECRET_KEY stops
+# the deploy rather than shipping forgeable tokens.
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError(
+        "SECRET_KEY is not set. Est8Go will not start without a JWT signing "
+        "key. Set SECRET_KEY in the environment (Render -> Environment) "
+        "or in backend/.env for local development."
+    )
+
 ALGORITHM = "HS256"
 
 # ── TOKEN EXPIRY TIERS ───────────────────────────────────────────
