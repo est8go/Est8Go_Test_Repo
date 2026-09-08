@@ -1,13 +1,11 @@
 import os
 import httpx
 import logging
-from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
 # Import Models
 from app.listings.models import Listing
 from app.users.models import User
-from app.conversations.models import Conversation
 from app.messages.models import Message
 
 # Configuration
@@ -189,40 +187,6 @@ async def alert_realtor_of_lead(
     except Exception as e:
         logger.error(f"❌ alert_realtor_of_lead error: {e}", exc_info=True)
         return False
-
-
-# ---------------------------------------------------------
-# ABANDONED CHAT REMINDERS (Retention Engine)
-# ---------------------------------------------------------
-
-
-async def check_for_abandoned_chats(db: Session):
-    """Finds ghosted users and nudges them (2h and 24h intervals)."""
-    try:
-        # Using timezone-aware UTC
-        reminder_threshold = datetime.now(timezone.utc) - timedelta(hours=2)
-
-        idle_convos = (
-            db.query(Conversation)
-            .filter(
-                Conversation.state == "ACTIVE",
-                Conversation.updated_at < reminder_threshold,
-                Conversation.reminder_count < 2,
-            )
-            .all()
-        )
-
-        for convo in idle_convos:
-            nudge = "Hey! 👋 Just checking—are you still looking for a property? I don't want you to miss out on our verified deals!"
-            await send_meta_text_message(convo.external_user_id, nudge)
-
-            convo.reminder_count += 1
-            convo.updated_at = datetime.now(timezone.utc)
-            db.commit()
-
-    except Exception as e:
-        logger.error(f"❌ Error in Reminder service: {e}")
-        db.rollback()
 
 
 # ---------------------------------------------------------

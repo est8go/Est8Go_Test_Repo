@@ -8,14 +8,25 @@ Intelligent re-engagement sequences based on:
     - Number of previous reminders
 
 Recovery Sequences:
-    AWARENESS    → 3 nudges (4h, 12h, 24h)
-    VERIFICATION → 2 nudges (2h, 8h)   — closer to buying
-    COMMITMENT   → 2 nudges (1h, 4h)   — hottest, act fast
-    HANDSHAKE    → 1 nudge  (1h)       — inspection no-show recovery
+    AWARENESS    → 4 nudges (4h, 24h, 48h, 7d)
+    VERIFICATION → 3 nudges (2h, 12h, 24h)  — closer to buying
+    COMMITMENT   → 3 nudges (1h, 4h, 12h)   — hottest, act fast
+    HANDSHAKE    → not recovered (see choose_recovery_template)
+
+Delivery:
+    Recovery is business-initiated and therefore ALWAYS outside Meta's
+    24h customer-service window. Only APPROVED TEMPLATES are sent —
+    never free-form text. See choose_recovery_template + send_meta_template.
+
+Recency:
+    A template is deliverable at any age, so Meta will happily send to a
+    contact who went quiet months ago. RECOVERY_MAX_AGE_DAYS is the
+    judgement call Meta does not make for us: leads staler than the cutoff
+    are never chased.
 
 Rules-First (80/20):
     - All timing logic = pure Python
-    - All message selection = pure Python
+    - All template selection = pure Python
     - GPT never called for reminders
     - Zero AI cost per recovery sequence
 """
@@ -26,7 +37,6 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
 from app.conversations.models import Conversation
-from app.services.notification_service import send_meta_text_message
 from app.services.tenant_service import get_tenant_profile
 from app.services.meta_sender_service import (
     send_meta_template,
@@ -34,110 +44,6 @@ from app.services.meta_sender_service import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-# ================================================================
-# RECOVERY MESSAGE TEMPLATES
-# Per funnel stage, per reminder sequence position
-# ================================================================
-
-RECOVERY_MESSAGES = {
-    # --- AWARENESS STAGE (Buyer just said hi, gave no data yet) ---
-    "awareness": [
-        # Nudge 1 — 4h after drop-off
-        (
-            "Hi {name}! 👋\n\n"
-            "Just checking in — we were having a great conversation about your property search a few hours ago. "
-            "At *{biz_name}*, we have fresh verified listings arriving daily — "
-            "GPS-checked, AI-audited, and document-verified.\n\n"
-            "What location are you targeting? I'll pull the best options for you. 🏠"
-        ),
-        # Nudge 2 — 12h after drop-off
-        (
-            "Hello {name}! 🏠\n\n"
-            "The property market moves fast in Nigeria — "
-            "verified deals don't stay available for long.\n\n"
-            "Tell me your preferred area and budget and I'll show you "
-            "what's currently in our vault. Takes less than 2 minutes. ⚡"
-        ),
-        # Nudge 3 — 24h after drop-off
-        (
-            "Hi {name}, one last check-in from *{biz_name}*. 🙏\n\n"
-            "We respect your time — so this is our final message unless you reach out.\n\n"
-            "Whenever your property search is ready, our verified vault will be here. "
-            "Just say *Hi* to reconnect anytime. ✅"
-        ),
-        # Nudge 4 — 7 days (final)
-        (
-            "Hi {name}. 🙏\n\n"
-            "This is our final message from *{biz_name}*.\n\n"
-            "We completely understand — life gets busy and "
-            "property decisions take time.\n\n"
-            "Whenever you're ready to find a verified, "
-            "GPS-confirmed property in Nigeria, just send "
-            "us a message and we'll be ready for you. ✅\n\n"
-            "Wishing you all the best. 🏠"
-        ),
-    ],
-    # --- VERIFICATION STAGE (Buyer gave location OR budget, not both) ---
-    "verification": [
-        # Nudge 1 — 2h after drop-off (closer to buying — act fast)
-        (
-            "Hi {name}! 🔍\n\n"
-            "You were in the middle of qualifying a property just a couple of hours ago — "
-            "and I have verified listings that match what you're looking for.\n\n"
-            "Can you share your {missing_field} so I can send your exact matches right now?"
-        ),
-        # Nudge 2 — 8h after drop-off (final — property may be gone)
-        (
-            "Hi {name}! ⏰\n\n"
-            "Heads up from *{biz_name}*: verified properties at your price point "
-            "don't stay available long — some have already been taken today.\n\n"
-            "Share your {missing_field} now and I'll lock in your top matches before they're gone. 🏠"
-        ),
-    ],
-    # --- COMMITMENT STAGE (Buyer gave both location AND budget) ---
-    "commitment": [
-        # Nudge 1 — 1h after drop-off (very urgent — they were ready to buy)
-        (
-            "Hi {name}! 🔥\n\n"
-            "You were this close — just an hour ago you were ready to secure a verified property.\n\n"
-            "That listing is still available *right now*, but at this trust grade it will go fast.\n\n"
-            "Say *Yes* to schedule your site inspection today. Our agent is standing by. ⚡"
-        ),
-        # Nudge 2 — 4h after drop-off (final — last chance)
-        (
-            "Hello {name}. 🏠\n\n"
-            "*Last chance* — the verified property we found for you is still available, "
-            "but we can't hold it beyond today.\n\n"
-            "At *{biz_name}*, Emerald-rated listings move quickly — GPS-verified, AI-audited, "
-            "and clean documents.\n\n"
-            "Say *Yes* to claim your inspection slot, or *New Search* to explore alternatives."
-        ),
-    ],
-    # --- HANDSHAKE STAGE (Inspection was scheduled, buyer no-showed) ---
-    "handshake": [
-        # Nudge 1 — 1h after missed inspection (reschedule same day)
-        (
-            "Hi {name}! 👋\n\n"
-            "It looks like you missed the site inspection today — no worries at all!\n\n"
-            "Our agent has a slot available *later today* if you'd like to reschedule. "
-            "What time works for you? 📅"
-        ),
-    ],
-    # --- HIGH LEAD SCORE (score >= 70, any stage) ---
-    "high_value": [
-        # Special sequence for high-intent buyers
-        (
-            "Hi {name}! 🌟\n\n"
-            "Based on our conversation, you're looking for exactly what "
-            "*{biz_name}* specialises in.\n\n"
-            "I've reserved a *Priority Viewing* slot for you — "
-            "this means our lead agent will personally guide your site inspection.\n\n"
-            "Would you like to confirm your slot? Just say *Yes*. 🏠"
-        ),
-    ],
-}
 
 
 # ================================================================
@@ -155,6 +61,27 @@ REMINDER_TIMING = {
 
 
 _SPEED_MULTIPLIER = {"gentle": 2.0, "standard": 1.0, "aggressive": 0.5}
+
+
+# ── RECENCY CUTOFF ───────────────────────────────────────────────
+# Upper bound on lead age. The timing table only ever set a LOWER
+# bound ("enough hours have passed"), so without this a conversation
+# dormant for a year still qualified for nudge 1. Meta will deliver a
+# template at any age — this is the judgement call it does not make.
+# Env-overridable; falls back to 14 on missing/malformed values.
+_DEFAULT_MAX_AGE_DAYS = 14
+
+
+def get_max_age_days() -> int:
+    """Read RECOVERY_MAX_AGE_DAYS at call time (not import time) so the
+    cron picks up an env change without a code deploy. Any unparseable
+    or non-positive value falls back to the safe default."""
+    import os
+    try:
+        _v = int(os.getenv("RECOVERY_MAX_AGE_DAYS", _DEFAULT_MAX_AGE_DAYS))
+        return _v if _v > 0 else _DEFAULT_MAX_AGE_DAYS
+    except (TypeError, ValueError):
+        return _DEFAULT_MAX_AGE_DAYS
 
 
 def is_good_send_time(window_start: int = 7, window_end: int = 21) -> bool:
@@ -248,6 +175,17 @@ def should_send_reminder(
         last_active = last_active.replace(tzinfo=timezone.utc)
 
     hours_since = (now - last_active).total_seconds() / 3600
+
+    # RECENCY CUTOFF — refuse to chase stale leads. Checked before the
+    # timing table so no amount of elapsed time can make a dead lead
+    # eligible. Deliberately independent of `speed`: a tenant on
+    # "gentle" should not get a longer chase window, only a slower one.
+    _max_age_days = get_max_age_days()
+    if hours_since > _max_age_days * 24:
+        return False, 0, (
+            f"Too stale ({hours_since / 24:.0f}d > {_max_age_days}d cutoff)"
+        )
+
     multiplier = _SPEED_MULTIPLIER.get(speed, 1.0)
     required_hours = max(0.5, timing[count][0] * multiplier)
 
@@ -259,81 +197,6 @@ def should_send_reminder(
         return True, -1, f"High-value buyer (score={score})"
 
     return True, nudge_index, f"Stage={stage}, Nudge={count+1}, Speed={speed}"
-
-
-def build_reminder_message(
-    convo: Conversation,
-    nudge_index: int,
-    name: str,
-    biz_name: str,
-) -> str:
-    """
-    Builds the personalised reminder message.
-    Fills in missing_field dynamically based on prefs.
-    """
-    import json
-
-    stage = convo.funnel_stage or "awareness"
-    prefs = {}
-    try:
-        prefs = json.loads(convo.data_json or "{}")
-    except Exception:
-        pass
-
-    # Determine missing field for verification stage
-    missing_field = "budget" if prefs.get("location") else "preferred location"
-
-    # Build search context string from previous preferences
-    location  = (prefs.get("location") or "").title()
-    prop_type = (prefs.get("property_type") or "").title()
-    budget    = prefs.get("budget_max") or prefs.get("budget")
-    search_context = ""
-    if prop_type or location:
-        _parts = []
-        if prop_type:
-            _parts.append(prop_type)
-        if location:
-            _parts.append(f"in {location}")
-        if budget:
-            try:
-                _b = int(budget)
-                if _b >= 1_000_000:
-                    _parts.append(f"around ₦{_b / 1_000_000:.0f}M")
-            except (ValueError, TypeError):
-                pass
-        search_context = " ".join(_parts)
-
-    # Awareness nudge 1 with context — override template if context available
-    if stage == "awareness" and nudge_index == 0 and search_context:
-        return (
-            f"Hi {name}! 👋\n\n"
-            f"Just checking in — you were looking for "
-            f"*{search_context}* a few hours ago.\n\n"
-            f"We have verified listings that match your criteria. "
-            f"Would you like to continue your search? 🏠"
-        )
-
-    # High-value buyers get special template
-    if nudge_index == -1:
-        templates = RECOVERY_MESSAGES.get("high_value", [])
-    else:
-        templates = RECOVERY_MESSAGES.get(stage, RECOVERY_MESSAGES["awareness"])
-        nudge_index = min(nudge_index, len(templates) - 1)
-
-    if not templates:
-        return (
-            f"Hi {name}! 👋\n\n"
-            f"Just checking in from *{biz_name}*. "
-            f"Are you still looking for a property? "
-            f"I'm here whenever you're ready. 🏠"
-        )
-
-    template = templates[nudge_index]
-    return template.format(
-        name=name,
-        biz_name=biz_name,
-        missing_field=missing_field,
-    )
 
 
 # ================================================================
@@ -371,6 +234,15 @@ def choose_recovery_template(convo, score, db) -> dict:
         _data = json.loads(convo.data_json or "{}")
     except Exception:
         _data = {}
+
+    # PLATFORM-CARE GUARD (belt). A `platform_state` key means this
+    # conversation ran through platform_care.py — someone asking Est8Go
+    # about the PRODUCT, not a buyer browsing property. funnel_stage is
+    # still "awareness" for them, so stage alone cannot tell them apart
+    # and they would wrongly receive a property re-engagement template.
+    # Braces: the tenant_type check in run_dropoff_recovery.
+    if "platform_state" in _data:
+        return None
 
     _name = (convo.display_name or "there").split()[0] if convo.display_name else "there"
     _area = (_data.get("location") or "").title()
@@ -452,6 +324,33 @@ def _get_tenant_recovery_settings(db: Session, tenant_id: int, cache: dict) -> d
     return cache[tenant_id]
 
 
+def _is_platform_tenant(db: Session, tenant_id: int, cache: dict) -> bool:
+    """True when the tenant is the Est8Go platform tenant itself, whose
+    conversations are customer-care chats about the product rather than
+    property leads. Uses the same `tenant_type == "platform"` discriminator
+    the live webhook dispatches on (conversation_service.py), not a
+    hardcoded id. Cached per run. Unknown/error → True (skip), because
+    failing closed here costs one unsent nudge and failing open sends the
+    wrong message from the platform's own number."""
+    if tenant_id not in cache:
+        try:
+            from app.tenants.models import Tenant
+            _t = db.get(Tenant, tenant_id)
+            if _t is None:
+                cache[tenant_id] = True
+            else:
+                cache[tenant_id] = (
+                    getattr(_t, "tenant_type", "") or ""
+                ) == "platform"
+        except Exception as e:
+            logger.error(
+                f"❌ RECOVERY: tenant_type lookup failed for tenant "
+                f"{tenant_id} ({e}) — treating as platform, skipping."
+            )
+            cache[tenant_id] = True
+    return cache[tenant_id]
+
+
 async def run_dropoff_recovery(db: Session):
     """
     Master recovery function.
@@ -486,9 +385,16 @@ async def run_dropoff_recovery(db: Session):
         skipped = 0
         errors = 0
         _settings_cache: dict = {}
+        _platform_cache: dict = {}
 
         for convo in active_convos:
             try:
+                # PLATFORM-CARE GUARD (braces). Skip the platform tenant's
+                # own customer-care conversations before any other work.
+                if _is_platform_tenant(db, convo.tenant_id, _platform_cache):
+                    skipped += 1
+                    continue
+
                 settings = _get_tenant_recovery_settings(db, convo.tenant_id, _settings_cache)
                 should_send, nudge_index, reason = should_send_reminder(
                     convo,
@@ -526,6 +432,30 @@ async def run_dropoff_recovery(db: Session):
                 _pid, _token, _ = get_tenant_whatsapp_credentials(
                     db, convo.tenant_id
                 )
+
+                # HARD REFUSAL. get_tenant_whatsapp_credentials returns
+                # _pid=None when a tenant has no active WhatsApp channel
+                # AND no whatsapp_phone_number_id. send_meta_template would
+                # then silently fall back to the global env number, sending
+                # THIS tenant's branded template from the PLATFORM's number
+                # — a cross-tenant leak the buyer sees. That env fallback is
+                # correct for the reply path (Scenario A compatibility) and
+                # wrong here, so it is refused at the call site rather than
+                # in the shared resolver.
+                #
+                # Counted as an error, not a skip: a tenant with no channel
+                # row is a misconfiguration someone must fix, and it should
+                # be loud in the cron logs.
+                if not _pid:
+                    errors += 1
+                    logger.error(
+                        f"❌ RECOVERY CONFIG: tenant {convo.tenant_id} has no "
+                        f"WhatsApp phone_number_id (no active tenant_channels "
+                        f"row and no Tenant.whatsapp_phone_number_id). "
+                        f"Refusing to send from the global number. "
+                        f"Conversation {convo.id} not contacted."
+                    )
+                    continue
 
                 _ok = await send_meta_template(
                     convo.external_user_id,
@@ -604,6 +534,12 @@ async def escalate_high_value_leads(db: Session):
 
     now = datetime.now(timezone.utc)
     threshold = now - timedelta(hours=6)
+    # Same recency cutoff as should_send_reminder. This loop had only a
+    # LOWER bound (>6h idle), so a lead cold for a year still escalated to
+    # a realtor. No template is involved here (the alert goes to staff),
+    # but chasing a dead lead wastes the realtor's time either way.
+    _max_age_days = get_max_age_days()
+    stale_before = now - timedelta(days=_max_age_days)
 
     high_value = (
         db.query(Conversation)
@@ -626,6 +562,13 @@ async def escalate_high_value_leads(db: Session):
 
         if last_active > threshold:
             continue  # still recent — skip
+
+        if last_active < stale_before:
+            logger.info(
+                f"⏭️  ESCALATION SKIP: {convo.external_user_id} too stale "
+                f"({(now - last_active).days}d > {_max_age_days}d cutoff)"
+            )
+            continue
 
         try:
             prefs = json.loads(convo.data_json or "{}")

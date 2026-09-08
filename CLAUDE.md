@@ -53,6 +53,14 @@ Super admin: est8go@gmail.com / Est8Go@2026
   Bot permanently deactivated on opt-out
   Hourly cron job on Render (est8go-reminder-cron)
 - Recovery message labels in ACTION_LABELS
+- Meta templates ARE wired — recovery sends APPROVED TEMPLATES,
+  never free-form text (send_meta_template + choose_recovery_template,
+  5 reengaged_* templates). This is what makes it 24h-window safe.
+  Guards before any send: RECOVERY_MAX_AGE_DAYS recency cutoff
+  (default 14d), platform-care skip, refusal when a tenant has no
+  phone_number_id. Template inventory: docs/meta_templates.md
+  (UNVERIFIED — confirm against Meta dashboard).
+  RECOVERY_ENABLED still "false" — nothing sends.
 - credits/history returns action_type or event_type
 - Onboarding Step 3 redesigned — two option cards:
   Option A: Est8Go sets up WhatsApp (50 credits, phone number only)
