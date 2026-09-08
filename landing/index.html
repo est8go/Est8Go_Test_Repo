@@ -89,10 +89,13 @@
       --muted: #94A3B8;
       --indigo: #4F46E5;
       --indigo2: #4338CA;
+      /* Indigo at body size fails AA on dark surfaces (2.82:1).
+         --accent-text is the readable variant; --indigo stays for
+         large text and for fills that carry white on top. */
+      --accent-text: #A5B4FC;
+      --accent-soft: rgba(79, 70, 229, 0.12);
+      /* Green means WhatsApp. Nothing else. */
       --em: #10B981;
-      --em2: #059669;
-      --warn: #F59E0B;
-      --risk: #F43F5E;
       --r-sm: 8px;
       --r-md: 14px;
       --r-lg: 20px;
@@ -108,7 +111,9 @@
       --border2: rgba(15, 23, 42, 0.14);
       --text: #0F172A;
       --text2: #334155;
-      --muted: #64748B;
+      --muted: #5A6472;
+      --accent-text: #4338CA;
+      --accent-soft: rgba(79, 70, 229, 0.10);
     }
 
     html {
@@ -136,7 +141,7 @@
         radial-gradient(ellipse 80% 60% at 110% -10%,
           rgba(79, 70, 229, 0.12) 0%, transparent 60%),
         radial-gradient(ellipse 60% 50% at -10% 110%,
-          rgba(16, 185, 129, 0.08) 0%, transparent 60%),
+          rgba(79, 70, 229, 0.05) 0%, transparent 60%),
         radial-gradient(ellipse 50% 40% at 50% 50%,
           rgba(79, 70, 229, 0.04) 0%, transparent 70%);
       animation: meshMove 12s ease-in-out infinite alternate;
@@ -162,7 +167,7 @@
         radial-gradient(ellipse 80% 60% at 110% -10%,
           rgba(79, 70, 229, 0.06) 0%, transparent 60%),
         radial-gradient(ellipse 60% 50% at -10% 110%,
-          rgba(16, 185, 129, 0.04) 0%, transparent 60%);
+          rgba(79, 70, 229, 0.03) 0%, transparent 60%);
     }
 
     * {
@@ -335,9 +340,11 @@
       border-color: rgba(255, 255, 255, 0.2);
     }
 
+    /* Dark ink on WhatsApp green: white scores 1.98:1 and fails AA.
+       #0B141A on #25D366 is 9.8:1, and matches Meta's own guidance. */
     .btn-wa {
       background: #25D366;
-      color: white;
+      color: #0B141A;
       padding: 13px 24px;
       box-shadow: 0 4px 20px rgba(37, 211, 102, 0.3);
     }
@@ -543,13 +550,13 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(16, 185, 129, 0.10);
-      border: 1px solid rgba(16, 185, 129, 0.25);
+      background: var(--accent-soft);
+      border: 1px solid rgba(79, 70, 229, 0.22);
       border-radius: 99px;
       padding: 7px 16px;
       font-size: 12px;
       font-weight: 600;
-      color: var(--em);
+      color: var(--accent-text);
       margin-bottom: 24px;
     }
 
@@ -557,7 +564,7 @@
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: var(--em);
+      background: var(--indigo);
       animation: badgePulse 2s infinite;
     }
 
@@ -575,8 +582,10 @@
       }
     }
 
+    /* Four words, one line at every width. Sizes step up only when the
+       text column is wide enough to hold the line without wrapping. */
     .hero h1 {
-      font-size: 32px;
+      font-size: 36px;
       margin-bottom: 20px;
       line-height: 1.05;
       letter-spacing: -0.02em;
@@ -584,19 +593,21 @@
 
     @media (min-width: 768px) {
       .hero h1 {
-        font-size: 38px;
+        font-size: 44px;
       }}
 
     @media (min-width: 1100px) {
       .hero h1 {
-        font-size: 42px;
+        font-size: 48px;
       }}
 
-    /* Colour alone carries the emphasis. No gradient (it thins the strokes
-       of a 400-weight serif) and no display:block (it forced the break). */
-    .hero h1 .accent {
-      color: var(--indigo);
-    }
+    /* 1200px is where .container hits max-width and the text column
+       stops growing (528px). Measured: 60px renders 483px on one line,
+       45px of slack, unchanged from 1200 to 1920. */
+    @media (min-width: 1200px) {
+      .hero h1 {
+        font-size: 60px;
+      }}
 
     .hero-sub {
       font-size: 16px;
@@ -691,11 +702,11 @@
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      background: rgba(16, 185, 129, 0.12);
+      background: var(--accent-soft);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--em);
+      color: var(--accent-text);
       font-size: 9px;
       font-weight: 700;
       flex-shrink: 0;
@@ -796,7 +807,7 @@
     /* Fix hero h1 on mobile */
     @media (max-width: 767px) {
       .hero h1 {
-        font-size: 32px;
+        font-size: 36px;
         word-break: break-word;
         overflow-wrap: break-word;
       }}
@@ -1022,7 +1033,7 @@
     }
 
     .problem-icon-em {
-      background: rgba(16, 185, 129, 0.12);
+      background: var(--surface2);
     }
 
     .problem-icon-indigo {
@@ -1030,7 +1041,7 @@
     }
 
     .problem-icon-warn {
-      background: rgba(245, 158, 11, 0.12);
+      background: var(--surface2);
     }
 
     .problem-icon-slate {
@@ -1056,11 +1067,11 @@
 
       0%,
       100% {
-        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.08), 0 0 40px rgba(16, 185, 129, 0.2);
+        box-shadow: 0 0 0 8px rgba(79, 70, 229, 0.08), 0 0 40px rgba(79, 70, 229, 0.2);
       }
 
       50% {
-        box-shadow: 0 0 0 16px rgba(16, 185, 129, 0.04), 0 0 60px rgba(16, 185, 129, 0.3);
+        box-shadow: 0 0 0 16px rgba(79, 70, 229, 0.04), 0 0 60px rgba(79, 70, 229, 0.3);
       }
     }
 
@@ -1176,13 +1187,13 @@
 
     .how-step-tag {
       display: inline-block;
-      background: rgba(16, 185, 129, 0.10);
-      color: var(--em);
+      background: var(--accent-soft);
+      color: var(--accent-text);
       font-size: 11px;
       font-weight: 700;
       padding: 4px 12px;
       border-radius: 99px;
-      border: 1px solid rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(79, 70, 229, 0.2);
     }
 
     /* ════════════════════════════════
@@ -1439,7 +1450,7 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: var(--em);
+      background: var(--indigo);
       animation: badgePulse 2s infinite;
     }
 
@@ -1627,7 +1638,7 @@
       inset: -1px;
       border-radius: var(--r-xl);
       padding: 1px;
-      background: linear-gradient(135deg, #4F46E5, #10B981, #4F46E5);
+      background: linear-gradient(135deg, #4F46E5, #818CF8, #4F46E5);
       -webkit-mask:
         linear-gradient(#fff 0 0) content-box,
         linear-gradient(#fff 0 0);
@@ -1734,8 +1745,8 @@
       width: 18px;
       height: 18px;
       border-radius: 50%;
-      background: rgba(16, 185, 129, 0.12);
-      color: var(--em);
+      background: var(--accent-soft);
+      color: var(--accent-text);
       font-size: 10px;
       font-weight: 700;
       display: flex;
@@ -1882,13 +1893,13 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(16, 185, 129, 0.10);
-      border: 1px solid rgba(16, 185, 129, 0.25);
+      background: var(--accent-soft);
+      border: 1px solid rgba(79, 70, 229, 0.22);
       border-radius: 99px;
       padding: 7px 16px;
       font-size: 12px;
       font-weight: 600;
-      color: var(--em);
+      color: var(--accent-text);
       margin-bottom: 24px;
     }
 
@@ -2057,14 +2068,14 @@
       gap: 6px;
       font-size: 12px;
       font-weight: 600;
-      color: var(--em);
+      color: var(--muted);
     }
 
     .footer-live-dot {
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: var(--em);
+      background: var(--indigo);
       animation: badgePulse 2s infinite;
     }
 
@@ -2122,7 +2133,7 @@
     .mock-price {
       font-size: 20px;
       font-weight: 700;
-      color: var(--em);
+      color: var(--text);
       margin-bottom: 10px;
     }
 
@@ -2160,7 +2171,7 @@
       border-top: 1px solid var(--border);
       font-size: 10px;
       font-weight: 700;
-      color: var(--em);
+      color: var(--muted);
       opacity: 0.8;
     }
 
@@ -2348,7 +2359,7 @@
     .record-disclaimer {
       background: var(--surface2);
       border: 1px solid var(--border);
-      border-left: 3px solid var(--warn);
+      border-left: 3px solid var(--border2);
       border-radius: 12px;
       padding: 16px 18px;
       font-size: 12.5px;
@@ -2424,9 +2435,7 @@
           </div>
 
           <h1 class="fade-up delay-1">
-            Never lose another buyer to a
-            <span class="accent">slow reply</span>
-            or a forgotten follow-up.
+            Never lose another buyer.
           </h1>
 
           <p class="hero-sub fade-up delay-2">
@@ -2675,7 +2684,7 @@
 
           <div class="how-step how-step-last fade-up delay-3">
             <div class="how-step-left">
-              <div class="how-step-num" style="background:var(--em)">
+              <div class="how-step-num" style="background:var(--indigo)">
                 3
               </div>
               <div class="how-step-line"></div>
