@@ -15,8 +15,8 @@ from app.core.crypto import encrypt_secret
 from app.core.validators import validate_meta_phone_number_id
 from app.database.db import get_db
 from app.listings.models import Listing, ListingDocument
-from app.tenants.models import TenantChannel
 from app.listings.schemas import ListingOut
+from app.tenants.models import Tenant as _TenantModel, TenantChannel
 from app.services.trust_engine import calculate_confidence_score, get_trust_label
 
 logger = logging.getLogger(__name__)
@@ -62,6 +62,21 @@ router = APIRouter(prefix="/public", tags=["Public Pages"])
 # --- 3. HELPERS ---
 
 
+def _tenant_is_public(tenant) -> bool:
+    """
+    True when a tenant's content may be served on a PUBLIC surface.
+
+    A suspended tenant (is_active=False) must disappear from every public
+    page. Previously only the agency directory checked this, so a
+    suspended agency's verified listings stayed live at
+    /public/property/{id} with a working WhatsApp button.
+
+    A listing with no resolvable tenant is also non-public — an orphan
+    row should never render rather than render unattributed.
+    """
+    return bool(tenant is not None and getattr(tenant, "is_active", False))
+
+
 def _get_wa_number(listing, db: Session) -> str:
     """Returns E.164 WhatsApp number (e.g. 2348012345678) for wa.me links."""
     raw = ""
@@ -70,7 +85,11 @@ def _get_wa_number(listing, db: Session) -> str:
             from app.tenants.models import Tenant
 
             tenant = db.query(Tenant).filter(Tenant.id == listing.tenant_id).first()
-            raw = getattr(tenant, "whatsapp_phone_number", "") or ""
+            # Never surface a suspended tenant's number. Callers should
+            # already have gated on _tenant_is_public; this is the second
+            # lock, so a new caller cannot leak a number by forgetting.
+            if _tenant_is_public(tenant):
+                raw = getattr(tenant, "whatsapp_phone_number", "") or ""
     except Exception:
         pass
     if not raw:
@@ -154,7 +173,14 @@ def _property_context(listing, db: Session) -> dict:
 
 
 def _fetch_listing(listing_id: int, db: Session):
-    return (
+    """
+    Loads a listing for a PUBLIC page, or None if it must not be shown.
+
+    Returns None for a suspended tenant so the caller 404s. 404 rather
+    than 403 matches the cross-tenant isolation convention used by
+    serve_document: a 403 would confirm the listing exists.
+    """
+    listing = (
         db.query(Listing)
         .options(
             joinedload(Listing.images),
@@ -164,6 +190,12 @@ def _fetch_listing(listing_id: int, db: Session):
         .filter(Listing.id == listing_id)
         .first()
     )
+    if not listing:
+        return None
+    # tenant is already eager-loaded above — no extra query.
+    if not _tenant_is_public(listing.tenant):
+        return None
+    return listing
 
 
 @router.get("/property/{listing_id}/classic", response_class=HTMLResponse)
@@ -179,6 +211,10 @@ async def get_property_page_classic(
             name="property_detail_classic.html",
             context=_property_context(listing, db),
         )
+    except HTTPException:
+        # HTTPException subclasses Exception, so without this the 404
+        # raised above is swallowed and returned as a 500.
+        raise
     except Exception as e:
         logger.error(f"❌ Property Classic Page Error: {e}")
         return HTMLResponse(
@@ -199,6 +235,10 @@ async def get_property_page(
             name="property_detail.html",
             context=_property_context(listing, db),
         )
+    except HTTPException:
+        # HTTPException subclasses Exception, so without this the 404
+        # raised above is swallowed and returned as a 500.
+        raise
     except Exception as e:
         logger.error(f"❌ Property Page Error: {e}")
         return HTMLResponse(
@@ -244,6 +284,12 @@ async def serve_document(
     if doc.tenant_id != listing.tenant_id:
         raise _DENY
     if listing.status != "verified":
+        raise _DENY
+
+    # 3b. Tenant must not be suspended. A suspended agency's documents
+    #     stop being served the moment it is suspended.
+    _t = db.query(_TenantModel).filter(_TenantModel.id == listing.tenant_id).first()
+    if not _tenant_is_public(_t):
         raise _DENY
 
     # 4. Stream from the PRIVATE bucket. Any storage failure → 404.
@@ -297,6 +343,12 @@ async def get_admin_dashboard(request: Request):
 # 4. Search API for the Bot
 @router.get("/listings/{tenant_id}", response_model=List[ListingOut])
 def get_public_listings(tenant_id: int, db: Session = Depends(get_db)):
+    # A suspended tenant returns an empty list, not its listings. Empty
+    # rather than 404 keeps the response shape stable for callers and
+    # does not confirm whether the tenant exists.
+    _t = db.query(_TenantModel).filter(_TenantModel.id == tenant_id).first()
+    if not _tenant_is_public(_t):
+        return []
     return (
         db.query(Listing)
         .filter(Listing.tenant_id == tenant_id, Listing.status == "verified")
@@ -665,10 +717,14 @@ async def get_matches_page(request: Request, ids: str, db: Session = Depends(get
         # Fetch verified properties from the list
         listings = (
             db.query(Listing)
-            .options(joinedload(Listing.images))
+            .options(joinedload(Listing.images), joinedload(Listing.tenant))
             .filter(Listing.id.in_(id_list))
             .all()
         )
+
+        # Drop any whose tenant has been suspended. The gallery is built
+        # from ids the bot sent earlier, which may have gone stale.
+        listings = [l for l in listings if _tenant_is_public(l.tenant)]
 
         # Get wa_number from first listing's tenant
         wa_number = _get_wa_number(listings[0], db) if listings else ""
@@ -707,13 +763,23 @@ async def public_listings_api(
     """
     from app.tenants.models import Tenant as _Tenant
 
-    tenant = db.query(_Tenant).filter(_Tenant.slug == tenant_slug).first()
+    tenant = (
+        db.query(_Tenant)
+        .filter(_Tenant.slug == tenant_slug, _Tenant.is_active == True)
+        .first()
+    )
     if not tenant:
         tenant = (
             db.query(_Tenant)
-            .filter(_Tenant.business_name.ilike(f"%{tenant_slug.replace('-', ' ')}%"))
+            .filter(
+                _Tenant.business_name.ilike(f"%{tenant_slug.replace('-', ' ')}%"),
+                _Tenant.is_active == True,
+            )
             .first()
         )
+    # Suspended tenants 404 exactly like tenants that never existed —
+    # the fuzzy business_name fallback is filtered too, or it would be a
+    # back door to a suspended agency.
     if not tenant:
         raise HTTPException(status_code=404, detail="Agency not found")
 
@@ -775,15 +841,22 @@ async def tenant_public_vault(
         from app.tenants.models import Tenant
         from app.company_profiles.models import CompanyProfile
 
-        tenant = db.query(Tenant).filter(Tenant.slug == tenant_slug).first()
+        tenant = (
+            db.query(Tenant)
+            .filter(Tenant.slug == tenant_slug, Tenant.is_active == True)
+            .first()
+        )
         if not tenant:
             tenant = (
                 db.query(Tenant)
                 .filter(
-                    Tenant.business_name.ilike(f"%{tenant_slug.replace('-', ' ')}%")
+                    Tenant.business_name.ilike(f"%{tenant_slug.replace('-', ' ')}%"),
+                    Tenant.is_active == True,
                 )
                 .first()
             )
+        # Same rule as the JSON API — suspended agencies 404, and the
+        # fuzzy name fallback cannot be used to reach one.
         if not tenant:
             raise HTTPException(status_code=404, detail="Agency not found")
 

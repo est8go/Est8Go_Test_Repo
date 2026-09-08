@@ -107,28 +107,28 @@ async def receive_meta_message(
     Unified entry point for WhatsApp, Instagram, and Facebook messages.
 
     Every payload is signature-checked against META_APP_SECRET before
-    anything is parsed or dispatched.
+    anything is parsed or dispatched. Fails closed: an unset secret
+    rejects all traffic rather than accepting it unverified.
     """
     # Raw bytes — the signature is over these, not over parsed JSON.
     raw_body = await request.body()
     _sig = request.headers.get("X-Hub-Signature-256")
 
-    # ── TEMPORARY: UNPROTECTED UNTIL META_APP_SECRET IS SET ──────────
-    # Deliberate deploy-then-configure gap so this can ship before the
-    # secret exists on Render. While unset, the endpoint accepts ANY
-    # POST from ANYONE — exactly the vulnerability this code closes.
-    #
-    # ACTION REQUIRED: set META_APP_SECRET (Meta App Dashboard →
-    # Settings → Basic → App Secret) on the web service, then DELETE
-    # this whole branch so a missing secret fails closed instead of
-    # silently disabling verification.
+    # FAIL CLOSED. A missing META_APP_SECRET rejects every payload rather
+    # than waving it through — there is deliberately no path where an
+    # unset or empty secret silently disables verification. Logged
+    # separately from a bad signature because the two have completely
+    # different causes: this one is our misconfiguration, and without a
+    # distinct message it looks like Meta sending bad signatures.
     if not os.getenv("META_APP_SECRET"):
-        logger.warning(
-            "🚨 WEBHOOK UNVERIFIED: META_APP_SECRET is not set — accepting "
-            "an UNSIGNED payload. This endpoint is currently open to "
-            "forged messages. Set META_APP_SECRET on Render now."
+        logger.critical(
+            "❌ WEBHOOK REJECTED: META_APP_SECRET is not set — rejecting ALL "
+            "webhook traffic. Kora is offline until this is set on the web "
+            "service (Meta App Dashboard → Settings → Basic → App Secret)."
         )
-    elif not _verify_meta_signature(raw_body, _sig):
+        return JSONResponse(status_code=403, content={"detail": "Invalid signature"})
+
+    if not _verify_meta_signature(raw_body, _sig):
         # Do not echo the signature or body back — a rejection response
         # should tell an attacker nothing beyond "no".
         logger.error(
