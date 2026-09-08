@@ -5,11 +5,10 @@
 > **English (`en`)**, category **Marketing** — matching what the code
 > sends. No action needed on them.
 >
-> ⚠️ **`property_carousel` DOES NOT EXIST in Meta.** The account holds
-> exactly six templates: the five `reengaged_*` plus `hello_world`
-> (Utility, `en_US`). `send_meta_carousel()` is called on the **live
-> reply path**, so every carousel send is currently failing. It logs a
-> non-200 and returns without raising — see "Other templates" below.
+> 🗑️ **`property_carousel` never existed in Meta and has been removed
+> from the codebase.** The account holds exactly six templates: the five
+> `reengaged_*` plus `hello_world` (Utility, `en_US`). `send_meta_carousel()`
+> and `prepare_meta_carousel()` are deleted — see "Removed" below.
 
 ## Why templates at all
 
@@ -62,11 +61,43 @@ static Quick-Reply, so **no button component is sent** in the payload.
 - **Kill switch** — nothing sends unless `RECOVERY_ENABLED` is exactly
   `"true"` (case-insensitive). Default off.
 
-## Other templates referenced in code
+## Removed: `property_carousel`
 
-| Template name | Where | Status |
-|---|---|---|
-| `property_carousel` | `send_meta_carousel()`, `meta_sender_service.py` | ❌ **DOES NOT EXIST in Meta.** Confirmed absent from the dashboard. Called on the live reply path in `conversation_service.py`, so every carousel send fails. `send_meta_carousel` catches the non-200, logs it, and returns `None` without raising — the caller carries on, so there is no crash and no retry. |
+`send_meta_carousel()` and `prepare_meta_carousel()` have been **deleted**
+from `meta_sender_service.py`, along with all six call sites in
+`conversation_service.py`.
+
+The template was never created in Meta, so every call returned HTTP 400
+(error 132001, "template name does not exist"). The function caught the
+non-200, logged it and returned `None` without raising, so callers carried
+on and nothing broke visibly.
+
+**The cards buyers actually see come from `send_meta_image_message()`**
+(`notification_service.py`) — a plain WhatsApp `type: "image"` message with
+the property summary as its caption. That is free-form, needs no template
+approval, and was already running on the main search path immediately
+before each failing carousel call. Deleting the carousel changed nothing a
+buyer receives; it only removed a guaranteed-failing API round-trip per
+search.
+
+Two bugs died with the function:
+
+- **Hardcoded `en_US`.** Every Est8Go template is `en`; only Meta's stock
+  `hello_world` is `en_US`. Had `property_carousel` ever been created as
+  `en` to match the account, the send would have failed a second time for
+  this separate reason.
+- **Messenger-format buttons.** `prepare_meta_carousel` built `web_url` and
+  `postback` buttons — Facebook Messenger Send API format, not WhatsApp —
+  in a `buttons` key that `send_meta_carousel` never read. Dead data inside
+  dead code, and not a usable starting point had the template been built.
+
+Also removed: the unreachable `trigger_global_search` branch in
+`conversation_service.py`, which contained one of the six call sites.
+Nothing in the repo ever produced that reply value — `kora_behavior.py`
+only passes it through — so the branch had never executed.
+
+If a carousel is wanted in future, design the template in Meta first and
+write the payload to match it. Do not resurrect the deleted code.
 
 ### Templates that actually exist in the account (6 total)
 
@@ -80,10 +111,9 @@ static Quick-Reply, so **no button component is sent** in the payload.
 | `hello_world` | Utility | `en_US` | Active (Meta's default sample — unused by Est8Go) |
 
 Note the language split: every Est8Go template is `en`. Only Meta's
-stock `hello_world` is `en_US`. `send_meta_carousel` hardcodes
-`en_US` — if `property_carousel` is ever created as English (`en`) to
-match the rest of the account, that hardcoded `en_US` would have to
-change too, or the send fails for a second, separate reason.
+stock `hello_world` is `en_US`, and it is unused by Est8Go. No code
+sends `en_US` any more — `send_meta_template` defaults to `en`, which
+matches all five live templates.
 
 ## Verification record
 
@@ -94,7 +124,7 @@ Checked against WhatsApp Manager on 2026-09-08:
 - [x] Category — Marketing for all five
 - [x] Approval status — Active/Approved for all five
 - [x] Account contains exactly 6 templates (5 + `hello_world`)
-- [x] `property_carousel` — **absent**
+- [x] `property_carousel` — **absent**, and now deleted from the codebase
 
 Still unrecorded (not needed for correctness, useful if templates are
 edited later): body placeholder counts per template, image header

@@ -29,8 +29,6 @@ from app.conversations.models import Conversation
 from app.services.tenant_service import get_tenant_profile
 from app.services.meta_sender_service import (
     send_meta_message,
-    send_meta_carousel,
-    prepare_meta_carousel,
 )
 
 # Logic Engines
@@ -1544,11 +1542,6 @@ async def handle_incoming_message(data: dict, db: Session):
                                 phone_number_id=_send_pid,
                                 access_token=_send_token,
                             )
-                            await send_meta_carousel(
-                                sender_id, prepare_meta_carousel(_wms),
-                                phone_number_id=_send_pid,
-                                access_token=_send_token,
-                            )
                             _wc["last_viewed_id"] = _wms[0].id
                             _wc["last_viewed_title"] = _wms[0].title or ""
                             convo.data_json = json.dumps(_wc)
@@ -1651,10 +1644,6 @@ async def handle_incoming_message(data: dict, db: Session):
                             _ms[0], _ms, _sr.get("total_count", 0), first_name
                         )
                         await send_meta_message(sender_id, _sum, phone_number_id=_send_pid, access_token=_send_token)
-                        await send_meta_carousel(
-                            sender_id, prepare_meta_carousel(_ms),
-                            phone_number_id=_send_pid, access_token=_send_token,
-                        )
                         _current["last_viewed_id"] = _ms[0].id
                         _current["last_viewed_title"] = _ms[0].title or ""
                         convo.data_json = json.dumps(_current)
@@ -2831,10 +2820,6 @@ async def handle_incoming_message(data: dict, db: Session):
                         await send_meta_message(
                             sender_id, summary, phone_number_id=_send_pid, access_token=_send_token
                         )
-                        carousel_data = prepare_meta_carousel(matches)
-                        await send_meta_carousel(
-                            sender_id, carousel_data, phone_number_id=_send_pid, access_token=_send_token
-                        )
                         _data["last_viewed_id"] = matches[0].id
                         _data["last_viewed_title"] = matches[0].title
                         _data["last_match_ids"] = [m.id for m in matches]
@@ -3030,25 +3015,6 @@ async def handle_incoming_message(data: dict, db: Session):
                     )
                     db.commit()
                     logger.info(f"Saved last_viewed_id: {matches[0].id}")
-
-                    # Save last viewed listing ID so handshake works
-                    prefs["last_viewed_id"] = matches[0].id
-                    prefs["last_viewed_title"] = matches[0].title or ""
-                    convo.data_json = json.dumps(prefs)
-                    convo.funnel_stage = "commitment"
-                    convo.last_active_at = datetime.now(timezone.utc).replace(
-                        tzinfo=None
-                    )
-                    db.commit()
-                    carousel_data = prepare_meta_carousel(matches)
-                    await send_meta_carousel(sender_id, carousel_data, phone_number_id=_send_pid, access_token=_send_token)
-
-                    # Advance funnel
-                    convo.funnel_stage = "commitment"
-                    convo.last_active_at = datetime.now(timezone.utc).replace(
-                        tzinfo=None
-                    )
-                    db.commit()
                     return
 
                 else:
@@ -3202,8 +3168,6 @@ async def handle_incoming_message(data: dict, db: Session):
                             except Exception as _img2_e:
                                 logger.warning(f"Image send failed: {_img2_e}")
                                 await send_meta_message(sender_id, summary, phone_number_id=_send_pid, access_token=_send_token)
-                            carousel_data = prepare_meta_carousel(matches)
-                            await send_meta_carousel(sender_id, carousel_data, phone_number_id=_send_pid, access_token=_send_token)
                             prefs["last_viewed_id"] = matches[0].id
                             prefs["last_viewed_title"] = matches[0].title or ""
                             prefs["last_match_ids"] = [m.id for m in matches]
@@ -3244,27 +3208,6 @@ async def handle_incoming_message(data: dict, db: Session):
                         phone_number_id=_send_pid, access_token=_send_token,
                     )
                     return
-
-            # Global search trigger
-            if final_reply == "trigger_global_search":
-                search_result = execute_premium_search(
-                    db, tenant_id, {"location": "Abuja"}
-                )
-                matches = search_result.get("data", [])
-                if matches:
-                    summary = (
-                        f"I've pulled our Top {len(matches)} most trusted "
-                        f"deals in Abuja for you, {first_name}. 🔄\n\n"
-                    )
-                    summary += build_property_summary(
-                        matches[0],
-                        matches,
-                        search_result.get("total_count"),
-                        first_name,
-                    )
-                    await send_meta_message(sender_id, summary, phone_number_id=_send_pid, access_token=_send_token)
-                    await send_meta_carousel(sender_id, prepare_meta_carousel(matches), phone_number_id=_send_pid, access_token=_send_token)
-                return
 
             # Handshake trigger
             if raw_reply == "handshake_flag" and not prefs.get("last_viewed_id"):
