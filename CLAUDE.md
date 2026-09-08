@@ -58,9 +58,23 @@ Super admin: est8go@gmail.com / Est8Go@2026
   5 reengaged_* templates). This is what makes it 24h-window safe.
   Guards before any send: RECOVERY_MAX_AGE_DAYS recency cutoff
   (default 14d), platform-care skip, refusal when a tenant has no
-  phone_number_id. Template inventory: docs/meta_templates.md
-  (UNVERIFIED — confirm against Meta dashboard).
+  phone_number_id.
+  Template inventory: docs/meta_templates.md — VERIFIED against the
+  Meta dashboard. All 5 reengaged_* are Active/Approved, category
+  Marketing, language en, matching the code. The account holds exactly
+  6 templates (the 5 plus hello_world).
   RECOVERY_ENABLED still "false" — nothing sends.
+- property_carousel DELETED from the codebase — it never existed in
+  Meta, so every send returned HTTP 400 and was logged and swallowed.
+  send_meta_carousel + prepare_meta_carousel removed, all 6 call sites
+  removed, plus the unreachable trigger_global_search branch. The
+  hardcoded en_US language bug died with it.
+- Property cards on ALL results paths — _send_property_card() in
+  conversation_service.py. Image card (photo + summary caption) with
+  text fallback, is_main-first photo selection matching
+  choose_recovery_template. Replaces 2 inlined copies and fixes 3
+  paths that previously sent text only: welcome-choice resume,
+  "continue" handler, budget objection. Needs live WhatsApp testing.
 - credits/history returns action_type or event_type
 - Onboarding Step 3 redesigned — two option cards:
   Option A: Est8Go sets up WhatsApp (50 credits, phone number only)
