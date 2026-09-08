@@ -325,18 +325,6 @@
       box-shadow: 0 2px 10px rgba(79, 70, 229, 0.25);
     }
 
-    .btn-ghost {
-      background: transparent;
-      color: var(--text);
-      padding: 12px 22px;
-      border: 1px solid var(--border2);
-    }
-
-    .btn-ghost:hover {
-      background: var(--surface2);
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
     /* Dark ink on WhatsApp green: white scores 1.98:1 and fails AA.
        #0B141A on #25D366 is 9.8:1, and matches Meta's own guidance. */
     .btn-wa {
@@ -474,19 +462,33 @@
         gap: 12px;
       }}
 
+    /* Secondary control: 36px visually, but a ::after pad keeps the
+       tap target at 44px. Not a primary action for a first-time visitor. */
     .nav-theme {
+      position: relative;
       width: 44px;
       height: 44px;
       border-radius: 12px;
-      background: var(--surface2);
-      border: 1px solid var(--border2);
+      background: none;
+      border: none;
+      opacity: 0.65;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 14px;
       cursor: pointer;
       transition: background 0.2s;
       flex-shrink: 0;
+    }
+
+    /* 36px of visible chrome inside a real 44px tap target. */
+    .nav-theme::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      pointer-events: none;
     }
 
     .nav-theme:hover {
@@ -658,21 +660,74 @@
     }
 
     /* Hero CTAs */
+    /* One action in the hero. The primary is a button; the secondary
+       only scrolls the page, so it is a text link, not a second button.
+       Nothing here uses flex:1 with min-width:0 -- that combination
+       against .btn's white-space:nowrap is what pushed the old label
+       outside its own box. */
     .hero-ctas {
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 14px;
       margin-bottom: 24px;
     }
 
+    .hero-cta-main {
+      width: 100%;
+      min-height: 48px;
+      font-size: 15px;
+    }
+
+    .cta-textlink {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 44px;
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--accent-text);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+
+    .cta-textlink:hover {
+      opacity: 0.75;
+    }
+
+    .cta-chev {
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+
+    .cta-textlink:hover .cta-chev {
+      transform: translateY(2px);
+    }
+
+    @media (min-width: 900px) {
+      .hero-ctas {
+        flex-direction: row;
+        align-items: center;
+        gap: 24px;
+      }
+
+      .hero-cta-main {
+        width: auto;
+        min-width: 200px;
+      }
+
+      .cta-textlink {
+        justify-content: flex-start;
+      }}
+
     /* Mobile: side by side small buttons */
     @media (max-width: 767px) {
-      .hero-ctas .btn-primary,
-      .hero-ctas .btn-ghost {
-        flex: 1;
-        min-width: 0;
-        font-size: 13px;
-        padding: 12px 14px;
+      .hero-ctas .btn-primary {
+        font-size: 15px;
       }}
 
     /* Reassurance notes */
@@ -856,6 +911,16 @@
     /* ════════════════════════════════
      STICKY MOBILE BOTTOM BAR
   ════════════════════════════════ */
+    .sticky-textlink {
+      flex-shrink: 0;
+      padding: 0 4px;
+    }
+
+    .sticky-bar .btn-primary {
+      flex: 1;
+      min-width: 0;
+    }
+
     .sticky-bar {
       display: none;
       position: fixed;
@@ -1872,7 +1937,18 @@
     .final-cta-sub {
       font-size: 16px;
       color: var(--muted);
-      margin-bottom: 32px;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    /* A line, not a countdown. A timer reads as a discount-site tactic
+       and undercuts the positioning; the 14-day trial on Access is a
+       clock the visitor starts themselves. */
+    .final-urgency {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text2);
+      margin-bottom: 20px;
       line-height: 1.6;
     }
 
@@ -2434,6 +2510,12 @@
         font-size: 32px;
       }
 
+      .hero-badge     { margin-bottom: 16px; }
+      .hero h1        { margin-bottom: 14px; }
+      .hero-sub       { margin-bottom: 22px; }
+      .hero-statement { margin-bottom: 22px; }
+      .hero-ctas      { gap: 10px; }
+
       .wa-msg {
         max-width: 96%;
         padding: 9px 11px;
@@ -2468,7 +2550,7 @@
         <div class="nav-actions">
           <button class="nav-theme" onclick="toggleTheme()" id="themeBtn">🌙</button>
           <a class="btn btn-primary" href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
-            Message us on WhatsApp
+            Get Kora
           </a>
         </div>
 
@@ -2511,11 +2593,11 @@
           </div>
 
           <div class="hero-ctas fade-up delay-3">
-            <a class="btn btn-primary" href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
-              Message us on WhatsApp →
+            <a class="btn btn-primary hero-cta-main" href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
+              Get Kora Now
             </a>
-            <a class="btn btn-ghost" href="#how">
-              See how it works
+            <a class="cta-textlink" href="#how">
+              See how it works <svg class="cta-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
             </a>
           </div>
 
@@ -3077,7 +3159,7 @@
             </ul>
             <a class="pricing-cta pricing-cta-ghost"
               href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
-              Message us on WhatsApp
+              Start 14-day trial
             </a>
           </div>
 
@@ -3108,7 +3190,7 @@
             </ul>
             <a class="pricing-cta pricing-cta-primary"
               href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
-              Message us on WhatsApp
+              Get Kora Now
             </a>
           </div>
 
@@ -3133,7 +3215,7 @@
             </ul>
             <a class="pricing-cta pricing-cta-ghost"
               href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
-              Message us on WhatsApp
+              Talk to us
             </a>
           </div>
 
@@ -3166,16 +3248,20 @@
           operations moving together.
         </p>
 
+        <p class="final-urgency">
+          Every week without follow-up is leads going cold.
+        </p>
+
         <div class="final-cta-btns">
           <a class="btn btn-wa" href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
               <path
                 d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347" />
             </svg>
-            Message us on WhatsApp
+            Get Kora Now
           </a>
-          <a class="btn btn-ghost" href="#how">
-            See how it works
+          <a class="cta-textlink" href="#how">
+            See how it works <svg class="cta-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
           </a>
         </div>
 
@@ -3253,7 +3339,7 @@
               Contact Us
             </a>
             <a class="footer-link" href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
-              Message us on WhatsApp
+              Get Kora Now
             </a>
           </div>
         </div>
@@ -3277,10 +3363,10 @@
   <!-- STICKY MOBILE BAR -->
   <div class="sticky-bar hidden" id="stickyBar">
     <a class="btn btn-primary" href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
-      Message us on WhatsApp
+      Get Kora Now
     </a>
-    <a class="btn btn-ghost" href="#how">
-      See how it works
+    <a class="cta-textlink sticky-textlink" href="#how">
+      See how it works <svg class="cta-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
     </a>
   </div>
 
