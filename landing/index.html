@@ -219,10 +219,6 @@
       transition-delay: 0.4s;
     }
 
-    .delay-5 {
-      transition-delay: 0.5s;
-    }
-
     h1,
     h2,
     h3 {
@@ -300,6 +296,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      min-height: 44px;
       gap: 8px;
       border-radius: var(--r-md);
       font-size: 14px;
@@ -382,6 +379,7 @@
     .nav-logo {
       display: flex;
       align-items: center;
+      min-height: 44px;
       gap: 10px;
       text-decoration: none;
     }
@@ -477,9 +475,9 @@
       }}
 
     .nav-theme {
-      width: 38px;
-      height: 38px;
-      border-radius: 11px;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
       background: var(--surface2);
       border: 1px solid var(--border2);
       display: flex;
@@ -499,7 +497,7 @@
      HERO - MOBILE
   ════════════════════════════════ */
     .hero {
-      padding: 60px 0 40px;
+      padding: 44px 0 40px;
       overflow: hidden;
     }
 
@@ -669,18 +667,12 @@
 
     /* Mobile: side by side small buttons */
     @media (max-width: 767px) {
-      .hero-ctas .btn-primary {
-        flex: 1;
-        min-width: 0;
-        font-size: 13px;
-        padding: 12px 16px;
-      }
-
+      .hero-ctas .btn-primary,
       .hero-ctas .btn-ghost {
         flex: 1;
         min-width: 0;
         font-size: 13px;
-        padding: 11px 16px;
+        padding: 12px 14px;
       }}
 
     /* Reassurance notes */
@@ -912,7 +904,7 @@
     /* Add bottom padding on mobile for sticky bar */
     @media (max-width: 767px) {
       body {
-        padding-bottom: 68px;
+        padding-bottom: 78px;
       }}
 
     /* Tighter section spacing on mobile */
@@ -1340,6 +1332,7 @@
     .code-copy-btn {
       display: flex;
       align-items: center;
+      min-height: 44px;
       gap: 6px;
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1415,9 +1408,12 @@
     }
 
     .embed-docs-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
       font-size: 13px;
       font-weight: 600;
-      color: var(--indigo);
+      color: var(--accent-text);
       text-decoration: none;
     }
 
@@ -1756,7 +1752,10 @@
     }
 
     .pricing-cta {
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
       text-align: center;
       text-decoration: none;
       border-radius: var(--r-md);
@@ -1787,53 +1786,6 @@
     .pricing-cta-ghost:hover {
       border-color: var(--indigo);
       color: var(--indigo);
-    }
-
-    /* Pricing dots */
-    .pricing-dots {
-      display: flex;
-      gap: 6px;
-      margin-top: 16px;
-      justify-content: center;
-    }
-
-    @media (min-width: 900px) {
-      .pricing-dots {
-        display: none;
-      }}
-
-    .pricing-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--border2);
-      transition: all 0.3s;
-    }
-
-    .pricing-dot.active,
-    .pricing-dot.active-featured {
-      width: 20px;
-      border-radius: 99px;
-    }
-
-    .pricing-dot.active {
-      background: var(--muted);
-    }
-
-    .pricing-dot.active-featured {
-      background: var(--indigo);
-    }
-
-    .pricing-invite-note {
-      text-align: center;
-      font-size: 13px;
-      color: var(--muted);
-      padding: 14px 20px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--r-md);
-      max-width: 480px;
-      margin: 0 auto;
     }
 
     /* ════════════════════════════════
@@ -2001,6 +1953,7 @@
       text-decoration: none;
       display: flex;
       align-items: center;
+      min-height: 44px;
       gap: 6px;
       transition: color 0.2s;
     }
@@ -2036,7 +1989,12 @@
       margin-bottom: 4px;
     }
 
+    /* 21px of text in a 44px hit area. Padding grows the target
+       without changing the visual rhythm of the column. */
     .footer-link {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
       font-size: 13px;
       color: var(--muted);
       text-decoration: none;
@@ -2192,8 +2150,7 @@
     @media (min-width: 900px) {
       .wa-thread {
         transform: scale(1.04);
-      }
-    }
+      }}
 
     .wa-thread-hdr {
       display: flex;
@@ -2239,6 +2196,7 @@
 
     .wa-msg {
       max-width: 82%;
+      overflow-wrap: break-word;
       padding: 10px 13px;
       border-radius: 14px;
       font-size: 13px;
@@ -2386,7 +2344,104 @@
       font-size: 13px;
       font-weight: 600;
       color: var(--text);
-    }</style>
+    }
+    /* ════════════════════════════════
+     MOBILE REFINEMENTS
+     Measured over CDP at 390x844 and 360x800.
+  ════════════════════════════════ */
+
+    /* Hero order: the mockup is the strongest element on the page and
+       was starting at y=777, a sliver above an 844px fold. Pills and the
+       assurance row cost 170px ahead of it, so they move below it.
+       display:contents lifts .hero-content's children into .hero-inner
+       so a single order scale covers them and .hero-visual together. */
+    @media (max-width: 899px) {
+      .hero-inner {
+        gap: 0;
+      }
+
+      .hero-content {
+        display: contents;
+      }
+
+      .hero-badge     { order: 1; }
+      .hero h1        { order: 2; }
+      .hero-sub       { order: 3; }
+      .hero-statement { order: 4; }
+      .hero-ctas      { order: 5; margin-bottom: 4px; }
+      .hero-visual    { order: 6; margin: 14px 0 28px; }
+      .hero-pills     { order: 7; margin-bottom: 24px; }
+      .hero-assure    { order: 8; }}
+
+    @media (max-width: 767px) {
+      /* Body copy floor. 12px was below caption size for the section
+         carrying the core argument. .wa-msg stays 13px on purpose --
+         it mimics a chat UI. .record-illustrative stays fine print. */
+      .problem-card-body   { font-size: 15px; }
+      .problem-card-title  { font-size: 16px; }
+      .how-step-body       { font-size: 15px; }
+      .pricing-features li { font-size: 15px; }
+      .embed-step-desc     { font-size: 15px; }
+      .footer-link         { font-size: 15px; }
+      .who-chip            { font-size: 15px; }
+      .pricing-plan-desc   { font-size: 14px; }
+      .hero-assure-item    { font-size: 14px; }
+      .record-disclaimer   { font-size: 14px; }
+      .record-badge        { font-size: 13px; }}
+
+    /* Three tiers that must be compared should not need a swipe.
+       Horizontally scrolled, only Access was visible on load and Growth
+       sat entirely off-screen. */
+    @media (max-width: 899px) {
+      .pricing-scroll-wrap {
+        padding-top: 24px;
+      }
+
+      .pricing-cards {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        overflow: visible;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+      }
+
+      .pricing-card {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+        flex-shrink: 1;
+      }}
+
+    /* Below 400px the outgoing bubble's meta line wrapped to two lines,
+       pushing that bubble from 81px to 96px. */
+    @media (max-width: 400px) {
+      .wa-msg {
+        max-width: 90%;
+      }
+
+      .wa-meta {
+        letter-spacing: 0;
+      }}
+
+    /* 320px (iPhone SE, older Androids) is common in this market and has
+       the least screen to spare, so the meta must not wrap there either. */
+    @media (max-width: 340px) {
+      /* 36px wraps "Never lose another buyer." to two lines in a 280px
+         column. A wrapped four-word headline is worse than a smaller one. */
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      .wa-msg {
+        max-width: 96%;
+        padding: 9px 11px;
+      }
+
+      .wa-meta {
+        font-size: 9.5px;
+      }}</style>
 </head>
 
 <body>
@@ -3084,12 +3139,6 @@
 
         </div>
 
-        <!-- Mobile scroll dots -->
-        <div class="pricing-dots" id="pricingDots">
-          <div class="pricing-dot active"></div>
-          <div class="pricing-dot"></div>
-          <div class="pricing-dot"></div>
-        </div>
       </div>
 
     </div>
@@ -3307,31 +3356,6 @@
         );
       });
     }, { passive: true });
-
-    // ── PRICING SCROLL DOTS ────────────
-    const pricingCards = document.getElementById(
-      'pricingCards'
-    );
-    if (pricingCards) {
-      pricingCards.addEventListener('scroll', () => {
-        const cards = pricingCards.querySelectorAll(
-          '.pricing-card'
-        );
-        const dots = document.querySelectorAll('.pricing-dot');
-        const cardWidth = (cards[0]?.offsetWidth || 260) + 14;
-        const activeIndex = Math.round(
-          pricingCards.scrollLeft / cardWidth
-        );
-        dots.forEach((d, i) => {
-          d.classList.remove('active', 'active-featured');
-          if (i === activeIndex) {
-            d.classList.add(
-              i === 1 ? 'active-featured' : 'active'
-            );
-          }
-        });
-      });
-    }
 
     // ── CODE SNIPPET COPY ──────────────
     function copySnippet(btn) {
