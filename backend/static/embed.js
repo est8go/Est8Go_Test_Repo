@@ -1,8 +1,8 @@
-/*! Est8Go Embed Widget v1.2 — est8go-api.onrender.com */
+/*! Est8Go Embed Widget v1.2 — api.est8go.com */
 (function () {
   'use strict';
 
-  var API = 'https://est8go-api.onrender.com';
+  var API = 'https://api.est8go.com';
   var REFRESH_MS = 30 * 60 * 1000;
 
   // ── Find script tag ──────────────────────────────────────────
@@ -211,7 +211,7 @@
   function attribHtml() {
     if (!cfg.showBranding) return '';
     return '<div class="attrib-row">'
-      + '<a class="attrib" href="https://est8go-api.onrender.com" target="_blank" rel="noopener noreferrer">'
+      + '<a class="attrib" href="https://api.est8go.com" target="_blank" rel="noopener noreferrer">'
       + 'Powered by Est8Go'
       + '</a></div>';
   }

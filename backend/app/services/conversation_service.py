@@ -3457,9 +3457,8 @@ async def handle_incoming_message(data: dict, db: Session):
             if intent == "media_request" and prefs.get("last_viewed_id"):
                 listing = db.get(Listing, prefs.get("last_viewed_id"))
                 if listing:
-                    showroom_link = (
-                        f"https://est8go-api.onrender.com/public/property/{listing.id}"
-                    )
+                    _base_mr = os.getenv("BASE_URL", "https://api.est8go.com")
+                    showroom_link = f"{_base_mr}/public/property/{listing.id}"
                     response = build_media_redirect(first_name, biz_name, showroom_link)
                     await send_meta_message(sender_id, response, phone_number_id=_send_pid, access_token=_send_token)
                     return

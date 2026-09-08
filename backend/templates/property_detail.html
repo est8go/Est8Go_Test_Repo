@@ -269,7 +269,7 @@ html[data-theme="light"] .action-bar{background:#fff}
     <button class="fh-btn" onclick="
   const ref = document.referrer;
   if (ref && !ref.includes('/public/property') &&
-      !ref.includes('onrender.com') && ref !== '') {
+      !ref.includes('api.est8go.com') && ref !== '') {
     history.back();
   } else {
     const slug = '{{ listing.tenant.slug }}' || '';

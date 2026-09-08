@@ -87,6 +87,15 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+
+    # Static assets — embed.js in particular — ship onto third-party sites.
+    # With no Cache-Control, browsers fall back to heuristic freshness and can
+    # serve a stale copy for days. "no-cache" stores the file but revalidates
+    # every request; StaticFiles already sends an ETag, so the usual answer is
+    # a cheap 304 rather than a re-download.
+    if request.url.path.startswith("/static"):
+        response.headers["Cache-Control"] = "no-cache"
+
     return response
 
 
