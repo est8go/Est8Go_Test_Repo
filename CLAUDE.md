@@ -2,8 +2,17 @@
 
 ## Project
 Multi-tenant SaaS real estate trust platform for Nigerian market.
-Live: https://est8go-api.onrender.com
+Live: https://api.est8go.com
 Super admin: est8go@gmail.com / Est8Go@2026
+
+## HOSTS ⚠️
+- https://api.est8go.com — LIVE. Custom domain on the current Render
+  service. This is the only API host. Use it everywhere.
+- https://est8go-api.onrender.com — DEAD. That Render service is
+  suspended and returns "Service Suspended". Never point anything at it.
+  Any remaining reference is a bug; the os.getenv("BASE_URL", ...)
+  fallbacks still name it and are only safe while BASE_URL is set on
+  Render.
 
 ## COMPLETE ✅
 - WhatsApp conversation engine (Kora v3) — fully tested live
@@ -243,28 +252,21 @@ Stages 1–4 complete. Final corrections before deploy.
    - embed-right sticky top: 80px
    - Right column aligns with header
 
-2. Replace 234XXXXXXXXXX with real WA number
-   in landing/index.html
-   Search: XXXXXXXXXX (appears ~8 times)
+2. Real WA number: ✅ DONE
+   All 12 CTAs use wa.me/2348057834774 with a prefilled
+   demo message. No XXXXXXXXXX placeholders remain.
 
-3. api.est8go.com DNS — add CNAME in Netlify:
-   Domain management → DNS settings → Add record:
-   Type: CNAME
-   Name: api
-   Value: est8go-api.onrender.com
-   Then update BASE_URL on Render to:
-   https://api.est8go.com
-
-4. Deploy landing page to Netlify after WA number updated
+3. Deploy landing page to Netlify
    (drag and drop landing/ folder to Netlify dashboard)
    - Test on mobile and desktop
    - Verify all animations and links work
 
-5. Speak to Bravieshomz management
-   for real listings approval
-
-6. Set admin phone numbers in Super Admin
+4. Set admin phone numbers in Super Admin
    → Staff & Phones tab
+
+5. Confirm BASE_URL on Render reads https://api.est8go.com
+   (backend/.env is updated locally but is gitignored — the
+   deployed value is whatever Render holds)
 
 ### 1. Est8Go Landing Page ✅ STAGES 1–3 COMPLETE
 URL: est8go.com (hosted on Namecheap or Netlify free)
@@ -317,9 +319,11 @@ Design: Est8Go brand colours, Inter + Syne fonts
 
 CONTEXT:
 - Embed widget live at /static/embed.js
-- Tenant slug for live demo: bravieshomz-limited
+- Live demo tenant: set EMBED_DEMO_TENANT to the slug of an agency
+  that has CONSENTED. Unset renders a placeholder. Bravieshomz has
+  not approved use of their inventory — do not name them anywhere.
 - Signup link generated via Super Admin → Tenants tab
-- Live API base: https://est8go-api.onrender.com
+- Live API base: https://api.est8go.com
 
 ### 2. Light/Dark Theme System ✅ DONE
 Added to business_dashboard.html and super_admin_dashboard.html:
