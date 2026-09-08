@@ -1,4 +1,4 @@
-/*! Est8Go Embed Widget v1.1 — est8go-api.onrender.com */
+/*! Est8Go Embed Widget v1.2 — est8go-api.onrender.com */
 (function () {
   'use strict';
 
@@ -27,7 +27,10 @@
     radius:       Math.min(32, Math.max(0, parseInt(script.getAttribute('data-radius'), 10) || 16)),
     showPrice:    script.getAttribute('data-show-price') !== 'false',
     showWa:       script.getAttribute('data-show-wa') !== 'false',
-    showTrust:    script.getAttribute('data-show-trust') !== 'false',
+    // data-show-facts is the current name; data-show-trust is still
+    // honoured so embeds already live on third-party sites keep working.
+    showFacts:    script.getAttribute('data-show-facts') !== 'false'
+                    && script.getAttribute('data-show-trust') !== 'false',
     showBranding: script.getAttribute('data-show-branding') !== 'false'
   };
 
@@ -58,12 +61,6 @@
   function themeClass() {
     return isLight() ? ' light' : '';
   }
-
-  // ── Trust grade colours ──────────────────────────────────────
-  var GRADE_COLORS = {
-    emerald: '#10B981', gold: '#F59E0B', silver: '#94A3B8',
-    bronze: '#CD7F32', ungraded: '#64748B'
-  };
 
   // ── Helpers ──────────────────────────────────────────────────
   function formatPrice(p) {
@@ -129,11 +126,8 @@
       '.img-wrap img{width:100%;height:100%;object-fit:cover;display:block}',
       '.img-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:42px;color:var(--w-mut)}',
 
-      // Trust overlay
-      '.trust{position:absolute;top:10px;right:10px;background:rgba(15,23,42,.88);border-radius:9px;padding:5px 9px;display:flex;align-items:center;gap:5px}',
-      '.trust-n{font-family:"Syne",Arial,sans-serif;font-size:16px;font-weight:800;line-height:1}',
-      '.trust-g{font-size:9px;font-weight:700;text-transform:capitalize;opacity:.85}',
-      '.gps{position:absolute;bottom:10px;left:10px;background:rgba(16,185,129,.92);border-radius:7px;padding:3px 9px;font-size:9px;font-weight:700;color:#fff}',
+      // Factual chip — states a record the agency supplied, nothing more
+      '.fact{position:absolute;bottom:10px;left:10px;background:rgba(15,23,42,.88);border-radius:7px;padding:4px 9px;font-size:9px;font-weight:600;color:#E2E8F0;letter-spacing:.01em}',
 
       // Card body
       '.body{padding:12px;display:flex;flex-direction:column;flex:1}',
@@ -148,10 +142,10 @@
       '.btn-w{width:38px;height:38px;background:#25D366;border:none;border-radius:var(--w-rad);display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;cursor:pointer;transition:opacity .15s}',
       '.btn-w:hover{opacity:.87}',
 
-      // Seal row
-      '.seal-row{display:flex;justify-content:flex-end;align-items:center;padding-top:12px;margin-top:8px;border-top:1px solid var(--w-bdr)}',
-      '.seal{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:var(--w-em);text-decoration:none;opacity:.8;transition:opacity .15s}',
-      '.seal:hover{opacity:1}',
+      // Attribution row
+      '.attrib-row{display:flex;justify-content:flex-end;align-items:center;padding-top:12px;margin-top:8px;border-top:1px solid var(--w-bdr)}',
+      '.attrib{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:var(--w-em);text-decoration:none;opacity:.8;transition:opacity .15s}',
+      '.attrib:hover{opacity:1}',
 
       // State screens
       '.loader,.err{text-align:center;padding:40px 16px;font-size:13px;color:var(--w-mut)}',
@@ -180,17 +174,10 @@
 
   // ── Card HTML ────────────────────────────────────────────────
   function cardHtml(l) {
-    var gc = GRADE_COLORS[l.trust_grade] || '#64748B';
-
-    var trustHtml = cfg.showTrust
-      ? '<div class="trust">'
-        + '<span class="trust-n" style="color:' + gc + '">' + (l.trust_score || 0) + '</span>'
-        + '<span class="trust-g" style="color:' + gc + '">' + esc(l.trust_grade || 'ungraded') + '</span>'
-        + '</div>'
-      : '';
-
-    var gpsHtml = l.gps_verified
-      ? '<div class="gps">&#128205; GPS Verified</div>'
+    // Only ever state a fact the agency recorded. Where there is no
+    // fact to show, show nothing — never a score, grade or badge.
+    var factHtml = cfg.showFacts && l.gps_verified
+      ? '<div class="fact">&#128205; Coordinates recorded</div>'
       : '';
 
     var priceHtml = cfg.showPrice
@@ -207,7 +194,7 @@
       + (l.image_url
         ? '<img src="' + esc(l.image_url) + '" alt="' + esc(l.title) + '" loading="lazy">'
         : '<div class="img-empty">&#127968;</div>')
-      + trustHtml + gpsHtml
+      + factHtml
       + '</div>'
       + '<div class="body">'
       + '<div class="title">' + esc(l.title) + '</div>'
@@ -221,11 +208,11 @@
       + '</div>';
   }
 
-  function sealHtml() {
-    return '<div class="seal-row">'
-      + '<a class="seal" href="https://est8go-api.onrender.com" target="_blank" rel="noopener noreferrer">'
-      + '&#128737;&#65039;'
-      + (cfg.showBranding ? ' Verified by Est8Go' : '')
+  function attribHtml() {
+    if (!cfg.showBranding) return '';
+    return '<div class="attrib-row">'
+      + '<a class="attrib" href="https://est8go-api.onrender.com" target="_blank" rel="noopener noreferrer">'
+      + 'Powered by Est8Go'
       + '</a></div>';
   }
 
@@ -233,7 +220,7 @@
     if (!listings || !listings.length) {
       return '<div class="empty">'
         + '<div class="empty-ico">&#127968;</div>'
-        + '<div class="empty-msg">No verified properties available</div>'
+        + '<div class="empty-msg">No properties available</div>'
         + '</div>';
     }
     return '<div class="grid">' + listings.map(cardHtml).join('') + '</div>';
@@ -243,7 +230,7 @@
   function paint(listings) {
     root.innerHTML = '<style>' + buildCss() + '</style>'
       + '<div class="widget' + themeClass() + '">'
-      + buildInner(listings) + sealHtml()
+      + buildInner(listings) + attribHtml()
       + '</div>';
     wrapper = root.querySelector('.widget');
   }
@@ -251,7 +238,7 @@
   function showLoading() {
     root.innerHTML = '<style>' + buildCss() + '</style>'
       + '<div class="widget' + themeClass() + '">'
-      + '<div class="loader">Loading verified properties&hellip;</div>'
+      + '<div class="loader">Loading properties&hellip;</div>'
       + '</div>';
     wrapper = root.querySelector('.widget');
   }
