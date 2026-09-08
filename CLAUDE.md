@@ -229,6 +229,13 @@ DATABASE_URL, SECRET_KEY, OPENAI_API_KEY
 WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_ID, META_VERIFY_TOKEN
 SUPABASE_URL, SUPABASE_KEY
 
+## PUBLIC PRICING ⚠️
+Landing page now advertises: Access ₦25,000/mo · Growth ₦60,000/mo ·
+Enterprise custom. Pilot retired as a public plan (existing pilot
+tenants keep theirs; it is simply no longer advertised).
+The MMEF section and the credit bundle prices below still reflect the
+OLD figures (Core ₦2,500, Growth ₦6,000) and need review.
+
 ## CREDIT ECONOMY SUMMARY
 Currency: Est8 Credits
 Tiers: Pilot / Access / Core / Growth / Enterprise

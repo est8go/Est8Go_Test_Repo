@@ -5,7 +5,7 @@
   <meta name="google-site-verification" content="dPO_3qzzJn9uY8cbVnjGUKp4vCQrix22209VKEVBuIg" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Est8Go — WhatsApp Lead Coordination for Real Estate Agencies in Abuja</title>
+  <title>Est8Go: WhatsApp Lead Coordination for Real Estate Agencies in Abuja</title>
   <meta name="description"
     content="Kora answers every WhatsApp enquiry for your agency instantly, qualifies the lead, and keeps follow-ups moving until someone takes action. Built for real estate agencies in Abuja." />
   <meta name="keywords"
@@ -13,7 +13,7 @@
   <meta name="robots" content="index, follow" />
   <meta name="geo.region" content="NG" />
   <meta name="geo.placename" content="Abuja, Nigeria" />
-  <meta property="og:title" content="Est8Go — Never lose another buyer to a slow reply" />
+  <meta property="og:title" content="Est8Go: Never lose another buyer to a slow reply" />
   <meta property="og:description" content="Kora answers every WhatsApp enquiry instantly, qualifies the lead, and keeps follow-ups moving. Your agents sell. Kora coordinates. You stay in control." />
   <meta property="og:url" content="https://est8go.com" />
   <meta property="og:type" content="website" />
@@ -50,7 +50,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=Syne:wght@700;800&display=swap"
     rel="stylesheet" />
 
   <script>
@@ -221,9 +221,11 @@
     h1,
     h2,
     h3 {
-      font-family: 'Syne', sans-serif;
-      font-weight: 800;
-      letter-spacing: -0.03em;
+      /* Instrument Serif ships Regular + Italic only. Weight stays 400.
+         anything heavier triggers synthetic bold and smears the strokes. */
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-weight: 400;
+      letter-spacing: -0.02em;
       line-height: 1.1;
       color: var(--text);
     }
@@ -270,13 +272,13 @@
     }
 
     .section-title {
-      font-size: 32px;
+      font-size: 30px;
       margin-bottom: 16px;
     }
 
     @media (min-width: 768px) {
       .section-title {
-        font-size: 44px;
+        font-size: 40px;
       }}
 
     .section-sub {
@@ -487,16 +489,37 @@
     }
 
     /* ════════════════════════════════
-     HERO — MOBILE
+     HERO - MOBILE
   ════════════════════════════════ */
     .hero {
       padding: 60px 0 40px;
       overflow: hidden;
     }
 
+    /* Chip fill: a light neutral lift off the page ground, no border. */
+    :root {
+      --chip: rgba(15, 23, 42, 0.05);
+      --chip-hover: rgba(15, 23, 42, 0.08);
+    }
+
+    :root:not([data-theme="light"]) {
+      --chip: rgba(255, 255, 255, 0.06);
+      --chip-hover: rgba(255, 255, 255, 0.10);
+    }
+
+    [data-theme="dark"] {
+      --chip: rgba(255, 255, 255, 0.06);
+      --chip-hover: rgba(255, 255, 255, 0.10);
+    }
+
+    [data-theme="light"] {
+      --chip: rgba(15, 23, 42, 0.05);
+      --chip-hover: rgba(15, 23, 42, 0.08);
+    }
+
     @media (min-width: 768px) {
       .hero {
-        padding: 100px 0 80px;
+        padding: 96px 0 88px;
       }}
 
     .hero-inner {
@@ -509,7 +532,7 @@
       .hero-inner {
         flex-direction: row;
         align-items: center;
-        gap: 60px;
+        gap: 72px;
       }}
 
     .hero-content {
@@ -553,27 +576,26 @@
     }
 
     .hero h1 {
-      font-size: 40px;
+      font-size: 32px;
       margin-bottom: 20px;
       line-height: 1.05;
+      letter-spacing: -0.02em;
     }
 
     @media (min-width: 768px) {
       .hero h1 {
-        font-size: 60px;
+        font-size: 38px;
       }}
 
     @media (min-width: 1100px) {
       .hero h1 {
-        font-size: 72px;
+        font-size: 42px;
       }}
 
+    /* Colour alone carries the emphasis. No gradient (it thins the strokes
+       of a 400-weight serif) and no display:block (it forced the break). */
     .hero h1 .accent {
-      background: linear-gradient(135deg, var(--indigo), #818CF8);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      display: block;
+      color: var(--indigo);
     }
 
     .hero-sub {
@@ -591,46 +613,39 @@
 
     /* Pills */
     .hero-statement {
-      font-family: 'Syne', sans-serif;
-      font-weight: 700;
-      font-size: clamp(15px, 2.2vw, 18px);
-      line-height: 1.5;
+      font-weight: 500;
+      font-size: 17px;
+      line-height: 1.6;
       color: var(--text);
-      margin-bottom: 24px;
-      padding-left: 14px;
-      border-left: 3px solid var(--indigo);
+      margin: 0 0 28px;
     }
 
     .hero-pills {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 12px;
       margin-bottom: 32px;
     }
 
+    /* Borderless with a soft fill. Three calm chips, not three outlined
+       boxes. No dots, because three dot colours meant nothing. */
     .hero-pill {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      background: var(--surface);
-      border: 1px solid var(--border2);
+      height: 34px;
+      background: var(--chip);
+      border: none;
       border-radius: 99px;
-      padding: 6px 14px;
-      font-size: 12px;
-      font-weight: 600;
+      padding: 0 18px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
       color: var(--text2);
-      transition: all 0.2s;
+      transition: background 0.2s;
     }
 
     .hero-pill:hover {
-      border-color: var(--indigo);
-      color: var(--text);
-    }
-
-    .pill-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
+      background: var(--chip-hover);
     }
 
     /* Hero CTAs */
@@ -687,7 +702,7 @@
     }
 
     /* ════════════════════════════════
-     HERO RIGHT — SERVICE SHOWCASE
+     HERO RIGHT - SERVICE SHOWCASE
      Mobile: horizontal scroll cards
      Desktop: floating property card
   ════════════════════════════════ */
@@ -698,7 +713,7 @@
 
     @media (min-width: 900px) {
       .hero-visual {
-        width: 460px;
+        width: 480px;
       }}
 
     @keyframes cardFloat {
@@ -781,12 +796,9 @@
     /* Fix hero h1 on mobile */
     @media (max-width: 767px) {
       .hero h1 {
-        font-size: 36px !important;
+        font-size: 32px;
         word-break: break-word;
         overflow-wrap: break-word;
-      }
-      .hero h1 .accent {
-        font-size: 36px !important;
       }}
 
     @keyframes bubbleIn {
@@ -1103,9 +1115,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Syne', sans-serif;
       font-size: 18px;
-      font-weight: 800;
+      font-weight: 700;
       color: white;
       flex-shrink: 0;
       z-index: 1;
@@ -1150,9 +1161,8 @@
     }
 
     .how-step-title {
-      font-family: 'Syne', sans-serif;
       font-size: 17px;
-      font-weight: 800;
+      font-weight: 700;
       color: var(--text);
       margin-bottom: 8px;
     }
@@ -1553,7 +1563,7 @@
     @media (min-width: 900px) {
       .pricing-cards {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         overflow: visible;
         padding: 0;
         margin: 0;
@@ -1674,22 +1684,20 @@
     }
 
     .pricing-currency {
-      font-family: 'Syne', sans-serif;
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 17px;
+      font-weight: 600;
       color: var(--text);
     }
 
     .pricing-price-num {
-      font-family: 'Syne', sans-serif;
-      font-size: 36px;
-      font-weight: 800;
+      font-size: 30px;
+      font-weight: 700;
       color: var(--text);
-      letter-spacing: -1px;
+      letter-spacing: -0.02em;
     }
 
     .pricing-custom {
-      font-size: 28px;
+      font-size: 26px;
     }
 
     .pricing-period {
@@ -1885,11 +1893,10 @@
     }
 
     .final-cta-title {
-      font-family: 'Syne', sans-serif;
       font-size: 36px;
-      font-weight: 800;
+      font-weight: 400;
       line-height: 1.1;
-      letter-spacing: -1px;
+      letter-spacing: -0.02em;
       margin-bottom: 16px;
       color: var(--text);
     }
@@ -2062,7 +2069,7 @@
     }
 
     /* ════════════════════════════════
-     EMBED WIDGET MOCKUP (static — not a live render)
+     EMBED WIDGET MOCKUP (static, not a live render)
   ════════════════════════════════ */
     .mock-card {
       background: var(--surface);
@@ -2113,9 +2120,8 @@
     }
 
     .mock-price {
-      font-family: 'Syne', sans-serif;
       font-size: 20px;
-      font-weight: 800;
+      font-weight: 700;
       color: var(--em);
       margin-bottom: 10px;
     }
@@ -2166,7 +2172,16 @@
       border: 1px solid var(--border);
       border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+      box-shadow:
+        0 32px 80px rgba(0, 0, 0, 0.34),
+        0 4px 16px rgba(0, 0, 0, 0.16);
+    }
+
+    /* Anchor the right side. Only once the row layout exists. */
+    @media (min-width: 900px) {
+      .wa-thread {
+        transform: scale(1.04);
+      }
     }
 
     .wa-thread-hdr {
@@ -2426,18 +2441,9 @@
           </p>
 
           <div class="hero-pills fade-up delay-2">
-            <span class="hero-pill">
-              <span class="pill-dot" style="background:var(--em)"></span>
-              Works 24/7
-            </span>
-            <span class="hero-pill">
-              <span class="pill-dot" style="background:var(--indigo)"></span>
-              Your WhatsApp number
-            </span>
-            <span class="hero-pill">
-              <span class="pill-dot" style="background:var(--warn)"></span>
-              Your inventory
-            </span>
+            <span class="hero-pill">Works 24/7</span>
+            <span class="hero-pill">Your WhatsApp number</span>
+            <span class="hero-pill">Your inventory</span>
           </div>
 
           <div class="hero-ctas fade-up delay-3">
@@ -2484,7 +2490,7 @@
                 <span class="wa-meta">Buyer · 9:41 PM</span>
               </div>
               <div class="wa-msg wa-msg-out">
-                Yes — I have 3 that match. Budget range?
+                Yes, I have 3 that match. Budget range?
                 <span class="wa-meta wa-meta-fast">
                   Your agency · 9:41 PM · replied in seconds
                 </span>
@@ -2710,9 +2716,8 @@
         </h2>
         <p class="section-sub">
           Kora presents the information your agency has
-          provided about a property &mdash; coordinates
-          recorded, documents on file, photos, and
-          property details.
+          provided about a property. Coordinates recorded,
+          documents on file, photos, and property details.
         </p>
       </div>
 
@@ -2720,7 +2725,7 @@
 
         <div class="record-example fade-up delay-1">
           <div class="record-example-label">
-            Example &mdash; how a property&#39;s record appears
+            Example: how a property&#39;s record appears
           </div>
           <div class="record-badges">
             <span class="record-badge">
@@ -2735,7 +2740,7 @@
           </div>
           <p class="record-illustrative">
             Illustrative only. Every line reflects what your
-            agency has actually recorded &mdash; nothing more.
+            agency has actually recorded, and nothing more.
           </p>
         </div>
 
@@ -2795,9 +2800,9 @@
             </h2>
             <p class="section-sub">
               One script tag. Your listings appear live on
-              any website &mdash; WordPress, Wix,
-              Squarespace, or plain HTML. Updates
-              automatically every 30 minutes.
+              any website: WordPress, Wix, Squarespace, or
+              plain HTML. Updates automatically every
+              30 minutes.
             </p>
           </div>
 
@@ -2973,7 +2978,7 @@
       <div class="pricing-header fade-up">
         <span class="section-label">Pricing</span>
         <h2 class="section-title">
-          Start free.<br />Scale as you grow.
+          Simple pricing.<br />Scale as you grow.
         </h2>
         <p class="section-sub">
           Every plan includes the full WhatsApp
@@ -2987,43 +2992,24 @@
       <div class="pricing-scroll-wrap">
         <div class="pricing-cards" id="pricingCards">
 
-          <!-- Pilot -->
-          <div class="pricing-card fade-up delay-1">
-            <div class="pricing-plan-name">Pilot</div>
-            <div class="pricing-price-wrap">
-              <span class="pricing-price-num">Free</span>
-            </div>
-            <div class="pricing-plan-desc">
-              Forever. No card needed.
-            </div>
-            <ul class="pricing-features">
-              <li>Up to 5 listings</li>
-              <li>Coordinate capture</li>
-              <li>10 welcome credits</li>
-              <li>WhatsApp coordination engine</li>
-            </ul>
-            <a class="pricing-cta pricing-cta-ghost"
-              href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
-              Message us on WhatsApp
-            </a>
-          </div>
-
           <!-- Access -->
-          <div class="pricing-card fade-up delay-2">
+          <div class="pricing-card fade-up delay-1">
             <div class="pricing-plan-name">Access</div>
             <div class="pricing-price-wrap">
-              <span class="pricing-currency">₦</span>
-              <span class="pricing-price-num">1,500</span>
+              <span class="pricing-currency">&#8358;</span>
+              <span class="pricing-price-num">25,000</span>
               <span class="pricing-period">/mo</span>
             </div>
             <div class="pricing-plan-desc">
-              For individual agents
+              For individual agents and small teams
             </div>
             <ul class="pricing-features">
               <li>Up to 20 listings</li>
-              <li>Photo records</li>
-              <li>Document storage</li>
-              <li>Embed widget (basic)</li>
+              <li>2 staff accounts</li>
+              <li>WhatsApp coordination engine</li>
+              <li>Embed widget</li>
+              <li>Property records</li>
+              <li>14-day free trial</li>
             </ul>
             <a class="pricing-cta pricing-cta-ghost"
               href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
@@ -3031,42 +3017,18 @@
             </a>
           </div>
 
-          <!-- Core — Featured -->
+          <!-- Growth - Featured -->
           <div class="pricing-card pricing-featured
-                    fade-up delay-3">
+                    fade-up delay-2">
             <div class="pricing-popular-badge">
               Most Popular
             </div>
             <div class="pricing-plan-name" style="color:var(--indigo)">
-              Core
+              Growth
             </div>
             <div class="pricing-price-wrap">
-              <span class="pricing-currency">₦</span>
-              <span class="pricing-price-num">2,500</span>
-              <span class="pricing-period">/mo</span>
-            </div>
-            <div class="pricing-plan-desc">
-              For small agencies
-            </div>
-            <ul class="pricing-features">
-              <li>Up to 50 listings</li>
-              <li>Full property records</li>
-              <li>Reel generation</li>
-              <li>Recovery engine</li>
-              <li>2 staff accounts</li>
-            </ul>
-            <a class="pricing-cta pricing-cta-primary"
-              href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
-              Message us on WhatsApp
-            </a>
-          </div>
-
-          <!-- Growth -->
-          <div class="pricing-card fade-up delay-4">
-            <div class="pricing-plan-name">Growth</div>
-            <div class="pricing-price-wrap">
-              <span class="pricing-currency">₦</span>
-              <span class="pricing-price-num">6,000</span>
+              <span class="pricing-currency">&#8358;</span>
+              <span class="pricing-price-num">60,000</span>
               <span class="pricing-period">/mo</span>
             </div>
             <div class="pricing-plan-desc">
@@ -3074,19 +3036,20 @@
             </div>
             <ul class="pricing-features">
               <li>Unlimited listings</li>
+              <li>5 staff accounts</li>
+              <li>Automated follow-up and recovery</li>
               <li>Branded embed widget</li>
               <li>Property record exports</li>
-              <li>5 staff accounts</li>
               <li>Priority support</li>
             </ul>
-            <a class="pricing-cta pricing-cta-ghost"
+            <a class="pricing-cta pricing-cta-primary"
               href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
               Message us on WhatsApp
             </a>
           </div>
 
           <!-- Enterprise -->
-          <div class="pricing-card fade-up delay-5">
+          <div class="pricing-card fade-up delay-3">
             <div class="pricing-plan-name">Enterprise</div>
             <div class="pricing-price-wrap">
               <span class="pricing-price-num
@@ -3095,18 +3058,18 @@
               </span>
             </div>
             <div class="pricing-plan-desc">
-              For large developers
+              For developers and large agencies
             </div>
             <ul class="pricing-features">
-              <li>Unlimited everything</li>
+              <li>Everything in Growth</li>
               <li>White-label option</li>
               <li>Full API access</li>
               <li>Dedicated support</li>
-              <li>SLA guarantee</li>
+              <li>SLA</li>
             </ul>
             <a class="pricing-cta pricing-cta-ghost"
-              href="https://wa.me/2348057834774?text=Hi%2C%20I%20would%20like%20to%20discuss%20an%20Enterprise%20plan.%20Company%3A%20">
-              Contact Us
+              href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
+              Message us on WhatsApp
             </a>
           </div>
 
@@ -3116,16 +3079,8 @@
         <div class="pricing-dots" id="pricingDots">
           <div class="pricing-dot active"></div>
           <div class="pricing-dot"></div>
-          <div class="pricing-dot active-featured"></div>
-          <div class="pricing-dot"></div>
           <div class="pricing-dot"></div>
         </div>
-      </div>
-
-      <div class="pricing-invite-note fade-up">
-        &#128274; Currently invite only, we review each
-        application personally to maintain
-        platform quality.
       </div>
 
     </div>
@@ -3362,7 +3317,7 @@
           d.classList.remove('active', 'active-featured');
           if (i === activeIndex) {
             d.classList.add(
-              i === 2 ? 'active-featured' : 'active'
+              i === 1 ? 'active-featured' : 'active'
             );
           }
         });
