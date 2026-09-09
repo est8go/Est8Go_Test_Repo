@@ -102,7 +102,7 @@ def build_property_summary(
     prop, matches: list, total_count: int, first_name: str
 ) -> str:
     """The Complete Elite Showcase: Includes Location, Links, and Closing CTA."""
-    _base = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+    _base = os.getenv("BASE_URL", "https://api.est8go.com")
     showroom_link = f"{_base}/public/property/{prop.id}"
     all_ids = ",".join([str(m.id) for m in matches[:50]])
     boutique_link = f"{_base}/public/matches?ids={all_ids}"
@@ -234,7 +234,7 @@ def build_comparison_message(listings: list, first_name: str) -> str:
 
 def build_referral_summary(prop, original_biz_name: str) -> str:
     """The Complete Broker Handshake: Includes Location and Direct Link."""
-    _base = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+    _base = os.getenv("BASE_URL", "https://api.est8go.com")
     direct_link = f"{_base}/public/property/{prop.id}"
     price = f"₦{int(prop.price):,}" if prop.price else "Price on request"
     location = (prop.location or "Abuja").title()

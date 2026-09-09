@@ -278,7 +278,7 @@ def forgot_password(
     db.add(reset_token)
     db.commit()
 
-    base_url  = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+    base_url  = os.getenv("BASE_URL", "https://api.est8go.com")
     reset_url = f"{base_url}/public/reset-password?token={token}"
     name      = user.email.split("@")[0].title()
     send_password_reset(user.email, reset_url, name)

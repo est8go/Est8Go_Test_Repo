@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 # existing `from app.services.health_service import SUPERADMIN_EMAIL`
 # spelling keeps working.
 from app.services.email_service import SUPERADMIN_EMAIL  # noqa: E402,F401
-BASE_URL = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+BASE_URL = os.getenv("BASE_URL", "https://api.est8go.com")
 
 
 # ════════════════════════════════════════════════════════════════

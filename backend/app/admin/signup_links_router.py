@@ -14,7 +14,7 @@ from app.services.email_service import send_tenant_signup_link
 from app.users.models import User
 
 router = APIRouter(prefix="/admin/signup-links", tags=["Signup Links"])
-BASE_URL = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+BASE_URL = os.getenv("BASE_URL", "https://api.est8go.com")
 
 
 class CreateLinkBody(BaseModel):

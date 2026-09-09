@@ -102,7 +102,7 @@ def run_mmef_check():
                     try:
                         from app.services.email_service import _send, _base_template
                         base_url = os.getenv(
-                            "BASE_URL", "https://est8go-api.onrender.com"
+                            "BASE_URL", "https://api.est8go.com"
                         )
                         body = f"""
                         <p>Hi {user.email.split('@')[0].title()},</p>

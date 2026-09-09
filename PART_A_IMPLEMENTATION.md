@@ -1072,7 +1072,7 @@ if _saved2.get("awaiting_stretch_choice"):
                 ).title()
                 base_url = os.getenv(
                     "BASE_URL",
-                    "https://est8go-api.onrender.com"
+                    "https://api.est8go.com"
                 )
                 
                 await send_meta_message(
@@ -1265,7 +1265,7 @@ if _saved2.get("awaiting_referral_permission"):
                 # offer vault browse + consultant
                 _base = os.getenv(
                     "BASE_URL",
-                    "https://est8go-api.onrender.com"
+                    "https://api.est8go.com"
                 )
                 _slug = tenant_profile.get(
                     "slug", ""
@@ -1496,7 +1496,7 @@ if _saved2.get("awaiting_last_resort"):
     if "1" in _choice or "browse" in _choice or "vault" in _choice:
         _base = os.getenv(
             "BASE_URL",
-            "https://est8go-api.onrender.com"
+            "https://api.est8go.com"
         )
         _slug = tenant_profile.get("slug", "")
         convo.data_json = json.dumps(_saved2)

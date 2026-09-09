@@ -11,7 +11,7 @@ from app.tenants.signup_models import ReferralCode, ReferralConversion
 from app.users.models import User
 
 router = APIRouter(prefix="/referrals", tags=["Referrals"])
-BASE_URL = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+BASE_URL = os.getenv("BASE_URL", "https://api.est8go.com")
 
 
 @router.get("/my-code")

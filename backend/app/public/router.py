@@ -810,7 +810,7 @@ async def public_listings_api(
     elif len(digits) == 10:
         digits = "234" + digits
 
-    base_url = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+    base_url = os.getenv("BASE_URL", "https://api.est8go.com")
 
     data = [
         {
@@ -907,7 +907,7 @@ async def tenant_public_vault(
                 "locations": locations,
                 "types": types,
                 "wa_number": digits,
-                "base_url": os.getenv("BASE_URL", "https://est8go-api.onrender.com"),
+                "base_url": os.getenv("BASE_URL", "https://api.est8go.com"),
                 "selected_type": property_type,
                 "selected_location": location,
                 # Render-time CSS-injection guard (same as the property page).

@@ -17,7 +17,7 @@ from app.services.email_service import (
 )
 
 router = APIRouter(prefix="/admin/role-requests", tags=["Role Requests"])
-BASE_URL = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+BASE_URL = os.getenv("BASE_URL", "https://api.est8go.com")
 
 
 class RoleRequestBody(BaseModel):
