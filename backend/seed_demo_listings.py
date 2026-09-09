@@ -8,10 +8,18 @@ Creates 25 realistic Nigerian property listings across:
     - Lagos (Lekki, Victoria Island, Ikoyi, Ajah, Magodo,
              Gbagada, Surulere)
     - Multiple property types: land, house, apartment
-    - Trust grades: emerald, gold, silver, bronze
     - 2 images per listing (Unsplash free images)
     - GPS coordinates for every listing
-    - Documents uploaded flags set realistically
+
+Trust is NOT seeded. This file used to hardcode trust_score,
+trust_grade, ai_verified_real, witness_count and all three document
+flags, which fabricated Emerald grades on listings that had never been
+audited, had no uploaded documents and had never been visited. Those
+values then flowed onto public property pages as evidence.
+
+Seeded listings get GPS coordinates and nothing else, so the scorer
+gives them 30 (GPS only, bronze). If you want a demo listing to score
+higher, upload a real document to it through the portal.
 
 Run from backend folder:
     python seed_demo_listings.py
@@ -20,6 +28,10 @@ Run from backend folder:
 from app.models_registry import register_all_models
 from app.database.db import get_db
 from app.listings.models import Listing, ListingImage
+from app.services.trust_engine import (
+    calculate_confidence_score,
+    grade_for_score,
+)
 from datetime import datetime, timedelta
 from datetime import datetime, timezone
 
@@ -68,7 +80,7 @@ IMG = {
 
 LISTINGS = [
     # ══════════════════════════════════════════════
-    # ABUJA — EMERALD GRADE
+    # ABUJA — PRIME (Maitama, Asokoro, Jabi, Katampe)
     # ══════════════════════════════════════════════
     {
         "tenant_id": 1,
@@ -82,15 +94,6 @@ LISTINGS = [
         "longitude": 7.5023,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=5),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=55),
-        "trust_score": 88,
-        "trust_grade": "emerald",
-        "ai_verified_real": True,
-        "cof_uploaded": True,
-        "survey_uploaded": True,
-        "deed_uploaded": True,
-        "gps_location_match": True,
-        "gps_photo_match": True,
-        "witness_count": 3,
         "nearest_landmark": "Maitama District Hospital",
         "images": [IMG["land"][0], IMG["land"][1]],
     },
@@ -106,15 +109,6 @@ LISTINGS = [
         "longitude": 7.5186,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=10),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=50),
-        "trust_score": 92,
-        "trust_grade": "emerald",
-        "ai_verified_real": True,
-        "cof_uploaded": True,
-        "survey_uploaded": True,
-        "deed_uploaded": True,
-        "gps_location_match": True,
-        "gps_photo_match": True,
-        "witness_count": 5,
         "nearest_landmark": "Asokoro District Hospital",
         "images": [IMG["house"][0], IMG["house"][2]],
     },
@@ -130,15 +124,6 @@ LISTINGS = [
         "longitude": 7.4380,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=3),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=57),
-        "trust_score": 86,
-        "trust_grade": "emerald",
-        "ai_verified_real": True,
-        "cof_uploaded": True,
-        "survey_uploaded": True,
-        "deed_uploaded": False,
-        "gps_location_match": True,
-        "gps_photo_match": True,
-        "witness_count": 2,
         "nearest_landmark": "Jabi Lake Mall",
         "images": [IMG["apartment"][0], IMG["apartment"][5]],
     },
@@ -154,20 +139,11 @@ LISTINGS = [
         "longitude": 7.4300,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=7),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=53),
-        "trust_score": 94,
-        "trust_grade": "emerald",
-        "ai_verified_real": True,
-        "cof_uploaded": True,
-        "survey_uploaded": True,
-        "deed_uploaded": True,
-        "gps_location_match": True,
-        "gps_photo_match": True,
-        "witness_count": 4,
         "nearest_landmark": "Katampe Extension Junction",
         "images": [IMG["house"][6], IMG["house"][3]],
     },
     # ══════════════════════════════════════════════
-    # ABUJA — GOLD GRADE
+    # ABUJA — MID (Gwarinpa, Wuse 2, Garki, Lifecamp)
     # ══════════════════════════════════════════════
     {
         "tenant_id": 1,
@@ -181,15 +157,6 @@ LISTINGS = [
         "longitude": 7.4042,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=15),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=45),
-        "trust_score": 77,
-        "trust_grade": "gold",
-        "ai_verified_real": True,
-        "cof_uploaded": False,
-        "survey_uploaded": True,
-        "deed_uploaded": True,
-        "gps_location_match": True,
-        "gps_photo_match": False,
-        "witness_count": 2,
         "nearest_landmark": "Gwarinpa Shopping Mall",
         "images": [IMG["land"][2], IMG["land"][4]],
     },
@@ -205,15 +172,6 @@ LISTINGS = [
         "longitude": 7.4892,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=20),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=40),
-        "trust_score": 73,
-        "trust_grade": "gold",
-        "ai_verified_real": True,
-        "cof_uploaded": True,
-        "survey_uploaded": False,
-        "deed_uploaded": True,
-        "gps_location_match": True,
-        "gps_photo_match": False,
-        "witness_count": 1,
         "nearest_landmark": "Wuse Market",
         "images": [IMG["apartment"][2], IMG["apartment"][6]],
     },
@@ -229,15 +187,6 @@ LISTINGS = [
         "longitude": 7.4769,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=2),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=58),
-        "trust_score": 80,
-        "trust_grade": "gold",
-        "ai_verified_real": True,
-        "cof_uploaded": True,
-        "survey_uploaded": True,
-        "deed_uploaded": False,
-        "gps_location_match": True,
-        "gps_photo_match": True,
-        "witness_count": 0,
         "nearest_landmark": "Garki International Market",
         "images": [IMG["land"][0], IMG["land"][5]],
     },
@@ -253,15 +202,6 @@ LISTINGS = [
         "longitude": 7.4167,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=8),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=52),
-        "trust_score": 69,
-        "trust_grade": "gold",
-        "ai_verified_real": True,
-        "cof_uploaded": False,
-        "survey_uploaded": True,
-        "deed_uploaded": True,
-        "gps_location_match": True,
-        "gps_photo_match": False,
-        "witness_count": 1,
         "nearest_landmark": "Lifecamp Shopping Centre",
         "images": [IMG["house"][4], IMG["house"][7]],
     },
@@ -277,20 +217,11 @@ LISTINGS = [
         "longitude": 7.5233,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=14),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=46),
-        "trust_score": 71,
-        "trust_grade": "gold",
-        "ai_verified_real": True,
-        "cof_uploaded": False,
-        "survey_uploaded": True,
-        "deed_uploaded": True,
-        "gps_location_match": True,
-        "gps_photo_match": False,
-        "witness_count": 2,
         "nearest_landmark": "Apo Legislative Quarters",
         "images": [IMG["house"][1], IMG["house"][5]],
     },
     # ══════════════════════════════════════════════
-    # ABUJA — SILVER GRADE
+    # ABUJA — OUTER (Lugbe, Galadimawa, Kubwa, Apo, Gwagwalada)
     # ══════════════════════════════════════════════
     {
         "tenant_id": 1,
@@ -304,15 +235,6 @@ LISTINGS = [
         "longitude": 7.3928,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=30),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=30),
-        "trust_score": 58,
-        "trust_grade": "silver",
-        "ai_verified_real": True,
-        "cof_uploaded": False,
-        "survey_uploaded": True,
-        "deed_uploaded": False,
-        "gps_location_match": True,
-        "gps_photo_match": False,
-        "witness_count": 0,
         "nearest_landmark": "Lugbe Market",
         "images": [IMG["land"][1], IMG["land"][3]],
     },
@@ -328,15 +250,6 @@ LISTINGS = [
         "longitude": 7.4456,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=12),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=48),
-        "trust_score": 62,
-        "trust_grade": "silver",
-        "ai_verified_real": False,
-        "cof_uploaded": False,
-        "survey_uploaded": True,
-        "deed_uploaded": True,
-        "gps_location_match": True,
-        "gps_photo_match": False,
-        "witness_count": 1,
         "nearest_landmark": "Galadimawa Roundabout",
         "images": [IMG["apartment"][4], IMG["apartment"][7]],
     },
@@ -352,15 +265,6 @@ LISTINGS = [
         "longitude": 7.3517,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=25),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=35),
-        "trust_score": 55,
-        "trust_grade": "silver",
-        "ai_verified_real": False,
-        "cof_uploaded": False,
-        "survey_uploaded": True,
-        "deed_uploaded": False,
-        "gps_location_match": True,
-        "gps_photo_match": False,
-        "witness_count": 0,
         "nearest_landmark": "Kubwa General Hospital",
         "images": [IMG["land"][3], IMG["land"][5]],
     },
@@ -376,20 +280,11 @@ LISTINGS = [
         "longitude": 7.0833,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=3),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=57),
-        "trust_score": 63,
-        "trust_grade": "silver",
-        "ai_verified_real": True,
-        "cof_uploaded": False,
-        "survey_uploaded": True,
-        "deed_uploaded": True,
-        "gps_location_match": True,
-        "gps_photo_match": False,
-        "witness_count": 0,
         "nearest_landmark": "Gwagwalada Area Council Secretariat",
         "images": [IMG["land"][2], IMG["land"][4]],
     },
     # ══════════════════════════════════════════════
-    # LAGOS — EMERALD GRADE
+    # LAGOS — PRIME (Lekki, Victoria Island, Ikoyi)
     # ══════════════════════════════════════════════
     {
         "tenant_id": 1,
@@ -403,15 +298,6 @@ LISTINGS = [
         "longitude": 3.4510,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=4),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=56),
-        "trust_score": 90,
-        "trust_grade": "emerald",
-        "ai_verified_real": True,
-        "cof_uploaded": True,
-        "survey_uploaded": True,
-        "deed_uploaded": True,
-        "gps_location_match": True,
-        "gps_photo_match": True,
-        "witness_count": 4,
         "nearest_landmark": "Lekki Phase 1 Toll Gate",
         "images": [IMG["house"][0], IMG["house"][6]],
     },
@@ -427,15 +313,6 @@ LISTINGS = [
         "longitude": 3.4219,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=1),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=59),
-        "trust_score": 96,
-        "trust_grade": "emerald",
-        "ai_verified_real": True,
-        "cof_uploaded": True,
-        "survey_uploaded": True,
-        "deed_uploaded": True,
-        "gps_location_match": True,
-        "gps_photo_match": True,
-        "witness_count": 6,
         "nearest_landmark": "Bar Beach",
         "images": [IMG["land"][0], IMG["land"][5]],
     },
@@ -451,20 +328,11 @@ LISTINGS = [
         "longitude": 3.4350,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=6),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=54),
-        "trust_score": 88,
-        "trust_grade": "emerald",
-        "ai_verified_real": True,
-        "cof_uploaded": True,
-        "survey_uploaded": True,
-        "deed_uploaded": True,
-        "gps_location_match": True,
-        "gps_photo_match": True,
-        "witness_count": 3,
         "nearest_landmark": "Ikoyi Club 1938",
         "images": [IMG["apartment"][1], IMG["apartment"][5]],
     },
     # ══════════════════════════════════════════════
-    # LAGOS — GOLD GRADE
+    # LAGOS — MID (Magodo, Gbagada)
     # ══════════════════════════════════════════════
     {
         "tenant_id": 1,
@@ -478,15 +346,6 @@ LISTINGS = [
         "longitude": 3.3833,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=9),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=51),
-        "trust_score": 82,
-        "trust_grade": "gold",
-        "ai_verified_real": True,
-        "cof_uploaded": True,
-        "survey_uploaded": True,
-        "deed_uploaded": False,
-        "gps_location_match": True,
-        "gps_photo_match": True,
-        "witness_count": 2,
         "nearest_landmark": "Magodo Phase 2 Gate",
         "images": [IMG["house"][2], IMG["house"][7]],
     },
@@ -502,20 +361,11 @@ LISTINGS = [
         "longitude": 3.3833,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=11),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=49),
-        "trust_score": 84,
-        "trust_grade": "gold",
-        "ai_verified_real": True,
-        "cof_uploaded": True,
-        "survey_uploaded": True,
-        "deed_uploaded": False,
-        "gps_location_match": True,
-        "gps_photo_match": True,
-        "witness_count": 3,
         "nearest_landmark": "Gbagada General Hospital",
         "images": [IMG["house"][3], IMG["house"][5]],
     },
     # ══════════════════════════════════════════════
-    # LAGOS — SILVER GRADE
+    # LAGOS — OUTER (Ajah, Surulere)
     # ══════════════════════════════════════════════
     {
         "tenant_id": 1,
@@ -529,15 +379,6 @@ LISTINGS = [
         "longitude": 3.5759,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=18),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=42),
-        "trust_score": 65,
-        "trust_grade": "silver",
-        "ai_verified_real": True,
-        "cof_uploaded": False,
-        "survey_uploaded": True,
-        "deed_uploaded": True,
-        "gps_location_match": True,
-        "gps_photo_match": False,
-        "witness_count": 1,
         "nearest_landmark": "Shoprite Sangotedo",
         "images": [IMG["apartment"][3], IMG["apartment"][6]],
     },
@@ -553,15 +394,6 @@ LISTINGS = [
         "longitude": 3.3515,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=22),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=38),
-        "trust_score": 60,
-        "trust_grade": "silver",
-        "ai_verified_real": True,
-        "cof_uploaded": False,
-        "survey_uploaded": False,
-        "deed_uploaded": True,
-        "gps_location_match": True,
-        "gps_photo_match": False,
-        "witness_count": 1,
         "nearest_landmark": "National Stadium Surulere",
         "images": [IMG["apartment"][0], IMG["apartment"][7]],
     },
@@ -577,15 +409,6 @@ LISTINGS = [
         "longitude": 3.3515,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=16),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=44),
-        "trust_score": 67,
-        "trust_grade": "silver",
-        "ai_verified_real": True,
-        "cof_uploaded": False,
-        "survey_uploaded": True,
-        "deed_uploaded": True,
-        "gps_location_match": True,
-        "gps_photo_match": False,
-        "witness_count": 0,
         "nearest_landmark": "Computer Village Ikeja",
         "images": [IMG["apartment"][2], IMG["apartment"][4]],
     },
@@ -604,15 +427,6 @@ LISTINGS = [
         "longitude": 3.5200,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=2),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=58),
-        "trust_score": 91,
-        "trust_grade": "emerald",
-        "ai_verified_real": True,
-        "cof_uploaded": True,
-        "survey_uploaded": True,
-        "deed_uploaded": True,
-        "gps_location_match": True,
-        "gps_photo_match": True,
-        "witness_count": 5,
         "nearest_landmark": "Lekki-Epe Expressway",
         "images": [IMG["land"][4], IMG["land"][0]],
     },
@@ -628,15 +442,6 @@ LISTINGS = [
         "longitude": 7.5100,
         "gps_verified_at": datetime.now(timezone.utc) - timedelta(days=1),
         "gps_expires_at": datetime.now(timezone.utc) + timedelta(days=59),
-        "trust_score": 97,
-        "trust_grade": "emerald",
-        "ai_verified_real": True,
-        "cof_uploaded": True,
-        "survey_uploaded": True,
-        "deed_uploaded": True,
-        "gps_location_match": True,
-        "gps_photo_match": True,
-        "witness_count": 7,
         "nearest_landmark": "Maitama II Toll",
         "images": [IMG["house"][6], IMG["house"][2]],
     },
@@ -676,6 +481,13 @@ def seed():
 
             # Create listing
             listing = Listing(**data)
+
+            # Trust is COMPUTED, never seeded. These listings have GPS
+            # coordinates and nothing else — no audit has run and no
+            # document has been uploaded — so the honest score is 30.
+            listing.trust_score = calculate_confidence_score(listing)
+            listing.trust_grade = grade_for_score(listing.trust_score)
+
             db.add(listing)
             db.flush()  # Get ID without full commit
 
