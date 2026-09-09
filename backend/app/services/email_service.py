@@ -1,9 +1,17 @@
+import asyncio
+import html
+import re
 import resend
 import os
 
 resend.api_key = os.getenv("RESEND_API_KEY", "")
 FROM_EMAIL = os.getenv("FROM_EMAIL", "Est8Go <onboarding@resend.dev>")
 BASE_URL = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+
+# Where every platform-level notification goes. Single source of truth —
+# health_service imports this rather than defining its own, and nothing
+# hardcodes the literal address.
+SUPERADMIN_EMAIL = os.getenv("SUPERADMIN_EMAIL", "est8go@gmail.com")
 
 # Inline style constants — email clients strip CSS classes
 _P  = 'style="font-size:14px;line-height:1.6;color:#475569;margin:0 0 16px;font-family:Arial,sans-serif"'
@@ -226,3 +234,205 @@ def send_onboarding_complete(
     </a>"""
     return _send(admin_email, f"New tenant onboarded: {tenant_name}",
                  _base_template("New Tenant Onboarded", body))
+
+
+# ================================================================
+# USER-SUPPLIED CONTENT — ESCAPING
+# ================================================================
+# Everything below this line may carry text a stranger typed into
+# WhatsApp. _base_template does no escaping of its own, so an unescaped
+# field is an HTML injection straight into the super admin's inbox.
+
+
+def esc(value, fallback: str = "—") -> str:
+    """
+    HTML-escapes any user-supplied value for safe interpolation.
+
+    quote=True because these land in attribute position as well as text.
+    Empty / None becomes the fallback so a missing field reads as "—"
+    rather than the string "None".
+    """
+    if value is None:
+        return fallback
+    _s = str(value).strip()
+    if not _s:
+        return fallback
+    return html.escape(_s, quote=True)
+
+
+def wa_link(phone) -> str:
+    """
+    wa.me URL from a phone number, or "" when there is nothing usable.
+
+    Reduces the number to digits rather than escaping arbitrary text into
+    an href — that removes the attribute-injection surface entirely
+    instead of trying to neutralise it.
+    """
+    _digits = re.sub(r"\D", "", str(phone or ""))
+    if len(_digits) < 10:
+        return ""
+    if _digits.startswith("0"):
+        _digits = "234" + _digits[1:]
+    return f"https://wa.me/{_digits}"
+
+
+# ================================================================
+# SUPER ADMIN NOTIFICATIONS
+# ================================================================
+
+
+def notify_superadmin(subject: str, title: str, body_html: str) -> bool:
+    """
+    Sends a platform notification to the super admin.
+
+    The single entry point for "something happened that a human at Est8Go
+    needs to see". Replaces the hand-rolled _send + _base_template pairs
+    that had accumulated in health_service and public/router.
+
+    body_html is trusted markup built by the caller — every user-supplied
+    value inside it must already have gone through esc().
+    """
+    return _send(SUPERADMIN_EMAIL, subject, _base_template(title, body_html))
+
+
+# resend.Emails.send blocks. Every other caller in this codebase sits in a
+# sync `def` endpoint, which FastAPI runs in a threadpool, so the event loop
+# is never touched. The platform-care path is genuinely async — it runs from
+# background_tasks on the loop itself — so a bare call there would stall
+# every tenant's webhook for the duration of the HTTP round-trip. The _async
+# variants at the bottom of this module are the entry points for that path.
+
+
+def _received_line() -> str:
+    from datetime import datetime
+    return datetime.utcnow().strftime("%H:%M UTC %d %b %Y")
+
+
+def _dashboard_button(label: str = "View in Super Admin") -> str:
+    return (
+        f'<a href="{BASE_URL}/public/super-admin-portal" {_BTN}>{label}</a>'
+    )
+
+
+def send_listing_report(
+    reference: str,
+    detail: str,
+    reporter_name: str = "",
+    reporter_phone: str = "",
+) -> bool:
+    """
+    Notifies the super admin that a buyer has reported a listing.
+
+    Every field here was typed by a stranger into WhatsApp — all of it
+    goes through esc(), and the phone reaches the href only as digits.
+    """
+    _ref = esc(reference)
+    _name = esc(reporter_name, "Unknown")
+    _phone = esc(reporter_phone, "not provided")
+    _wa = wa_link(reporter_phone)
+
+    _from_line = f"{_name} &middot; {_phone}"
+    if _wa:
+        _from_line += (
+            f' &nbsp;<a href="{_wa}" style="color:#4F46E5;font-weight:600;'
+            f'text-decoration:none">Reply on WhatsApp</a>'
+        )
+
+    body = f"""
+    <p {_P}>A buyer has reported a listing through Est8Go platform care.</p>
+    <p {_P}>
+      <strong>Reference:</strong> <span {_EM}>{_ref}</span><br/>
+      <strong>From:</strong> {_from_line}<br/>
+      <strong>Received:</strong> {_received_line()}
+    </p>
+    <div style="background:#F8FAFC;border-left:3px solid #F43F5E;
+                border-radius:8px;padding:16px 18px;margin:0 0 20px">
+      <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;
+                  color:#94A3B8;margin-bottom:8px;font-family:Arial,sans-serif">
+        Report
+      </div>
+      <div style="font-size:14px;line-height:1.6;color:#0F172A;
+                  white-space:pre-wrap;font-family:Arial,sans-serif">{esc(detail)}</div>
+    </div>
+    {_dashboard_button()}"""
+
+    return notify_superadmin(
+        f"Listing report {_ref}",
+        "New listing report",
+        body,
+    )
+
+
+def send_agency_application(
+    agency: str,
+    city: str = "",
+    listings: str = "",
+    contact_name: str = "",
+    phone: str = "",
+) -> bool:
+    """
+    Notifies the super admin that an agency has applied via platform care.
+
+    The phone number is the only contact channel the form captures — the
+    flow never asks for an email — so it is surfaced as a tappable
+    WhatsApp link rather than plain text.
+    """
+    _agency = esc(agency, "Unnamed agency")
+    _phone = esc(phone, "not provided")
+    _wa = wa_link(phone)
+
+    _phone_line = _phone
+    if _wa:
+        _phone_line += (
+            f' &nbsp;<a href="{_wa}" style="color:#4F46E5;font-weight:600;'
+            f'text-decoration:none">Reply on WhatsApp</a>'
+        )
+
+    body = f"""
+    <p {_P}>An agency has applied to join Est8Go through platform care.</p>
+    <p {_P}>
+      <strong>Agency:</strong> <span {_EM}>{_agency}</span><br/>
+      <strong>City:</strong> {esc(city)}<br/>
+      <strong>Active listings:</strong> {esc(listings)}<br/>
+      <strong>Contact:</strong> {esc(contact_name)}<br/>
+      <strong>Phone:</strong> {_phone_line}<br/>
+      <strong>Received:</strong> {_received_line()}
+    </p>
+    {_dashboard_button()}"""
+
+    return notify_superadmin(
+        f"Agency application — {_agency}",
+        "New agency application",
+        body,
+    )
+
+
+# ================================================================
+# ASYNC ENTRY POINTS
+# ================================================================
+# For callers running ON the event loop (the platform-care webhook path).
+# The blocking Resend call is handed to a worker thread so the loop keeps
+# serving every other tenant's webhook while it is in flight.
+
+
+async def send_listing_report_async(
+    reference: str,
+    detail: str,
+    reporter_name: str = "",
+    reporter_phone: str = "",
+) -> bool:
+    return await asyncio.to_thread(
+        send_listing_report, reference, detail, reporter_name, reporter_phone
+    )
+
+
+async def send_agency_application_async(
+    agency: str,
+    city: str = "",
+    listings: str = "",
+    contact_name: str = "",
+    phone: str = "",
+) -> bool:
+    return await asyncio.to_thread(
+        send_agency_application, agency, city, listings, contact_name, phone
+    )

@@ -60,11 +60,22 @@ async def get_health_history(
 
 
 @router.post("/run")
-async def run_health_check_now(
+def run_health_check_now(
     include_openai: bool = False,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_superuser),
 ):
-    """Manually trigger a full health check. Superuser only."""
+    """
+    Manually trigger a full health check. Superuser only.
+
+    Deliberately sync `def`, not `async def`. run_all_checks makes blocking
+    calls — requests to Meta / Paystack / OpenAI, and on a CRITICAL result
+    a blocking Resend send through escalate_critical. As `async def` all of
+    that ran on the event loop and stalled every other request for its
+    duration. A sync def hands the whole endpoint to FastAPI's threadpool,
+    which is the pattern every other blocking caller in this codebase
+    already uses, and it avoids passing the request's SQLAlchemy Session
+    across a thread boundary the way an explicit to_thread would.
+    """
     results = run_all_checks(db, include_openai=include_openai)
     return {"status": "complete", "checks": results}

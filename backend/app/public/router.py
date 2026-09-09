@@ -633,35 +633,30 @@ async def submit_onboarding(
         except Exception as _wpe:
             logger.warning(f"WhatsApp phone number storage failed: {_wpe}")
         try:
-            import os as _os
-            from app.services.email_service import _send, _base_template
+            from app.services.email_service import (
+                notify_superadmin, esc, SUPERADMIN_EMAIL, _P, _BTN, BASE_URL,
+            )
 
             biz_name = body.get("business_name", "New Tenant")
+            # biz_name and wa_phone come straight off the signup form.
             _body_html = f"""
-              <p style="font-size:14px;color:#475569;font-family:Arial,sans-serif">
-                A new tenant needs WhatsApp setup.
-              </p>
-              <p style="font-size:14px;color:#475569;font-family:Arial,sans-serif">
-                <strong>Business:</strong> {biz_name}<br/>
-                <strong>WhatsApp Number:</strong> {wa_phone}<br/>
+              <p {_P}>A new tenant needs WhatsApp setup.</p>
+              <p {_P}>
+                <strong>Business:</strong> {esc(biz_name)}<br/>
+                <strong>WhatsApp Number:</strong> {esc(wa_phone)}<br/>
                 <strong>Credits:</strong> 50 credits will be deducted on activation
               </p>
-              <p style="font-size:14px;color:#475569;font-family:Arial,sans-serif">
-                Log in to Super Admin to manage this request.
-              </p>
-              <a href="{_os.getenv('BASE_URL', '')}/public/super-admin-portal"
-                 style="display:inline-block;background:#4338CA;color:white;
-                        text-decoration:none;padding:14px 28px;border-radius:12px;
-                        font-weight:700;font-size:14px">
+              <p {_P}>Log in to Super Admin to manage this request.</p>
+              <a href="{BASE_URL}/public/super-admin-portal" {_BTN}>
                 View in Dashboard
               </a>"""
-            _send(
-                "est8go@gmail.com",
+            notify_superadmin(
                 f"WhatsApp setup needed: {biz_name}",
-                _base_template("New WhatsApp Setup Request", _body_html),
+                "New WhatsApp Setup Request",
+                _body_html,
             )
             logger.info(
-                f"WhatsApp setup email sent to est8go@gmail.com "
+                f"WhatsApp setup email sent to {SUPERADMIN_EMAIL} "
                 f"for tenant: {tenant.business_name}"
             )
         except Exception as _wae:

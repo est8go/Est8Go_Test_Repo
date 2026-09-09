@@ -20,7 +20,10 @@ from app.database.base import Base
 
 logger = logging.getLogger(__name__)
 
-SUPERADMIN_EMAIL = os.getenv("SUPERADMIN_EMAIL", "est8go@gmail.com")
+# Single source of truth lives in email_service — re-exported here so the
+# existing `from app.services.health_service import SUPERADMIN_EMAIL`
+# spelling keeps working.
+from app.services.email_service import SUPERADMIN_EMAIL  # noqa: E402,F401
 BASE_URL = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
 
 
@@ -295,7 +298,7 @@ def _create_issue_if_new(db: Session, system: str, detail: str) -> None:
 
 def escalate_critical(system: str, detail: str, db: Optional[Session] = None) -> None:
     try:
-        from app.services.email_service import _send, _base_template, _BTN, _P, _WN
+        from app.services.email_service import notify_superadmin, _BTN, _P, _WN
         now_str = datetime.utcnow().strftime("%H:%M UTC %d %b %Y")
         body = f"""
         <p {_P}>A critical system alert has been detected on the Est8Go platform.</p>
@@ -309,10 +312,10 @@ def escalate_critical(system: str, detail: str, db: Optional[Session] = None) ->
         <p {_P}>Immediate action is required. Log in to your Super Admin dashboard.</p>
         <a href="{BASE_URL}/public/super-admin-portal" {_BTN}>View Dashboard</a>
         """
-        _send(
-            SUPERADMIN_EMAIL,
+        notify_superadmin(
             f"EST8GO ALERT: {system.upper()} is down",
-            _base_template(f"Critical Alert — {system.upper()}", body),
+            f"Critical Alert — {system.upper()}",
+            body,
         )
         logger.warning(f"Health CRITICAL email sent — {system}: {detail}")
     except Exception as e:
