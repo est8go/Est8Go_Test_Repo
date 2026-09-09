@@ -577,7 +577,6 @@ async def audit_and_update_listing(listing, db) -> ListingAuditResult:
         gps_verified=bool(listing.gps_verified_at),
         gps_expired=False,
         gps_location_match=getattr(listing, "gps_location_match", False),
-        gps_photo_match=getattr(listing, "gps_photo_match", False),
         ai_verified=audit.ai_verified_real,
         document_keys=doc_keys,
         listing=listing,

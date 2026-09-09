@@ -711,7 +711,8 @@ def _gps_score(listing: Listing) -> int:
     Flat 30, matching trust_engine.calculate_confidence_score. This
     used to award a graduated 15/+10/+5, so the dashboard showed 15 or
     25 for a listing the real scorer had given 30 — and the last 5 were
-    unreachable anyway, since no code has ever written gps_photo_match.
+    unreachable anyway: gps_photo_match was never part of a real
+    capture flow, and that column is now gone.
     """
     if not (
         getattr(listing, "latitude", None)

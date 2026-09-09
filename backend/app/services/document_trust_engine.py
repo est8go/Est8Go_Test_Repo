@@ -405,7 +405,6 @@ def calculate_full_trust_score(
     gps_verified: bool,
     gps_expired: bool,
     gps_location_match: bool,
-    gps_photo_match: bool,
     ai_verified: bool,
     document_keys: List[str],
     deduction_flags: List[str] = None,
@@ -425,10 +424,6 @@ def calculate_full_trust_score(
     90/emerald there and 73/Silver here. Because this path runs on
     photo upload (via the AI audit) and writes trust_score, a listing's
     grade depended on which action the agency performed last.
-
-    gps_photo_match is accepted for signature compatibility and
-    reported in the breakdown, but no code has ever written that
-    column, so it is always False.
     """
     from app.services.trust_engine import (
         calculate_confidence_score,
@@ -468,7 +463,6 @@ def calculate_full_trust_score(
             "status": ["coordinates_captured"] if gps_score else [],
             "expired": gps_expired,
             "location_match": gps_location_match,
-            "photo_match": gps_photo_match,
         },
         "ai_vision": {
             "score": ai_score,

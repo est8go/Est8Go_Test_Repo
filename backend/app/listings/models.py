@@ -107,7 +107,6 @@ class Listing(Base):
     gps_verified_at = Column(DateTime, nullable=True)  # when GPS was captured
     gps_expires_at = Column(DateTime, nullable=True)  # Emerald expires after 60 days
     gps_location_match = Column(Boolean, default=False)  # coords match claimed address
-    gps_photo_match = Column(Boolean, default=False)  # photos geotagged on site
 
     # --- AI VISION MOAT ---
     ai_verified_real = Column(Boolean, default=False)
