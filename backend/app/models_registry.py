@@ -25,6 +25,9 @@ from app.credits.models import (
 # 5. HEALTH MONITOR + ISSUES TRACKER MODELS
 from app.services.health_service import HealthCheck, PlatformIssue
 
+# 6. LISTING REPORTS (buyer fraud reports from platform care)
+from app.reports.models import ListingReport
+
 logger = logging.getLogger(__name__)
 
 
@@ -60,6 +63,7 @@ def register_all_models():
             SeatEntitlement,
             HealthCheck,
             PlatformIssue,
+            ListingReport,
         ]
 
         # Force SQLAlchemy to link all string references to their classes
