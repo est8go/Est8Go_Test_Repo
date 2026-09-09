@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <script>
+    (function () {
+      var t = localStorage.getItem('est8go-theme') ||
+        (window.matchMedia('(prefers-color-scheme:light)').matches
+          ? 'light' : 'dark');
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Est8Go Embed Widget: Developer Docs</title>
+  <meta name="description"
+    content="Add your agency's live property listings to any website with a single script tag. No login, no API keys, no backend." />
+  <meta name="robots" content="index, follow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet" />
+
+  <style>
+    /* ════════════════════════════════════════════════════════
+       landing/index.html is the source of truth for every token,
+       type scale and component below. This page carries a copy of
+       the subset it needs rather than importing a shared sheet, so
+       that index.html (whose layout is measured and deployed) does
+       not have to be reopened. If a token changes there, change it
+       here too.
+
+       JetBrains Mono is the one deliberate divergence: index.html
+       uses Courier New for a single-line snippet, which is not good
+       enough for a 60-cell reference table.
+    ════════════════════════════════════════════════════════ */
+
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* ── TOKENS (from landing/index.html) ── */
+    :root {
+      --bg: #0B0F1E;
+      --bg2: #0F172A;
+      --surface: #111827;
+      --surface2: #1E293B;
+      --border: rgba(255, 255, 255, 0.07);
+      --border2: rgba(255, 255, 255, 0.12);
+      --text: #F8FAFC;
+      --text2: #CBD5E1;
+      --muted: #94A3B8;
+      --indigo: #4F46E5;
+      --indigo2: #4338CA;
+      /* Indigo at body size fails AA on dark surfaces (2.82:1).
+         --accent-text is the readable variant; --indigo stays for
+         large text and for fills that carry white on top. */
+      --accent-text: #A5B4FC;
+      --accent-soft: rgba(79, 70, 229, 0.12);
+      --code-bg: #0D1117;
+      --chip: rgba(255, 255, 255, 0.06);
+      --chip-hover: rgba(255, 255, 255, 0.10);
+      --r-sm: 8px;
+      --r-md: 14px;
+      --r-lg: 20px;
+      --r-xl: 28px;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    [data-theme="light"] {
+      --bg: #F0F4F8;
+      --bg2: #F8FAFC;
+      --surface: #FFFFFF;
+      --surface2: #F1F5F9;
+      --border: rgba(15, 23, 42, 0.08);
+      --border2: rgba(15, 23, 42, 0.14);
+      --text: #0F172A;
+      --text2: #334155;
+      --muted: #5A6472;
+      --accent-text: #4338CA;
+      --accent-soft: rgba(79, 70, 229, 0.10);
+      --code-bg: #0F172A;
+      --chip: rgba(15, 23, 42, 0.05);
+      --chip-hover: rgba(15, 23, 42, 0.08);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Instrument Serif ships Regular + Italic only. Weight stays 400. */
+    h1,
+    h2,
+    h3 {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      color: var(--text);
+    }
+
+    a {
+      color: var(--accent-text);
+    }
+
+    /* ── NAV ── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .nav-logo-mark {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--indigo2), var(--indigo));
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .nav-wordmark {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+
+    .nav-pill {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-text);
+      background: var(--accent-soft);
+      border-radius: 99px;
+      padding: 4px 10px;
+      white-space: nowrap;
+    }
+
+    /* 36px of visible chrome inside a real 44px tap target. */
+    .nav-theme {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: none;
+      border: none;
+      opacity: 0.65;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .nav-theme::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      pointer-events: none;
+    }
+
+    .nav-theme:hover {
+      opacity: 1;
+    }
+
+    /* ── LAYOUT ── */
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+    }
+
+    .section {
+      padding: 56px 0 0;
+    }
+
+    .section-label {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent-text);
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-size: 30px;
+      margin-bottom: 14px;
+    }
+
+    @media (min-width: 768px) {
+      .section-title {
+        font-size: 40px;
+      }
+    }
+
+    .section-sub {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 620px;
+      margin-bottom: 24px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 44px 0 8px;
+    }
+
+    .hero h1 {
+      font-size: 36px;
+      margin-bottom: 18px;
+    }
+
+    @media (min-width: 768px) {
+      .hero h1 {
+        font-size: 44px;
+      }
+    }
+
+    @media (min-width: 900px) {
+      .hero h1 {
+        font-size: 52px;
+      }
+    }
+
+    .hero-sub {
+      font-size: 17px;
+      color: var(--text2);
+      line-height: 1.7;
+      max-width: 620px;
+      margin-bottom: 26px;
+    }
+
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      height: 34px;
+      background: var(--chip);
+      border-radius: 99px;
+      padding: 0 16px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      color: var(--text2);
+    }
+
+    /* ── BUTTONS (from landing/index.html) ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      gap: 8px;
+      border-radius: var(--r-md);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: none;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--indigo2), var(--indigo));
+      color: white;
+      padding: 13px 24px;
+      box-shadow: 0 4px 20px rgba(79, 70, 229, 0.35);
+    }
+
+    /* ── CODE ── */
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border2);
+      border-radius: var(--r-md);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 8px 6px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .code-lang {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #8B949E;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      gap: 6px;
+      background: none;
+      border: none;
+      padding: 0 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #8B949E;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .copy-btn:hover,
+    .copy-btn.copied {
+      color: #A5B4FC;
+    }
+
+    pre {
+      padding: 14px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: #C9D1D9;
+    }
+
+    .tok-tag {
+      color: #FF7B72;
+    }
+
+    .tok-attr {
+      color: #79C0FF;
+    }
+
+    .tok-val {
+      color: #A5D6FF;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.92em;
+      color: var(--accent-text);
+    }
+
+    /* ── STEPS ── */
+    .steps {
+      display: grid;
+      gap: 14px;
+    }
+
+    .step {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 18px;
+    }
+
+    .step-num {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--indigo);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 5px;
+    }
+
+    .step-desc {
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── CONFIGURATOR ── */
+    .cfg {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    .cfg-head {
+      width: 100%;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-text);
+    }
+
+    .cfg-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1 1 150px;
+      min-width: 0;
+    }
+
+    .cfg-item label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .cfg-item select,
+    .cfg-item input {
+      min-height: 44px;
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--r-sm);
+      padding: 0 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .cfg-item input[type="color"] {
+      padding: 4px;
+    }
+
+    /* ── EXAMPLE WIDGET (static mockup, no backend call) ── */
+    .ex-wrap {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+
+    .ex-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .ex-body {
+      padding: 16px;
+    }
+
+    .ex-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 560px) {
+      .ex-grid.cols-2,
+      .ex-grid.cols-3 {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (min-width: 820px) {
+      .ex-grid.cols-3 {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+
+    .ex-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--ex-radius, 16px);
+      overflow: hidden;
+    }
+
+    .ex-img {
+      position: relative;
+      height: 120px;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      color: var(--muted);
+    }
+
+    .ex-fact {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      background: rgba(15, 23, 42, 0.88);
+      border-radius: 7px;
+      padding: 4px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #E2E8F0;
+    }
+
+    .ex-body-in {
+      padding: 12px;
+    }
+
+    .ex-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+
+    .ex-loc {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .ex-price {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+
+    .ex-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .ex-btn {
+      flex: 1;
+      background: var(--ex-accent, #4F46E5);
+      color: #fff;
+      border-radius: var(--ex-radius, 16px);
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .ex-wa {
+      width: 38px;
+      height: 38px;
+      background: #25D366;
+      border-radius: var(--ex-radius, 16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .ex-attrib {
+      text-align: right;
+      padding-top: 12px;
+      margin-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .ex-note {
+      font-size: 15px;
+      color: var(--muted);
+      text-align: center;
+      padding: 0 16px 16px;
+    }
+
+    /* ── ATTRIBUTE TABLE ── */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+
+    .attr-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+
+    .attr-table th {
+      text-align: left;
+      padding: 12px 14px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .attr-table td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      line-height: 1.6;
+    }
+
+    .attr-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .attr-name {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--accent-text);
+      font-weight: 600;
+      overflow-wrap: anywhere;
+    }
+
+    .attr-values {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .attr-default {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text2);
+    }
+
+    .attr-desc {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .plan-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 6px;
+      padding: 3px 8px;
+      white-space: nowrap;
+      background: var(--surface2);
+      color: var(--muted);
+    }
+
+    /* All = neutral, the default. Growth+ and Pro carry the accent. */
+    .plan-all {
+      background: var(--surface2);
+      color: var(--muted);
+    }
+
+    .plan-growth,
+    .plan-pro {
+      background: var(--accent-soft);
+      color: var(--accent-text);
+    }
+
+    /* Below 720px the 5-column table reflows to one card per
+       attribute. The markup stays a real table, so it still reads
+       and copies correctly; only the presentation changes. */
+    @media (max-width: 719px) {
+      .attr-table,
+      .attr-table tbody,
+      .attr-table tr,
+      .attr-table td {
+        display: block;
+        width: 100%;
+      }
+
+      .attr-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+
+      .attr-table tr {
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .attr-table tr:last-child {
+        border-bottom: none;
+      }
+
+      .attr-table td {
+        padding: 0;
+        border: none;
+      }
+
+      .attr-table td[data-label]::before {
+        content: attr(data-label);
+        display: inline-block;
+        width: 74px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        flex-shrink: 0;
+      }
+
+      /* name and plan share the first row of the card */
+      .attr-table td.c-name {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .attr-table td.c-plan {
+        display: none;
+      }
+
+      .attr-table td.c-values,
+      .attr-table td.c-default {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        margin-bottom: 4px;
+      }
+
+      .attr-table td.c-desc {
+        margin-top: 10px;
+      }
+    }
+
+    /* ── PLATFORMS ── */
+    .platform-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .platform-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .platform-name {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .platform-status {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    /* ── FAQ ── */
+    .faq-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .faq {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 18px;
+    }
+
+    .faq-q {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .faq-a {
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* ── CTA + FOOTER ── */
+    .doc-cta {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      padding: 32px 24px;
+      text-align: center;
+      margin-top: 56px;
+    }
+
+    .doc-cta h2 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .doc-cta p {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 22px;
+    }
+
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 26px 20px;
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .footer a {
+      display: inline-block;
+      min-height: 24px;
+      padding: 3px 2px;
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .footer a:hover {
+      color: var(--text);
+    }
+
+    /* Below 420px the logo, the pill and a 44px toggle do not fit in a
+       280px nav. The pill is the only expendable part. */
+    @media (max-width: 419px) {
+      .nav-pill {
+        display: none;
+      }
+    }
+
+    /* Mobile body copy floor, matching landing/index.html. Code stays
+       13px mono, and badges stay badge-sized. */
+    @media (max-width: 767px) {
+      .attr-name,
+      .attr-values,
+      .cfg-item label,
+      .platform-status,
+      .hero-tag,
+      .footer {
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="nav-logo" href="/">
+        <div class="nav-logo-mark">E8</div>
+        <span class="nav-wordmark">Est8Go</span>
+        <span class="nav-pill">Embed Widget</span>
+      </a>
+      <button class="nav-theme" onclick="toggleTheme()" id="themeBtn">🌙</button>
+    </div>
+  </nav>
+
+  <div class="page">
+
+    <!-- HERO -->
+    <section class="hero">
+      <h1>Your listings on any website.</h1>
+      <p class="hero-sub">
+        One script tag. No login, no API keys, no backend. Add a live,
+        auto-refreshing property grid to WordPress, Wix, or your own HTML.
+      </p>
+      <div class="hero-tags">
+        <span class="hero-tag">Zero dependencies</span>
+        <span class="hero-tag">Shadow DOM isolated</span>
+        <span class="hero-tag">Refreshes every 30 min</span>
+        <span class="hero-tag">Light / dark / auto</span>
+        <span class="hero-tag">Mobile responsive</span>
+      </div>
+    </section>
+
+    <!-- QUICK START -->
+    <section class="section">
+      <div class="section-label">Quick Start</div>
+      <h2 class="section-title">One tag. Done.</h2>
+      <p class="section-sub">
+        Copy this snippet, replace <code>your-agency-slug</code> with your
+        slug, and paste it anywhere in your HTML.
+      </p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">HTML</span>
+          <button class="copy-btn" id="copySnippet" onclick="copyCode('snippet','copySnippet')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2" />
+              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+            </svg>
+            Copy
+          </button>
+        </div>
+        <pre id="snippet"><span class="tok-tag">&lt;script</span>
+  <span class="tok-attr">src</span>=<span class="tok-val">"https://api.est8go.com/static/embed.js"</span>
+  <span class="tok-attr">data-tenant</span>=<span class="tok-val">"your-agency-slug"</span>
+  <span class="tok-attr">data-theme</span>=<span class="tok-val">"dark"</span>
+  <span class="tok-attr">data-limit</span>=<span class="tok-val">"6"</span><span class="tok-tag">&gt;&lt;/script&gt;</span></pre>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="section">
+      <div class="section-label">How It Works</div>
+      <h2 class="section-title">Three seconds to embed.</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div>
+            <div class="step-title">Find your agency slug</div>
+            <div class="step-desc">
+              Your slug is the last part of your vault URL. For example, if
+              your vault is <code>/public/your-agency</code> then your slug
+              is <code>your-agency</code>.
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div>
+            <div class="step-title">Paste the script tag</div>
+            <div class="step-desc">
+              Add the tag to any page: a body widget area, a code block, or
+              an HTML file. No backend changes needed.
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div>
+            <div class="step-title">Listings appear instantly</div>
+            <div class="step-desc">
+              The widget fetches your published listings, renders them
+              inside an isolated Shadow DOM, and refreshes every 30 minutes.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONFIGURATOR -->
+    <section class="section">
+      <div class="section-label">Configure</div>
+      <h2 class="section-title">Build your snippet.</h2>
+      <p class="section-sub">
+        Adjust the controls. The snippet below updates as you go, and the
+        example shows how the styling options affect a card.
+      </p>
+
+      <div class="cfg">
+        <div class="cfg-head">Configuration</div>
+
+        <div class="cfg-item">
+          <label for="cTheme">Theme</label>
+          <select id="cTheme" onchange="updateCfg('theme', this.value)">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+            <option value="auto">Auto (OS)</option>
+          </select>
+        </div>
+
+        <div class="cfg-item">
+          <label for="cColumns">Columns</label>
+          <select id="cColumns" onchange="updateCfg('columns', this.value)">
+            <option value="3">3 columns</option>
+            <option value="2">2 columns</option>
+            <option value="1">1 column</option>
+          </select>
+        </div>
+
+        <div class="cfg-item">
+          <label for="cLimit">Listings</label>
+          <select id="cLimit" onchange="updateCfg('limit', this.value)">
+            <option value="6">6 listings</option>
+            <option value="3">3 listings</option>
+            <option value="12">12 listings</option>
+          </select>
+        </div>
+
+        <div class="cfg-item">
+          <label for="cRadius">Card radius</label>
+          <select id="cRadius" onchange="updateCfg('radius', this.value)">
+            <option value="16">16px (default)</option>
+            <option value="8">8px (sharp)</option>
+            <option value="24">24px (round)</option>
+            <option value="0">0px (square)</option>
+          </select>
+        </div>
+
+        <div class="cfg-item">
+          <label for="cAccent">Accent colour</label>
+          <input id="cAccent" type="color" value="#4F46E5" onchange="updateCfg('accent', this.value)">
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Your snippet</span>
+          <button class="copy-btn" id="copyCfg" onclick="copyCode('cfgSnippet','copyCfg')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2" />
+              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+            </svg>
+            Copy
+          </button>
+        </div>
+        <pre id="cfgSnippet"></pre>
+      </div>
+
+      <div class="ex-wrap">
+        <div class="ex-bar">Example</div>
+        <div class="ex-body">
+          <div class="ex-grid cols-3" id="exGrid">
+
+            <div class="ex-card">
+              <div class="ex-img">
+                &#127968;
+                <span class="ex-fact">&#128205; Coordinates recorded</span>
+              </div>
+              <div class="ex-body-in">
+                <div class="ex-title">3-Bed Apartment</div>
+                <div class="ex-loc">&#128205; Maitama &middot; Apartment</div>
+                <div class="ex-price">&#8358;45M</div>
+                <div class="ex-actions">
+                  <span class="ex-btn">View Details &rarr;</span>
+                  <span class="ex-wa">&#128172;</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ex-card">
+              <div class="ex-img">&#127968;</div>
+              <div class="ex-body-in">
+                <div class="ex-title">Residential Plot</div>
+                <div class="ex-loc">&#128205; Guzape &middot; Land</div>
+                <div class="ex-price">&#8358;32M</div>
+                <div class="ex-actions">
+                  <span class="ex-btn">View Details &rarr;</span>
+                  <span class="ex-wa">&#128172;</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ex-card">
+              <div class="ex-img">&#127968;</div>
+              <div class="ex-body-in">
+                <div class="ex-title">4-Bed Duplex</div>
+                <div class="ex-loc">&#128205; Asokoro &middot; House</div>
+                <div class="ex-price">&#8358;78M</div>
+                <div class="ex-actions">
+                  <span class="ex-btn">View Details &rarr;</span>
+                  <span class="ex-wa">&#128172;</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div class="ex-attrib">Powered by Est8Go</div>
+        </div>
+        <p class="ex-note">
+          Example layout. Your own listings appear here.
+        </p>
+      </div>
+    </section>
+
+    <!-- ATTRIBUTES -->
+    <section class="section">
+      <div class="section-label">Reference</div>
+      <h2 class="section-title">All 12 data attributes.</h2>
+      <p class="section-sub">
+        Every attribute is optional except <code>data-tenant</code>.
+        Growth+ attributes require the Growth plan or higher.
+      </p>
+
+      <div class="table-wrap">
+        <table class="attr-table">
+          <thead>
+            <tr>
+              <th>Attribute</th>
+              <th>Values</th>
+              <th>Default</th>
+              <th>Plan</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="c-name"><span class="attr-name">data-tenant</span><span
+                  class="plan-badge plan-all">All</span></td>
+              <td class="c-values attr-values" data-label="Values">your-slug</td>
+              <td class="c-default" data-label="Default"><span class="attr-default">required</span></td>
+              <td class="c-plan"><span class="plan-badge plan-all">All</span></td>
+              <td class="c-desc attr-desc"><strong>Required.</strong> Your agency slug from the vault URL.</td>
+            </tr>
+            <tr>
+              <td class="c-name"><span class="attr-name">data-theme</span><span
+                  class="plan-badge plan-all">All</span></td>
+              <td class="c-values attr-values" data-label="Values">dark &middot; light &middot; auto</td>
+              <td class="c-default" data-label="Default"><span class="attr-default">dark</span></td>
+              <td class="c-plan"><span class="plan-badge plan-all">All</span></td>
+              <td class="c-desc attr-desc">Widget colour scheme. <code>auto</code> follows OS preference and updates
+                live without re-loading.</td>
+            </tr>
+            <tr>
+              <td class="c-name"><span class="attr-name">data-limit</span><span
+                  class="plan-badge plan-all">All</span></td>
+              <td class="c-values attr-values" data-label="Values">1 to 24</td>
+              <td class="c-default" data-label="Default"><span class="attr-default">6</span></td>
+              <td class="c-plan"><span class="plan-badge plan-all">All</span></td>
+              <td class="c-desc attr-desc">Max properties to show. Listings with the most complete records appear
+                first.</td>
+            </tr>
+            <tr>
+              <td class="c-name"><span class="attr-name">data-type</span><span class="plan-badge plan-all">All</span>
+              </td>
+              <td class="c-values attr-values" data-label="Values">land &middot; house &middot; apartment</td>
+              <td class="c-default" data-label="Default"><span class="attr-default">all</span></td>
+              <td class="c-plan"><span class="plan-badge plan-all">All</span></td>
+              <td class="c-desc attr-desc">Filter by property type. Must match your listing types exactly.</td>
+            </tr>
+            <tr>
+              <td class="c-name"><span class="attr-name">data-location</span><span
+                  class="plan-badge plan-all">All</span></td>
+              <td class="c-values attr-values" data-label="Values">maitama &middot; lekki</td>
+              <td class="c-default" data-label="Default"><span class="attr-default">all</span></td>
+              <td class="c-plan"><span class="plan-badge plan-all">All</span></td>
+              <td class="c-desc attr-desc">Filter by location. Partial match, case-insensitive.</td>
+            </tr>
+            <tr>
+              <td class="c-name"><span class="attr-name">data-columns</span><span
+                  class="plan-badge plan-growth">Growth+</span></td>
+              <td class="c-values attr-values" data-label="Values">1 &middot; 2 &middot; 3</td>
+              <td class="c-default" data-label="Default"><span class="attr-default">3</span></td>
+              <td class="c-plan"><span class="plan-badge plan-growth">Growth+</span></td>
+              <td class="c-desc attr-desc">Max columns on desktop. Mobile is always 1 column, tablet max 2.</td>
+            </tr>
+            <tr>
+              <td class="c-name"><span class="attr-name">data-accent</span><span
+                  class="plan-badge plan-growth">Growth+</span></td>
+              <td class="c-values attr-values" data-label="Values">#hex colour</td>
+              <td class="c-default" data-label="Default"><span class="attr-default">#4F46E5</span></td>
+              <td class="c-plan"><span class="plan-badge plan-growth">Growth+</span></td>
+              <td class="c-desc attr-desc">Button background colour. Use your brand colour.</td>
+            </tr>
+            <tr>
+              <td class="c-name"><span class="attr-name">data-radius</span><span
+                  class="plan-badge plan-growth">Growth+</span></td>
+              <td class="c-values attr-values" data-label="Values">0 to 32 (px)</td>
+              <td class="c-default" data-label="Default"><span class="attr-default">16</span></td>
+              <td class="c-plan"><span class="plan-badge plan-growth">Growth+</span></td>
+              <td class="c-desc attr-desc">Card and button border-radius in pixels.</td>
+            </tr>
+            <tr>
+              <td class="c-name"><span class="attr-name">data-show-price</span><span
+                  class="plan-badge plan-growth">Growth+</span></td>
+              <td class="c-values attr-values" data-label="Values">true &middot; false</td>
+              <td class="c-default" data-label="Default"><span class="attr-default">true</span></td>
+              <td class="c-plan"><span class="plan-badge plan-growth">Growth+</span></td>
+              <td class="c-desc attr-desc">Set to <code>false</code> to hide the price on each card.</td>
+            </tr>
+            <tr>
+              <td class="c-name"><span class="attr-name">data-show-wa</span><span
+                  class="plan-badge plan-growth">Growth+</span></td>
+              <td class="c-values attr-values" data-label="Values">true &middot; false</td>
+              <td class="c-default" data-label="Default"><span class="attr-default">true</span></td>
+              <td class="c-plan"><span class="plan-badge plan-growth">Growth+</span></td>
+              <td class="c-desc attr-desc">Set to <code>false</code> to hide the WhatsApp button on each card.</td>
+            </tr>
+            <tr>
+              <td class="c-name"><span class="attr-name">data-show-facts</span><span
+                  class="plan-badge plan-growth">Growth+</span></td>
+              <td class="c-values attr-values" data-label="Values">true &middot; false</td>
+              <td class="c-default" data-label="Default"><span class="attr-default">true</span></td>
+              <td class="c-plan"><span class="plan-badge plan-growth">Growth+</span></td>
+              <td class="c-desc attr-desc">Set to <code>false</code> to hide the record chip, for example
+                &ldquo;Coordinates recorded&rdquo;, on images. <strong>Legacy:</strong>
+                <code>data-show-trust</code> is still honoured for embeds already live, and does the same thing.
+              </td>
+            </tr>
+            <tr>
+              <td class="c-name"><span class="attr-name">data-show-branding</span><span
+                  class="plan-badge plan-pro">Pro only</span></td>
+              <td class="c-values attr-values" data-label="Values">true &middot; false</td>
+              <td class="c-default" data-label="Default"><span class="attr-default">true</span></td>
+              <td class="c-plan"><span class="plan-badge plan-pro">Pro only</span></td>
+              <td class="c-desc attr-desc">Set to <code>false</code> to hide the &ldquo;Powered by Est8Go&rdquo;
+                attribution.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- EXAMPLES -->
+    <section class="section">
+      <div class="section-label">Examples</div>
+      <h2 class="section-title">More configurations.</h2>
+
+      <p class="section-sub">Land listings only, Maitama, custom accent:</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">HTML</span>
+          <button class="copy-btn" id="copyEx1" onclick="copyCode('ex1','copyEx1')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2" />
+              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+            </svg>
+            Copy
+          </button>
+        </div>
+        <pre id="ex1"><span class="tok-tag">&lt;script</span>
+  <span class="tok-attr">src</span>=<span class="tok-val">"https://api.est8go.com/static/embed.js"</span>
+  <span class="tok-attr">data-tenant</span>=<span class="tok-val">"your-agency-slug"</span>
+  <span class="tok-attr">data-type</span>=<span class="tok-val">"land"</span>
+  <span class="tok-attr">data-location</span>=<span class="tok-val">"maitama"</span>
+  <span class="tok-attr">data-limit</span>=<span class="tok-val">"12"</span>
+  <span class="tok-attr">data-accent</span>=<span class="tok-val">"#4338CA"</span><span class="tok-tag">&gt;&lt;/script&gt;</span></pre>
+      </div>
+
+      <p class="section-sub">Light theme sidebar: 1 column, sharp corners, price hidden.</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">HTML</span>
+          <button class="copy-btn" id="copyEx2" onclick="copyCode('ex2','copyEx2')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2" />
+              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+            </svg>
+            Copy
+          </button>
+        </div>
+        <pre id="ex2"><span class="tok-tag">&lt;script</span>
+  <span class="tok-attr">src</span>=<span class="tok-val">"https://api.est8go.com/static/embed.js"</span>
+  <span class="tok-attr">data-tenant</span>=<span class="tok-val">"your-agency-slug"</span>
+  <span class="tok-attr">data-theme</span>=<span class="tok-val">"light"</span>
+  <span class="tok-attr">data-columns</span>=<span class="tok-val">"1"</span>
+  <span class="tok-attr">data-radius</span>=<span class="tok-val">"8"</span>
+  <span class="tok-attr">data-limit</span>=<span class="tok-val">"3"</span>
+  <span class="tok-attr">data-show-price</span>=<span class="tok-val">"false"</span><span class="tok-tag">&gt;&lt;/script&gt;</span></pre>
+      </div>
+    </section>
+
+    <!-- PLATFORMS -->
+    <section class="section">
+      <div class="section-label">Compatibility</div>
+      <h2 class="section-title">Works everywhere.</h2>
+      <p class="section-sub">A plain script tag. Works wherever you can add HTML.</p>
+      <div class="platform-grid">
+        <div class="platform-card">
+          <div class="platform-name">WordPress</div>
+          <div class="platform-status">Compatible</div>
+        </div>
+        <div class="platform-card">
+          <div class="platform-name">Wix</div>
+          <div class="platform-status">Compatible</div>
+        </div>
+        <div class="platform-card">
+          <div class="platform-name">Squarespace</div>
+          <div class="platform-status">Compatible</div>
+        </div>
+        <div class="platform-card">
+          <div class="platform-name">Webflow</div>
+          <div class="platform-status">Compatible</div>
+        </div>
+        <div class="platform-card">
+          <div class="platform-name">Custom HTML</div>
+          <div class="platform-status">Compatible</div>
+        </div>
+        <div class="platform-card">
+          <div class="platform-name">Ghost</div>
+          <div class="platform-status">Compatible</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section">
+      <div class="section-label">FAQ</div>
+      <h2 class="section-title">Common questions.</h2>
+      <div class="faq-list">
+        <div class="faq">
+          <div class="faq-q">Will the widget slow down my website?</div>
+          <div class="faq-a">
+            No. The script loads asynchronously, runs in Shadow DOM
+            isolation, and lazy-loads all images. It has zero impact on your
+            page's own CSS or layout.
+          </div>
+        </div>
+        <div class="faq">
+          <div class="faq-q">Do I need an API key or login?</div>
+          <div class="faq-a">
+            No. Your agency slug is all that's needed. The API only returns
+            listings your agency has published. No private data is ever
+            exposed.
+          </div>
+        </div>
+        <div class="faq">
+          <div class="faq-q">Can I embed multiple widgets on the same page?</div>
+          <div class="faq-a">
+            Yes. Each script tag creates an independent widget with its own
+            Shadow DOM. You can show different property types or locations
+            side by side.
+          </div>
+        </div>
+        <div class="faq">
+          <div class="faq-q">What does data-theme="auto" actually do?</div>
+          <div class="faq-a">
+            It reads the visitor's OS dark/light preference and switches the
+            widget theme to match, without re-fetching data. If the visitor
+            changes their OS theme while the page is open, the widget
+            updates instantly.
+          </div>
+        </div>
+        <div class="faq">
+          <div class="faq-q">What happens when I add new listings?</div>
+          <div class="faq-a">
+            The widget refreshes every 30 minutes. New listings appear
+            automatically. No changes to your site code required.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <div class="doc-cta">
+      <h2>Need a hand setting it up?</h2>
+      <p>We will walk you through it.</p>
+      <a class="btn btn-primary"
+        href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency"
+        target="_blank" rel="noopener">
+        Talk to us on WhatsApp
+      </a>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <a href="/">Est8Go</a> &middot; Your agents sell. Kora coordinates. You stay in control.
+  </div>
+
+  <script>
+    function toggleTheme() {
+      var root = document.documentElement;
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('est8go-theme', next);
+      document.getElementById('themeBtn').textContent =
+        next === 'dark' ? '🌙' : '☀️';
+    }
+
+    (function () {
+      var t = document.documentElement.getAttribute('data-theme') || 'dark';
+      var b = document.getElementById('themeBtn');
+      if (b) b.textContent = t === 'dark' ? '🌙' : '☀️';
+    })();
+
+    // ── Copy ──────────────────────────────────────────────
+    function copyCode(preId, btnId) {
+      var pre = document.getElementById(preId);
+      var text = (pre.textContent || pre.innerText).trim();
+      var btn = document.getElementById(btnId);
+      function marked() {
+        btn.classList.add('copied');
+        btn.innerHTML = btn.innerHTML.replace('Copy', 'Copied');
+        setTimeout(function () {
+          btn.classList.remove('copied');
+          btn.innerHTML = btn.innerHTML.replace('Copied', 'Copy');
+        }, 2000);
+      }
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(marked).catch(function () {
+          fallbackCopy(text); marked();
+        });
+      } else { fallbackCopy(text); marked(); }
+    }
+
+    function fallbackCopy(text) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0;top:-999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (e) { }
+      document.body.removeChild(ta);
+    }
+
+    // ── Snippet builder ───────────────────────────────────
+    // Nothing here calls the backend. The controls write a snippet
+    // and restyle a static example; they never fetch listings.
+    var cfg = {
+      theme: 'dark', columns: '3', limit: '6',
+      radius: '16', accent: '#4F46E5'
+    };
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function renderSnippet() {
+      var rows = [
+        ['src', 'https://api.est8go.com/static/embed.js'],
+        ['data-tenant', 'your-agency-slug'],
+        ['data-theme', cfg.theme],
+        ['data-columns', cfg.columns],
+        ['data-limit', cfg.limit],
+        ['data-radius', cfg.radius],
+        ['data-accent', cfg.accent]
+      ];
+      var out = '<span class="tok-tag">&lt;script</span>';
+      rows.forEach(function (r, i) {
+        out += '\n  <span class="tok-attr">' + esc(r[0]) + '</span>=' +
+          '<span class="tok-val">"' + esc(r[1]) + '"</span>';
+        if (i === rows.length - 1) {
+          out += '<span class="tok-tag">&gt;&lt;/script&gt;</span>';
+        }
+      });
+      document.getElementById('cfgSnippet').innerHTML = out;
+    }
+
+    function renderExample() {
+      var grid = document.getElementById('exGrid');
+      grid.className = 'ex-grid cols-' + cfg.columns;
+      grid.style.setProperty('--ex-radius', cfg.radius + 'px');
+      grid.style.setProperty('--ex-accent', cfg.accent);
+    }
+
+    function updateCfg(key, value) {
+      cfg[key] = value;
+      renderSnippet();
+      renderExample();
+    }
+
+    renderSnippet();
+    renderExample();
+  </script>
+
+</body>
+
+</html>
