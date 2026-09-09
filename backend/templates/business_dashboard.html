@@ -4815,7 +4815,10 @@
       if (l.id) CFG._currentListingId = l.id;
       const certSection = g('certSection');
       if (certSection) {
-        certSection.style.display = (l && l.trust_score > 0) ? 'block' : 'none';
+        // Trust Certificate is parked: GET /listings/{id}/trust-certificate
+        // returns 404 pending the Property Record reframing. Keep the
+        // section hidden so nobody hits a dead endpoint.
+        certSection.style.display = 'none';
       }
     }
 
@@ -6075,6 +6078,12 @@
         return;
       }
 
+      // Parked pending the Property Record reframing; the endpoint
+      // returns 404. Guard here too so a stale cached page cannot fire it.
+      toast('Trust Certificate is temporarily unavailable.');
+      return;
+
+      /* eslint-disable no-unreachable */
       const btn = g('downloadCertBtn');
       if (btn) {
         btn.textContent = '⏳ Generating certificate...';

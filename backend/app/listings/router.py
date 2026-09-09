@@ -505,9 +505,25 @@ async def generate_trust_certificate_pdf(
     current_user: User = Depends(get_current_user),
 ):
     """
-    Generates and returns a PDF trust certificate.
-    Costs 20 Est8 Credits.
+    PARKED. Returns 404.
+
+    The certificate is the most exposed verification artifact we have:
+    it is a file that outlives any deploy, and every copy generated
+    carries two things we no longer stand behind. Its footer prints
+    "Verify authenticity: est8go-api.onrender.com", which is a dead host
+    (that Render service is suspended), and the certificate as a whole
+    asserts verification, while the product only records and presents
+    what the agency supplied.
+
+    Parked pending the decision on reframing it as a Property Record.
+    trust_certificate_service.py is left intact; when the reframing
+    lands, delete this block and fix the footer host and wording.
+
+    Disabled here rather than in the service so no credits are charged
+    and no partial work runs.
     """
+    raise HTTPException(status_code=404, detail="Not found")
+
     tenant_id = current_user.tenant_id
     if not tenant_id:
         raise HTTPException(status_code=400, detail="No tenant associated")
