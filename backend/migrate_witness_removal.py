@@ -142,6 +142,7 @@ def main():
         flags_fixed = 0
         witness_wiped = 0
         score_changes = []
+        flag_resets = []
         updates = []
 
         for r in rows:
@@ -163,10 +164,25 @@ def main():
                 "deed_uploaded": "deed_of_assignment" in keys,
                 "survey_uploaded": "survey_plan" in keys,
             }
-            if any(
-                bool(r[f]) != v for f, v in new_flags.items()
-            ):
+            if any(bool(r[f]) != v for f, v in new_flags.items()):
                 flags_fixed += 1
+                flag_resets.append({
+                    "id": r["id"],
+                    "title": r["title"],
+                    "before": "".join([
+                        "C" if r["cof_uploaded"] else "-",
+                        "D" if r["deed_uploaded"] else "-",
+                        "S" if r["survey_uploaded"] else "-",
+                    ]),
+                    "after": "".join([
+                        "C" if new_flags["cof_uploaded"] else "-",
+                        "D" if new_flags["deed_uploaded"] else "-",
+                        "S" if new_flags["survey_uploaded"] else "-",
+                    ]),
+                    "real_docs": sorted(keys),
+                    "doc_before": old_doc,
+                    "doc_after": new_doc,
+                })
 
             # --- Stage 3: recompute ---
             gps_ok = bool(r["latitude"] and r["longitude"] and r["gps_verified_at"])
@@ -233,6 +249,24 @@ def main():
         print(f"  document_score recomputed from real uploaded files   : {doc_fixed}")
         print(f"  cof/deed/survey flags reset to match real files      : {flags_fixed}")
         print(f"  witness_count zeroed                                 : {witness_wiped}")
+
+        if flag_resets:
+            print(f"\nDOCUMENT FLAG RESETS ({len(flag_resets)} listings)")
+            print("  flags: C = C of O, D = Deed, S = Survey")
+            print("  spot-check with:")
+            print("    SELECT listing_id, doc_type FROM listing_documents"
+                  " WHERE listing_id IN (...);")
+            print("-" * 72)
+            print(f"  {'id':>4}  {'before':>6} -> {'after':<6} "
+                  f"{'doc_score':>13}   real files on disk")
+            for f in flag_resets:
+                docs = ", ".join(f["real_docs"]) if f["real_docs"] else "(none)"
+                shift = f"{f['doc_before']:>3} -> {f['doc_after']:<3}"
+                print(f"  {f['id']:>4}  {f['before']:>6} -> {f['after']:<6} "
+                      f"{shift:>13}   {docs}")
+            print("-" * 72)
+            ids = ",".join(str(f["id"]) for f in flag_resets)
+            print(f"  ids: {ids}")
 
         # ── BIGGEST MOVERS ───────────────────────────────────────
         if score_changes:
