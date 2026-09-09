@@ -6,7 +6,7 @@ import os
 
 resend.api_key = os.getenv("RESEND_API_KEY", "")
 FROM_EMAIL = os.getenv("FROM_EMAIL", "Est8Go <onboarding@resend.dev>")
-BASE_URL = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+BASE_URL = os.getenv("BASE_URL", "https://api.est8go.com")
 
 # Where every platform-level notification goes. Single source of truth —
 # health_service imports this rather than defining its own, and nothing
