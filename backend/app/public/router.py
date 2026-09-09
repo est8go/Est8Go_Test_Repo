@@ -6,7 +6,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+)
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
 
@@ -359,7 +364,6 @@ def get_public_listings(tenant_id: int, db: Session = Depends(get_db)):
 @router.get("", response_class=HTMLResponse)
 @router.get("/", response_class=HTMLResponse)
 async def public_index(request: Request, db: Session = Depends(get_db)):
-    from fastapi.responses import RedirectResponse
     from app.tenants.models import Tenant
 
     tenant = (
@@ -739,20 +743,21 @@ async def get_matches_page(request: Request, ids: str, db: Session = Depends(get
         return HTMLResponse("Gallery temporarily unavailable", status_code=500)
 
 
-@router.get("/embed", response_class=HTMLResponse)
-async def embed_demo_page(request: Request):
-    """Developer documentation page for the Est8Go embed widget."""
-    return templates.TemplateResponse(
-        request=request,
-        name="embed_demo.html",
-        context={
-            "base_url": os.getenv("BASE_URL", "https://est8go-api.onrender.com"),
-            # Slug of an agency that has consented to their public vault being
-            # used as the live demo. Unset means the page renders a preview
-            # placeholder instead of any real agency inventory.
-            "demo_tenant": os.getenv("EMBED_DEMO_TENANT", "").strip(),
-        },
-    )
+@router.get("/embed", include_in_schema=False)
+async def embed_docs_redirect():
+    """The embed documentation now lives on the static landing site.
+
+    It was served from here, on Render's free tier, which spins down: a
+    visitor clicking through from the landing page waited 30-50 seconds
+    for a cold start on a page that needs no backend at all. Nothing on
+    it did, once the live preview was gated.
+
+    302 rather than 301 on purpose. A permanent redirect is cached by
+    browsers effectively forever, so if the landing domain ever moves
+    there would be no taking it back.
+    """
+    base = os.getenv("LANDING_URL", "https://est8go.com").rstrip("/")
+    return RedirectResponse(url=f"{base}/embed", status_code=302)
 
 
 @router.get("/api/{tenant_slug}/listings")
