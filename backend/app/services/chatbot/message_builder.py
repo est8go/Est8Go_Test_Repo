@@ -89,9 +89,9 @@ def _factual_badges(prop) -> list:
     )
     if doc_count:
         badges.append(f"{doc_count} document{'s' if doc_count != 1 else ''} on file")
-    visits = getattr(prop, "witness_count", 0) or 0
-    if visits:
-        badges.append(f"{visits} site visit{'s' if visits != 1 else ''}")
+    # witness_count is deliberately NOT surfaced: the seeded demo rows carry
+    # fabricated counts and the endpoint that increments it is unauthenticated,
+    # so it is not a number we can put in front of a buyer.
     return badges
 
 

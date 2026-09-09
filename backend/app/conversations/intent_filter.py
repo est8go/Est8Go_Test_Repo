@@ -447,7 +447,34 @@ def detect_property_reference(text: str) -> Optional[int]:
 
 
 # 12 Nigerian RE objections
+#
+# Order matters — this map is walked in insertion order and the first
+# phrase found in the message wins. Trust and agent sit at the top on
+# purpose: "let me think, is this even real?" is a trust question, not
+# a stall, and it must not be pre-empted by a later key.
 OBJECTION_MAP = {
+    # --- TRUST / LEGITIMACY ---
+    "how do i know": "objection_trust",
+    "how do we know": "objection_trust",
+    "how can i trust": "objection_trust",
+    "how do i trust": "objection_trust",
+    "can i trust": "objection_trust",
+    "is this real": "objection_trust",
+    "is it real": "objection_trust",
+    "is this genuine": "objection_trust",
+    "is it genuine": "objection_trust",
+    "scam": "objection_trust",
+    "fake": "objection_trust",
+    "legit": "objection_trust",
+    # --- AGENT QUALITY ---
+    "agent reliable": "objection_agent",
+    "reliable agent": "objection_agent",
+    "trust the agent": "objection_agent",
+    "trust this agent": "objection_agent",
+    "is the agent real": "objection_agent",
+    "know the agent": "objection_agent",
+    "who am i dealing with": "objection_agent",
+    # --- STALLING ---
     "get back to you": "objection_stalling",
     "i'll think": "objection_stalling",
     "let me think": "objection_stalling",
@@ -458,6 +485,16 @@ OBJECTION_MAP = {
     "whatsapp video": "objection_media",
     "is this still": "objection_availability",
     "still available": "objection_availability",
+    # --- INSPECTION ("I can't come now", "too far") ---
+    "i cant come": "objection_inspection",
+    "i can't come": "objection_inspection",
+    "cant make it": "objection_inspection",
+    "can't make it": "objection_inspection",
+    "too far": "objection_inspection",
+    "i am abroad": "objection_inspection",
+    "i'm abroad": "objection_inspection",
+    "not in nigeria": "objection_inspection",
+    "outside the country": "objection_inspection",
     "last price": "objection_price",
     "can owner reduce": "objection_price",
     "can you reduce": "objection_price",

@@ -1,193 +1,280 @@
 """
 EST8GO KORA OBJECTION ENGINE
 ==============================
-12 Standard Nigerian Real Estate Objections mapped to
-executive, consultative closing responses.
+Standard Nigerian Real Estate objections mapped to short, honest,
+forward-moving replies.
 
 Rules-First: Pure Python — zero GPT cost.
 Every objection advances the sale, never just answers it.
 
-Philosophy:
-    - Never be defensive
-    - Reframe every objection as a reason to act NOW
-    - Always end with a forward-moving question
-    - Maintain the executive, consultative tone
+Voice:
+    Kora speaks AS THE AGENCY, on the agency's own number. The buyer
+    is talking to their estate agency, not to a platform. Nothing here
+    ever mentions Est8Go, the platform, or any verification policy.
+
+Position:
+    We hold what the agency gives us and show it to buyers. Nothing in
+    this file asserts that a document is genuine, a photo original, a
+    location confirmed or a property real. State what is on record,
+    then offer the next step.
+
+Style:
+    WhatsApp, not web copy. Two or three lines, then a forward step.
 """
 
 import random
 
 # ================================================================
-# THE 12 OBJECTION RESPONSES
+# WHAT WE HOLD ON A LISTING
+# ================================================================
+
+
+def _format_day(value) -> str:
+    """'12 January' — no leading zero, no year for a recent record."""
+    try:
+        return f"{value.day} {value.strftime('%B')}"
+    except Exception:
+        return ""
+
+
+def _document_names(listing) -> list:
+    """
+    Human names of the documents on file.
+    Strips the parenthetical: "Certificate of Occupancy (C of O)" reads
+    as "Certificate of Occupancy" in a chat message.
+    """
+    names = []
+    for doc in (getattr(listing, "documents", None) or []):
+        label = (getattr(doc, "label", "") or "").split("(")[0].strip()
+        if label and label not in names:
+            names.append(label)
+    if names:
+        return names
+
+    # Fall back to the per-type flags when no document rows exist.
+    for flag, label in (
+        ("cof_uploaded", "Certificate of Occupancy"),
+        ("deed_uploaded", "Deed of Assignment"),
+        ("survey_uploaded", "Survey Plan"),
+    ):
+        if getattr(listing, flag, False):
+            names.append(label)
+    return names
+
+
+def _join_naturally(items: list) -> str:
+    if len(items) == 1:
+        return items[0]
+    return f"{', '.join(items[:-1])} and {items[-1]}"
+
+
+def build_agency_record(listing) -> str:
+    """
+    One sentence naming what we hold on this listing — coordinates,
+    photos, documents on file.
+
+    States only what exists and when it was recorded. Never asserts
+    that any of it was checked, authenticated or found genuine, and
+    never reports a trust grade: a score reads as a verification
+    claim, and that is not a claim we are in a position to make.
+
+    witness_count is deliberately not used.
+
+    Returns a complete sentence in every case, so it drops straight
+    into a template with no branching at the call site.
+    """
+    nothing_yet = "Let me pull the full file on this one for you."
+
+    if listing is None:
+        return nothing_yet
+
+    parts = []
+
+    if getattr(listing, "latitude", None) and getattr(listing, "longitude", None):
+        day = _format_day(getattr(listing, "gps_verified_at", None))
+        parts.append(
+            f"coordinates recorded on {day}" if day else "coordinates on file"
+        )
+
+    photo_count = len(getattr(listing, "images", None) or [])
+    if photo_count:
+        parts.append(f"{photo_count} photo{'s' if photo_count != 1 else ''}")
+
+    documents = _document_names(listing)
+    if documents:
+        parts.append(f"the {_join_naturally(documents)} on file")
+
+    if not parts:
+        return nothing_yet
+
+    if len(parts) > 1:
+        body = f"{', '.join(parts[:-1])}, plus {parts[-1]}"
+    else:
+        body = parts[0]
+
+    return f"Here's what we have on this one: {body}."
+
+
+# ================================================================
+# THE OBJECTION RESPONSES
 # ================================================================
 
 OBJECTION_RESPONSES = {
     # --- 1. STALLING ("let me think", "I'll get back to you") ---
     "objection_stalling": [
         (
-            "I completely understand, {name}. The best decisions deserve careful thought. 🧠\n\n"
-            "What I can tell you is that *{biz_name}* operates on verified inventory "
-            "these are not listings that sit available indefinitely. "
-            "Properties at this trust grade move quickly once the right buyer sees them.\n\n"
-            "What specific aspect would you like me to clarify before you decide?"
+            "Of course, {name}. A decision like this deserves time. 🧠\n\n"
+            "Tell me what you'd want settled first — the documents, the "
+            "location, the price — and I'll get it for you.\n\n"
+            "What's on your mind?"
         ),
         (
-            "Of course, {name}  a property decision is never trivial. 🏠\n\n"
-            "While you think it over, let me share one fact: this listing carries an "
-            "*{trust_grade} Trust Score,*  GPS verified, AI-audited, and document checked. "
-            "That combination is rare in this market.\n\n"
-            "Is there anything about the title documents or location you'd like confirmed first?"
+            "That's fair, {name}. 🏠\n\n"
+            "{record}\n\n"
+            "Anything you'd like me to send across while you think it over?"
         ),
     ],
     # --- 2. MEDIA REQUEST ("send me the video", "WhatsApp video") ---
     "objection_media": [
         (
-            "Absolutely, {name}! 📸\n\n"
-            "Our verified property showcase includes high resolution photos and a GPS audit trail "
-            " all available at the link I shared above.\n\n"
-            "For a full video walkthrough, that is arranged during a *scheduled site inspection* "
-            "with our lead agent ensuring you see the property live and unedited.\n\n"
-            "Would you like me to schedule that inspection for you? Just share a preferred date."
+            "Of course, {name}! 📸\n\n"
+            "Every photo we have on this property is at the link I shared.\n\n"
+            "For the full walkthrough our professionals take you round the "
+            "site itself — shall I book that in?"
         ),
         (
-            "Great idea, {name}. 🎥\n\n"
-            "I want to be transparent, pre-recorded videos can be manipulated. "
-            "At *{biz_name}*, we go further: a *live agent walkthrough* at the physical site, "
-            "so you see every corner in real time.\n\n"
-            "That is our Truth Standard. Shall I connect you with the site agent today?"
+            "Happy to, {name}. 🎥\n\n"
+            "Photos only show so much, which is why we walk buyers round the "
+            "property in person.\n\n"
+            "Shall I arrange that with our professionals this week?"
         ),
     ],
     # --- 3. AVAILABILITY ("is it still available?", "still there?") ---
+    # The realtor alert is wired into this path in conversation_service —
+    # the copy offers a confirmation, so someone has to actually hear
+    # about it.
     "objection_availability": [
         (
-            "✅ Confirmed, {name} this property is *active and verified* in our vault.\n\n"
-            "At *{biz_name}*, listings are only visible when they have passed our GPS "
-            "and AI audit checks. Anything you see here is live.\n\n"
-            "Would you like to schedule a physical inspection before someone else does?"
+            "Still available, {name}. ✅\n\n"
+            "I'll have our professionals confirm the current position before "
+            "you travel.\n\n"
+            "Shall I book you in for a viewing?"
         ),
         (
-            "Yes, {name} still available and freshly verified. 🔒\n\n"
-            "Our system automatically removes any property the moment it is sold or "
-            "taken off market. You are looking at a live, active listing.\n\n"
-            "Shall I lock in a site visit for you?"
+            "Yes, still on our list, {name}. 🔒\n\n"
+            "Let me get our professionals to confirm it's not under offer and "
+            "hold a date for you at the same time.\n\n"
+            "What day suits?"
         ),
     ],
     # --- 4. PRICE NEGOTIATION ("last price?", "can owner reduce?") ---
     "objection_price": [
         (
             "Fair point, {name}. 💰\n\n"
-            "Verified properties tend to hold their value because the trust "
-            "work is already done — but I understand budget matters.\n\n"
-            "Let me check what else is available:\n\n"
+            "Let me see what else we have:\n\n"
             "1️⃣ *A lower-priced option* in the same area\n"
             "2️⃣ *A nearby area* within your budget\n"
-            "3️⃣ *Speak to the agent* about payment structure\n\n"
+            "3️⃣ *Speak to our professionals* about payment structure\n\n"
             "Which would you prefer? "
             "Or tell me your maximum and I'll search now."
         ),
     ],
+    # --- 5. BUDGET MISMATCH ---
+    # Handled end-to-end in conversation_service (re-search / budget
+    # prompt) and never reaches this file. Noted here so the numbering
+    # matches the objection set.
     # --- 6. THIRD PARTY ("my wife", "my husband", "my partner") ---
     "objection_third_party": [
         (
-            "That is wise, {name} major decisions belong to the whole family. 👨‍👩‍👧\n\n"
-            "Here is what I suggest: share the verified property link with them directly. "
-            "Everything they need: photos, GPS audit, trust score, and documents "
-            "is in one place. No back and forth required.\n\n"
-            "Would you like me to prepare a summary they can review at their convenience?"
+            "That's wise, {name} — a decision like this belongs to both of "
+            "you. 👨‍👩‍👧\n\n"
+            "Send them the property link: the photos, location and documents "
+            "on file are all in one place.\n\n"
+            "Shall I resend it so you can forward it?"
         ),
         (
-            "Absolutely the right approach, {name}. 🤝\n\n"
-            "I can prepare a *Verification Summary* for this property "
-            "a clean, shareable document showing the GPS proof, AI audit result, "
-            "and title documents. Perfect for a joint review.\n\n"
-            "Shall I put that together for you now?"
+            "Absolutely the right call, {name}. 🤝\n\n"
+            "If there's anything specific they'd want — a document, the exact "
+            "address, a viewing date — tell me and I'll sort it.\n\n"
+            "What would they want to see first?"
         ),
     ],
     # --- 7. MORE OPTIONS ("show me others", "any other options?") ---
     "objection_more_options": [
         (
-            "Of course, {name}! Variety is important. 🔍\n\n"
-            "I have pulled our full verified collection matching your criteria. "
-            "Every option in our boutique carries the same Truth Standard "
-            "GPS-verified, AI audited, and document-checked.\n\n"
-            "Tap the boutique link above to browse all available matches. "
-            "Which one catches your eye?"
+            "Of course, {name}! Worth comparing. 🔍\n\n"
+            "Tell me what to change — a different area, a higher or lower "
+            "budget, another property type — and I'll pull a fresh set.\n\n"
+            "What should I adjust?"
         ),
         (
-            "Great — let me expand your options, {name}. 📋\n\n"
-            "Our vault has additional verified matches in your area. "
-            "I will not waste your time with unverified listings "
-            "everything I show you has passed our full audit.\n\n"
-            "Take a look at the boutique link. Any of those work for you?"
+            "Let me widen it for you, {name}. 📋\n\n"
+            "Give me an area and a maximum figure and I'll show you "
+            "everything we have in range.\n\n"
+            "What are we working with?"
         ),
     ],
     # --- 8. COLD DISENGAGEMENT ("not interested", "forget it") ---
     "objection_cold": [
         (
-            "Understood completely, {name}. No pressure at all. 🙏\n\n"
-            "If your property needs change, whether buying, selling, or investing "
-            "*{biz_name}* will always have verified options waiting for you.\n\n"
-            "Is there anything specific that changed your mind? "
-            "Your feedback helps us serve you better."
+            "Understood, {name}. No pressure at all. 🙏\n\n"
+            "If your plans change — buying, selling or just looking — message "
+            "this number any time.\n\n"
+            "If something specific put you off, I'd genuinely like to know."
         ),
         (
-            "That is perfectly fine, {name}. 👍\n\n"
-            "The market moves fast and so do preferences. "
-            "Whenever you are ready to explore again, our vault will be here  "
-            "fully verified and updated.\n\n"
-            "Is there anything I can improve or clarify before you go?"
+            "That's perfectly fine, {name}. 👍\n\n"
+            "Message this number whenever you'd like to look again.\n\n"
+            "Anything I could have done better?"
         ),
     ],
     # --- 9. NIGERIAN CASUAL ("abeg", "e don do") ---
     "objection_nigerian_casual": [
         (
             "Ha {name}, I hear you! 😄\n\n"
-            "But seriously, this one na real deal. GPS verified, documents clean, "
-            "AI-checked. No story, no drama.\n\n"
-            "Just say the word and I will connect you with the agent directly. "
-            "No time wasting. 🤝"
+            "{record} Our professionals fit carry you go the site make you "
+            "see am yourself.\n\n"
+            "Make I arrange am for you? 🤝"
         ),
         (
             "Lol {name}, I feel you! 😂\n\n"
-            "But this property no be one of those fake listings. "
-            "Everything checked and confirmed, coordinates, photos, papers.\n\n"
-            "You want make I send you the verification details? Na facts, I promise. ✅"
+            "Best thing na to go see the place with your own eyes — na there "
+            "everything dey clear.\n\n"
+            "Make I book am for you? ✅"
         ),
     ],
     # --- 10. INSPECTION OBJECTION ("I can't come now", "too far") ---
     "objection_inspection": [
         (
             "No problem at all, {name}. 📅\n\n"
-            "Our site inspections are flexible, weekdays, weekends, early morning. "
-            "We work around your schedule, not the other way around.\n\n"
-            "What day and time works best for you?"
+            "Our professionals work weekdays, weekends and early mornings — "
+            "whatever suits you.\n\n"
+            "What day works best?"
         ),
         (
-            "I understand, {name}  we will make it convenient for you. 🚗\n\n"
-            "Our agent can also arrange a *live video walkthrough* as a first step, "
-            "so you can preview the property remotely before committing to a visit.\n\n"
-            "Would that work for you?"
+            "Understood, {name}. 🚗\n\n"
+            "If distance is the issue, many of our buyers send a relative or "
+            "their surveyor to view on their behalf.\n\n"
+            "Shall I hold a date for whoever can make it?"
         ),
     ],
     # --- 11. TRUST / LEGITIMACY ("how do I know it's real?") ---
     "objection_trust": [
         (
-            "That is exactly the right question to ask, {name}. 🔍\n\n"
-            "At *{biz_name}*, every listing passes three independent checks:\n\n"
-            "📍 GPS Verification: physical site location confirmed\n"
-            "🤖 AI Vision Audit: photos scanned for CGI or stolen images\n"
-            "📄 Document Check: title documents verified and scored\n\n"
-            "You can see the full audit trail at the property link. "
-            "This is not a promise, it is mathematical proof."
+            "Good question, {name}. 🔍\n\n"
+            "{record} Our professionals can take you through it "
+            "themselves.\n\n"
+            "The surest way is to see it in person — shall I arrange an "
+            "inspection?"
         ),
     ],
     # --- 12. AGENT QUALITY ("is the agent reliable?") ---
     "objection_agent": [
         (
-            "Great question, {name}. 🏆\n\n"
-            "Every agent on the *{biz_name}* platform carries a *Trust Passport*  "
-            "a verified record of their transactions, inspection history, and client ratings.\n\n"
-            "You are not dealing with an unknown, you are dealing with a verified professional. "
-            "Shall I share their profile with you?"
+            "Happy to introduce you, {name}. 🤝\n\n"
+            "Our professionals handle this listing directly and can answer "
+            "anything the file doesn't cover.\n\n"
+            "Shall I connect you with them, or arrange a site visit first?"
         ),
     ],
 }
@@ -199,16 +286,18 @@ OBJECTION_RESPONSES = {
 
 
 def get_objection_response(
-    response_key: str, name: str, biz_name: str, trust_grade: str = "Verified"
+    response_key: str, name: str, biz_name: str, listing=None
 ) -> str:
     """
-    Returns a randomised executive objection response.
+    Returns a randomised objection response.
 
     Args:
         response_key: The objection key from OBJECTION_RESPONSES
         name:         Buyer's first name
-        biz_name:     Tenant's business name
-        trust_grade:  The listing's trust grade (Emerald/Gold/Silver/Bronze/Verified)
+        biz_name:     The agency's business name
+        listing:      The Listing in view, if any. Copy is built from
+                      what is actually on record for it — never from a
+                      trust grade, which reads as a verification claim.
 
     Returns:
         Formatted response string
@@ -222,7 +311,11 @@ def get_objection_response(
     )
 
     template = random.choice(templates)
-    return template.format(name=name, biz_name=biz_name, trust_grade=trust_grade)
+    return template.format(
+        name=name,
+        biz_name=biz_name,
+        record=build_agency_record(listing),
+    )
 
 
 # ================================================================
@@ -232,14 +325,13 @@ def get_objection_response(
 
 def build_media_redirect(name: str, biz_name: str, showroom_link: str) -> str:
     """
-    Specific media request handler that includes the showroom link.
-    Called when buyer asks for video/photos.
+    Media request handler that includes the property link.
+    Called when a buyer asks for video/photos.
     """
     return (
-        f"Absolutely, {name}! 📸\n\n"
-        f"Tap below to view the full verified photo gallery and GPS audit trail:\n"
+        f"Of course, {name}! 📸\n\n"
+        f"Every photo we have on this property is here:\n"
         f"{showroom_link}\n\n"
-        f"For a *live video walkthrough*, our agent visits the site with you in person — "
-        f"so what you see is exactly what you get.\n\n"
-        f"Shall I schedule that with *{biz_name}*'s lead agent? Just share a preferred date. 📅"
+        f"For the full walkthrough our professionals take you round the site "
+        f"itself. Shall I book that in? 📅"
     )

@@ -2649,17 +2649,17 @@ async def handle_incoming_message(data: dict, db: Session):
                         _price_fmt = f"₦{_price:,}"
 
                     _b = _factual_badges(_lst)
-                    _b_line = " · ".join(_b) if _b else "Verification details on the listing"
+                    _b_line = " · ".join(_b) if _b else "Full file held on this property"
 
                     await send_meta_message(
                         sender_id,
                         f"Hi {first_name}! 👋\n\n"
-                        f"Excellent choice. You have selected an Est8Go listing:\n\n"
+                        f"Excellent choice. You have selected:\n\n"
                         f"*{_lst.title}*\n"
                         f"📍 {(_lst.location or '').title()}\n"
                         f"💰 *{_price_fmt}*\n"
                         f"🛡️ {_b_line}\n\n"
-                        f"This property's verification details are on file. Ready to arrange your inspection.\n\n"
+                        f"Ready to arrange your inspection.\n\n"
                         f"Would you like to schedule a site visit? "
                         f"Just give me a preferred time and our agent will confirm. 📅",
                         phone_number_id=_send_pid, access_token=_send_token,
@@ -2796,19 +2796,9 @@ async def handle_incoming_message(data: dict, db: Session):
             if _md_id:
                 _md_lst = db.get(Listing, int(_md_id)) if str(_md_id).isdigit() else None
                 if _md_lst:
-                    _base = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+                    _base = os.getenv("BASE_URL", "https://api.est8go.com")
                     _link = f"{_base}/public/property/{_md_lst.id}"
-                    try:
-                        from app.services.chatbot.message_builder import build_media_redirect
-                        _md_msg = build_media_redirect(first_name, biz_name, _link)
-                    except Exception:
-                        _md_msg = (
-                            f"All photos for "
-                            f"*{_md_lst.title}* are here, "
-                            f"{first_name}: 📸\n\n{_link}\n\n"
-                            f"Would you like to schedule a "
-                            f"site inspection? 📅"
-                        )
+                    _md_msg = build_media_redirect(first_name, biz_name, _link)
                     await send_meta_message(
                         sender_id, _md_msg,
                         phone_number_id=_send_pid,
@@ -2934,14 +2924,40 @@ async def handle_incoming_message(data: dict, db: Session):
                 return
 
             last_id = prefs.get("last_viewed_id")
-            trust_grade = "Verified"
-            if last_id:
-                viewed = db.get(Listing, last_id)
-                grade_raw = (viewed.trust_grade or "") if viewed else ""
-                if grade_raw and grade_raw != "ungraded":
-                    trust_grade = grade_raw.title()
-            response = get_objection_response(objection_key, first_name, biz_name, trust_grade)
+            viewed = db.get(Listing, last_id) if last_id else None
+
+            # The Listing itself goes in, not a trust grade. Copy is built
+            # from what is actually on record for it — coordinates, photos,
+            # documents on file. A grade reads as a verification claim.
+            response = get_objection_response(
+                objection_key, first_name, biz_name, listing=viewed
+            )
             await send_meta_message(sender_id, response, phone_number_id=_send_pid, access_token=_send_token)
+
+            # "Is it still available?" is a live buyer, and the reply tells
+            # them a professional will confirm the position — so one has to
+            # actually hear about it. Never block the reply on the alert.
+            if objection_key == "objection_availability" and viewed:
+                try:
+                    await alert_realtor_of_lead(
+                        db, viewed.id, sender_id, biz_name,
+                        phone_number_id=_send_pid,
+                        access_token=_send_token,
+                        custom_message=(
+                            f"🔔 *AVAILABILITY CHECK*\n\n"
+                            f"{first_name} is asking whether "
+                            f"*{viewed.title}* is still available.\n\n"
+                            f"📱 {sender_id}\n\n"
+                            f"They have been told you will confirm the "
+                            f"current position. Please reply to them "
+                            f"directly."
+                        ),
+                    )
+                except Exception as _av_alert_err:
+                    logger.warning(
+                        f"Availability objection realtor alert failed: "
+                        f"{_av_alert_err}"
+                    )
             return
 
         # Also trigger search if intent is search_ready
@@ -3130,9 +3146,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"Our lead agent will reach out shortly "
                             f"to confirm the exact time and meeting point. "
                             f"Please keep your phone available. 📱\n\n"
-                            f"Thank you for choosing *{biz_name}*, "
-                            f"where every listing shows its verification "
-                            f"details before it reaches you. 🏠"
+                            f"Thank you for choosing *{biz_name}*. 🏠"
                         )
                         await send_meta_message(sender_id, confirmation, phone_number_id=_send_pid, access_token=_send_token)
                         return
@@ -3453,15 +3467,9 @@ async def handle_incoming_message(data: dict, db: Session):
                     )
                     return
 
-            # Media request — include showroom link
-            if intent == "media_request" and prefs.get("last_viewed_id"):
-                listing = db.get(Listing, prefs.get("last_viewed_id"))
-                if listing:
-                    _base_mr = os.getenv("BASE_URL", "https://api.est8go.com")
-                    showroom_link = f"{_base_mr}/public/property/{listing.id}"
-                    response = build_media_redirect(first_name, biz_name, showroom_link)
-                    await send_meta_message(sender_id, response, phone_number_id=_send_pid, access_token=_send_token)
-                    return
+            # NOTE: media_request is handled in full at section 8f, which
+            # returns on every branch — a second handler here would be
+            # unreachable. Do not re-add one.
 
             # Never send raw flag strings or generic fallback
             if final_reply in ("I am here to assist you.", "filler_flag", ""):
