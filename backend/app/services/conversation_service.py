@@ -914,6 +914,8 @@ async def _handle_platform_care(
         and len(text_body.strip().split()) <= 4
     ) or not convo_data.get("platform_state")
 
+    _notify = None
+
     if is_greeting:
         await send_meta_message(sender_id, get_welcome(first_name), phone_number_id=phone_number_id)
         convo_data["platform_state"] = "menu"
@@ -921,12 +923,132 @@ async def _handle_platform_care(
         response, convo_data = get_platform_care_response(
             text_body, first_name, convo_data
         )
+        # The router is pure: it emits an intent and does no I/O. Pop it
+        # before persisting — _notify is a one-shot instruction, not
+        # conversation state, and must never survive into data_json.
+        _notify = convo_data.pop("_notify", None)
         await send_meta_message(sender_id, response, phone_number_id=phone_number_id)
 
     convo.data_json = json.dumps(convo_data)
     convo.state = "ACTIVE"
     convo.last_active_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.commit()
+
+    # Notification runs AFTER the reply and the commit, and every failure is
+    # swallowed. A buyer who reports a listing has already been told we
+    # logged it; a Resend outage must not turn that into silence, and must
+    # not roll back the row.
+    if _notify:
+        await _dispatch_platform_care_notification(
+            db, _notify, tenant_id, sender_id, whatsapp_name
+        )
+
+
+async def _dispatch_platform_care_notification(
+    db, notify: dict, tenant_id, sender_id, whatsapp_name
+):
+    """
+    Persists a platform-care submission and emails the super admin.
+
+    Lives here rather than in platform_care.py because this is where db,
+    tenant_id and the sender's WhatsApp number already are — the router
+    has none of the three, which is why the old agency-application write
+    had to open its own session and invent a tenant id.
+    """
+    _kind = notify.get("kind")
+
+    if _kind == "listing_report":
+        _ref = notify.get("reference") or ""
+        _detail = notify.get("detail") or ""
+
+        try:
+            from app.reports.service import create_listing_report
+            create_listing_report(
+                db,
+                detail=_detail,
+                reporter_phone=sender_id,
+                reporter_name=whatsapp_name,
+                tenant_id=tenant_id,
+                reference=_ref,
+            )
+            logger.info(f"LISTING_REPORT stored {_ref} from {sender_id}")
+        except Exception as _e:
+            db.rollback()
+            # The reporter already holds this reference. Log it in full so
+            # the report is recoverable from the logs even if the row is not.
+            logger.error(
+                f"LISTING_REPORT_SAVE_FAILED ref={_ref} from={sender_id} "
+                f"tenant={tenant_id}: {_e} | detail={_detail!r}",
+                exc_info=True,
+            )
+
+        try:
+            from app.services.email_service import send_listing_report_async
+            _sent = await send_listing_report_async(
+                _ref, _detail, whatsapp_name or "", sender_id or "",
+            )
+            if not _sent:
+                logger.error(f"LISTING_REPORT_EMAIL_FAILED ref={_ref}")
+        except Exception as _e:
+            logger.error(
+                f"LISTING_REPORT_EMAIL_FAILED ref={_ref}: {_e}", exc_info=True
+            )
+        return
+
+    if _kind == "agency_application":
+        _agency = notify.get("agency") or "Unnamed agency"
+
+        try:
+            from app.services.health_service import PlatformIssue
+            import json as _json
+            db.add(PlatformIssue(
+                title=f"Agency Application — {_agency}",
+                description=_json.dumps({
+                    "agency": _agency,
+                    "city": notify.get("city"),
+                    "listings": notify.get("listings"),
+                    "contact": notify.get("contact"),
+                    "phone": notify.get("phone"),
+                    "source": "whatsapp_care",
+                }),
+                severity="low",
+                status="open",
+                affected_area="agency_application",
+                tenant_id=tenant_id,
+            ))
+            db.commit()
+            logger.info(f"AGENCY_APPLICATION stored for {_agency}")
+        except Exception as _e:
+            db.rollback()
+            logger.error(
+                f"AGENCY_APPLICATION_SAVE_FAILED agency={_agency!r} "
+                f"from={sender_id}: {_e} | payload={notify!r}",
+                exc_info=True,
+            )
+
+        try:
+            from app.services.email_service import (
+                send_agency_application_async,
+            )
+            _sent = await send_agency_application_async(
+                _agency,
+                notify.get("city") or "",
+                notify.get("listings") or "",
+                notify.get("contact") or "",
+                notify.get("phone") or "",
+            )
+            if not _sent:
+                logger.error(
+                    f"AGENCY_APPLICATION_EMAIL_FAILED agency={_agency!r}"
+                )
+        except Exception as _e:
+            logger.error(
+                f"AGENCY_APPLICATION_EMAIL_FAILED agency={_agency!r}: {_e}",
+                exc_info=True,
+            )
+        return
+
+    logger.warning(f"Unknown platform-care notify kind: {_kind!r}")
 
 
 # ================================================================

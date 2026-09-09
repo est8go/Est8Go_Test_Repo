@@ -383,9 +383,11 @@ def get_form_confirm(
     contact_name: str,
     phone: str,
 ) -> str:
-    # No timeline is promised here: nothing in the platform care flow
-    # notifies anyone. The form is written to convo.data_json and that
-    # is all, so the email address is the only real route forward.
+    # No timeline and no outcome promised. The old closing line said the
+    # next step is "set up by email" and asked the applicant to write in —
+    # but this form only ever captures a phone number, so it promised a
+    # channel we have no address for. The application now reaches a human
+    # on its own, so neither the instruction nor the promise is needed.
     return (
         f"✅ *Details received — "
         f"thank you, {name}!*\n\n"
@@ -395,9 +397,7 @@ def get_form_confirm(
         f"🏠 *Listings:* {listings}\n"
         f"👤 *Contact:* {contact_name}\n"
         f"📞 *Phone:* {phone}\n\n"
-        f"Next step is onboarding, which we set up by "
-        f"email. To move it along, reach us directly at "
-        f"*est8go@gmail.com* with your agency name.\n\n"
+        f"We've logged this.\n\n"
         f"Anything else I can help with? Reply *menu* "
         f"anytime. 😊"
     )
@@ -446,16 +446,18 @@ def get_option_5(name: str) -> str:
 # ================================================================
 
 def get_report_confirm(name: str, ref: str) -> str:
-    # Deliberately promises no investigation and no timeline. The report
-    # is stored on the conversation row and nothing alerts anyone, so
-    # the email address is the only route that actually reaches a human.
+    # Still promises no investigation, no timeline and no outcome — saying
+    # a listing "can be removed" reads as a commitment we have not made.
+    #
+    # The reference IS now real: the report is written to listing_reports
+    # under this reference, so a reporter quoting it has something to quote
+    # against. The old "email est8go@gmail.com" instruction is gone — it
+    # existed only because nothing alerted anyone, and something does now.
     return (
         f"✅ *Report received — thank you, {name}*\n\n"
         f"🔖 *Reference:* EST-{ref}\n\n"
-        f"We've logged what you sent. A listing that turns out to be "
-        f"misrepresented can be removed from the platform.\n\n"
-        f"To make sure this is picked up quickly, email the same details "
-        f"to *est8go@gmail.com* quoting your reference.\n\n"
+        f"We've logged this. Quote your reference if you contact us "
+        f"about it.\n\n"
         f"Anything else I can help you with? "
         f"Reply *menu* anytime. 👇"
     )
@@ -509,11 +511,18 @@ def get_platform_care_response(
     Routes incoming message to correct care response.
     Returns (response_text, updated_convo_data).
 
+    Pure: no db, no network, no tenant context. Submissions that need to
+    reach a human are emitted as an intent under the `_notify` key, which
+    _handle_platform_care pops, acts on, and never persists.
+
     convo_data keys:
     - platform_state: menu | opt1 | opt2 | opt3 | opt4_step1-5
                       | reporting | searching
-    - report_detail: str
     - form_agency, form_city, form_listings, form_contact: str
+    - _notify: one-shot intent, popped by the caller. Either
+               {"kind": "listing_report", "reference", "detail"} or
+               {"kind": "agency_application", "agency", "city",
+                "listings", "contact", "phone"}
     """
     text_clean = text.strip().lower()
     state = convo_data.get("platform_state", "menu")
@@ -547,7 +556,15 @@ def get_platform_care_response(
         import random as _r
         ref = str(_r.randint(100000, 999999))
         updated["platform_state"] = "menu"
-        updated["report_detail"] = text
+        # _notify is an INTENT, not a side effect. This function stays pure:
+        # no db, no tenant_id, no network. _handle_platform_care owns the
+        # write and the email because that is where db, tenant_id and the
+        # reporter's phone already live.
+        updated["_notify"] = {
+            "kind": "listing_report",
+            "reference": f"EST-{ref}",
+            "detail": text,
+        }
         return get_report_confirm(first_name, ref), updated
 
     # ── Option 1 follow-up (got property preferences) ────────
@@ -594,32 +611,19 @@ def get_platform_care_response(
         listings = updated.get("form_listings", "—")
         contact = updated.get("form_contact", "—")
 
-        try:
-            from app.database.db import get_db
-            from sqlalchemy import text as sql_text
-            import json as _json
-            _db = next(get_db())
-            _db.execute(sql_text("""
-                INSERT INTO platform_issues
-                (title, description, severity,
-                 affected_area, tenant_id, status)
-                VALUES (:title, :desc, 'low',
-                        'agency_application', 12, 'open')
-            """), {
-                "title": f"Agency Application — {agency}",
-                "desc": _json.dumps({
-                    "agency": agency,
-                    "city": city,
-                    "listings": listings,
-                    "contact": contact,
-                    "phone": phone,
-                    "source": "whatsapp_care",
-                }),
-            })
-            _db.commit()
-        except Exception as _e:
-            import logging
-            logging.warning(f"Could not save agency application: {_e}")
+        # Emitted as an intent for the same reason as a report. The old
+        # code here opened its own session with next(get_db()) and never
+        # closed it — one leaked connection per application — and wrote
+        # tenant_id=12, a magic number appearing nowhere else in the
+        # codebase, while the caller held the real tenant_id all along.
+        updated["_notify"] = {
+            "kind": "agency_application",
+            "agency": agency,
+            "city": city,
+            "listings": listings,
+            "contact": contact,
+            "phone": phone,
+        }
 
         for key in ("form_agency", "form_city", "form_listings", "form_contact"):
             updated.pop(key, None)

@@ -1141,6 +1141,13 @@
     </div>
     <div style="padding:12px 20px">
       <div id="idm_meta" style="font-size:11px;color:var(--muted);margin-bottom:12px"></div>
+      <div id="idm_desc_wrap" style="margin-bottom:12px">
+        <label class="field-label">Details</label>
+        <div id="idm_desc" style="font-size:12px;line-height:1.6;color:var(--text);
+             background:var(--surface2);border-radius:10px;padding:10px 12px;
+             white-space:pre-wrap;word-break:break-word;max-height:220px;
+             overflow-y:auto"></div>
+      </div>
       <label class="field-label">Diagnosis</label>
       <textarea id="idm_diagnosis" class="field-input" rows="2" placeholder="Root cause analysis..." style="resize:none;margin-bottom:10px"></textarea>
       <label class="field-label">Fix Applied</label>
@@ -2828,6 +2835,50 @@
     }).join('') + '</div>';
   }
 
+  // Agency applications arrive from platform care with the whole form
+  // JSON-encoded into description. Rendered raw it is unreadable, and the
+  // list row truncates at 80 chars — which cut off the phone number, the
+  // one field anyone actually needs. Parse it into labelled lines when it
+  // is JSON, show it verbatim when it is not.
+  const ISSUE_DESC_LABELS = {
+    agency: 'Agency', city: 'City', listings: 'Active listings',
+    contact: 'Contact', phone: 'Phone', source: 'Source'
+  };
+
+  function renderIssueDescription(desc) {
+    const wrap = g('idm_desc_wrap');
+    const box = g('idm_desc');
+    if (!wrap || !box) return;
+    if (!desc) { wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+
+    let parsed = null;
+    try {
+      const p = JSON.parse(desc);
+      if (p && typeof p === 'object' && !Array.isArray(p)) parsed = p;
+    } catch (e) { /* not JSON — fall through to verbatim */ }
+
+    if (!parsed) { box.textContent = desc; return; }
+
+    box.innerHTML = Object.keys(parsed).map(k => {
+      const label = ISSUE_DESC_LABELS[k] || k;
+      const val = parsed[k];
+      const shown = (val === null || val === undefined || val === '')
+        ? '—' : String(val);
+      let out = `<strong style="color:var(--muted);font-weight:600">` +
+                `${sanitise(label)}:</strong> ${sanitise(shown)}`;
+      if (k === 'phone') {
+        const digits = String(val || '').replace(/\D/g, '');
+        if (digits.length >= 10) {
+          out += ` &nbsp;<a href="https://wa.me/${digits}" target="_blank" ` +
+                 `rel="noopener noreferrer" style="color:var(--indigo);` +
+                 `font-weight:600;text-decoration:none">WhatsApp</a>`;
+        }
+      }
+      return `<div style="margin-bottom:3px">${out}</div>`;
+    }).join('');
+  }
+
   function openIssueDetail(id) {
     const issue = _allIssues.find(i => i.id === id);
     if (!issue) return;
@@ -2839,6 +2890,7 @@
       `${sanitise(issue.status)}</strong>` +
       (issue.affected_area ? ` &nbsp;· ${sanitise(issue.affected_area)}` : '') +
       `<br/><span style="font-size:10px">${formatDateTime(issue.created_at)}</span>`;
+    renderIssueDescription(issue.description);
     g('idm_diagnosis').value = issue.diagnosis || '';
     g('idm_fix').value = issue.fix_applied || '';
     g('idm_status').value = issue.status;
