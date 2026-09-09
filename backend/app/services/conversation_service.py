@@ -161,7 +161,7 @@ def _get_negotiation_note(listing, db: Session) -> str:
                 )
             elif days > 45:
                 notes.append(
-                    f"⏰ On market for {days} days, worth discussing price with the agent."
+                    f"⏰ On market for {days} days, worth discussing price with our professionals."
                 )
     except Exception:
         pass
@@ -876,7 +876,7 @@ async def _no_results_cascade(
     _referral_perm_msg = (
         f"I've searched thoroughly in *{_loc_title}* and nearby areas, {first_name}.\n\n"
         f"May I check our partner network in the same city? 🤝\n\n"
-        f"Every listing shows its verification details, so you can see exactly what has been recorded.\n\n"
+        f"You'll see everything we hold on each one.\n\n"
         f"Reply *Yes* to search the wider network."
     )
 
@@ -1147,8 +1147,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     if _lst_dir:
                         _close_msg += f"🗺️ *How to find us:*\n{_lst_dir}\n\n"
                     _close_msg += (
-                        f"Thank you for choosing *{biz_name}*, where every "
-                        f"listing shows its verification details. 🛡️"
+                        f"Thank you for choosing *{biz_name}*. 🛡️"
                     )
                     await send_meta_message(
                         sender_id, _close_msg, phone_number_id=_send_pid, access_token=_send_token
@@ -1396,7 +1395,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         await send_meta_message(
                             sender_id,
                             f"My pleasure, {first_name}! 🤝 "
-                            f"Your consultant will be in touch "
+                            f"Our professionals will be in touch "
                             f"shortly. I'm here whenever you'd "
                             f"like to explore more "
                             f"properties. 😊",
@@ -1411,7 +1410,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     db.commit()
                     await send_meta_message(
                         sender_id,
-                        f"Your dedicated consultant will call "
+                        f"Our professionals will call "
                         f"you within 2 hours, {first_name}, to "
                         f"confirm your inspection details. Please "
                         f"keep your phone handy. 📱",
@@ -1509,7 +1508,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"Thanks for the document, "
                     f"{_first}. 📄\n\n"
                     f"I can't open files here, but "
-                    f"our consultant can review it "
+                    f"our professionals can review it "
                     f"with you directly.\n\n"
                     f"In the meantime, tell me the "
                     f"*area* and *budget* you're "
@@ -1771,9 +1770,9 @@ async def handle_incoming_message(data: dict, db: Session):
                     f"All cleared, {first_name}. "
                     f"Let's find you something "
                     f"exceptional. 🏡\n\n"
-                    f"Every property I show you comes with "
-                    f"its verification details on file, "
-                    f"so no fake listings and no wasted trips.\n\n"
+                    f"I'll show you what we hold on each "
+                    f"property, photos, location and any "
+                    f"documents on file.\n\n"
                     f"What are we searching for?\n\n"
                     f"🌱 *Land*\n"
                     f"🏠 *House*\n"
@@ -2094,7 +2093,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     sender_id,
                     f"Understood, {first_name}. 🤝\n\n"
                     f"May I check our partner network? "
-                    f"Every listing shows its verification details.\n\n"
+                    f"You'll see everything we hold on each one.\n\n"
                     f"Reply *Yes* to search the wider network.",
                     phone_number_id=_send_pid, access_token=_send_token,
                 )
@@ -2106,7 +2105,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 _p_fmt = f"₦{_p/1_000_000:.0f}M" if _p >= 1_000_000 else f"₦{_p:,}"
                 _b = _factual_badges(_lst)
                 _b_line = " · ".join(_b) if _b else "Verification details on the listing"
-                _base_url = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+                _base_url = os.getenv("BASE_URL", "https://api.est8go.com")
                 await send_meta_message(
                     sender_id,
                     f"Excellent choice, {first_name}! 🎯\n\n"
@@ -2139,7 +2138,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 sender_id,
                 f"Understood, {first_name}. 🤝\n\n"
                 f"May I check our partner network? "
-                f"Every listing shows its verification details.\n\n"
+                f"You'll see everything we hold on each one.\n\n"
                 f"Reply *Yes* to search the wider network.",
                 phone_number_id=_send_pid, access_token=_send_token,
             )
@@ -2191,7 +2190,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"🏠 {(_ref_listing.property_type or 'Property').title()} in {_city_show}\n"
                             f"💰 Around {_rp_range}\n"
                             f"🛡️ {_ref_b_line}\n\n"
-                            f"A consultant will share the full details with you directly.\n\n"
+                            f"Our professionals will share the full details with you directly.\n\n"
                             f"Shall I connect you now? 📞"
                         )
                         _saved2["awaiting_consultant"] = True
@@ -2201,7 +2200,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         db.commit()
                         await send_meta_message(sender_id, _ref_msg, phone_number_id=_send_pid, access_token=_send_token)
                     else:
-                        _base_r = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+                        _base_r = os.getenv("BASE_URL", "https://api.est8go.com")
                         _slug_r = tenant_profile.get("slug", "")
                         await send_meta_message(
                             sender_id,
@@ -2209,7 +2208,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"Two options:\n\n"
                             f"1️⃣ *Browse our full vault*, you may find something I missed:\n"
                             f"👉 {_base_r}/public/{_slug_r}\n\n"
-                            f"2️⃣ *Speak to a consultant*, they have access to off-market "
+                            f"2️⃣ *Speak to our professionals*, they have access to off-market "
                             f"deals not yet listed online.\n\n"
                             f"Which would you prefer?",
                             phone_number_id=_send_pid, access_token=_send_token,
@@ -2306,14 +2305,13 @@ async def handle_incoming_message(data: dict, db: Session):
                 await send_meta_message(
                     sender_id,
                     f"You're all set, {first_name}! ✅\n\n"
-                    f"Your search brief has been sent to our consultant:\n\n"
+                    f"Your search brief has been sent to our professionals:\n\n"
                     f"📋 *{_cptype}* in *{_cloc}*\n"
                     f"💰 Budget: *{_cbudget_str}*\n\n"
                     f"They will reach out within *2 hours* with full details on the options "
                     f"that match your exact requirements.\n\n"
                     f"Please keep your phone available. 📱\n\n"
-                    f"Thank you for choosing *{biz_name}*, where every listing shows its "
-                    f"verification details before it reaches you. 🛡️",
+                    f"Thank you for choosing *{biz_name}*. 🛡️",
                     phone_number_id=_send_pid, access_token=_send_token,
                 )
                 convo.data_json = json.dumps(_saved2)
@@ -2342,7 +2340,7 @@ async def handle_incoming_message(data: dict, db: Session):
             _lrc = text_body.strip().lower()
             _saved2.pop("awaiting_last_resort", None)
             if "1" in _lrc or "browse" in _lrc or "vault" in _lrc:
-                _base_lr = os.getenv("BASE_URL", "https://est8go-api.onrender.com")
+                _base_lr = os.getenv("BASE_URL", "https://api.est8go.com")
                 _slug_lr = tenant_profile.get("slug", "")
                 convo.data_json = json.dumps(_saved2)
                 db.commit()
@@ -2350,7 +2348,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     sender_id,
                     f"Here's our full property vault, {first_name}:\n\n"
                     f"👉 {_base_lr}/public/{_slug_lr}\n\n"
-                    f"Every listing shows its verification details. "
+                    f"Everything we hold on each one is there. "
                     f"Take your time browsing. 😊\n\n"
                     f"Reply *I'm interested* on any listing and I'll connect you immediately.",
                     phone_number_id=_send_pid, access_token=_send_token,
@@ -2362,7 +2360,7 @@ async def handle_incoming_message(data: dict, db: Session):
                 await send_meta_message(
                     sender_id,
                     f"Great choice, {first_name}. 📞\n\n"
-                    f"Our property consultants have access to off-market deals "
+                    f"Our professionals have access to off-market deals "
                     f"not yet listed online.\n\n"
                     f"Shall I connect you now?",
                     phone_number_id=_send_pid, access_token=_send_token,
@@ -2487,9 +2485,9 @@ async def handle_incoming_message(data: dict, db: Session):
                         f"All cleared, {first_name}. "
                         f"Let's find you something "
                         f"exceptional. 🏡\n\n"
-                        f"Every property I show you comes with "
-                        f"its verification details on file, "
-                        f"so no fake listings and no wasted trips.\n\n"
+                        f"I'll show you what we hold on each "
+                        f"property, photos, location and any "
+                        f"documents on file.\n\n"
                         f"What are we searching for?\n\n"
                         f"🌱 *Land*\n"
                         f"🏠 *House*\n"
@@ -2566,7 +2564,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     sender_id,
                     f"Got it, {first_name}! 📱\n\n"
                     f"I've passed your number to our "
-                    f"consultant. They will call you "
+                    f"professionals. They will call you "
                     f"within *2 hours*.\n\n"
                     f"In the meantime, is there anything "
                     f"else you'd like to know about "
@@ -2581,7 +2579,7 @@ async def handle_incoming_message(data: dict, db: Session):
                     sender_id,
                     f"Thanks, {first_name}! 📱\n\n"
                     f"I've noted your number. To help "
-                    f"our consultant prepare before "
+                    f"our professionals prepare before "
                     f"they call, let me quickly find "
                     f"you the right property.\n\n"
                     f"What type of property are you "
@@ -2661,7 +2659,7 @@ async def handle_incoming_message(data: dict, db: Session):
                         f"🛡️ {_b_line}\n\n"
                         f"Ready to arrange your inspection.\n\n"
                         f"Would you like to schedule a site visit? "
-                        f"Just give me a preferred time and our agent will confirm. 📅",
+                        f"Just give me a preferred time and our professionals will confirm. 📅",
                         phone_number_id=_send_pid, access_token=_send_token,
                     )
 
@@ -3143,7 +3141,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"Perfect, {first_name}! ✅\n\n"
                             f"Your inspection for *{listing_title}* "
                             f"has been noted.\n\n"
-                            f"Our lead agent will reach out shortly "
+                            f"Our professionals will reach out shortly "
                             f"to confirm the exact time and meeting point. "
                             f"Please keep your phone available. 📱\n\n"
                             f"Thank you for choosing *{biz_name}*. 🏠"
@@ -3356,9 +3354,7 @@ async def handle_incoming_message(data: dict, db: Session):
                             )
                         _hs_close += (
                             f"Thank you for choosing "
-                            f"*{biz_name}*, where every "
-                            f"listing shows its "
-                            f"verification details. 🛡️"
+                            f"*{biz_name}*. 🛡️"
                         )
                         await send_meta_message(
                             sender_id, _hs_close,
