@@ -951,6 +951,7 @@ async def handle_incoming_message(data: dict, db: Session):
         sender_id = None
         text_body = ""
         btn_payload = ""
+        _btn_id = ""
         whatsapp_name = "there"
         channel = "whatsapp"
 
@@ -969,9 +970,45 @@ async def handle_incoming_message(data: dict, db: Session):
                 _loc = msg_obj.get("location", {})
                 _loc_lat = _loc.get("latitude")
                 _loc_lng = _loc.get("longitude")
-            btn_payload = msg_obj.get("button", {}).get("payload", "") or msg_obj.get(
-                "interactive", {}
-            ).get("button_reply", {}).get("id", "")
+            # A tapped button or list row carries NO text.body — it arrives
+            # as an id plus the label that was tapped. Three shapes reach us:
+            #   template quick reply → button.payload   + button.text
+            #   interactive button   → button_reply.id  + button_reply.title
+            #   interactive list     → list_reply.id    + list_reply.title
+            # Only the first two ids were read before, and the label was
+            # never read at all, so every tap arrived with empty text and
+            # fell through every handler to the "I didn't catch that" guard.
+            _interactive = msg_obj.get("interactive", {}) or {}
+            _btn_reply = _interactive.get("button_reply", {}) or {}
+            _list_reply = _interactive.get("list_reply", {}) or {}
+            _tpl_btn = msg_obj.get("button", {}) or {}
+
+            _btn_id = (
+                _tpl_btn.get("payload", "")
+                or _btn_reply.get("id", "")
+                or _list_reply.get("id", "")
+            )
+            btn_payload = _btn_id
+
+            # Title fallback. The existing handlers all match on words the
+            # buyer types ("yes", "continue", "new search", "land"), so
+            # feeding them the tapped LABEL makes taps work through the
+            # machine unchanged — no per-handler dispatch needed yet.
+            # _btn_id is kept separate for the handlers whose label is
+            # ambiguous; nothing reads it yet.
+            if not text_body:
+                _btn_title = (
+                    _btn_reply.get("title", "")
+                    or _list_reply.get("title", "")
+                    or _tpl_btn.get("text", "")
+                )
+                if _btn_title:
+                    text_body = _btn_title
+                    logger.info(
+                        f"TAP id={_btn_id or '(none)'} "
+                        f"label={_btn_title!r} from={sender_id}"
+                    )
+
             contacts = value.get("contacts", [])
             if contacts:
                 whatsapp_name = contacts[0].get("profile", {}).get("name", "there")
