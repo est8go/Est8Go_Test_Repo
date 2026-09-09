@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&display=swap"
     rel="stylesheet" />
 
   <style>
@@ -152,19 +152,18 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Syne', sans-serif;
       font-size: 14px;
       font-weight: 800;
+      letter-spacing: -0.02em;
       color: white;
       flex-shrink: 0;
     }
 
     .nav-wordmark {
-      font-family: 'Syne', sans-serif;
       font-size: 20px;
-      font-weight: 800;
+      font-weight: 700;
       color: var(--text);
-      letter-spacing: -0.5px;
+      letter-spacing: -0.03em;
     }
 
     .nav-pill {
@@ -185,7 +184,8 @@
       border-radius: 12px;
       background: none;
       border: none;
-      opacity: 0.65;
+      color: var(--muted);
+      opacity: 0.5;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -204,7 +204,7 @@
     }
 
     .nav-theme:hover {
-      opacity: 1;
+      opacity: 0.8;
     }
 
     /* ── LAYOUT ── */
@@ -917,7 +917,8 @@
         <span class="nav-wordmark">Est8Go</span>
         <span class="nav-pill">Embed Widget</span>
       </a>
-      <button class="nav-theme" onclick="toggleTheme()" id="themeBtn">🌙</button>
+      <button class="nav-theme" onclick="toggleTheme()" id="themeBtn"
+        aria-label="Toggle colour theme"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
     </div>
   </nav>
 
@@ -1398,9 +1399,9 @@
       <h2>Need a hand setting it up?</h2>
       <p>We will walk you through it.</p>
       <a class="btn btn-primary"
-        href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency"
+        href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20activate%20Kora%20on%20my%20agency%27s%20number."
         target="_blank" rel="noopener">
-        Talk to us on WhatsApp
+        Activate your number
       </a>
     </div>
 
@@ -1411,19 +1412,27 @@
   </div>
 
   <script>
+    /* An emoji renders in its own colour, so it cannot be muted with
+       CSS. The icon is inline SVG using currentColor instead. */
+    var ICON_MOON = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    var ICON_SUN = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v1.6M12 20.4V22M4.2 4.2l1.1 1.1M18.7 18.7l1.1 1.1M2 12h1.6M20.4 12H22M5.3 18.7l-1.1 1.1M19.8 4.2l-1.1 1.1"/></svg>';
+
+    function themeIcon(theme) {
+      return theme === 'dark' ? ICON_MOON : ICON_SUN;
+    }
+
     function toggleTheme() {
       var root = document.documentElement;
       var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       root.setAttribute('data-theme', next);
       localStorage.setItem('est8go-theme', next);
-      document.getElementById('themeBtn').textContent =
-        next === 'dark' ? '🌙' : '☀️';
+      document.getElementById('themeBtn').innerHTML = themeIcon(next);
     }
 
     (function () {
       var t = document.documentElement.getAttribute('data-theme') || 'dark';
       var b = document.getElementById('themeBtn');
-      if (b) b.textContent = t === 'dark' ? '🌙' : '☀️';
+      if (b) b.innerHTML = themeIcon(t);
     })();
 
     // ── Copy ──────────────────────────────────────────────

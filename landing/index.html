@@ -50,7 +50,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=Syne:wght@700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap"
     rel="stylesheet" />
 
   <script>
@@ -380,20 +380,19 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Syne', sans-serif;
       font-size: 14px;
       font-weight: 800;
+      letter-spacing: -0.02em;
       color: white;
       flex-shrink: 0;
       box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
     }
 
     .nav-wordmark {
-      font-family: 'Syne', sans-serif;
       font-size: 20px;
-      font-weight: 800;
+      font-weight: 700;
       color: var(--text);
-      letter-spacing: -0.5px;
+      letter-spacing: -0.03em;
     }
 
     /* Desktop nav links */
@@ -475,13 +474,14 @@
       border-radius: 12px;
       background: none;
       border: none;
-      opacity: 0.65;
+      color: var(--muted);
+      opacity: 0.5;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 14px;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: opacity 0.2s;
       flex-shrink: 0;
     }
 
@@ -496,7 +496,7 @@
     }
 
     .nav-theme:hover {
-      background: var(--surface);
+      opacity: 0.8;
     }
 
     /* ════════════════════════════════
@@ -2664,7 +2664,7 @@
       line-height: 1.5;
     }
 
-    /* Sticky bar at 320px cannot fit "Talk to us on WhatsApp"
+    /* Sticky bar at 320px cannot fit "Activate your number"
        beside a 141px text link. The link goes; the button stays. */
     @media (max-width: 399px) {
       .sticky-textlink {
@@ -2812,9 +2812,10 @@
         </div>
 
         <div class="nav-actions">
-          <button class="nav-theme" onclick="toggleTheme()" id="themeBtn">🌙</button>
-          <a class="btn btn-primary" href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
-            Talk to us
+          <button class="nav-theme" onclick="toggleTheme()" id="themeBtn"
+        aria-label="Toggle colour theme"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+          <a class="btn btn-primary" href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20activate%20Kora%20on%20my%20agency%27s%20number." target="_blank" rel="noopener">
+            Get started
           </a>
         </div>
 
@@ -2853,8 +2854,8 @@
           </div>
 
           <div class="hero-ctas fade-up delay-3">
-            <a class="btn btn-primary hero-cta-main" href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
-              Talk to us on WhatsApp
+            <a class="btn btn-primary hero-cta-main" href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20activate%20Kora%20on%20my%20agency%27s%20number." target="_blank" rel="noopener">
+              Activate your number
             </a>
             <a class="cta-textlink" href="#how">
               See how it works <svg class="cta-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
@@ -3553,7 +3554,7 @@
               <li>14-day free trial</li>
             </ul>
             <a class="pricing-cta pricing-cta-ghost"
-              href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
+              href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20activate%20Kora%20on%20my%20agency%27s%20number." target="_blank" rel="noopener">
               Start 14-day trial
             </a>
           </div>
@@ -3584,8 +3585,8 @@
               <li>Priority support</li>
             </ul>
             <a class="pricing-cta pricing-cta-primary"
-              href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
-              Talk to us on WhatsApp
+              href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20activate%20Kora%20on%20my%20agency%27s%20number." target="_blank" rel="noopener">
+              Set up your agency
             </a>
           </div>
 
@@ -3609,7 +3610,7 @@
               <li>SLA</li>
             </ul>
             <a class="pricing-cta pricing-cta-ghost"
-              href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
+              href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20activate%20Kora%20on%20my%20agency%27s%20number." target="_blank" rel="noopener">
               Talk to us
             </a>
           </div>
@@ -3647,12 +3648,12 @@
         </p>
 
         <div class="final-cta-btns">
-          <a class="btn btn-wa" href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
+          <a class="btn btn-wa" href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20activate%20Kora%20on%20my%20agency%27s%20number." target="_blank" rel="noopener">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
               <path
                 d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347" />
             </svg>
-            Talk to us on WhatsApp
+            Activate your number
           </a>
           <a class="cta-textlink" href="#how">
             See how it works <svg class="cta-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
@@ -3732,8 +3733,8 @@
             <a class="footer-link" href="https://wa.me/2348057834774" target="_blank">
               Contact Us
             </a>
-            <a class="footer-link" href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
-              Talk to us on WhatsApp
+            <a class="footer-link" href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20activate%20Kora%20on%20my%20agency%27s%20number." target="_blank" rel="noopener">
+              Activate your number
             </a>
           </div>
         </div>
@@ -3756,8 +3757,8 @@
 
   <!-- STICKY MOBILE BAR -->
   <div class="sticky-bar hidden" id="stickyBar">
-    <a class="btn btn-primary" href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20see%20a%20demo%20for%20my%20agency" target="_blank" rel="noopener">
-      Talk to us on WhatsApp
+    <a class="btn btn-primary" href="https://wa.me/2348057834774?text=Hi%20Est8Go%2C%20I%27d%20like%20to%20activate%20Kora%20on%20my%20agency%27s%20number." target="_blank" rel="noopener">
+      Activate your number
     </a>
     <a class="cta-textlink sticky-textlink" href="#how">
       See how it works <svg class="cta-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
@@ -3766,22 +3767,29 @@
 
   <script>
     // Theme
+    /* An emoji renders in its own colour, so it cannot be muted with
+       CSS. The icon is inline SVG using currentColor instead. */
+    var ICON_MOON = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    var ICON_SUN = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v1.6M12 20.4V22M4.2 4.2l1.1 1.1M18.7 18.7l1.1 1.1M2 12h1.6M20.4 12H22M5.3 18.7l-1.1 1.1M19.8 4.2l-1.1 1.1"/></svg>';
+
+    function themeIcon(theme) {
+      return theme === 'dark' ? ICON_MOON : ICON_SUN;
+    }
+
     function toggleTheme() {
       const html = document.documentElement;
       const cur = html.getAttribute('data-theme');
       const next = cur === 'light' ? 'dark' : 'light';
       html.setAttribute('data-theme', next);
       localStorage.setItem('est8go-theme', next);
-      document.getElementById('themeBtn').textContent =
-        next === 'light' ? '☀️' : '🌙';
+      document.getElementById('themeBtn').innerHTML = themeIcon(next);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
       const t = document.documentElement
         .getAttribute('data-theme');
       const btn = document.getElementById('themeBtn');
-      if (btn) btn.textContent =
-        t === 'light' ? '☀️' : '🌙';
+      if (btn) btn.innerHTML = themeIcon(t);
     });
 
     // Sticky bar
