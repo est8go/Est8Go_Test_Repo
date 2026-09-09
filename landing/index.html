@@ -2669,7 +2669,125 @@
     @media (max-width: 399px) {
       .sticky-textlink {
         display: none;
-      }}</style>
+      }}
+    /* ════════════════════════════════
+     HERO THREAD ANIMATION
+     Plays once when the thread scrolls into view, then stops.
+
+     Everything animates on opacity and transform only. Each message and
+     outcome row sits in normal flow from first paint, so the container
+     is already at its final height and nothing below it can shift.
+
+     The typing indicator is the exception, because it appears and then
+     goes away in the reply's position. It is absolutely positioned
+     inside .wa-msg-slot, whose height is driven by the reply bubble
+     underneath it, so it occupies reserved space and costs nothing.
+
+     .wa-anim is added by JS. Without JS the thread renders complete and
+     static, so a script failure cannot blank the hero.
+  ════════════════════════════════ */
+    .wa-msg-slot {
+      position: relative;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .wa-typing {
+      position: absolute;
+      top: 0;
+      right: 0;
+      align-items: center;
+      gap: 4px;
+      padding: 13px 14px;
+      border-radius: 14px;
+      border-bottom-right-radius: 4px;
+      background: rgba(37, 211, 102, 0.16);
+      border: 1px solid rgba(37, 211, 102, 0.25);
+      opacity: 0;
+      pointer-events: none;
+      display: none;
+    }
+
+    .wa-typing span {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--muted);
+      display: block;
+    }
+
+    @keyframes waIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* One animation, not two. Two animations on the same property let the
+       second one's backwards fill hold opacity:1 from t=0, which showed
+       the agency typing before the buyer had asked anything. */
+    @keyframes waTyping {
+      0%   { opacity: 0; }
+      22%  { opacity: 1; }
+      78%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes waDot {
+      0%, 60%, 100% { transform: translateY(0);    opacity: 0.45; }
+      30%           { transform: translateY(-4px); opacity: 1; }
+    }
+
+    /* hidden only once JS has confirmed it will animate */
+    .wa-thread.wa-anim .wa-msg,
+    .wa-thread.wa-anim .wa-outcome {
+      opacity: 0;
+    }
+
+    .wa-thread.wa-play .wa-msg,
+    .wa-thread.wa-play .wa-outcome {
+      animation-duration: 0.3s;
+      animation-timing-function: ease-out;
+      animation-fill-mode: both;
+      animation-name: waIn;
+    }
+
+    .wa-thread.wa-play .wa-msg-in:first-child      { animation-delay: 0.15s; }
+    .wa-thread.wa-play .wa-msg-out                 { animation-delay: 1.35s; }
+    .wa-thread.wa-play .wa-msg-slot ~ .wa-msg-in   { animation-delay: 1.90s; }
+
+    .wa-thread.wa-play .wa-outcome {
+      animation-duration: 0.25s;
+    }
+
+    .wa-thread.wa-play .wa-outcome:nth-child(1) { animation-delay: 2.40s; }
+    .wa-thread.wa-play .wa-outcome:nth-child(2) { animation-delay: 2.60s; }
+    .wa-thread.wa-play .wa-outcome:nth-child(3) { animation-delay: 2.80s; }
+    .wa-thread.wa-play .wa-outcome:nth-child(4) { animation-delay: 3.00s; }
+
+    /* starts 0.60s, up by 0.80s, holds to 1.30s, gone by 1.50s */
+    .wa-thread.wa-play .wa-typing {
+      display: flex;
+      animation: waTyping 0.9s ease 0.60s both;
+    }
+
+    .wa-thread.wa-play .wa-typing span {
+      animation: waDot 1.2s ease-in-out infinite;
+    }
+
+    .wa-thread.wa-play .wa-typing span:nth-child(2) { animation-delay: 0.15s; }
+    .wa-thread.wa-play .wa-typing span:nth-child(3) { animation-delay: 0.30s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .wa-thread.wa-anim .wa-msg,
+      .wa-thread.wa-anim .wa-outcome {
+        opacity: 1;
+        animation: none;
+      }
+
+      .wa-thread.wa-anim .wa-typing {
+        display: none;
+      }
+    }
+  </style>
 </head>
 
 <body>
@@ -2777,11 +2895,16 @@
                 Do you still have 3-bed apartments in Maitama?
                 <span class="wa-meta">Buyer · 9:41 PM</span>
               </div>
-              <div class="wa-msg wa-msg-out">
-                Yes, I have 3 that match. Budget range?
-                <span class="wa-meta wa-meta-fast">
-                  Your agency · 9:41 PM · replied in seconds
-                </span>
+              <div class="wa-msg-slot">
+                <div class="wa-typing" aria-hidden="true">
+                  <span></span><span></span><span></span>
+                </div>
+                <div class="wa-msg wa-msg-out">
+                  Yes, I have 3 that match. Budget range?
+                  <span class="wa-meta wa-meta-fast">
+                    Your agency · 9:41 PM · replied in seconds
+                  </span>
+                </div>
               </div>
               <div class="wa-msg wa-msg-in">
                 Around 45M
@@ -3713,6 +3836,29 @@
         );
       });
     }, { passive: true });
+
+    // ── HERO THREAD ANIMATION ──────────
+    // Plays once, on scroll into view. The thread sits below the fold on
+    // a phone, so this cannot fire on load. Hiding is applied by JS, so
+    // without JS the completed thread renders as-is.
+    (function () {
+      var thread = document.querySelector('.wa-thread');
+      if (!thread || !('IntersectionObserver' in window)) return;
+
+      var reduce = window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduce) return;
+
+      thread.classList.add('wa-anim');
+
+      var io = new IntersectionObserver(function (entries, obs) {
+        if (!entries[0].isIntersecting) return;
+        thread.classList.add('wa-play');
+        obs.disconnect();
+      }, { threshold: 0.25 });
+
+      io.observe(thread);
+    }());
 
     // ── CODE SNIPPET COPY ──────────────
     function copySnippet(btn) {
