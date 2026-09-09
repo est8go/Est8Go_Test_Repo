@@ -157,9 +157,9 @@ SEARCH_REDIRECT_VARIANTS = [
         "in exactly that.\n\n"
         "Browse live verified listings now:\n"
         "👉 *est8go.com*\n\n"
-        "Every listing shows its full "
-        "trust audit trail — GPS, photo analysis, "
-        "documents, witnesses.\n\n"
+        "Every listing shows what is on record "
+        "for it — GPS, photo analysis, "
+        "documents.\n\n"
         "A verified agent will reach out shortly."
     ),
     (

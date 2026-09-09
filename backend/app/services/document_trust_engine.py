@@ -408,99 +408,89 @@ def calculate_full_trust_score(
     gps_photo_match: bool,
     ai_verified: bool,
     document_keys: List[str],
-    witness_count: int = 0,
     deduction_flags: List[str] = None,
+    listing=None,
 ) -> dict:
     """
-    Master trust score combining all Est8Go truth signals.
+    Full trust breakdown for the portal and Kora.
 
-    Breakdown:
-        GPS Verification    → 30 pts max
-        AI Vision Audit     → 20 pts max
-        Document Score      → 40 pts max
-        Witness Signals     → 10 pts max
-        Total               → 100 pts
+    The NUMBER comes from trust_engine.calculate_confidence_score —
+    the single implementation. This function only assembles the
+    per-pillar breakdown around it.
 
-    Returns full breakdown dict for the portal and Kora.
+    It used to compute its own total and disagreed with that scorer on
+    every pillar: GPS graduated 15/10/5 against a flat 30, documents
+    rescaled to 40 rather than truncated, witnesses at 2 points rather
+    than 5, and a different grade ladder. The same listing came out
+    90/emerald there and 73/Silver here. Because this path runs on
+    photo upload (via the AI audit) and writes trust_score, a listing's
+    grade depended on which action the agency performed last.
+
+    gps_photo_match is accepted for signature compatibility and
+    reported in the breakdown, but no code has ever written that
+    column, so it is always False.
     """
-    score = 0
-    breakdown = {}
+    from app.services.trust_engine import (
+        calculate_confidence_score,
+        grade_for_score,
+    )
 
-    # --- GPS SCORE (30 pts) ---
-    # 15 pts = coordinates captured on site
-    # 10 pts = coordinates match claimed address
-    # 5 pts  = photos taken at same GPS location
-    gps_score = 0
-    gps_status = []
-
-    if gps_verified and not gps_expired:
-        gps_score += 15
-        gps_status.append("coordinates_captured")
-
-        if gps_location_match:
-            gps_score += 10
-            gps_status.append("location_confirmed")
-
-        if gps_photo_match:
-            gps_score += 5
-            gps_status.append("photos_geotagged")
-
-    elif gps_verified and gps_expired:
-        gps_score = 10
-        gps_status.append("expired_needs_reverification")
-
-    score += gps_score
-    breakdown["gps"] = {
-        "score": gps_score,
-        "max": 30,
-        "status": gps_status,
-        "expired": gps_expired,
-        "location_match": gps_location_match,
-        "photo_match": gps_photo_match,
-    }
-
-    # --- AI VISION SCORE (20 pts) ---
-    ai_score = 20 if ai_verified else 0
-    score += ai_score
-    breakdown["ai_vision"] = {
-        "score": ai_score,
-        "max": 20,
-        "status": "passed" if ai_verified else "not audited",
-    }
-
-    # --- DOCUMENT SCORE (40 pts max) ---
     doc_result = calculate_document_score(document_keys, deduction_flags)
-    # Scale document score to 40 pts max
-    doc_scaled = int((doc_result.final_score / 100) * 40)
-    score += doc_scaled
-    breakdown["documents"] = {
-        "score": doc_scaled,
-        "max": 40,
-        "raw_doc_score": doc_result.final_score,
-        "grade": doc_result.grade,
-        "uploaded": doc_result.uploaded_docs,
-        "bonuses": doc_result.bonuses_applied,
-        "deductions": doc_result.deductions_applied,
-        "upgrade_path": doc_result.upgrade_path,
-    }
 
-    # --- WITNESS SCORE (10 pts max — 2 pts per witness, max 5) ---
-    witness_score = min(witness_count * 2, 10)
-    score += witness_score
-    breakdown["witnesses"] = {
-        "score": witness_score,
-        "max": 10,
-        "count": witness_count,
-    }
+    # The stored document_score is on a 0-100 scale; the trust pillar
+    # truncates it at 50. Build a stand-in when no listing row is given.
+    if listing is not None:
+        subject = listing
+    else:
+        class _Subject:
+            latitude = 1.0 if gps_verified else None
+            longitude = 1.0 if gps_verified else None
+            gps_verified_at = True if gps_verified else None
+            ai_verified_real = ai_verified
+            document_score = doc_result.final_score
+        subject = _Subject()
 
-    # --- FINAL GRADE ---
-    final_score = min(score, 100)
-    grade = _get_grade(final_score, set(document_keys))
+    final_score = calculate_confidence_score(subject)
+    grade = grade_for_score(final_score)
+
+    gps_score = 30 if (
+        getattr(subject, "latitude", None)
+        and getattr(subject, "longitude", None)
+        and getattr(subject, "gps_verified_at", None)
+    ) else 0
+    ai_score = 20 if getattr(subject, "ai_verified_real", False) else 0
+    doc_scaled = min(getattr(subject, "document_score", 0) or 0, 50)
+
+    breakdown = {
+        "gps": {
+            "score": gps_score,
+            "max": 30,
+            "status": ["coordinates_captured"] if gps_score else [],
+            "expired": gps_expired,
+            "location_match": gps_location_match,
+            "photo_match": gps_photo_match,
+        },
+        "ai_vision": {
+            "score": ai_score,
+            "max": 20,
+            "status": "passed" if ai_score else "not audited",
+        },
+        "documents": {
+            "score": doc_scaled,
+            "max": 50,
+            "raw_doc_score": doc_result.final_score,
+            "grade": doc_result.grade,
+            "uploaded": doc_result.uploaded_docs,
+            "bonuses": doc_result.bonuses_applied,
+            "deductions": doc_result.deductions_applied,
+            "upgrade_path": doc_result.upgrade_path,
+        },
+    }
 
     return {
         "total_score": final_score,
         "grade": grade,
         "breakdown": breakdown,
-        "emerald_ready": grade == "Emerald",
+        "emerald_ready": grade == "emerald",
         "upgrade_path": doc_result.upgrade_path,
     }

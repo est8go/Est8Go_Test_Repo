@@ -125,7 +125,6 @@ class Listing(Base):
     # --- TRUST SCORING ---
     trust_score = Column(Integer, default=0)  # 0-100 calculated score
     trust_grade = Column(String(20), default="ungraded")  # bronze/silver/gold/emerald
-    witness_count = Column(Integer, default=0)  # buyer visit confirmations
 
     # --- TIMESTAMPS ---
     created_at = Column(DateTime, default=datetime.utcnow)

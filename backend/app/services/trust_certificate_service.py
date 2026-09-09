@@ -79,9 +79,7 @@ def generate_trust_certificate(
     # Score breakdown
     gps_score = 30 if (listing.latitude and listing.longitude) else 0
     ai_score = 20 if getattr(listing, 'ai_verified_real', False) else 0
-    doc_score = getattr(listing, 'document_score', 0) or 0
-    witness_score = min((getattr(listing, 'witness_count', 0) or 0) * 5, 10)
-    witness_count = getattr(listing, 'witness_count', 0) or 0
+    doc_score = min(getattr(listing, 'document_score', 0) or 0, 50)
 
     # Safe strings — no injection risk in HTML
     safe_title    = (listing.title or "Property").replace("<", "&lt;").replace(">", "&gt;")
@@ -573,19 +571,7 @@ def generate_trust_certificate(
             +{doc_score} pts
           </span>
         </td>
-        <td style="color:#94A3B8;text-align:center">40</td>
-      </tr>
-      <tr>
-        <td>Witness Attestation</td>
-        <td class="{'status-verified' if witness_score > 0 else 'status-unverified'}">
-          {witness_count} witness{'es' if witness_count != 1 else ''} recorded
-        </td>
-        <td>
-          <span class="pts-badge {'pts-earned' if witness_score > 0 else 'pts-zero'}">
-            +{witness_score} pts
-          </span>
-        </td>
-        <td style="color:#94A3B8;text-align:center">10</td>
+        <td style="color:#94A3B8;text-align:center">50</td>
       </tr>
       <tr>
         <td><strong>TOTAL TRUST SCORE</strong></td>
@@ -650,9 +636,9 @@ def generate_trust_certificate(
     <strong>Important Disclaimer:</strong>
     This certificate reflects the property trust score
     at the time of generation, based on GPS site
-    verification, automated media audit, legal document
-    verification, and witness attestation recorded on the
-    Est8Go platform. Est8Go Service Limited does not
+    capture, automated media audit, and the legal
+    documents the agency has filed on the Est8Go
+    platform. Est8Go Service Limited does not
     guarantee title, ownership, or freedom from
     encumbrances. Independent legal verification by a
     qualified Nigerian solicitor is strongly recommended

@@ -3339,19 +3339,8 @@
             <div class="trust-sub" id="docStatus">C of O · Deed · Survey</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-            <div class="trust-status text-warn" id="docScore">+40</div>
+            <div class="trust-status text-warn" id="docScore">+50</div>
             <button class="trust-action-btn" onclick="openDocUpload()">Upload Doc</button>
-          </div>
-        </div>
-        <div class="trust-item">
-          <div class="trust-icon" style="background:rgba(255,255,255,0.06)">👥</div>
-          <div class="trust-detail">
-            <div class="trust-title">Witness Attestation</div>
-            <div class="trust-sub" id="witnessStatus">Independent witnesses</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-            <div class="trust-status text-mid" id="witnessScore">+10</div>
-            <button class="trust-action-btn" onclick="toast('Witness verification coming soon. Contact support.','info')">Add Witness</button>
           </div>
         </div>
       </div>
@@ -4806,11 +4795,7 @@
       if (g('aiScore')) g('aiScore').textContent = `+${l.ai_verified_real ? 20 : 0}`;
       if (g('docStatus')) g('docStatus').textContent =
         `C of O: ${l.cof_uploaded ? '✓' : '✗'} · Deed: ${l.deed_uploaded ? '✓' : '✗'} · Survey: ${l.survey_uploaded ? '✓' : '✗'}`;
-      if (g('docScore')) g('docScore').textContent = `+${l.document_score || 0}`;
-      if (g('witnessStatus')) g('witnessStatus').textContent =
-        `${l.witness_count || 0} witness${l.witness_count !== 1 ? 'es' : ''} recorded`;
-      if (g('witnessScore')) g('witnessScore').textContent =
-        `+${Math.min((l.witness_count || 0) * 5, 10)}`;
+      if (g('docScore')) g('docScore').textContent = `+${Math.min(l.document_score || 0, 50)}`;
       // Track current listing for certificate download
       if (l.id) CFG._currentListingId = l.id;
       const certSection = g('certSection');

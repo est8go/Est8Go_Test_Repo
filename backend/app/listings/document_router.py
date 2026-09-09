@@ -622,8 +622,12 @@ async def get_trust_dashboard(
         },
         "documents": {
             "label": "Document Verification",
-            "max": 40,
-            "earned": int((doc_result.final_score / 100) * 40),
+            # 50 since the witness pillar was removed. Truncated, not
+            # rescaled — this must match calculate_confidence_score or
+            # the dashboard misreports the agency's own score, which is
+            # what the old int(final_score / 100 * 40) rescale did.
+            "max": 50,
+            "earned": min(doc_result.final_score, 50),
             "doc_score": doc_result.final_score,
             "uploaded": [
                 DOCUMENT_SCORES[k]["label"]
@@ -635,18 +639,6 @@ async def get_trust_dashboard(
             ],
             "bonuses": doc_result.bonuses_applied,
             "action": doc_result.upgrade_path,
-        },
-        "witnesses": {
-            "label": "Buyer Visit Confirmations",
-            "max": 10,
-            "earned": min((listing.witness_count or 0) * 2, 10),
-            "count": listing.witness_count or 0,
-            "action": (
-                "✅ Strong witness signals"
-                if (listing.witness_count or 0) >= 5
-                else f"Schedule site visits to earn witness confirmations "
-                f"({listing.witness_count or 0}/5 so far)"
-            ),
         },
     }
 
@@ -694,27 +686,37 @@ async def get_trust_dashboard(
 
 
 def _get_uploaded_doc_keys(listing: Listing) -> list:
-    """Returns list of document keys based on listing upload flags."""
+    """
+    Document keys backed by an actual uploaded file.
+
+    Reads the ListingDocument rows, which the model calls the source of
+    truth, NOT the cof/deed/survey booleans. Those flags can be set
+    without a file behind them — the demo seed sets all three on 22
+    listings that have no documents at all — and scoring from them
+    awards points for paperwork nobody uploaded. Listing #4 scored 72
+    document points off one C of O worth 35 for exactly this reason.
+    """
     keys = []
-    if getattr(listing, "cof_uploaded", False):
-        keys.append("c_of_o")
-    if getattr(listing, "deed_uploaded", False):
-        keys.append("deed_of_assignment")
-    if getattr(listing, "survey_uploaded", False):
-        keys.append("survey_plan")
+    for doc in (getattr(listing, "documents", None) or []):
+        key = getattr(doc, "doc_type", None)
+        if key and key in DOCUMENT_SCORES and key not in keys:
+            keys.append(key)
     return keys
 
 
 def _gps_score(listing: Listing) -> int:
-    """Calculates current GPS pillar score."""
-    if not listing.gps_verified_at:
-        return 0
-    if listing.gps_expires_at and datetime.utcnow() > listing.gps_expires_at:
-        return 10  # expired
+    """
+    GPS pillar as the agency dashboard displays it.
 
-    score = 15  # coordinates captured
-    if getattr(listing, "gps_location_match", False):
-        score += 10
-    if getattr(listing, "gps_photo_match", False):
-        score += 5
-    return score
+    Flat 30, matching trust_engine.calculate_confidence_score. This
+    used to award a graduated 15/+10/+5, so the dashboard showed 15 or
+    25 for a listing the real scorer had given 30 — and the last 5 were
+    unreachable anyway, since no code has ever written gps_photo_match.
+    """
+    if not (
+        getattr(listing, "latitude", None)
+        and getattr(listing, "longitude", None)
+        and getattr(listing, "gps_verified_at", None)
+    ):
+        return 0
+    return 30

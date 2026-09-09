@@ -53,7 +53,7 @@ class ListingOut(ListingBase):
     # AI + Documents + Witnesses
     ai_verified_real: Optional[bool] = False
     document_score:   Optional[int]  = 0
-    witness_count:    Optional[int]  = 0
+
     cof_uploaded:     Optional[bool] = False
     deed_uploaded:    Optional[bool] = False
     survey_uploaded:  Optional[bool] = False

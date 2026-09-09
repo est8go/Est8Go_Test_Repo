@@ -32,40 +32,21 @@ from app.services.trust_engine import (
     verify_gps_proximity,
     calculate_confidence_score,
     get_trust_label,
+    grade_for_score,
 )
 
 router = APIRouter(prefix="/listings", tags=["Listings"])
 
 
 # ──────────────────────────────────────────────────────────────────
-# SINGLE SOURCE OF TRUTH: trust score formula
-# GPS:30 | AI:20 | Docs:40 | Witness:10 — matches trust tab display
+# Trust score — GPS:30 | AI:20 | Docs:50
+# This used to be a second copy of the formula and it drifted from the
+# others. It now delegates to trust_engine.calculate_confidence_score,
+# which is the only implementation.
 # ──────────────────────────────────────────────────────────────────
 def calculate_listing_trust(listing) -> tuple:
-    gps_score = 30 if (
-        getattr(listing, 'latitude', None)
-        and getattr(listing, 'longitude', None)
-        and getattr(listing, 'gps_verified_at', None)
-    ) else 0
-
-    ai_score = 20 if getattr(listing, 'ai_verified_real', False) else 0
-
-    doc_score = min(getattr(listing, 'document_score', 0) or 0, 40)
-
-    witness_score = min(
-        (getattr(listing, 'witness_count', 0) or 0) * 5, 10
-    )
-
-    total = gps_score + ai_score + doc_score + witness_score
-
-    grade = (
-        'emerald' if total >= 85 else
-        'gold'    if total >= 70 else
-        'silver'  if total >= 55 else
-        'bronze'  if total > 0  else
-        'ungraded'
-    )
-    return total, grade
+    total = calculate_confidence_score(listing)
+    return total, grade_for_score(total)
 
 
 def get_tenant_id_from_user(

@@ -569,6 +569,10 @@ async def audit_and_update_listing(listing, db) -> ListingAuditResult:
     if getattr(listing, "survey_uploaded", False):
         doc_keys.append("survey_plan")
 
+    # Pass the listing itself so the score is computed from the stored
+    # document_score, exactly as every other write path does. Before
+    # this, the audit recomputed with a different formula and could
+    # demote a listing by 17 points on a photo upload alone.
     trust = calculate_full_trust_score(
         gps_verified=bool(listing.gps_verified_at),
         gps_expired=False,
@@ -576,7 +580,7 @@ async def audit_and_update_listing(listing, db) -> ListingAuditResult:
         gps_photo_match=getattr(listing, "gps_photo_match", False),
         ai_verified=audit.ai_verified_real,
         document_keys=doc_keys,
-        witness_count=getattr(listing, "witness_count", 0) or 0,
+        listing=listing,
     )
 
     listing.trust_score = trust["total_score"]

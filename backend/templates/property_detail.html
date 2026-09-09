@@ -349,8 +349,7 @@ html[data-theme="light"] .action-bar{background:#fff}
         <div class="trust-pills">
           {% if listing.gps_verified_at %}<span class="t-pill done">📍 GPS coordinates recorded</span>{% endif %}
           {% if doc_count >= 1 %}<span class="t-pill done">📄 {{ doc_count }} document{{ 's' if doc_count > 1 else '' }} on file</span>{% endif %}
-          {% if listing.witness_count and listing.witness_count >= 1 %}<span class="t-pill done">👥 {{ listing.witness_count }} site visit{{ 's' if listing.witness_count > 1 else '' }}</span>{% endif %}
-          {% if not listing.gps_verified_at and doc_count == 0 and not (listing.witness_count and listing.witness_count >= 1) %}<span class="t-pill pending">Verification details being added</span>{% endif %}
+          {% if not listing.gps_verified_at and doc_count == 0 %}<span class="t-pill pending">Verification details being added</span>{% endif %}
         </div>
       </div>
     </div>
@@ -387,14 +386,6 @@ html[data-theme="light"] .action-bar{background:#fff}
             </div>
           </div>
           <div class="vt-badge">{{ '✅' if doc_count >= 1 else '○' }}</div>
-        </div>
-        <div class="vt-item">
-          <div class="vt-icon {{ 'done' if listing.witness_count and listing.witness_count >= 2 else ('partial' if listing.witness_count == 1 else 'pending') }}">👥</div>
-          <div class="vt-body">
-            <div class="vt-name">Site Visits</div>
-            <div class="vt-val">{% if listing.witness_count and listing.witness_count >= 2 %}{{ listing.witness_count }} buyers recorded a site visit{% elif listing.witness_count == 1 %}1 site visit recorded{% else %}No site visits recorded yet{% endif %}</div>
-          </div>
-          <div class="vt-badge">{{ '✅' if listing.witness_count and listing.witness_count >= 2 else ('⚠️' if listing.witness_count == 1 else '○') }}</div>
         </div>
       </div>
     </div>

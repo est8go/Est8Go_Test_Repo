@@ -113,8 +113,27 @@ def is_gps_expired(listing: Listing) -> bool:
 
 def calculate_confidence_score(listing: Listing) -> int:
     """
-    Real-time trust score.
-    GPS:30 | AI:20 | Docs:40 | Witness:10 — same formula as calculate_listing_trust.
+    THE trust score. This is the only implementation — every other
+    scorer in the codebase delegates here.
+
+    GPS:30 | AI:20 | Docs:50 = 100
+
+    There used to be three of these and they disagreed on every pillar.
+    The same listing scored 90/emerald here and 73/Silver in
+    document_trust_engine, so a listing's grade depended on which
+    action the agency happened to perform last: a photo upload runs
+    the AI audit, which wrote the score with the other formula and
+    silently demoted whatever a GPS capture had promoted. Anything
+    that needs a trust number calls this function.
+
+    The witness pillar is gone. It was fed by an unauthenticated
+    endpoint, its stored values are fabricated by the demo seed, and a
+    site-visit count attested by the party whose score it raises is not
+    a signal. Its 10 points moved to documents — the only pillar backed
+    by an artefact the agency actually uploaded.
+
+    document_score is stored on a 0-100 scale and truncated here, not
+    rescaled: a listing below the cap keeps exactly the points it has.
     """
     gps_score = 30 if (
         getattr(listing, "latitude", None)
@@ -124,13 +143,23 @@ def calculate_confidence_score(listing: Listing) -> int:
 
     ai_score = 20 if getattr(listing, "ai_verified_real", False) else 0
 
-    doc_score = min(getattr(listing, "document_score", 0) or 0, 40)
+    doc_score = min(getattr(listing, "document_score", 0) or 0, 50)
 
-    witness_score = min(
-        (getattr(listing, "witness_count", 0) or 0) * 5, 10
+    return min(gps_score + ai_score + doc_score, 100)
+
+
+def grade_for_score(score: int) -> str:
+    """
+    THE grade ladder. Lowercase, matching the trust_grade column.
+    Kept in step with get_trust_label() below.
+    """
+    return (
+        "emerald" if score >= 85 else
+        "gold" if score >= 70 else
+        "silver" if score >= 55 else
+        "bronze" if score > 0 else
+        "ungraded"
     )
-
-    return min(gps_score + ai_score + doc_score + witness_score, 100)
 
 
 # ================================================================
@@ -189,13 +218,7 @@ def recalculate_all_trust_scores(db) -> dict:
         try:
             new_score = calculate_confidence_score(listing)
             listing.trust_score = new_score
-            listing.trust_grade = (
-                'emerald' if new_score >= 85 else
-                'gold'    if new_score >= 70 else
-                'silver'  if new_score >= 55 else
-                'bronze'  if new_score > 0  else
-                'ungraded'
-            )
+            listing.trust_grade = grade_for_score(new_score)
             updated += 1
         except Exception as e:
             logger.error(f"Failed listing {listing.id}: {e}")
