@@ -670,47 +670,22 @@ async def get_trust_dashboard(
 
 
 # ================================================================
-# 5. WITNESS CONFIRMATION (Buyer Visit Signal)
+# 5. WITNESS CONFIRMATION — REMOVED
 # ================================================================
-
-
-@router.post("/{listing_id}/confirm-visit", tags=["Public"])
-async def confirm_buyer_visit(
-    listing_id: int,
-    buyer_phone: str = Form(...),
-    db: Session = Depends(get_db),
-):
-    """
-    WITNESS SIGNAL:
-    Called after a buyer physically visits a property.
-    Increments witness count and updates trust score.
-    No authentication required — public endpoint.
-    """
-    listing = db.query(Listing).filter(Listing.id == listing_id).first()
-    if not listing:
-        raise HTTPException(status_code=404, detail="Listing not found")
-
-    # Increment witness count
-    listing.witness_count = (listing.witness_count or 0) + 1
-
-    # Recalculate trust score
-    new_score = calculate_confidence_score(listing)
-    label = get_trust_label(new_score)
-    listing.trust_score = new_score
-    listing.trust_grade = label["grade"]
-
-    db.commit()
-
-    return {
-        "status": "confirmed",
-        "witness_count": listing.witness_count,
-        "trust_score": new_score,
-        "trust_label": label["text"],
-        "message": (
-            f"✅ Visit confirmed for *{listing.title}*. "
-            f"Trust score updated to {new_score}/100."
-        ),
-    }
+# POST /{listing_id}/confirm-visit is gone. It was the only route in
+# this router with no authentication, it was never scoped to a tenant,
+# and nothing in the codebase ever called it — it was added in one
+# commit and never wired to anything.
+#
+# Unauthenticated, it let anyone with a listing ID (sequential, and in
+# every property URL) increment witness_count without limit and push
+# trust_score up by 10 — enough to move a listing from Silver to Gold
+# on a single request. The raw counter is printed on the public
+# property page, so the same request published fabricated social proof
+# under the agency's name.
+#
+# witness_count itself is being removed from the trust model; do not
+# reinstate this endpoint.
 
 
 # ================================================================
