@@ -108,6 +108,16 @@ services:
       # (case-insensitive). This is why the engine has never sent a message.
       - key: RECOVERY_ENABLED
         value: "false"
+      # SEPARATE kill switch for the follow-up task queue
+      # (app/operations/followup_service.py). Deliberately NOT
+      # RECOVERY_ENABLED: that flag gates messages sent TO BUYERS and is
+      # meant to stay "false", so sharing it would keep this feature
+      # permanently off. The sweep sends nothing — it writes rows a human
+      # reads in the dashboard — so the two switches guard genuinely
+      # different risks and must move independently.
+      # Flip to "true" once the Operations tab ships (step 5).
+      - key: FOLLOWUP_TASKS_ENABLED
+        value: "false"
       - key: WHATSAPP_ACCESS_TOKEN
         sync: false
       - key: WHATSAPP_PHONE_ID

@@ -14,10 +14,8 @@ register_all_models()
 import asyncio
 import logging
 from app.database.db import SessionLocal
-from app.services.recovery_engine import (
-    run_dropoff_recovery,
-    escalate_high_value_leads,
-)
+from app.services.recovery_engine import run_dropoff_recovery
+from app.operations.followup_service import run_followup_sweep
 
 logging.basicConfig(
     level=logging.INFO,
@@ -37,8 +35,22 @@ async def main():
             f"{result['errors']} errors"
         )
 
-        escalated = await escalate_high_value_leads(db)
-        logger.info(f"🚨 Escalated: {escalated} high-value leads to Realtors")
+        # Follow-up task queue. Gated by FOLLOWUP_TASKS_ENABLED, which is
+        # DELIBERATELY NOT RECOVERY_ENABLED: that flag is "false" on
+        # Render and is meant to stay that way, so reusing it would have
+        # shipped this feature permanently switched off. Nothing here
+        # sends a message — it writes rows a human reads in the dashboard.
+        #
+        # Replaces escalate_high_value_leads(), retired in the same
+        # change: it alerted realtors with free-form WhatsApp text that
+        # Meta refuses outside the 24h window, and wrote no state, so it
+        # re-alerted the same lead every hour forever.
+        tasks = await run_followup_sweep(db)
+        logger.info(
+            f"📋 Follow-ups: {tasks['created']} created | "
+            f"{tasks['escalated']} escalated | {tasks['expired']} expired | "
+            f"{tasks['closed_optout']} opt-out | {tasks['errors']} errors"
+        )
     except Exception as e:
         logger.error(f"❌ Worker error: {e}", exc_info=True)
     finally:

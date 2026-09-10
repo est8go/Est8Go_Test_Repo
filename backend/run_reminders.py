@@ -15,10 +15,8 @@ import asyncio
 import logging
 from app.database.db import SessionLocal
 from app.models_registry import register_all_models
-from app.services.recovery_engine import (
-    run_dropoff_recovery,
-    escalate_high_value_leads,
-)
+from app.services.recovery_engine import run_dropoff_recovery
+from app.operations.followup_service import run_followup_sweep
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
@@ -29,7 +27,7 @@ logger = logging.getLogger(__name__)
 async def main():
     logger.info("🚀 EST8GO REMINDER WORKER STARTED")
     logger.info("   Drop-off recovery: every 60 minutes")
-    logger.info("   High-value escalation: every 60 minutes")
+    logger.info("   Follow-up task sweep: every 60 minutes")
 
     while True:
         db = SessionLocal()
@@ -44,9 +42,15 @@ async def main():
                 f"{result['errors']} errors"
             )
 
-            # 2. High-value lead escalation (score >= 70)
-            escalated = await escalate_high_value_leads(db)
-            logger.info(f"🚨 Escalated: {escalated} high-value leads to Realtors")
+            # 2. Follow-up task queue (dashboard, not WhatsApp).
+            #    Replaces escalate_high_value_leads(), retired because
+            #    it sent free-form text Meta refuses outside the 24h
+            #    window and re-alerted the same lead every hour.
+            tasks = await run_followup_sweep(db)
+            logger.info(
+                f"📋 Follow-ups: {tasks['created']} created | "
+                f"{tasks['escalated']} escalated | {tasks['expired']} expired"
+            )
 
         except Exception as e:
             logger.error(f"❌ Worker cycle error: {e}", exc_info=True)

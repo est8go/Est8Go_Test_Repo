@@ -32,13 +32,11 @@ Rules-First (80/20):
 """
 
 import logging
-import random
 import re
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
 from app.conversations.models import Conversation
-from app.services.tenant_service import get_tenant_profile
 from app.services.meta_sender_service import (
     send_meta_template,
     get_tenant_whatsapp_credentials,
@@ -593,87 +591,34 @@ async def run_dropoff_recovery(db: Session):
 
 
 # ================================================================
-# PRIORITY ESCALATION
-# (High-score leads get Realtor notified too)
+# PRIORITY ESCALATION — RETIRED
 # ================================================================
-
-
-async def escalate_high_value_leads(db: Session):
-    """
-    Finds leads with score >= 70 that have gone cold
-    and alerts the Realtor directly.
-    Runs alongside the standard recovery engine.
-    """
-    # ── CODE-LEVEL KILL SWITCH (default OFF) ──────────────────────
-    # This path also sends (realtor alerts) → gated identically. Stays
-    # paused unless RECOVERY_ENABLED is EXPLICITLY "true". Before any
-    # DB query or send.
-    import os
-    if os.getenv("RECOVERY_ENABLED", "false").lower() != "true":
-        print("[recovery] RECOVERY_ENABLED is not 'true' — skipping (code-level pause).")
-        return 0
-
-    from app.services.notification_service import alert_realtor_of_lead
-    import json
-
-    now = datetime.now(timezone.utc)
-    threshold = now - timedelta(hours=6)
-    # Same recency cutoff as should_send_reminder. This loop had only a
-    # LOWER bound (>6h idle), so a lead cold for a year still escalated to
-    # a realtor. No template is involved here (the alert goes to staff),
-    # but chasing a dead lead wastes the realtor's time either way.
-    _max_age_days = get_max_age_days()
-    stale_before = now - timedelta(days=_max_age_days)
-
-    high_value = (
-        db.query(Conversation)
-        .filter(
-            Conversation.lead_score >= 70,
-            Conversation.state == "ACTIVE",
-            Conversation.funnel_stage.in_(["commitment", "handshake"]),
-        )
-        .all()
-    )
-
-    escalated = 0
-    for convo in high_value:
-        last_active = convo.last_active_at or convo.updated_at
-        if not last_active:
-            continue
-
-        if last_active.tzinfo is None:
-            last_active = last_active.replace(tzinfo=timezone.utc)
-
-        if last_active > threshold:
-            continue  # still recent — skip
-
-        if last_active < stale_before:
-            logger.info(
-                f"⏭️  ESCALATION SKIP: {convo.external_user_id} too stale "
-                f"({(now - last_active).days}d > {_max_age_days}d cutoff)"
-            )
-            continue
-
-        try:
-            prefs = json.loads(convo.data_json or "{}")
-            last_id = prefs.get("last_viewed_id")
-
-            if last_id:
-                tenant_profile = get_tenant_profile(db, convo.tenant_id)
-                biz_name = tenant_profile.get("business_name", "Est8Go")
-
-                await alert_realtor_of_lead(
-                    db, last_id, convo.external_user_id, biz_name
-                )
-                escalated += 1
-                logger.info(
-                    f"🚨 ESCALATED: Lead {convo.external_user_id} | "
-                    f"Score={convo.lead_score} | "
-                    f"Stage={convo.funnel_stage}"
-                )
-
-        except Exception as e:
-            logger.error(f"Escalation error for {convo.id}: {e}")
-
-    logger.info(f"🚨 ESCALATION: {escalated} high-value leads escalated to Realtors")
-    return escalated
+#
+# escalate_high_value_leads() lived here. It is REPLACED by the follow-up
+# task queue (app/operations/followup_service.py), which does the same job
+# without either of the two faults that made this one undeliverable:
+#
+#   1. IT COULD NOT REACH ANYONE. It called alert_realtor_of_lead(), which
+#      sends FREE-FORM text. Meta refuses free-form outside the 24h
+#      customer-service window — notification_service.py carries
+#      WINDOW_CLOSED_CODES = {131047, 470} to detect exactly that. A
+#      realtor who had not messaged the business number in the last day
+#      could not receive the alert at all, and the third fallback tier
+#      sent to the tenant's OWN Business API line, which by definition
+#      has no open window to itself.
+#
+#   2. IT RE-ALERTED FOREVER. Nothing was written after a successful
+#      alert — no counter, no timestamp, no row. Every hourly cron run
+#      re-selected the same conversations and alerted again.
+#
+#   It also required data_json["last_viewed_id"] and skipped silently
+#   without it, so a hot lead who never reached a specific listing
+#   escalated to nobody.
+#
+# The replacement writes a ROW: no Meta window, no template, no fee, and
+# uq_ft_open_convo_tier makes a duplicate open task at the same tier
+# impossible in the database rather than in bookkeeping.
+#
+# Retired rather than left dormant: it was gated by RECOVERY_ENABLED and
+# so inert today, but two systems claiming the same job is how you get
+# double-alerting the day someone flips that flag.
