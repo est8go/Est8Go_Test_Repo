@@ -51,6 +51,7 @@ def run_retention_checks(db: Session) -> dict:
             Tenant.suspended_at <= cutoff_30,
             Tenant.anonymised_at == None,
         ).all()
+        from app.operations.models import FollowUpTask
         for t in to_anonymise:
             logger.info(f"Retention: anonymising tenant {t.id} (suspended {t.suspended_at})")
             t.name = "[Suspended]"
@@ -64,6 +65,33 @@ def run_retention_checks(db: Session) -> dict:
                 u.first_name = "[Redacted]"
                 u.phone_number = None
                 u.anonymised_at = now
+
+            # Follow-up tasks snapshot BUYER PII at creation time —
+            # buyer_name, buyer_phone, and suggested_message, which is a
+            # drafted WhatsApp opener naming the buyer. Without this the
+            # queue would quietly outlive the retention policy that
+            # covers users, holding the same class of data.
+            #
+            # Scrubbed, not deleted: outcome_reason is what feeds the
+            # owner's "why leads die" reporting, and that stays useful
+            # once the personal details are gone.
+            _scrubbed = db.query(FollowUpTask).filter(
+                FollowUpTask.tenant_id == t.id,
+                FollowUpTask.buyer_phone != None,
+            ).update(
+                {
+                    "buyer_name": "[Redacted]",
+                    "buyer_phone": None,
+                    "suggested_message": None,
+                },
+                synchronize_session=False,
+            )
+            if _scrubbed:
+                logger.info(
+                    f"Retention: scrubbed PII from {_scrubbed} "
+                    f"follow-up task(s) for tenant {t.id}"
+                )
+
             t.anonymised_at = now
         db.commit()
         results["pii_anonymised"] = len(to_anonymise)

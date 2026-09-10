@@ -28,6 +28,9 @@ from app.services.health_service import HealthCheck, PlatformIssue
 # 6. LISTING REPORTS (buyer fraud reports from platform care)
 from app.reports.models import ListingReport
 
+# 7. FOLLOW-UP TASK QUEUE (dashboard-first lead follow-up + escalation)
+from app.operations.models import FollowUpTask, FollowUpDigestLog
+
 logger = logging.getLogger(__name__)
 
 
@@ -64,6 +67,8 @@ def register_all_models():
             HealthCheck,
             PlatformIssue,
             ListingReport,
+            FollowUpTask,
+            FollowUpDigestLog,
         ]
 
         # Force SQLAlchemy to link all string references to their classes

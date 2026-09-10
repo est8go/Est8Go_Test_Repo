@@ -33,6 +33,7 @@ Rules-First (80/20):
 
 import logging
 import random
+import re
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
@@ -94,16 +95,92 @@ def is_good_send_time(window_start: int = 7, window_end: int = 21) -> bool:
     return window_start <= now.hour <= window_end
 
 
-STOP_KEYWORDS = [
-    "stop", "no", "leave me", "not interested",
-    "don't contact", "do not contact", "unsubscribe",
-    "remove me", "cancel", "quit", "bye", "goodbye",
-    "go away", "enough", "too many messages",
-    "stop messaging", "don't message", "block",
-    # Pidgin Nigerian
-    "abeg no", "no vex", "i no want", "commot",
-    "no disturb", "i don see am",
+# ── OPT-OUT DETECTION ────────────────────────────────────────────
+# Matching a buyer as "opted out" PERMANENTLY deactivates automation for
+# them (is_bot_active=False) and, under the follow-up task queue, also
+# auto-closes their open tasks. It is therefore a high-cost false
+# positive and the list is written defensively.
+#
+# Two rules, learned the hard way from the previous version:
+#
+#   1. WHOLE PHRASES ONLY. The old check was `if keyword in content`,
+#      a substring test. With "no" in the list, "I know that area"
+#      contained "no" (inside "know") and opted the buyer out. So did
+#      "No wahala", "I no fit come today" and "Nothing spoil". With
+#      "block" in the list, "Block 5, Lekki Phase 1" — an ADDRESS in
+#      every Nigerian estate — opted the buyer out. 24 of 57 ordinary
+#      messages in the test corpus tripped it.
+#
+#   2. NO AMBIGUOUS SINGLE WORDS. Several entries were simply wrong for
+#      this market, boundaries or not:
+#        "no"          — bare negation, ubiquitous in Pidgin
+#        "no vex"      — an APOLOGY ("sorry, don't be annoyed"), usually
+#                        followed by a polite question
+#        "i don see am"— means "I HAVE SEEN IT", often the reply to a photo
+#        "enough"      — "big enough", "not enough bedrooms"
+#        "cancel"      — cancelling one inspection is RESCHEDULING, which
+#                        is a buying signal, not an opt-out
+#        "bye"         — ends a conversation, not a relationship
+#      Each was either removed or promoted into an unambiguous phrase.
+#
+# "abeg no" is deliberately absent: "Abeg no vex" is an apology. The
+# refusal forms are spelled out ("abeg no send", "abeg no call", ...) so
+# the apology cannot match.
+STOP_PHRASES = [
+    # Explicit English opt-out
+    "stop", "stop messaging", "stop texting", "stop disturbing",
+    "unsubscribe", "opt out", "take me off",
+    "remove me", "remove my number",
+    "leave me alone", "go away",
+    "not interested", "no longer interested", "im not interested",
+    "dont contact", "do not contact",
+    "dont message", "do not message",
+    "dont call", "do not call",
+    "dont text", "do not text",
+    "no thanks", "no thank you",
+    "too many messages", "block me",
+    # Nigerian Pidgin
+    "abeg stop", "abeg leave me", "abeg comot",
+    "abeg no send", "abeg no call", "abeg no message", "abeg no text",
+    "no disturb", "no dey disturb", "make you no disturb",
+    "i no want", "i no want am", "i no interested",
+    "i no dey interested", "no send again", "no send me again",
+    "commot my number", "commot my number for your list",
 ]
+
+# Kept as an alias: this name is part of the module's surface and may be
+# imported elsewhere. STOP_PHRASES is the one to edit.
+STOP_KEYWORDS = STOP_PHRASES
+
+# (?<!\w) / (?!\w) rather than \b so a phrase is matched as a whole unit.
+_STOP_RE = re.compile(
+    r"(?<!\w)(?:" + "|".join(re.escape(p) for p in STOP_PHRASES) + r")(?!\w)",
+    re.IGNORECASE,
+)
+
+
+def _normalise_for_optout(content: str) -> str:
+    """Lowercase, fold both curly apostrophes to straight, then DROP
+    apostrophes entirely and collapse whitespace.
+
+    Dropping them means "don't", "dont" and "don’t" all reduce to the one
+    stored phrase "dont contact". The old list carried only the
+    typographically correct "don't contact", so the far more common
+    apostrophe-less "Dont message me again" — and "Don't call me again",
+    which was never listed at all — sailed straight through.
+    """
+    t = (content or "").lower()
+    t = t.replace("’", "'").replace("ʼ", "'")
+    t = t.replace("'", "")
+    return re.sub(r"\s+", " ", t).strip()
+
+
+def match_stop_phrase(content: str) -> str | None:
+    """The matched opt-out phrase, or None. Exposed separately so the
+    task sweep can close a task with the same verdict the recovery engine
+    uses, and so this is unit-testable without a database."""
+    _m = _STOP_RE.search(_normalise_for_optout(content))
+    return _m.group(0) if _m else None
 
 
 async def check_buyer_opted_out(
@@ -111,8 +188,8 @@ async def check_buyer_opted_out(
     db: Session,
 ) -> bool:
     """
-    Check if buyer has sent any stop/opt-out keywords
-    in their recent messages. If yes, halt all recovery.
+    Check if buyer has sent any stop/opt-out phrase in their recent
+    messages. If yes, halt all recovery.
     """
     try:
         from app.conversations.models import ConversationMessage
@@ -127,10 +204,17 @@ async def check_buyer_opted_out(
             .all()
         )
         for msg in recent:
-            content = (msg.content or "").lower().strip()
-            for keyword in STOP_KEYWORDS:
-                if keyword in content:
-                    return True
+            _hit = match_stop_phrase(msg.content)
+            if _hit:
+                # Record WHICH phrase matched. This call permanently
+                # deactivates automation for a buyer; when someone later
+                # asks why a conversation went silent, the log is the
+                # only place that answer exists.
+                logger.info(
+                    f"🚫 OPT-OUT MATCH: conversation={convo_id} "
+                    f"phrase={_hit!r} message_id={msg.id}"
+                )
+                return True
         return False
     except Exception as e:
         logger.error(f"Opt-out check failed: {e}")
