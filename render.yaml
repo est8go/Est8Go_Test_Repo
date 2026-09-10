@@ -115,9 +115,12 @@ services:
       # permanently off. The sweep sends nothing — it writes rows a human
       # reads in the dashboard — so the two switches guard genuinely
       # different risks and must move independently.
-      # Flip to "true" once the Operations tab ships (step 5).
+      # ON as of step 5: the Operations tab now renders the queue, so the
+      # sweep has somewhere to deliver to. Verified end-to-end (sweep ->
+      # /tasks -> card payload) against production data in a rolled-back
+      # transaction before enabling.
       - key: FOLLOWUP_TASKS_ENABLED
-        value: "false"
+        value: "true"
       - key: WHATSAPP_ACCESS_TOKEN
         sync: false
       - key: WHATSAPP_PHONE_ID

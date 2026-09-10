@@ -2878,6 +2878,178 @@
       .prop-toolbar-stat-num { font-size: 18px; }
     }
 
+    /* ═══════════════════════════════════════════
+       FOLLOW-UP TASK QUEUE (Operations tab)
+    ═══════════════════════════════════════════ */
+    .seg {
+      display: flex;
+      gap: 6px;
+      padding: 0 0 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .seg::-webkit-scrollbar { display: none }
+
+    .seg-btn {
+      flex: 0 0 auto;
+      padding: 8px 13px;
+      border-radius: 999px;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      white-space: nowrap;
+      min-height: 34px;
+      transition: all 0.15s;
+    }
+
+    .seg-btn.active {
+      background: var(--indigo);
+      border-color: var(--indigo);
+      color: #fff;
+    }
+
+    .seg-count {
+      display: inline-block;
+      margin-left: 5px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.16);
+      font-size: 9px;
+      font-weight: 800;
+    }
+
+    .seg-btn:not(.active) .seg-count {
+      background: var(--border2);
+      color: var(--text);
+    }
+
+    /* Overdue and breached use the same language as the rest of the
+       dashboard: amber = attention, crimson = risk. */
+    .task.overdue  { border-left-color: var(--warn) }
+    .task.breached { border-left-color: var(--risk); background: rgba(244,63,94,0.04) }
+    .task.t2       { border-left-color: var(--risk) }
+    .task.t3       { border-left-color: var(--risk); background: rgba(244,63,94,0.07) }
+
+    .task-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 9px;
+    }
+
+    .task-chip {
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .task-chip.warn { color: var(--warn); border-color: rgba(245,158,11,0.3) }
+    .task-chip.risk { color: var(--risk); border-color: rgba(244,63,94,0.3) }
+    .task-chip.em   { color: var(--em);   border-color: var(--em-glow) }
+
+    /* The drafted opener. Shown in full — an agent must be able to read
+       what they are about to send under their own name before they send
+       it, so this deliberately does not truncate. */
+    .task-opener {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--indigo);
+      font-size: 11.5px;
+      line-height: 1.55;
+      color: var(--text);
+    }
+
+    .task-opener-label {
+      display: block;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    /* The most important line in this feature. Tapping WhatsApp does not
+       close the task — the agent's conversation happens on their personal
+       phone where the platform cannot see it. If this is not obvious,
+       agents will assume "I messaged them" means "it is handled" and the
+       queue silently stops reflecting reality. */
+    .task-hint {
+      margin-top: 8px;
+      font-size: 10px;
+      line-height: 1.5;
+      color: var(--warn);
+      display: flex;
+      gap: 5px;
+      align-items: flex-start;
+    }
+
+    .task-photo {
+      width: 46px;
+      height: 46px;
+      border-radius: 10px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--surface2);
+    }
+
+    .task-escalated {
+      margin-top: 8px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: var(--risk-dim);
+      border: 1px solid rgba(244,63,94,0.22);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--risk);
+    }
+
+    /* Dismiss sheet — reason buttons. Four taps maximum from card to
+       closed: Dismiss -> reason -> (optional note) -> Confirm. */
+    .dismiss-opt {
+      width: 100%;
+      text-align: left;
+      padding: 13px 14px;
+      margin-bottom: 8px;
+      border-radius: 12px;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      min-height: 46px;
+      transition: all 0.15s;
+    }
+
+    .dismiss-opt.selected {
+      background: var(--indigo-dim);
+      border-color: var(--indigo);
+      color: var(--indigo);
+    }
+
+    .dismiss-opt small {
+      display: block;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .dismiss-opt.selected small { color: var(--indigo) }
   </style>
 </head>
 
@@ -3265,15 +3437,26 @@
 
     <!-- ─────────────── OPERATIONS TAB ─────────────── -->
     <div id="operationsTab" class="tab" style="padding-top:4px">
-      <div class="sep">Operations Board</div>
+      <div class="sep">Follow-ups</div>
+      <div class="seg" id="taskScopes">
+        <button class="seg-btn active" data-scope="mine"
+                onclick="setTaskScope('mine')">Mine<span class="seg-count" id="scMine">0</span></button>
+        <button class="seg-btn" data-scope="unassigned"
+                onclick="setTaskScope('unassigned')">Unclaimed<span class="seg-count" id="scUnassigned">0</span></button>
+        <button class="seg-btn admin-only" data-scope="team" style="display:none"
+                onclick="setTaskScope('team')">Team<span class="seg-count" id="scTeam">0</span></button>
+        <button class="seg-btn" data-scope="escalated"
+                onclick="setTaskScope('escalated')">Escalated<span class="seg-count" id="scEscalated">0</span></button>
+        <button class="seg-btn admin-only" data-scope="exceptions" style="display:none"
+                onclick="setTaskScope('exceptions')">Exceptions<span class="seg-count" id="scExceptions">0</span></button>
+      </div>
       <div id="operationsList">
         <div class="empty">
           <div class="empty-icon">📋</div>
-          <div class="empty-title">Your operations board is clear</div>
-          <div class="empty-body">Schedule site visits, set follow-up reminders, and manage your daily workflow here.</div>
-          <button class="btn btn-ind btn-sm empty-cta" onclick="toast('Scheduling coming soon','info')">Schedule a Visit</button>
+          <div class="empty-title">Loading follow-ups…</div>
         </div>
       </div>
+      <div id="taskInsights" class="admin-only" style="display:none"></div>
     </div>
 
     <!-- ─────────────── TRUST CENTER TAB ─────────────── -->
@@ -4088,6 +4271,57 @@
   </div>
 
   <!-- ══════════════════════════════════════
+       DISMISS FOLLOW-UP SHEET
+       Reason is MANDATORY, note optional. The reason is the only data
+       that answers "why do our leads actually die" for the owner, which
+       is why it cannot be skipped — and why it is four buttons rather
+       than a text box nobody fills in.
+       Four taps maximum: Dismiss → reason → Confirm.
+  ══════════════════════════════════════ -->
+  <div class="modal-backdrop" id="dismissModal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span class="modal-title">Why is this closing?</span>
+        <button class="modal-close" onclick="closeModal('dismissModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="text-xs text-muted" id="dismissBuyer" style="margin-bottom:14px"></div>
+
+        <button class="dismiss-opt" data-reason="not_interested"
+                onclick="pickDismiss('not_interested')">
+          Not interested
+          <small>They told us no, or they have gone cold for good</small>
+        </button>
+        <button class="dismiss-opt" data-reason="wrong_number"
+                onclick="pickDismiss('wrong_number')">
+          Wrong number
+          <small>This is not the buyer, or the line does not work</small>
+        </button>
+        <button class="dismiss-opt" data-reason="bought_elsewhere"
+                onclick="pickDismiss('bought_elsewhere')">
+          Bought elsewhere
+          <small>They closed with another agent or developer</small>
+        </button>
+        <button class="dismiss-opt" data-reason="still_deciding"
+                onclick="pickDismiss('still_deciding')">
+          Still deciding
+          <small>Alive, just not now — may come back on new activity</small>
+        </button>
+
+        <label class="field-label" style="margin-top:6px">Note (optional)</label>
+        <input class="field" id="dismissNote" type="text" maxlength="200"
+               placeholder="e.g. Bought in Gwarinpa">
+
+        <button class="btn btn-ind btn-md btn-full" style="margin-top:16px"
+                id="dismissConfirm" onclick="confirmDismiss()" disabled>
+          Choose a reason first
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
        MODAL: MENU DRAWER
   ══════════════════════════════════════ -->
   <div class="modal-backdrop" id="menuDrawer">
@@ -4229,6 +4463,13 @@
         upload: '/listings/realtor/upload',
         reelOpts: id => `/reels/options/${id}`,
         reelGen: id => `/reels/generate/${id}`,
+        tasks: scope => `/tasks?scope=${scope}&status=open`,
+        taskSummary: '/tasks/summary',
+        taskInsights: '/tasks/insights',
+        taskOpened: id => `/tasks/${id}/opened`,
+        taskDone: id => `/tasks/${id}/done`,
+        taskDismiss: id => `/tasks/${id}/dismiss`,
+        taskClaim: id => `/tasks/${id}/claim`,
       },
       REFRESH: 25000,
     };
@@ -4265,6 +4506,7 @@
       if (br) br.innerHTML = 'Est<span>8</span>Go';
       ST.timer = setInterval(() => {
         if (ST.tab === 'pipeline' || ST.tab === 'home') loadPipeline();
+        if (ST.tab === 'operations') loadOperations();
       }, CFG.REFRESH);
 
       document.addEventListener('visibilitychange', () => {
@@ -4275,6 +4517,7 @@
           if (!ST.timer) {
             ST.timer = setInterval(() => {
               if (ST.tab === 'pipeline' || ST.tab === 'home') loadPipeline();
+        if (ST.tab === 'operations') loadOperations();
             }, CFG.REFRESH);
             if (ST.tab === 'home') loadHome();
             if (ST.tab === 'pipeline') loadPipeline();
@@ -4596,32 +4839,65 @@
     }
 
     async function loadFollowups() {
+      // Now backed by the real follow-up queue.
+      //
+      // This previously filtered /pipeline/active on
+      //   l.reminder_count > 0 || l.funnel_stage === 'awareness'
+      // Since RECOVERY_ENABLED has always been "false", reminder_count is
+      // ALWAYS 0, so the first clause never fired and the filter collapsed
+      // to "every awareness lead" — i.e. every cold browser the agency has
+      // ever had, sorted by nothing in particular. It looked like a
+      // worklist and was noise.
+      //
+      // It now shows the viewer's own top 3 open follow-ups, ordered by
+      // the API (overdue first, then lead value), each of which is a real
+      // task with a real assignee and a message ready to send.
       const list = g('followupList');
+      if (!list) return;
       try {
-        const r = await fetch(CFG.API.pipeline, { headers: CFG.H });
+        const r = await fetch(CFG.API.tasks('mine'), { headers: CFG.H });
         if (!r.ok) return;
-        const pipe = await r.json();
-        const stale = (pipe.leads || []).filter(l => l.reminder_count > 0 || l.funnel_stage === 'awareness');
-        if (!stale.length) return;
-        list.innerHTML = stale.slice(0, 4).map(l => {
-          const hue = [...(l.name || '')].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+        const data = await r.json();
+        const tasks = (data.tasks || []).slice(0, 3);
+        if (!tasks.length) {
+          list.innerHTML = `
+            <div class="empty" style="padding:24px 20px">
+              <div class="empty-icon">✅</div>
+              <div class="empty-title">No follow-ups waiting</div>
+              <div class="empty-body">When a buyer goes quiet, their follow-up appears here.</div>
+            </div>`;
+          return;
+        }
+        list.innerHTML = tasks.map(t => {
+          const name = t.buyer_name || 'Unknown buyer';
+          const hue = [...name].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+          const quiet = t.days_quiet >= 1
+            ? `quiet ${t.days_quiet}d` : `quiet ${Math.round(t.hours_quiet || 0)}h`;
+          const val = t.priority_value > 0 ? ` · ${sanitise(t.priority_value_display)}` : '';
           return `
-            <div class="lead ${l.temp_code || 'cold'}" onclick="switchTab('pipeline')">
+            <div class="lead ${t.is_overdue ? 'hot' : 'warm'}" onclick="switchTab('operations')">
               <div class="lead-top">
                 <div class="lead-avatar" style="background:hsl(${hue},40%,18%);color:hsl(${hue},70%,70%)">
-                  ${(l.name || '?').slice(0, 2).toUpperCase()}
+                  ${sanitise(name.slice(0, 2).toUpperCase())}
                 </div>
                 <div class="lead-info">
-                  <div class="lead-name">${l.name || 'Unknown'}</div>
+                  <div class="lead-name">${sanitise(name)}</div>
                   <div class="lead-sub">
-                    ${stageLabel(l.funnel_stage)}
-                    · ${l.reminder_count || 0} reminder${l.reminder_count !== 1 ? 's' : ''}
+                    ${sanitise(STAGE_WORD[t.funnel_stage] || t.funnel_stage || '')}
+                    · ${sanitise(quiet)}${val}
                   </div>
                 </div>
-                <div class="lead-score" style="color:${scoreColor(l.lead_score)}">${l.lead_score || 0}</div>
+                <div class="lead-score" style="color:${scoreColor(t.lead_score)}">${t.lead_score || 0}</div>
               </div>
             </div>`;
         }).join('');
+        if (data.count > 3) {
+          list.innerHTML += `
+            <div style="text-align:center;padding:4px 0 2px">
+              <button class="btn btn-ghost btn-sm" onclick="switchTab('operations')">
+                View all ${data.count} follow-ups →</button>
+            </div>`;
+        }
       } catch (_) { }
     }
 
@@ -5385,10 +5661,310 @@
     }
 
     /* ── OPERATIONS ──────────────────────────── */
+    /* ── FOLLOW-UP TASK QUEUE ────────────────── */
+    let _taskScope = 'mine';
+    let _dismissId = null;
+    let _dismissReason = null;
+
+    const STAGE_WORD = {
+      awareness: 'Browsing', verification: 'Checking details',
+      commitment: 'Ready to book', handshake: 'Inspection booked',
+    };
+
+    const DISMISS_WORD = {
+      not_interested: 'Not interested', wrong_number: 'Wrong number',
+      bought_elsewhere: 'Bought elsewhere', still_deciding: 'Still deciding',
+      contacted: 'Followed up', booked: 'Booked', no_action: 'Expired — no action',
+      buyer_opted_out: 'Buyer opted out',
+    };
+
+    function setTaskScope(scope) {
+      _taskScope = scope;
+      document.querySelectorAll('#taskScopes .seg-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.scope === scope);
+      });
+      loadOperations();
+    }
+
+    async function loadTaskSummary() {
+      try {
+        const r = await fetch(CFG.API.taskSummary, { headers: CFG.H });
+        if (!r.ok) return null;
+        const s = await r.json();
+        const set = (id, n) => { const e = g(id); if (e) e.textContent = n || 0; };
+        set('scMine', s.mine);
+        set('scUnassigned', s.unassigned);
+        set('scEscalated', s.escalated_to_me);
+        set('scTeam', s.team_open);
+        set('scExceptions', s.exceptions);
+        if (s.is_admin) {
+          document.querySelectorAll('#operationsTab .admin-only')
+            .forEach(el => { el.style.display = ''; });
+        }
+        return s;
+      } catch (_) { return null; }
+    }
+
     async function loadOperations() {
       const list = g('operationsList');
       if (!list) return;
-      // Placeholder — scheduling endpoint not yet implemented
+      loadTaskSummary();
+      try {
+        const r = await fetch(CFG.API.tasks(_taskScope), { headers: CFG.H });
+        if (!r.ok) {
+          list.innerHTML = emptyTasks('Could not load follow-ups',
+            'Please refresh, or try again in a moment.');
+          return;
+        }
+        const data = await r.json();
+        if (!data.tasks.length) {
+          list.innerHTML = emptyTasks(
+            _taskScope === 'mine' ? 'No follow-ups waiting' : 'Nothing here',
+            _taskScope === 'mine'
+              ? 'When a buyer goes quiet, their follow-up appears here with a message ready to send.'
+              : 'Nothing in this view right now.');
+        } else {
+          list.innerHTML = data.tasks.map(taskCard).join('');
+        }
+        if (_taskScope === 'exceptions' || _taskScope === 'team') loadTaskInsights();
+        else { const ti = g('taskInsights'); if (ti) ti.innerHTML = ''; }
+      } catch (_) {
+        list.innerHTML = emptyTasks('Could not load follow-ups', 'Please refresh.');
+      }
+    }
+
+    function emptyTasks(title, body) {
+      return `<div class="empty">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">${sanitise(title)}</div>
+          <div class="empty-body">${sanitise(body)}</div>
+        </div>`;
+    }
+
+    function taskCard(t) {
+      const cls = t.tier === 3 ? 't3' : t.tier === 2 ? 't2'
+        : (t.hours_overdue > 24 ? 'breached' : t.is_overdue ? 'overdue' : '');
+      const name = t.buyer_name || 'Unknown buyer';
+      const hue = [...name].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+
+      const quiet = t.days_quiet >= 1
+        ? `Quiet ${t.days_quiet} day${t.days_quiet === 1 ? '' : 's'}`
+        : `Quiet ${Math.round(t.hours_quiet || 0)}h`;
+
+      const chips = [
+        `<span class="task-chip">${sanitise(STAGE_WORD[t.funnel_stage] || t.funnel_stage || '—')}</span>`,
+        `<span class="task-chip ${t.is_overdue ? 'risk' : ''}">${sanitise(quiet)}</span>`,
+      ];
+      if (t.priority_value > 0) {
+        chips.push(`<span class="task-chip em">${sanitise(t.priority_value_display)}</span>`);
+      }
+      if (t.is_overdue) {
+        chips.push(`<span class="task-chip risk">Overdue ${Math.round(t.hours_overdue)}h</span>`);
+      }
+      if (t.listing && t.listing.location) {
+        chips.push(`<span class="task-chip">${sanitise(t.listing.location)}</span>`);
+      }
+
+      const photo = (t.listing && t.listing.image_url)
+        ? `<img class="task-photo" src="${sanitise(t.listing.image_url)}" alt="" loading="lazy">`
+        : '';
+
+      const escalated = t.escalated_from
+        ? `<div class="task-escalated">⬆️ Escalated — ${sanitise(t.escalated_from.name)} did not action this in time</div>`
+        : '';
+
+      const unclaimed = !t.assigned_to
+        ? `<button class="lead-btn ind" onclick="claimTask(${t.id})">🙋 Claim this</button>` : '';
+
+      // The WhatsApp button is an <a>, not window.open(): iOS Safari's
+      // popup blocker is unreliable with the latter even inside a click
+      // handler. Copy is ALWAYS shown beside it, with no device
+      // detection — on a desktop where WhatsApp Web was never linked,
+      // wa.me is a dead end and the drafted message would be lost.
+      const waBtn = t.wa_url
+        ? `<a class="lead-btn em" href="${sanitise(t.wa_url)}" target="_blank" rel="noopener"
+              onclick="markOpened(${t.id})"
+              style="text-decoration:none;line-height:1.9">💬 WhatsApp</a>`
+        : `<button class="lead-btn" disabled style="opacity:.5">No number</button>`;
+
+      return `
+        <div class="lead task ${cls}" id="task-${t.id}"
+             data-opener="${sanitise(t.suggested_message || '')}"
+             data-buyer="${sanitise(name)}">
+          <div class="lead-top">
+            ${photo || `<div class="lead-avatar" style="background:hsl(${hue},40%,18%);color:hsl(${hue},70%,70%)">${sanitise(name.slice(0, 2).toUpperCase())}</div>`}
+            <div class="lead-info">
+              <div class="lead-name">${sanitise(name)}</div>
+              <div class="lead-sub">${sanitise((t.listing && t.listing.title) || 'No property yet')}</div>
+            </div>
+            <div class="lead-score" style="color:${scoreColor(t.lead_score)}">${t.lead_score || 0}</div>
+          </div>
+          ${escalated}
+          <div class="task-meta">${chips.join('')}</div>
+          ${t.suggested_message ? `
+            <div class="task-opener">
+              <span class="task-opener-label">Suggested opener</span>
+              ${sanitise(t.suggested_message)}
+            </div>` : ''}
+          <div class="task-hint">
+            <span>ℹ️</span>
+            <span>Opening WhatsApp does <b>not</b> close this. Your chat happens on your
+                  own phone, so mark it done when you have actually followed up.</span>
+          </div>
+          <div class="lead-actions">
+            ${waBtn}
+            <button class="lead-btn" onclick="copyOpener(${t.id})">📋 Copy</button>
+          </div>
+          <div class="lead-actions">
+            ${unclaimed}
+            <button class="lead-btn em" onclick="doneTask(${t.id})">✓ Mark done</button>
+            <button class="lead-btn red" onclick="openDismiss(${t.id})">✕ Dismiss</button>
+          </div>
+        </div>`;
+    }
+
+    async function copyOpener(id) {
+      // Read from data-opener rather than scraping .task-opener's
+      // textContent, which would drag the "Suggested opener" label in
+      // with it. The browser decodes the entities sanitise() added, so
+      // what lands on the clipboard is the original plain text.
+      const card = g(`task-${id}`);
+      const txt = (card && card.dataset.opener || '').trim();
+      if (!txt) return;
+      try {
+        await navigator.clipboard.writeText(txt);
+        toast('Message copied', 'success');
+      } catch (_) {
+        // clipboard API needs a secure context; fall back to selection
+        const ta = document.createElement('textarea');
+        ta.value = txt; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); toast('Message copied', 'success'); }
+        catch (_e) { toast('Could not copy — select the text manually', 'warn'); }
+        document.body.removeChild(ta);
+      }
+    }
+
+    async function markOpened(id) {
+      // Fire and forget: the <a> must navigate immediately, and a failed
+      // beacon is not worth blocking the agent for.
+      try { fetch(CFG.API.taskOpened(id), { method: 'POST', headers: CFG.H }); }
+      catch (_) { }
+      toast('Opened in WhatsApp — mark it done once you have followed up', 'info');
+    }
+
+    async function claimTask(id) {
+      try {
+        const r = await fetch(CFG.API.taskClaim(id), { method: 'POST', headers: CFG.H });
+        if (r.ok) { toast('Claimed — it is yours now', 'success'); loadOperations(); }
+        else if (r.status === 409) toast('Someone else just claimed it', 'warn');
+        else if (r.status === 403) toast('That follow-up is assigned to someone else', 'warn');
+        else toast('Could not claim it', 'error');
+      } catch (_) { toast('Could not claim it', 'error'); }
+    }
+
+    async function doneTask(id) {
+      try {
+        const r = await fetch(CFG.API.taskDone(id), { method: 'POST', headers: CFG.H });
+        if (r.ok) {
+          const d = await r.json();
+          toast(d.siblings_closed
+            ? 'Marked done — escalation cleared too'
+            : 'Marked done', 'success');
+          loadOperations();
+          if (ST.tab === 'home') loadFollowups();
+        } else if (r.status === 409) { toast('Already closed', 'warn'); loadOperations(); }
+        else toast('Could not update', 'error');
+      } catch (_) { toast('Could not update', 'error'); }
+    }
+
+    function openDismiss(id) {
+      _dismissId = id;
+      _dismissReason = null;
+      // Name read from the card's dataset rather than interpolated into
+      // an onclick attribute — a buyer-controlled WhatsApp profile name
+      // has no business being parsed as JS.
+      const card = g(`task-${id}`);
+      const name = (card && card.dataset.buyer) || '';
+      const b = g('dismissBuyer');
+      // textContent, not innerHTML — never re-parse a buyer-supplied name.
+      if (b) b.textContent = name ? `Closing the follow-up for ${name}.` : '';
+      g('dismissNote').value = '';
+      document.querySelectorAll('.dismiss-opt').forEach(o => o.classList.remove('selected'));
+      const btn = g('dismissConfirm');
+      btn.disabled = true;
+      btn.textContent = 'Choose a reason first';
+      openModal('dismissModal');
+    }
+
+    function pickDismiss(reason) {
+      _dismissReason = reason;
+      document.querySelectorAll('.dismiss-opt').forEach(o => {
+        o.classList.toggle('selected', o.dataset.reason === reason);
+      });
+      const btn = g('dismissConfirm');
+      btn.disabled = false;
+      btn.textContent = `Close as “${DISMISS_WORD[reason]}”`;
+    }
+
+    async function confirmDismiss() {
+      if (!_dismissId || !_dismissReason) return;
+      const btn = g('dismissConfirm');
+      btn.disabled = true;
+      try {
+        const r = await fetch(CFG.API.taskDismiss(_dismissId), {
+          method: 'POST',
+          headers: { ...CFG.H, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reason: _dismissReason,
+            note: g('dismissNote').value.trim() || null,
+          }),
+        });
+        if (r.ok) {
+          toast('Follow-up closed', 'success');
+          closeModal('dismissModal');
+          loadOperations();
+          if (ST.tab === 'home') loadFollowups();
+        } else {
+          toast('Could not close it', 'error');
+          btn.disabled = false;
+        }
+      } catch (_) { toast('Could not close it', 'error'); btn.disabled = false; }
+      _dismissId = null;
+      _dismissReason = null;
+    }
+
+    async function loadTaskInsights() {
+      const box = g('taskInsights');
+      if (!box) return;
+      try {
+        const r = await fetch(CFG.API.taskInsights, { headers: CFG.H });
+        if (!r.ok) { box.innerHTML = ''; return; }
+        const d = await r.json();
+        if (!d.total_closed) {
+          box.innerHTML = '';
+          return;
+        }
+        box.style.display = '';
+        box.innerHTML = `
+          <div class="sep">Why leads close</div>
+          <div class="card">
+            <div class="text-xs text-muted" style="margin-bottom:12px">
+              Last ${d.days} days · ${d.total_closed} closed follow-up${d.total_closed === 1 ? '' : 's'}
+            </div>
+            ${d.breakdown.map(b => `
+              <div class="pipeline-bar-wrap">
+                <div class="pipeline-bar-label">
+                  <span>${sanitise(DISMISS_WORD[b.reason] || b.reason)}</span>
+                  <span style="color:var(--text);font-weight:600">${b.count} · ${b.pct}%</span>
+                </div>
+                <div class="pipeline-bar">
+                  <div class="pipeline-fill" style="width:${b.pct}%;background:${
+                    b.reason === 'contacted' || b.reason === 'booked' ? 'var(--em)'
+                    : b.reason === 'no_action' ? 'var(--risk)' : 'var(--warn)'}"></div>
+                </div>
+              </div>`).join('')}
+          </div>`;
+      } catch (_) { box.innerHTML = ''; }
     }
 
     /* ── ANALYTICS ───────────────────────────── */
@@ -5668,8 +6244,23 @@
       AI_VISION_AUDIT:       'Automated vision audit',
       PRIORITY_VERIFICATION: 'Priority verification',
       WHATSAPP_SETUP:        'WhatsApp setup',
-      BROADCAST_100:         'Recovery message sent',
-      RECOVERY_MESSAGE:      'Recovery message sent',
+      // BROADCAST_100 is a real 2-credit charge for a 100-recipient
+      // broadcast (see ACTION_COSTS in app/credits/service.py). It was
+      // labelled "Recovery message sent", so a tenant reading their credit
+      // history saw a charge for something they never did.
+      BROADCAST_100:         'Broadcast (100 recipients)',
+      // RECOVERY_MESSAGE was removed: no such key exists in ACTION_COSTS
+      // and nothing anywhere writes a ledger entry with that action_type,
+      // so it labelled an event that can never occur. Recovery messages
+      // are not billed at all — see CLAUDE.md.
+      TRUST_CERTIFICATE:     'Trust certificate',
+      FEATURED_LISTING:      'Featured listing',
+      HOMEPAGE_BOOST:        'Homepage boost',
+      CAC_VERIFICATION:      'CAC verification',
+      ID_VERIFICATION:       'ID verification',
+      PHYSICAL_INSPECTION:   'Physical inspection',
+      AI_CAPTION:            'Caption generated',
+      FLYER_GENERATOR:       'Flyer generated',
       GPS_VERIFICATION:      'GPS verification',
     };
 
@@ -6377,10 +6968,12 @@
         { icon: '👤', label: 'Take Over', action: () => toast('Select a lead first', 'info') },
         { icon: '🤖', label: 'Smart Assist', action: () => toggleKora() },
       ],
+      // "Task board coming soon" used to live here. The tab IS the task
+      // board now, so these point at real work instead.
       operations: [
-        { icon: '📅', label: 'Schedule Visit', action: () => toast('Scheduling coming soon', 'info') },
-        { icon: '⏰', label: 'Set Reminder', action: () => toast('Reminders coming soon', 'info') },
-        { icon: '📋', label: 'New Task', action: () => toast('Task board coming soon', 'info') },
+        { icon: '🔄', label: 'Refresh', action: () => { loadOperations(); toast('Follow-ups refreshed', 'success'); } },
+        { icon: '🙋', label: 'Unclaimed', action: () => setTaskScope('unassigned') },
+        { icon: '⚡', label: 'Live Pipeline', action: () => switchTab('pipeline') },
       ],
     };
 
