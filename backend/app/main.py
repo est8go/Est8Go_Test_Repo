@@ -45,6 +45,7 @@ from app.credits.router import router as credits_router  # noqa: E402
 from app.credits.seat_router import router as seat_router  # noqa: E402
 from app.admin.health_router import router as health_router  # noqa: E402
 from app.admin.issues_router import router as issues_router  # noqa: E402
+from app.operations.tasks_router import router as tasks_router  # noqa: E402
 from app.database.db import get_db  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
@@ -133,6 +134,7 @@ app.include_router(credits_router)
 app.include_router(seat_router)
 app.include_router(health_router)
 app.include_router(issues_router)
+app.include_router(tasks_router)
 
 
 # ── 12. HEALTH CHECK ──────────────────────────────────────────
