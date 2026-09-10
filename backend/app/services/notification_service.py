@@ -344,6 +344,61 @@ async def send_meta_image_message(
         return False
 
 
+async def send_meta_location_message(
+    to: str,
+    latitude: float,
+    longitude: float,
+    name: str = None,
+    address: str = None,
+    phone_number_id: str = None,
+    access_token: str = None,
+) -> bool:
+    """Sends a WhatsApp location message — a native map card in the chat.
+
+    Meta renders the pin itself, so there is no third-party map provider,
+    no API key, no stored image and no licensing question. The buyer taps
+    through to their own maps app and can pan around, which is what the
+    "where is this actually" question needs.
+
+    Coordinates travel in NAMED fields, so there is no lat/lng ordering
+    trap here of the kind the static-map APIs have.
+
+    Plain type:"location" — non-template, so it needs an open 24h window
+    exactly like send_meta_image_message. It does not open or extend that
+    window; only an inbound message from the buyer does that.
+    """
+    token = access_token or META_ACCESS_TOKEN
+    pid = phone_number_id or BUSINESS_PHONE_ID
+    if not token or not pid:
+        logger.warning("Meta credentials missing — location message not sent")
+        return False
+    url = f"https://graph.facebook.com/v19.0/{pid}/messages"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+    location = {"latitude": str(latitude), "longitude": str(longitude)}
+    if name:
+        location["name"] = name
+    if address:
+        location["address"] = address
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": to,
+        "type": "location",
+        "location": location,
+    }
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(url, json=payload, headers=headers, timeout=30)
+            if resp.status_code != 200:
+                logger.warning(f"Location send non-200: {resp.text}")
+            return resp.status_code == 200
+    except Exception as e:
+        logger.warning(f"Location send failed: {e}")
+        return False
+
+
 async def schedule_inspection_logic(
     db: Session, tenant_id: int, user_phone: str, property_id: int, date_text: str
 ):

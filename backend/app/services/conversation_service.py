@@ -699,6 +699,50 @@ def add_message_service(conversation_id: int, text: str, tenant_id: int, db: Ses
 # ================================================================
 
 
+async def _send_property_location(
+    listing,
+    sender_id: str,
+    phone_number_id: str = None,
+    access_token: str = None,
+) -> None:
+    """Sends the listing's GPS pin as a native WhatsApp location card.
+
+    Best effort and fully self-contained — every failure is swallowed
+    here, so this can never raise into _send_property_card and disturb
+    the card it follows. A listing with no coordinates gets nothing: no
+    placeholder, no error, no message.
+    """
+    try:
+        _lat = getattr(listing, "latitude", None)
+        _lng = getattr(listing, "longitude", None)
+        if _lat is None or _lng is None:
+            return
+        # Null Island — both exactly zero is bad data, not a Nigerian
+        # address. Sending a pin in the Atlantic is worse than silence.
+        if not _lat and not _lng:
+            return
+
+        from app.services.notification_service import send_meta_location_message
+
+        _address = listing.location or ""
+        _recorded = getattr(listing, "gps_verified_at", None)
+        if _recorded:
+            # %-d is glibc-only; lstrip keeps this portable off Render.
+            _stamp = _recorded.strftime("%d %b %Y").lstrip("0")
+            _address = f"{_address} · GPS recorded {_stamp}".strip(" ·")
+
+        await send_meta_location_message(
+            sender_id,
+            _lat, _lng,
+            name=(listing.title or "")[:60] or None,
+            address=_address or None,
+            phone_number_id=phone_number_id,
+            access_token=access_token,
+        )
+    except Exception as _e:
+        logger.warning(f"Location pin send skipped: {_e}")
+
+
 async def _send_property_card(
     db: Session,
     sender_id: str,
@@ -718,6 +762,9 @@ async def _send_property_card(
     Extracted from the two copies previously inlined on the main search
     path so every results path can deliver the same card. Text is never
     lost: a buyer always receives the summary, image or not.
+
+    A native location pin follows the card when the listing has GPS
+    coordinates — best effort, and silent when it does not.
     """
     try:
         from app.listings.models import ListingImage
@@ -734,6 +781,9 @@ async def _send_property_card(
                 phone_number_id=phone_number_id,
                 access_token=access_token,
             )
+            await _send_property_location(
+                listing, sender_id, phone_number_id, access_token,
+            )
             return
     except Exception as _e:
         logger.warning(f"Image card send failed, falling back to text: {_e}")
@@ -742,6 +792,9 @@ async def _send_property_card(
         sender_id, summary,
         phone_number_id=phone_number_id,
         access_token=access_token,
+    )
+    await _send_property_location(
+        listing, sender_id, phone_number_id, access_token,
     )
 
 
