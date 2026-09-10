@@ -43,12 +43,27 @@ Super admin: est8go@gmail.com / Est8Go@2026
 - Super Admin credit management — award credits, view all wallets
 - Data migration — all new tables created on Supabase production
 - Credit bundles seeded — Starter/Growth/Pro/Scale
-- Credit deductions wired on all services:
+- Credit deductions wired on these services:
   Reel generation: 10 credits (reel_engine.py)
   Document upload: 3 credits (document_router.py)
   AI vision audit: 5 credits (ai_vision_service.py)
-  Recovery messages: 1 credit (recovery_engine.py)
   All wrapped in try/except — never block service delivery
+- Recovery messages are NOT billed. ⚠️ This line previously claimed
+  "Recovery messages: 1 credit (recovery_engine.py)". That was never
+  true: recovery_engine.py contains no credit code at all, there is no
+  RECOVERY_MESSAGE key in ACTION_COSTS, and nothing anywhere writes a
+  ledger entry with that action_type. Nothing has ever been charged for
+  a recovery message, and nothing could be — RECOVERY_ENABLED has been
+  "false" since the cron was created, so no recovery message has ever
+  been sent either.
+  Two leftovers in business_dashboard.html ACTION_LABELS point at the
+  same phantom: RECOVERY_MESSAGE labels an event type that is never
+  written, and BROADCAST_100 — which IS real, priced at 2 credits for a
+  100-recipient broadcast — is mislabelled "Recovery message sent".
+  Neither is load-bearing; both should be cleaned up when the credits
+  tab is next touched.
+  If per-message billing is ever wanted, it is a NEW build, not a
+  half-finished one.
 - Credits tab in business dashboard:
   Balance overview (purchased/bonus/total spent)
   9-item service costs reference table
