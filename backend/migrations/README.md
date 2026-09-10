@@ -26,20 +26,68 @@ Each script must be:
 
 From the `backend/` folder:
 
-    PYTHONPATH=. python migrations/001_applied_migrations.py
+    PYTHONPATH=. python migrations/00N_name.py --dry-run   # validate, rolls back
+    PYTHONPATH=. python migrations/00N_name.py             # apply
+
+## ⚠️ `register_all_models()` autocommits — import it only when needed
+
+`register_all_models()` calls `Base.metadata.create_all()`. That runs on its
+**own connection and autocommits**, before any transaction your script opens.
+
+For a plain `ALTER` that is harmless. For a migration that **creates a table**
+it is a trap, in two ways:
+
+1. **`create_all` wins the race.** It creates the table first, from the
+   SQLAlchemy model. Your `CREATE TABLE IF NOT EXISTS` then becomes a no-op,
+   so the table you get is the *model's* definition, not your SQL's. Anything
+   that exists only in your SQL — most importantly
+   `ENABLE ROW LEVEL SECURITY`, which has no SQLAlchemy equivalent — is
+   silently skipped.
+
+2. **A `--dry-run` cannot undo it.** Wrapping everything in a transaction and
+   rolling back at the end does *not* roll back `create_all`, because that
+   already committed on a different connection. The rollback leaves the new
+   table behind **without RLS**, while correctly reverting every statement
+   that was actually inside your transaction — so the run reports success and
+   the schema is left half-hardened.
+
+This is not hypothetical: the first `--dry-run` of `006_followup_tasks` did
+exactly this, leaving `followup_tasks` and `followup_digest_log` in production
+with `RLS = False`. `005_listing_reports` has the same shape and escaped only
+because it was never dry-run.
+
+**So: import the registry inside a `if not DRY_RUN:` guard** (see
+`006_followup_tasks.py`), and keep `ENABLE ROW LEVEL SECURITY` in the
+migration where it belongs. A migration that only `ALTER`s existing tables can
+skip the registry entirely.
+
+Related ordering rule: **apply a table-creating migration BEFORE the deploy
+that ships its model.** Render boots `register_all_models()`, so a deploy that
+lands first will create the table un-hardened.
 
 ## Template
 
     """
     00N — what this changes
     """
-    from app.models_registry import register_all_models
-    register_all_models()
+    import sys
+
+    MIGRATION_NAME = "00N_what_this_changes"
+
+    DRY_RUN = "--dry-run" in sys.argv
+
+    # See the warning above. create_all() autocommits on its own connection,
+    # so under --dry-run it would create tables the closing rollback cannot
+    # undo — leaving them without the RLS this script applies. It is only
+    # needed so create_all can resolve models on a real apply; a migration
+    # that just ALTERs existing tables does not need it at all.
+    if not DRY_RUN:
+        from app.models_registry import register_all_models
+
+        register_all_models()
 
     from app.database.db import get_db
     from sqlalchemy import text
-
-    MIGRATION_NAME = "00N_what_this_changes"
 
     db = next(get_db())
 
@@ -47,6 +95,11 @@ From the `backend/` folder:
 
     # If this migration CREATEs a table, lock it down:
     # db.execute(text("ALTER TABLE new_table ENABLE ROW LEVEL SECURITY"))
+
+    if DRY_RUN:
+        db.rollback()
+        print(f"ROLLED BACK — {MIGRATION_NAME} NOT recorded")
+        sys.exit(0)
 
     db.execute(
         text(
@@ -57,6 +110,12 @@ From the `backend/` folder:
     )
     db.commit()
     print(f"applied {MIGRATION_NAME}")
+
+A `--dry-run` executes every statement against the real database inside a
+transaction and then rolls back. Postgres DDL is transactional, so this
+genuinely validates the SQL — FK targets resolve, syntax is accepted,
+constraints hold — without persisting anything, *provided* the registry guard
+above is in place.
 
 ## Checking state
 
