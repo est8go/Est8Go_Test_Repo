@@ -3512,7 +3512,10 @@ async def handle_incoming_message(data: dict, db: Session):
                     except Exception:
                         pass
 
-                    # Message 1 — inspection confirmed + agent details
+                    # Inspection confirmed + agent details + navigation, as
+                    # ONE message. These fired back-to-back in the same turn
+                    # with nothing from the buyer between them, so the split
+                    # bought the buyer nothing and cost a billable message.
                     _hs_msg = (
                         f"Perfect, {first_name}! 🎯\n\n"
                         f"Your inspection request for "
@@ -3536,12 +3539,8 @@ async def handle_incoming_message(data: dict, db: Session):
                         f"Please keep your phone "
                         f"available. 📱"
                     )
-                    await send_meta_message(
-                        sender_id, _hs_msg,
-                        phone_number_id=_send_pid, access_token=_send_token,
-                    )
 
-                    # Message 2 — navigation + directions
+                    # Navigation tail — appended to the same body.
                     _hs_nav = ""
                     if listing.latitude and listing.longitude:
                         _hs_nav = (
@@ -3552,8 +3551,8 @@ async def handle_incoming_message(data: dict, db: Session):
                             f"&travelmode=driving"
                         )
                     _hs_dir = getattr(listing, "directions", None)
+                    _hs_close = ""
                     if _hs_nav or _hs_dir:
-                        _hs_close = ""
                         if _hs_nav:
                             _hs_close += (
                                 f"📍 *Property Location:*\n"
@@ -3564,10 +3563,28 @@ async def handle_incoming_message(data: dict, db: Session):
                                 f"🗺️ *How to find us:*\n"
                                 f"{_hs_dir}\n\n"
                             )
+                        # Sign-off stays inside this branch exactly as it
+                        # was: no nav and no directions means no sign-off.
                         _hs_close += (
                             f"Thank you for choosing "
                             f"*{biz_name}*. 🛡️"
                         )
+
+                    # listing.directions is tenant-authored free text, so the
+                    # merged body can in principle blow Meta's 4096-char text
+                    # limit. One oversized send would lose the agent details
+                    # too, which is worse than the message it saves — so fall
+                    # back to the old two-message split in that case only.
+                    if _hs_close:
+                        if len(_hs_msg) + 2 + len(_hs_close) <= 4000:
+                            _hs_msg = f"{_hs_msg}\n\n{_hs_close}"
+                            _hs_close = ""
+
+                    await send_meta_message(
+                        sender_id, _hs_msg,
+                        phone_number_id=_send_pid, access_token=_send_token,
+                    )
+                    if _hs_close:
                         await send_meta_message(
                             sender_id, _hs_close,
                             phone_number_id=_send_pid, access_token=_send_token,
