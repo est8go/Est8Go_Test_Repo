@@ -684,7 +684,17 @@ async def claim_task(
     pool with nobody accountable — which is the exact failure this whole
     feature exists to remove.
     """
-    task = _load_task(db, task_id, current_user)
+    # Claiming is intentionally different from other task actions: a staff
+    # member may race to claim a task that another staff member has just
+    # claimed.  Resolve only existence and tenant ownership here, then let the
+    # conditional UPDATE below return a truthful 409 rather than an unrelated
+    # 403 before the race can be evaluated.
+    tenant_id = _tenant_id(current_user)
+    task = db.get(FollowUpTask, task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if task.tenant_id != tenant_id:
+        raise HTTPException(status_code=403, detail="Not your tenant's task")
     if task.status != STATUS_OPEN:
         raise HTTPException(status_code=409, detail=f"Task is {task.status}")
     # One conditional UPDATE is the ownership decision. A read-then-write
