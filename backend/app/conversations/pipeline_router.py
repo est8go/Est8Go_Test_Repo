@@ -116,12 +116,23 @@ def classify_lead(convo: Conversation) -> dict:
     if score >= 70 or stage in ("handshake", "commitment"):
         temperature = "🔥 Hot"
         temp_code = "hot"
+        temperature_reason = (
+            "Inspection or next sales action is in progress."
+            if stage in ("handshake", "commitment")
+            else "Lead score is 70 or above."
+        )
     elif score >= 40 or stage == "verification":
         temperature = "🌡️ Warm"
         temp_code = "warm"
+        temperature_reason = (
+            "Buyer details are being verified."
+            if stage == "verification"
+            else "Lead score is 40 or above."
+        )
     else:
         temperature = "❄️ Cold"
         temp_code = "cold"
+        temperature_reason = "Needs qualification, re-engagement, or a clear next step."
 
     # Last active display
     last_active = convo.last_active_at or convo.updated_at
@@ -151,6 +162,7 @@ def classify_lead(convo: Conversation) -> dict:
         "lead_score": score,
         "temperature": temperature,
         "temp_code": temp_code,
+        "temperature_reason": temperature_reason,
         "is_bot_active": getattr(convo, "is_bot_active", True),
         "bot_status": (
             "🤖 Kora Active"

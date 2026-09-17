@@ -9,11 +9,10 @@ def _assert_has(mod, names):
 
 def test_ai_fallback_capabilities_exist():
     m = importlib.import_module("app.conversations.ai_fallback")
-    _assert_has(m, ["should_fallback", "cache_get", "cache_set", "ai_answer_stub"])
-    assert callable(m.should_fallback)
-    assert callable(m.cache_get)
-    assert callable(m.cache_set)
-    assert callable(m.ai_answer_stub)
+    _assert_has(m, ["is_company_faq", "answer_company_faq"])
+    assert callable(m.is_company_faq)
+    assert callable(m.answer_company_faq)
+    assert m.is_company_faq("Tell me about your company")
 
 
 def test_ai_cache_model_has_unique_index():
@@ -32,22 +31,28 @@ def test_company_profile_fields_exist():
         "assistant_role",
         "emoji_mode",
         "company_name",
-        "short_about",
-        "phone",
-        "whatsapp",
+        "company_about",
+        "phone_whatsapp",
         "email",
         "office_address",
         "areas_covered",
-        "payment_options",
-        "inspection_policy",
-        "manager_name",
-        "handoff_message",
+        "payment_rules",
+        "verification_policy",
+        "recovery_speed",
+        "send_window_start",
+        "send_window_end",
     ]
     for f in required:
         assert hasattr(CP, f), f"Missing CompanyProfile.{f}"
 
 
 def test_conversation_state_machine_minimum_contract():
+    from app.models_registry import register_all_models
+
+    # SQLAlchemy relationships use class names across modules. Register every
+    # model before creating an instance so this test exercises the app setup,
+    # rather than a partial import order that production never uses.
+    register_all_models()
     m = importlib.import_module("app.conversations.models")
     Conversation = m.Conversation
     assert hasattr(Conversation, "state"), "Conversation must have state"

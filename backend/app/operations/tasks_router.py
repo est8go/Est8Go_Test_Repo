@@ -39,6 +39,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.auth.deps import get_current_user
+from app.database.audit import AuditLog
 from app.database.db import get_db
 from app.listings.models import Listing, ListingImage
 from app.users.models import User
@@ -65,6 +66,12 @@ class DismissRequest(BaseModel):
     note: Optional[str] = Field(None, max_length=1000)
 
 
+class AssignTaskRequest(BaseModel):
+    """The staff member an agency manager has chosen to own a task."""
+
+    assignee_id: int = Field(..., ge=1)
+
+
 def _now() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
@@ -82,6 +89,41 @@ def _tenant_id(current_user: User) -> int:
 
 def _is_admin(current_user: User) -> bool:
     return current_user.effective_role in _ADMIN_ROLES
+
+
+def _assignment_snapshot(user: User | None) -> dict | None:
+    """Small, non-sensitive snapshot stored in the immutable audit event."""
+    if user is None:
+        return None
+    return {
+        "id": user.id,
+        "name": user.first_name or (user.email or "").split("@")[0],
+        "email": user.email,
+    }
+
+
+def _record_assignment_audit(
+    db: Session,
+    *,
+    actor: User,
+    task: FollowUpTask,
+    action: str,
+    previous_assignee: User | None,
+    new_assignee: User,
+) -> None:
+    """Keep manager assignment and self-claim decisions auditable."""
+    db.add(
+        AuditLog(
+            actor_id=actor.id,
+            actor_email=actor.email,
+            actor_role=actor.effective_role,
+            action=action,
+            target_table="followup_tasks",
+            target_id=task.id,
+            old_value={"assignee": _assignment_snapshot(previous_assignee)},
+            new_value={"assignee": _assignment_snapshot(new_assignee)},
+        )
+    )
 
 
 def _wa_url(phone, text) -> str:
@@ -383,6 +425,137 @@ async def task_insights(
 # ================================================================
 
 
+@router.get("/{task_id}/assignment-history")
+async def assignment_history(
+    task_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return the immutable record of who assigned this task and when."""
+    task = _load_task(db, task_id, current_user)
+    history = (
+        db.query(AuditLog)
+        .filter(
+            AuditLog.target_table == "followup_tasks",
+            AuditLog.target_id == task.id,
+            AuditLog.action.in_(("task_assigned", "task_reassigned", "task_claimed")),
+        )
+        .order_by(AuditLog.created_at.desc(), AuditLog.id.desc())
+        .all()
+    )
+    return {
+        "task_id": task.id,
+        "history": [
+            {
+                "action": event.action,
+                "actor": {
+                    "id": event.actor_id,
+                    "name": event.actor_email or "Unknown user",
+                    "role": event.actor_role,
+                },
+                "from": event.old_value or {},
+                "to": event.new_value or {},
+                "at": str(event.created_at) if event.created_at else None,
+            }
+            for event in history
+        ],
+    }
+
+
+@router.post("/{task_id}/assign")
+async def assign_task(
+    task_id: int,
+    payload: AssignTaskRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Let an agency manager assign or reassign an open task deliberately."""
+    tenant_id = _tenant_id(current_user)
+    if not _is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Admin access required.")
+
+    task = _load_task(db, task_id, current_user)
+    if task.status != STATUS_OPEN:
+        raise HTTPException(status_code=409, detail=f"Task is {task.status}")
+
+    assignee = (
+        db.query(User)
+        .filter(
+            User.id == payload.assignee_id,
+            User.tenant_id == tenant_id,
+            User.is_active.is_(True),
+            User.deleted_at.is_(None),
+        )
+        .first()
+    )
+    if assignee is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Choose an active staff member from your agency.",
+        )
+
+    previous_id = task.assigned_user_id
+    previous_assignee = db.get(User, previous_id) if previous_id else None
+    if previous_id == assignee.id:
+        return {
+            "status": "ok",
+            "task_id": task.id,
+            "already_assigned": True,
+            "assigned_to": _assignment_snapshot(assignee),
+        }
+
+    # Compare the assignment we read with the row at write time. This prevents
+    # a manager from overwriting a staff member who claimed the task a moment ago.
+    assignment_query = db.query(FollowUpTask).filter(
+        FollowUpTask.id == task.id,
+        FollowUpTask.tenant_id == tenant_id,
+        FollowUpTask.status == STATUS_OPEN,
+    )
+    if previous_id is None:
+        assignment_query = assignment_query.filter(FollowUpTask.assigned_user_id.is_(None))
+    else:
+        assignment_query = assignment_query.filter(FollowUpTask.assigned_user_id == previous_id)
+
+    changed = assignment_query.update(
+        {
+            FollowUpTask.assigned_user_id: assignee.id,
+            FollowUpTask.updated_at: _now(),
+        },
+        synchronize_session=False,
+    )
+    if changed != 1:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="This task changed before it could be assigned. Refresh and try again.",
+        )
+
+    _record_assignment_audit(
+        db,
+        actor=current_user,
+        task=task,
+        action="task_assigned" if previous_id is None else "task_reassigned",
+        previous_assignee=previous_assignee,
+        new_assignee=assignee,
+    )
+    db.commit()
+
+    logger.info(
+        "TASK ASSIGNED: task=%s tenant=%s from_user=%s to_user=%s by_user=%s",
+        task.id,
+        tenant_id,
+        previous_id,
+        assignee.id,
+        current_user.id,
+    )
+    return {
+        "status": "ok",
+        "task_id": task.id,
+        "already_assigned": False,
+        "assigned_to": _assignment_snapshot(assignee),
+    }
+
+
 @router.post("/{task_id}/opened")
 async def mark_opened(
     task_id: int,
@@ -514,14 +687,42 @@ async def claim_task(
     task = _load_task(db, task_id, current_user)
     if task.status != STATUS_OPEN:
         raise HTTPException(status_code=409, detail=f"Task is {task.status}")
-    if task.assigned_user_id is not None:
-        if task.assigned_user_id == current_user.id:
-            return {"status": "ok", "task_id": task.id, "already_yours": True}
-        raise HTTPException(
-            status_code=409,
-            detail="Already claimed by someone else",
+    # One conditional UPDATE is the ownership decision. A read-then-write
+    # sequence lets two staff members both believe they claimed the same task.
+    claimed = (
+        db.query(FollowUpTask)
+        .filter(
+            FollowUpTask.id == task.id,
+            FollowUpTask.tenant_id == task.tenant_id,
+            FollowUpTask.status == STATUS_OPEN,
+            FollowUpTask.assigned_user_id.is_(None),
         )
-    task.assigned_user_id = current_user.id
+        .update(
+            {
+                FollowUpTask.assigned_user_id: current_user.id,
+                FollowUpTask.updated_at: _now(),
+            },
+            synchronize_session=False,
+        )
+    )
+    if claimed != 1:
+        db.rollback()
+        db.expire_all()
+        current_task = db.get(FollowUpTask, task.id)
+        if current_task and current_task.assigned_user_id == current_user.id:
+            return {"status": "ok", "task_id": task.id, "already_yours": True}
+        if current_task and current_task.status != STATUS_OPEN:
+            raise HTTPException(status_code=409, detail=f"Task is {current_task.status}")
+        raise HTTPException(status_code=409, detail="Already claimed by someone else")
+
+    _record_assignment_audit(
+        db,
+        actor=current_user,
+        task=task,
+        action="task_claimed",
+        previous_assignee=None,
+        new_assignee=current_user,
+    )
     db.commit()
     logger.info(
         f"🙋 FOLLOWUP CLAIMED: task={task.id} by_user={current_user.id}"

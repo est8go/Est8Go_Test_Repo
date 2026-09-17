@@ -4470,6 +4470,8 @@
         taskDone: id => `/tasks/${id}/done`,
         taskDismiss: id => `/tasks/${id}/dismiss`,
         taskClaim: id => `/tasks/${id}/claim`,
+        taskAssign: id => `/tasks/${id}/assign`,
+        taskAssignmentHistory: id => `/tasks/${id}/assignment-history`,
       },
       REFRESH: 25000,
     };
@@ -5040,6 +5042,7 @@
                 <div class="lead-name">${sanitise(lead.name) || 'Unknown Buyer'}</div>
                 ${channelBadge(lead.channel)}
                 <div class="lead-sub" style="margin-top:2px">${stageLabel(lead.funnel_stage)}</div>
+                <div class="lead-sub" style="margin-top:2px">${sanitise(lead.temperature_reason || '')}</div>
               </div>
               <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
                 ${tempBadge}
@@ -5775,6 +5778,13 @@
 
       const unclaimed = !t.assigned_to
         ? `<button class="lead-btn ind" onclick="claimTask(${t.id})">🙋 Claim this</button>` : '';
+      const assigned = t.assigned_to
+        ? `<span class="task-chip">Assigned: ${sanitise(t.assigned_to.name)}</span>`
+        : `<span class="task-chip risk">Unassigned</span>`;
+      const canAssign = CFG._role === 'admin';
+      const assignAction = canAssign
+        ? `<button class="lead-btn" onclick="openTaskAssignment(${t.id})">👤 ${t.assigned_to ? 'Reassign' : 'Assign'}</button>`
+        : '';
 
       // The WhatsApp button is an <a>, not window.open(): iOS Safari's
       // popup blocker is unreliable with the latter even inside a click
@@ -5800,7 +5810,7 @@
             <div class="lead-score" style="color:${scoreColor(t.lead_score)}">${t.lead_score || 0}</div>
           </div>
           ${escalated}
-          <div class="task-meta">${chips.join('')}</div>
+          <div class="task-meta">${assigned}${chips.join('')}</div>
           ${t.suggested_message ? `
             <div class="task-opener">
               <span class="task-opener-label">Suggested opener</span>
@@ -5817,6 +5827,7 @@
           </div>
           <div class="lead-actions">
             ${unclaimed}
+            ${assignAction}
             <button class="lead-btn em" onclick="doneTask(${t.id})">✓ Mark done</button>
             <button class="lead-btn red" onclick="openDismiss(${t.id})">✕ Dismiss</button>
           </div>
@@ -5860,6 +5871,59 @@
         else if (r.status === 403) toast('That follow-up is assigned to someone else', 'warn');
         else toast('Could not claim it', 'error');
       } catch (_) { toast('Could not claim it', 'error'); }
+    }
+
+    let _assignTaskId = null;
+    async function openTaskAssignment(taskId) {
+      if (CFG._role !== 'admin') return;
+      _assignTaskId = taskId;
+      const select = g('taskAssigneeSelect');
+      const status = g('taskAssignmentStatus');
+      if (!select || !status) return;
+      status.textContent = 'Loading active staff…';
+      select.innerHTML = '<option value="">Choose a staff member</option>';
+      openModal('taskAssignModal');
+      try {
+        const r = await fetch('/users/', { headers: CFG.H });
+        if (!r.ok) throw new Error('staff');
+        const users = await r.json();
+        users.filter(u => u.is_active).forEach(u => {
+          const option = document.createElement('option');
+          option.value = String(u.id);
+          option.textContent = u.first_name || u.email;
+          select.appendChild(option);
+        });
+        status.textContent = 'Choose who should own this follow-up.';
+      } catch (_) {
+        status.textContent = 'Could not load staff. Please try again.';
+      }
+    }
+
+    async function saveTaskAssignment() {
+      const select = g('taskAssigneeSelect');
+      const status = g('taskAssignmentStatus');
+      const assigneeId = Number(select && select.value);
+      if (!_assignTaskId || !Number.isInteger(assigneeId) || assigneeId < 1) {
+        if (status) status.textContent = 'Choose a staff member first.';
+        return;
+      }
+      try {
+        const r = await fetch(CFG.API.taskAssign(_assignTaskId), {
+          method: 'POST',
+          headers: CFG.JH,
+          body: JSON.stringify({ assignee_id: assigneeId }),
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          if (status) status.textContent = data.detail || 'Could not assign this task.';
+          return;
+        }
+        closeModal('taskAssignModal');
+        toast(data.already_assigned ? 'Task already belongs to that staff member' : 'Task assigned', 'success');
+        loadOperations();
+      } catch (_) {
+        if (status) status.textContent = 'Could not assign this task. Please try again.';
+      }
     }
 
     async function doneTask(id) {
@@ -7700,6 +7764,29 @@
   </div>
 
   <!-- ══ MODAL: Assign Realtor ══ -->
+  <div class="modal-backdrop" id="taskAssignModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Assign follow-up</div>
+          <div class="modal-subtitle">Choose the staff member who owns this task.</div>
+        </div>
+        <button onclick="closeModal('taskAssignModal')" class="modal-x" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <label class="field-label" for="taskAssigneeSelect">Staff member</label>
+        <select id="taskAssigneeSelect" class="field-select">
+          <option value="">Choose a staff member</option>
+        </select>
+        <div id="taskAssignmentStatus" class="field-help"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="lead-btn" onclick="closeModal('taskAssignModal')">Cancel</button>
+        <button class="lead-btn em" onclick="saveTaskAssignment()">Assign task</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="assignModal">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
