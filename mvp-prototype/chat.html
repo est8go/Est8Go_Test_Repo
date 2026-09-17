@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Bravies Homz · WhatsApp</title>
+  <meta name="description" content="Bravies Homz WhatsApp Official Property Advisor Chatbot powered by Kora.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --wa-teal: #008069;
+      --wa-teal-dark: #075e54;
+      --wa-teal-light: #128c7e;
+      --wa-bg: #efeae2;
+      --wa-bubble-in: #ffffff;
+      --wa-bubble-out: #d9fdd3;
+      --wa-text-primary: #111b21;
+      --wa-text-secondary: #667781;
+      --wa-blue-tick: #53bdeb;
+      --wa-input-bg: #ffffff;
+      --wa-panel-bg: #f0f2f5;
+      --wa-border: #e9edef;
+      --wa-green: #25d366;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #d1d7db;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: var(--wa-text-primary);
+      overflow: hidden;
+    }
+
+    /* WhatsApp Web Desktop / Mobile Shell */
+    .wa-app-frame {
+      width: 100%;
+      height: 100vh;
+      max-width: 900px;
+      max-height: 94vh;
+      background: var(--wa-bg);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.15);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    @media (max-width: 768px) {
+      .wa-app-frame {
+        max-width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+      }
+    }
+
+    /* Top Platform Switcher Strip */
+    .platform-banner {
+      background: #111827;
+      color: #ffffff;
+      padding: 7px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 50;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .platform-banner a {
+      color: #34d399;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 700;
+      background: rgba(52, 211, 153, 0.12);
+      padding: 3px 9px;
+      border-radius: 4px;
+      transition: background 0.15s ease;
+    }
+    .platform-banner a:hover {
+      background: rgba(52, 211, 153, 0.22);
+    }
+
+    /* WhatsApp Header */
+    .wa-header {
+      background: var(--wa-panel-bg);
+      border-bottom: 1px solid var(--wa-border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 20;
+    }
+    .wa-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+    .wa-avatar {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #10b981, #047857);
+      border-radius: 50%;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .wa-meta {
+      display: flex;
+      flex-direction: column;
+    }
+    .wa-name {
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--wa-text-primary);
+    }
+    .wa-verified-badge {
+      background: #25d366;
+      color: #ffffff;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 900;
+    }
+    .wa-status {
+      font-size: 12px;
+      color: var(--wa-text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .wa-status.typing {
+      color: #00a884;
+      font-weight: 600;
+    }
+
+    .wa-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: var(--wa-text-secondary);
+      font-size: 18px;
+    }
+    .wa-icon-btn {
+      background: transparent;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .wa-icon-btn:hover {
+      background: rgba(0,0,0,0.05);
+    }
+
+    /* WhatsApp Conversation Area */
+    .wa-chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background-image: radial-gradient(#d3cbbe 1.2px, transparent 1.2px);
+      background-size: 22px 22px;
+      position: relative;
+    }
+
+    /* System Security Banner */
+    .wa-system-banner {
+      align-self: center;
+      max-width: 90%;
+      background: #ffeecd;
+      color: #54656f;
+      font-size: 11.5px;
+      line-height: 1.45;
+      padding: 6px 14px;
+      border-radius: 8px;
+      text-align: center;
+      margin: 8px auto 14px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .wa-date-divider {
+      align-self: center;
+      background: #ffffff;
+      color: #54656f;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 12px;
+      border-radius: 8px;
+      margin: 6px auto 12px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Message Bubbles */
+    .wa-bubble {
+      max-width: 78%;
+      padding: 8px 12px 6px;
+      font-size: 13.5px;
+      line-height: 1.45;
+      border-radius: 8px;
+      position: relative;
+      box-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.12);
+      display: flex;
+      flex-direction: column;
+      word-wrap: break-word;
+      animation: popIn 0.15s ease-out;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Incoming (Bot / Kora) */
+    .wa-bubble.in {
+      align-self: flex-start;
+      background: var(--wa-bubble-in);
+      color: var(--wa-text-primary);
+      border-top-left-radius: 0;
+    }
+    .wa-bubble.in::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -8px;
+      width: 0;
+      height: 0;
+      border-top: 8px solid var(--wa-bubble-in);
+      border-left: 8px solid transparent;
+    }
+
+    /* Outgoing (Buyer) */
+    .wa-bubble.out {
+      align-self: flex-end;
+      background: var(--wa-bubble-out);
+      color: var(--wa-text-primary);
+      border-top-right-radius: 0;
+    }
+    .wa-bubble.out::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: -8px;
+      width: 0;
+      height: 0;
+      border-top: 8px solid var(--wa-bubble-out);
+      border-right: 8px solid transparent;
+    }
+
+    .wa-bubble-footer {
+      align-self: flex-end;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10.5px;
+      color: var(--wa-text-secondary);
+      margin-top: 2px;
+    }
+    .wa-ticks {
+      color: var(--wa-blue-tick);
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    /* Quick Reply Suggestion Chips */
+    .quick-chips-bar {
+      background: #f0f2f5;
+      padding: 8px 14px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      border-top: 1px solid var(--wa-border);
+      scrollbar-width: none;
+    }
+    .quick-chips-bar::-webkit-scrollbar { display: none; }
+    .quick-chip-btn {
+      background: #ffffff;
+      border: 1px solid #d1d5db;
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      white-space: nowrap;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      transition: all 0.15s ease;
+    }
+    .quick-chip-btn:hover {
+      background: #e5e7eb;
+      border-color: #9ca3af;
+      transform: translateY(-1px);
+    }
+
+    /* WhatsApp Input Footer */
+    .wa-footer {
+      background: var(--wa-panel-bg);
+      border-top: 1px solid var(--wa-border);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .wa-input-box {
+      flex: 1;
+      background: var(--wa-input-bg);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    .wa-text-input {
+      width: 100%;
+      border: none;
+      outline: none;
+      padding: 11px 0;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--wa-text-primary);
+      background: transparent;
+    }
+    .wa-send-circle {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--wa-teal);
+      color: #ffffff;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 2px 6px rgba(0, 128, 105, 0.3);
+      transition: transform 0.1s ease, background 0.15s ease;
+      flex-shrink: 0;
+    }
+    .wa-send-circle:hover {
+      background: var(--wa-teal-light);
+      transform: scale(1.05);
+    }
+    .wa-send-circle:active {
+      transform: scale(0.95);
+    }
+
+    /* Phone Number Switcher Bar */
+    .buyer-identity-bar {
+      background: #f8fafc;
+      padding: 4px 16px;
+      font-size: 11px;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #e2e8f0;
+    }
+    .buyer-identity-bar span strong {
+      color: #0f172a;
+    }
+    .btn-reset-chat {
+      background: transparent;
+      border: none;
+      color: #0284c7;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wa-app-frame">
+    
+    <!-- Top Platform Switcher Header -->
+    <div class="platform-banner">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="color:#34d399;">●</span>
+        <span>User-Facing Component: <strong>Bravies Homz WhatsApp Chatbot</strong></span>
+      </div>
+      <a href="index.html" title="Switch to Agency Staff Dashboard">
+        <span>🔐 Agency Admin Portal →</span>
+      </a>
+    </div>
+
+    <!-- WhatsApp Business Header -->
+    <header class="wa-header">
+      <div class="wa-profile" onclick="showAgencyInfo()">
+        <div class="wa-avatar">AS</div>
+        <div class="wa-meta">
+          <div class="wa-name">
+            Bravies Homz
+            <span class="wa-verified-badge" title="Official Verified Business">✓</span>
+          </div>
+          <div class="wa-status" id="headerStatus">
+            Official Business Account · Online
+          </div>
+        </div>
+      </div>
+
+      <div class="wa-actions">
+        <button class="wa-icon-btn" title="Search messages">🔍</button>
+        <button class="wa-icon-btn" title="Voice Call" onclick="alert('Calls are directed to assigned consultant Chioma N. (+234 803 555 0192)')">📞</button>
+        <button class="wa-icon-btn" title="More options" onclick="showAgencyInfo()">⋮</button>
+      </div>
+    </header>
+
+    <!-- Main Message Stream -->
+    <main class="wa-chat-container" id="chatStream">
+      <div class="wa-system-banner">
+        <span>🔒</span>
+        <span>Messages and calls are end-to-end encrypted. Bravies Homz uses Kora to assist with 24/7 enquiries.</span>
+      </div>
+
+      <div class="wa-date-divider">Today</div>
+
+      <!-- Messages injected here dynamically -->
+    </main>
+
+    <!-- Quick Reply Chips Bar -->
+    <div class="quick-chips-bar" id="chipsBar">
+      <button class="quick-chip-btn" onclick="sendQuickPrompt('Hi, I saw your Lekki Phase 1 4-bed duplex. Is it available?')">
+        🏡 Lekki Duplex Enquiry
+      </button>
+      <button class="quick-chip-btn" onclick="sendQuickPrompt('Dr. Emeka Adeleke')">
+        👤 My Name
+      </button>
+      <button class="quick-chip-btn" onclick="sendQuickPrompt('Lekki Phase 1 or Ikoyi')">
+        📍 Preferred Location
+      </button>
+      <button class="quick-chip-btn" onclick="sendQuickPrompt('4-bedroom semi-detached duplex')">
+        🏠 Property Type
+      </button>
+      <button class="quick-chip-btn" onclick="sendQuickPrompt('₦120M - ₦150M')">
+        💰 Budget: ₦120M-150M
+      </button>
+      <button class="quick-chip-btn" onclick="sendQuickPrompt('Ready to buy within 30 days')">
+        📅 Timeline: 30 days
+      </button>
+    </div>
+
+    <!-- WhatsApp Input Bar -->
+    <footer class="wa-footer">
+      <button class="wa-icon-btn" style="font-size:20px;" title="Emoji">😊</button>
+      <button class="wa-icon-btn" style="font-size:20px;" title="Attach Document / Media">📎</button>
+      
+      <div class="wa-input-box">
+        <input type="text" class="wa-text-input" id="messageInput" placeholder="Type a message..." autocomplete="off" onkeydown="if(event.key==='Enter') sendMessage()">
+      </div>
+
+      <button class="wa-send-circle" id="sendBtn" onclick="sendMessage()" title="Send">
+        ➤
+      </button>
+    </footer>
+
+    <!-- Buyer Identity Bar -->
+    <div class="buyer-identity-bar">
+      <span>Simulated Buyer: <strong id="buyerPhoneDisplay">+234 803 555 0192</strong></span>
+      <button class="btn-reset-chat" onclick="resetChatSession()">New Buyer Session ↺</button>
+    </div>
+
+  </div>
+
+  <script>
+    // Current Buyer Phone
+    let currentBuyerPhone = localStorage.getItem("kora_user_phone") || "2348035550192";
+    let chatHistory = [];
+    let isWaitingForBot = false;
+
+    // Load initial conversation from API or LocalStorage
+    async function loadChat() {
+      document.getElementById('buyerPhoneDisplay').textContent = `+${currentBuyerPhone}`;
+
+      try {
+        const res = await fetch(`/api/chat/history/${currentBuyerPhone}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.chat && json.chat.length > 0) {
+            chatHistory = json.chat;
+            renderChatStream();
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('API not accessible, loading local state:', e.message);
+      }
+
+      // Default initial state
+      const saved = localStorage.getItem(`kora_chat_${currentBuyerPhone}`);
+      if (saved) {
+        try { chatHistory = JSON.parse(saved); } catch (e) {}
+      }
+
+      if (!chatHistory || chatHistory.length === 0) {
+        // First time opening — start with Kora greeting
+        const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        chatHistory = [
+          {
+            sender: 'kora',
+            text: "Hello! Welcome to *Bravies Homz* 🏡\n\nI am Kora, your 24/7 digital property advisor. How can I assist you with Lagos properties today?",
+            time: nowTime
+          }
+        ];
+        saveLocal();
+      }
+
+      renderChatStream();
+    }
+
+    function saveLocal() {
+      localStorage.setItem(`kora_chat_${currentBuyerPhone}`, JSON.stringify(chatHistory));
+      localStorage.setItem("kora_user_phone", currentBuyerPhone);
+    }
+
+    function renderChatStream() {
+      const container = document.getElementById('chatStream');
+      // Keep only system banner and date divider
+      const sysBanner = container.querySelector('.wa-system-banner');
+      const dateDiv = container.querySelector('.wa-date-divider');
+      container.innerHTML = '';
+      if (sysBanner) container.appendChild(sysBanner);
+      if (dateDiv) container.appendChild(dateDiv);
+
+      chatHistory.forEach(msg => {
+        const bubble = document.createElement('div');
+        bubble.className = `wa-bubble ${msg.sender === 'buyer' ? 'out' : 'in'}`;
+
+        // Format basic markdown *bold* and _italic_
+        let formattedText = escapeHtml(msg.text)
+          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+          .replace(/_(.*?)_/g, '<em>$1</em>')
+          .replace(/\n/g, '<br>');
+
+        bubble.innerHTML = `
+          <div>${formattedText}</div>
+          <div class="wa-bubble-footer">
+            <span>${msg.time || 'Today'}</span>
+            ${msg.sender === 'buyer' ? '<span class="wa-ticks">✓✓</span>' : ''}
+          </div>
+        `;
+        container.appendChild(bubble);
+      });
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function sendQuickPrompt(promptText) {
+      document.getElementById('messageInput').value = promptText;
+      sendMessage();
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      if (!text || isWaitingForBot) return;
+      input.value = '';
+
+      const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      chatHistory.push({ sender: 'buyer', text: text, time: nowTime });
+      renderChatStream();
+      saveLocal();
+
+      // Show typing indicator
+      isWaitingForBot = true;
+      const statusEl = document.getElementById('headerStatus');
+      statusEl.textContent = 'typing...';
+      statusEl.classList.add('typing');
+
+      try {
+        const response = await fetch('/api/chat/message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: currentBuyerPhone, text: text })
+        });
+
+        if (response.ok) {
+          const json = await response.json();
+          setTimeout(() => {
+            statusEl.textContent = 'Official Business Account · Online';
+            statusEl.classList.remove('typing');
+            isWaitingForBot = false;
+
+            if (json.replies && json.replies.length > 0) {
+              json.replies.forEach(reply => {
+                const repTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                chatHistory.push({ sender: 'kora', text: reply, time: repTime });
+              });
+            } else if (json.lead && json.lead.chat) {
+              chatHistory = json.lead.chat;
+            }
+
+            renderChatStream();
+            saveLocal();
+          }, 750);
+          return;
+        }
+      } catch (e) {
+        console.warn('Backend call failed, running local qualification fallback:', e.message);
+      }
+
+      // Local fallback bot simulation if server is unreachable
+      setTimeout(() => {
+        statusEl.textContent = 'Official Business Account · Online';
+        statusEl.classList.remove('typing');
+        isWaitingForBot = false;
+
+        let botReply = '';
+        const lower = text.toLowerCase();
+
+        if (chatHistory.length <= 2) {
+          botReply = "Thank you for reaching out! To help you find the right property, could I start with your *full name* please?";
+        } else if (chatHistory.length === 4) {
+          botReply = `Great to connect with you! Which area of Lagos are you looking in? (e.g. *Lekki Phase 1*, *Ikoyi*, *Victoria Island*, or *Ikeja*)`;
+        } else if (chatHistory.length === 6) {
+          botReply = `Understood. What type of property are you interested in? (e.g. *4-bedroom duplex*, *terrace*, *luxury flat*, or *land*)`;
+        } else if (chatHistory.length === 8) {
+          botReply = `Got it. What is your estimated working budget range? (e.g. *₦80M - ₦150M*)`;
+        } else if (chatHistory.length === 10) {
+          botReply = `Thank you! How soon are you planning to conclude the purchase? (e.g. *immediately*, *within 30 days*, *1-3 months*)`;
+        } else {
+          botReply = `✅ *Enquiry Qualified!*\n\nThank you! I have assigned your file to *Chioma N.*, our Senior Sales Consultant, who will contact you by phone shortly with verified property options. 🙏`;
+        }
+
+        const repTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        chatHistory.push({ sender: 'kora', text: botReply, time: repTime });
+        renderChatStream();
+        saveLocal();
+      }, 700);
+    }
+
+    function resetChatSession() {
+      const randomDigits = Math.floor(1000 + Math.random() * 9000);
+      currentBuyerPhone = `234803555${randomDigits}`;
+      chatHistory = [];
+      localStorage.removeItem(`kora_chat_${currentBuyerPhone}`);
+      localStorage.setItem("kora_user_phone", currentBuyerPhone);
+      loadChat();
+    }
+
+    function showAgencyInfo() {
+      alert("Bravies Homz Real Estate\nOfficial WhatsApp Business Contact\nPowered 24/7 by Kora Digital Property Advisor\nLagos, Nigeria");
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', loadChat);
+  </script>
+</body>
+</html>

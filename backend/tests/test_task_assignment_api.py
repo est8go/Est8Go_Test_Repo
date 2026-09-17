@@ -52,7 +52,7 @@ def seeded(runtime):
 
     db = runtime()
     suffix = uuid4().hex[:10]
-    tenant = Tenant(name=f"Amber Shelter {suffix}", slug=f"amber-{suffix}")
+    tenant = Tenant(name=f"Bravies Homz {suffix}", slug=f"bravies-homz-{suffix}")
     other_tenant = Tenant(name=f"Other Agency {suffix}", slug=f"other-{suffix}")
     db.add_all([tenant, other_tenant])
     db.flush()

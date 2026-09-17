@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kora Pilot Sequence Diagrams</title>
+  <style>
+    :root { --ink:#172019; --muted:#5e6961; --paper:#f7f6f1; --panel:#fffefa; --line:#d9ddd4; --accent:#176b45; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { width:min(1080px,calc(100% - 32px)); margin:48px auto 72px; }
+    header { border-bottom:1px solid var(--line); padding-bottom:28px; }
+    h1,h2 { line-height:1.15; letter-spacing:-.02em; }
+    h1 { margin:0; font-size:clamp(2rem,5vw,3.4rem); }
+    h2 { margin:36px 0 12px; font-size:1.35rem; }
+    .eyebrow { color:var(--accent); font-size:.78rem; font-weight:750; letter-spacing:.1em; text-transform:uppercase; }
+    .lede { color:var(--muted); font-size:1.08rem; }
+    .diagram { overflow-x:auto; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px; }
+    .mermaid { min-width:700px; }
+    footer { color:var(--muted); border-top:1px solid var(--line); margin-top:36px; padding-top:16px; font-size:.9rem; }
+    @media (max-width:600px) { main { margin-top:28px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">ACE Nigeria · Kora</p>
+      <h1>Sequence diagrams</h1>
+      <p class="lede">The main lead flow and a missing-answer recovery path.</p>
+    </header>
+    <section>
+      <h2>Main flow</h2>
+      <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant A as Screen App
+    participant S as Server
+    participant D as Database
+    U->>A: Send WhatsApp enquiry
+    A->>S: Send enquiry and buyer contact
+    S->>D: Create lead with New status
+    D-->>S: Return saved lead
+    S->>D: Save first response time
+    S-->>A: Return acknowledgement and questions
+    A-->>U: Send acknowledgement
+    U->>A: Send qualification answers
+    A->>S: Send answers for the lead
+    S->>D: Save answers
+    S->>D: Set lead status to Qualified
+    S->>D: Assign lead to a team member
+    S->>D: Create follow-up task and due time
+    D-->>S: Return assignment and task
+    S-->>A: Return assigned lead
+    A-->>U: Notify assigned team member
+    U->>A: Open lead and complete follow-up
+    A->>S: Send lead update
+    S->>D: Save current status and follow-up result
+    D-->>S: Confirm update
+    S-->>A: Return updated lead
+    A-->>U: Show confirmation
+      </pre></div>
+    </section>
+    <section>
+      <h2>Exception path: missing qualification answer</h2>
+      <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant A as Screen App
+    participant S as Server
+    participant D as Database
+    U->>A: Submit qualification answers
+    A->>A: Check required answers
+    A-->>U: Show the missing answer
+    U->>A: Submit the corrected answer
+    A->>S: Send corrected answer
+    S->>D: Save corrected answer
+    D-->>S: Confirm saved answer
+    S-->>A: Return qualification progress
+    A-->>U: Show next question
+      </pre></div>
+    </section>
+    <footer>Source: Kora Pilot Requirements</footer>
+  </main>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+  </script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kora Lead Prioritisation</title>
+  <style>
+    :root { --ink:#172019; --muted:#687169; --paper:#f6f7f3; --surface:#fff; --line:#dde1d9; --green:#176b45; --hot:#bd3a31; --hot-bg:#fcebea; --warm:#a86600; --warm-bg:#fff4dd; --cold:#466878; --cold-bg:#eaf1f4; --overdue:#902d29; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    .app { display:grid; grid-template-columns:224px 1fr; min-height:100vh; }
+    aside { padding:24px 16px; background:#173d2b; color:#f2f6f1; }
+    .brand { font-size:23px; font-weight:800; letter-spacing:-.04em; margin:0 0 34px; }
+    .brand span { color:#a9d2b2; }
+    .agency { font-size:12px; color:#bdcdc0; text-transform:uppercase; letter-spacing:.09em; margin:0 0 8px; }
+    .pilot { display:inline-block; padding:5px 9px; background:#285840; border-radius:6px; font-size:12px; margin-bottom:28px; }
+    nav a { display:block; color:#d9e6dc; text-decoration:none; padding:10px 11px; border-radius:7px; margin:4px 0; }
+    nav a.active { background:#e9f3ea; color:#153e2a; font-weight:700; }
+    main { padding:32px clamp(20px,4vw,56px); max-width:1450px; width:100%; }
+    .top { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:26px; }
+    h1 { font-size:30px; letter-spacing:-.045em; margin:0; }
+    .top p { margin:3px 0 0; color:var(--muted); }
+    button { border:1px solid var(--line); background:var(--surface); padding:9px 12px; border-radius:7px; font:inherit; color:var(--ink); cursor:pointer; }
+    button.primary { background:var(--green); border-color:var(--green); color:white; }
+    .stats { display:grid; grid-template-columns:repeat(4, minmax(130px,1fr)); gap:12px; margin-bottom:26px; }
+    .stat { background:var(--surface); border:1px solid var(--line); padding:16px; border-radius:10px; }
+    .stat strong { font-size:26px; display:block; letter-spacing:-.04em; }
+    .stat span { color:var(--muted); font-size:13px; }
+    .controls { display:flex; justify-content:space-between; gap:16px; align-items:center; margin:12px 0; flex-wrap:wrap; }
+    .filters, .legend { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .filter[aria-pressed="true"] { background:#173d2b; border-color:#173d2b; color:white; }
+    .legend-label { color:var(--muted); font-size:13px; margin-right:2px; }
+    .chip { display:inline-flex; gap:6px; align-items:center; border-radius:99px; padding:4px 8px; font-size:12px; font-weight:750; white-space:nowrap; }
+    .hot { background:var(--hot-bg); color:var(--hot); }
+    .warm { background:var(--warm-bg); color:var(--warm); }
+    .cold { background:var(--cold-bg); color:var(--cold); }
+    .table-wrap { overflow-x:auto; background:var(--surface); border:1px solid var(--line); border-radius:10px; }
+    table { width:100%; border-collapse:collapse; min-width:830px; }
+    th,td { text-align:left; padding:14px 16px; border-bottom:1px solid var(--line); vertical-align:middle; }
+    th { color:var(--muted); background:#fbfcfa; font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+    tr:last-child td { border-bottom:0; }
+    .buyer { font-weight:700; } .sub { display:block; color:var(--muted); font-size:12px; margin-top:2px; }
+    .reason { color:var(--muted); font-size:13px; }
+    .overdue { color:var(--overdue); font-weight:700; }
+    .open { color:var(--green); font-weight:700; text-decoration:none; }
+    .note { margin:18px 0 0; padding:13px 15px; border-left:3px solid var(--green); background:#edf5ef; color:#284734; }
+    @media (max-width:800px) { .app { grid-template-columns:1fr; } aside { display:none; } main { padding:24px 16px; } .stats { grid-template-columns:repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <p class="brand">kora<span>.</span></p>
+      <p class="agency">Bravies Homz</p><span class="pilot">Pilot workspace</span>
+      <nav aria-label="Admin navigation"><a class="active" href="#leads">Leads</a><a href="#">Team &amp; routing</a><a href="#">Qualification rules</a></nav>
+    </aside>
+    <main id="leads">
+      <header class="top"><div><h1>Leads</h1><p>Prioritise buyers using completion, urgency, and engagement.</p></div><button class="primary" type="button">Simulate enquiry</button></header>
+      <section class="stats" aria-label="Lead metrics"><div class="stat"><strong>24</strong><span>Active leads</span></div><div class="stat"><strong>8</strong><span>Awaiting qualification</span></div><div class="stat"><strong>11</strong><span>Handed to sales</span></div><div class="stat"><strong>3</strong><span>Overdue follow-ups</span></div></section>
+      <section class="controls" aria-label="Lead controls">
+        <div class="filters" role="group" aria-label="Lead filters"><button class="filter" data-filter="all" aria-pressed="true" type="button">All leads</button><button class="filter" data-filter="hot" aria-pressed="false" type="button">Hot</button><button class="filter" data-filter="warm" aria-pressed="false" type="button">Warm</button><button class="filter" data-filter="cold" aria-pressed="false" type="button">Cold</button><button class="filter" data-filter="overdue" aria-pressed="false" type="button">Overdue</button></div>
+        <div class="legend"><span class="legend-label">Lead priority:</span><span class="chip hot">Hot</span><span class="chip warm">Warm</span><span class="chip cold">Cold</span></div>
+      </section>
+      <div class="table-wrap"><table><thead><tr><th>Buyer</th><th>Priority</th><th>Status</th><th>Owner</th><th>Next action</th><th></th></tr></thead><tbody>
+        <tr data-temp="hot" data-overdue="true"><td><span class="buyer">Ada Okafor</span><span class="sub">+234 803 555 0102 · Lekki</span></td><td><span class="chip hot">Hot</span><span class="reason">Ready within 30 days</span></td><td>Handed off</td><td>Chioma N.</td><td class="overdue">Call to confirm inspection<br><span class="sub">Overdue by 2h</span></td><td><a class="open" href="#">Open →</a></td></tr>
+        <tr data-temp="warm" data-overdue="false"><td><span class="buyer">Tunde Adeyemi</span><span class="sub">+234 806 110 4421 · Wuse 2</span></td><td><span class="chip warm">Warm</span><span class="reason">Budget still needed</span></td><td>Awaiting qualification</td><td>Unassigned</td><td>Ask budget range<br><span class="sub">Due today, 15:00</span></td><td><a class="open" href="#">Open →</a></td></tr>
+        <tr data-temp="cold" data-overdue="false"><td><span class="buyer">Blessing James</span><span class="sub">+234 802 773 6835 · Gwarinpa</span></td><td><span class="chip cold">Cold</span><span class="reason">No reply after follow-up</span></td><td>Handed off</td><td>Emeka O.</td><td>Final follow-up<br><span class="sub">Due tomorrow, 10:00</span></td><td><a class="open" href="#">Open →</a></td></tr>
+        <tr data-temp="hot" data-overdue="false"><td><span class="buyer">Ifeanyi Obi</span><span class="sub">+234 807 991 2458 · Jabi</span></td><td><span class="chip hot">Hot</span><span class="reason">Qualified, viewing this week</span></td><td>Qualified</td><td>Tunde B.</td><td>Confirm viewing time<br><span class="sub">Due today, 17:30</span></td><td><a class="open" href="#">Open →</a></td></tr>
+      </tbody></table></div>
+      <p class="note"><strong>How the colours work:</strong> Hot = required details complete and near-term intent. Warm = engaged but still qualifying or purchasing later. Cold = no reply after follow-up, incomplete qualification, or closed. Every label shows its reason, so colour is never the only signal.</p>
+    </main>
+  </div>
+  <script>
+    const filters = document.querySelectorAll('.filter'); const rows = document.querySelectorAll('tbody tr');
+    filters.forEach(button => button.addEventListener('click', () => { const filter = button.dataset.filter; filters.forEach(item => item.setAttribute('aria-pressed', String(item === button))); rows.forEach(row => { const visible = filter === 'all' || row.dataset.temp === filter || (filter === 'overdue' && row.dataset.overdue === 'true'); row.hidden = !visible; }); }));
+  </script>
+</body>
+</html>

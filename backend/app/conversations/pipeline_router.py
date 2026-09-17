@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, BackgroundTasks
+from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -34,6 +35,17 @@ from app.services.tenant_service import get_tenant_profile
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/pipeline", tags=["Active Sales Pipeline"])
+
+
+class UpdateLeadRequest(BaseModel):
+    """Staff edits to buyer qualification data, scoped by the signed-in tenant."""
+
+    buyer_name: Optional[str] = Field(None, max_length=255)
+    location: Optional[str] = Field(None, max_length=255)
+    property_type: Optional[str] = Field(None, max_length=120)
+    budget: Optional[str] = Field(None, max_length=100)
+    timeline: Optional[str] = Field(None, max_length=100)
+    assigned_realtor_id: Optional[int] = Field(None, ge=1)
 
 
 # ================================================================
@@ -295,7 +307,74 @@ async def get_lead_detail(
                 "trust_grade": listing.trust_grade,
             }
 
+    # The staff dashboard is a read-only view of the actual WhatsApp
+    # transcript.  Never return messages from another tenant.
+    from app.conversations.models import ConversationMessage
+    messages = (
+        db.query(ConversationMessage)
+        .filter(ConversationMessage.conversation_id == convo.id)
+        .order_by(ConversationMessage.created_at.asc(), ConversationMessage.id.asc())
+        .all()
+    )
+    lead["messages"] = [
+        {
+            "role": message.role,
+            "content": message.content,
+            "created_at": str(message.created_at) if message.created_at else None,
+        }
+        for message in messages
+    ]
+
     return lead
+
+
+@router.patch("/{conversation_id}", tags=["Active Sales Pipeline"])
+async def update_lead_qualification(
+    conversation_id: int,
+    payload: UpdateLeadRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Persist staff corrections to qualification details for their own tenant."""
+    tenant_id = current_user.tenant_id
+    if not tenant_id:
+        raise HTTPException(status_code=403, detail="No tenant associated with this account")
+
+    convo = (
+        db.query(Conversation)
+        .filter(Conversation.id == conversation_id, Conversation.tenant_id == tenant_id)
+        .first()
+    )
+    if not convo:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    prefs = json.loads(convo.data_json or "{}")
+    updates = payload.model_dump(exclude_unset=True)
+    if "buyer_name" in updates:
+        convo.display_name = updates.pop("buyer_name") or None
+    if "assigned_realtor_id" in updates:
+        if current_user.effective_role not in ("admin", "superuser", "super_staff"):
+            raise HTTPException(status_code=403, detail="Only an agency manager can assign a lead")
+        assignee_id = updates.pop("assigned_realtor_id")
+        assignee = (
+            db.query(User)
+            .filter(
+                User.id == assignee_id,
+                User.tenant_id == tenant_id,
+                User.is_active.is_(True),
+                User.deleted_at.is_(None),
+            )
+            .first()
+        )
+        if not assignee:
+            raise HTTPException(status_code=400, detail="Choose an active staff member from your agency")
+        convo.assigned_realtor_id = assignee.id
+    for key, value in updates.items():
+        prefs[key] = value
+    convo.data_json = json.dumps(prefs)
+    db.commit()
+    db.refresh(convo)
+    return classify_lead(convo)
 
 
 # ================================================================

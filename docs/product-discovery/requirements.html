@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kora Pilot Requirements</title>
+  <style>
+    :root { --ink:#172019; --muted:#5e6961; --paper:#f7f6f1; --panel:#fffefa; --line:#d9ddd4; --accent:#176b45; --soft:#e9f4ec; --warn:#fff8e8; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { width:min(1080px,calc(100% - 32px)); margin:48px auto 72px; }
+    header { border-bottom:1px solid var(--line); padding-bottom:28px; }
+    h1,h2,h3 { line-height:1.18; letter-spacing:-.02em; }
+    h1 { margin:0; font-size:clamp(2rem,5vw,3.4rem); }
+    h2 { margin:36px 0 12px; font-size:1.35rem; }
+    h3 { margin:16px 0 6px; font-size:1rem; }
+    p { margin:10px 0; }
+    .eyebrow { color:var(--accent); font-size:.78rem; font-weight:750; letter-spacing:.1em; text-transform:uppercase; }
+    .lede { color:var(--muted); font-size:1.08rem; max-width:780px; }
+    .callout { border-left:4px solid var(--accent); background:var(--soft); padding:14px 18px; margin:18px 0; }
+    .warning { border-left-color:#b17216; background:var(--warn); }
+    .roles { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .role { border:1px solid var(--line); border-radius:10px; padding:16px; background:var(--panel); }
+    .role p { color:var(--muted); }
+    .table-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:10px; background:var(--panel); }
+    table { width:100%; border-collapse:collapse; min-width:760px; }
+    th,td { padding:13px 14px; text-align:left; vertical-align:top; border-bottom:1px solid var(--line); }
+    th { background:#eef2eb; font-size:.87rem; }
+    tr:last-child td { border-bottom:0; }
+    .priority { font-weight:700; white-space:nowrap; }
+    .must { color:#176b45; } .should { color:#855000; } .could { color:#53617f; }
+    li { margin:8px 0; }
+    footer { color:var(--muted); border-top:1px solid var(--line); margin-top:36px; padding-top:16px; font-size:.9rem; }
+    @media (max-width:720px) { main { margin-top:28px; } .roles { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">ACE Nigeria · Kora</p>
+      <h1>Pilot requirements</h1>
+      <p class="lede">Draft for the Bravies Homz three-month pilot, derived from the current office-hours discovery notes.</p>
+    </header>
+
+    <section>
+      <h2>Problem statement</h2>
+      <p>Founder-led Nigerian real-estate agencies that generate buyer leads through Facebook and Instagram into WhatsApp are losing prospects when enquiries arrive after operating hours or when manual follow-ups are forgotten. At Bravieshomz, a customer-service representative replies within minutes during working hours, but after-hours enquiries wait until the next day or are missed; qualified leads are then tracked in Excel and reminders depend on memory. Kora must prove that it can immediately capture and qualify these WhatsApp enquiries, hand them to the responsible salesperson, and make follow-up ownership visible, so that the pilot agency can measure whether more leads receive a timely qualified response and fewer go cold.</p>
+    </section>
+
+    <section>
+      <h2>Target users</h2>
+      <div class="roles">
+        <article class="role"><h3>Primary buyer</h3><p>The CEO/founder of Bravies Homz, a Nigerian real-estate agency that has committed to a three-month pilot. The founder’s name and pilot price remain to be recorded.</p></article>
+        <article class="role"><h3>Primary operator</h3><p>The customer-service representative or sales attendant who receives WhatsApp enquiries, qualifies prospects, records leads in Excel, schedules inspections, and sends reminders.</p></article>
+        <article class="role"><h3>Secondary user</h3><p>The sales manager or founder who needs visibility into answered, qualified, assigned, and overdue leads.</p></article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Functional requirements</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Feature</th><th>Description</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td>FR-01</td><td>Inbound WhatsApp capture</td><td>Receive each new buyer enquiry from the pilot agency’s WhatsApp business number and create a lead record with message time and conversation context.</td><td class="priority must">Must</td></tr>
+          <tr><td>FR-02</td><td>Immediate acknowledgement</td><td>Send an approved first response to every new enquiry, including outside normal operating hours, and record the response timestamp.</td><td class="priority must">Must</td></tr>
+          <tr><td>FR-03</td><td>Lead qualification</td><td>Ask configured questions for name, contact details, preferred location, property type, budget where supplied, and purchase timeline.</td><td class="priority must">Must</td></tr>
+          <tr><td>FR-04</td><td>Lead status</td><td>Mark each enquiry as new, awaiting qualification, qualified, handed off, or closed.</td><td class="priority must">Must</td></tr>
+          <tr><td>FR-05</td><td>Sales-team handoff</td><td>Assign or route a qualified lead to a named team member and notify that person that action is required.</td><td class="priority must">Must</td></tr>
+          <tr><td>FR-06</td><td>Follow-up task and reminder</td><td>Create a task with an owner and due time after handoff; notify the owner when it becomes due or overdue.</td><td class="priority must">Must</td></tr>
+          <tr><td>FR-07</td><td>Lead list</td><td>Show leads, owner, status, last customer message, response time, and next follow-up due time.</td><td class="priority must">Must</td></tr>
+          <tr><td>FR-08</td><td>Response and follow-up reporting</td><td>Show counts and rates for enquiries, response time, qualified leads, assigned leads, and overdue follow-ups.</td><td class="priority should">Should</td></tr>
+          <tr><td>FR-09</td><td>Configuration</td><td>Allow an authorised administrator to set qualification questions, first-response copy, team members, and routing rules.</td><td class="priority should">Should</td></tr>
+          <tr><td>FR-10</td><td>Conversation and action history</td><td>Retain a time-stamped history of messages, system replies, assignments, and follow-up actions for each lead.</td><td class="priority should">Should</td></tr>
+          <tr><td>FR-11</td><td>Inspection scheduling</td><td>Create or coordinate inspection appointments from a qualified lead record.</td><td class="priority could">Could</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section>
+      <h2>User stories</h2>
+      <ul>
+        <li>As a buyer who messages the agency after hours, I want an immediate acknowledgement and basic questions, so that I know my enquiry has been received and can move forward without waiting until the next day.</li>
+        <li>As a customer-service representative, I want each WhatsApp enquiry captured in one lead record, so that I do not have to rely on memory or manually recreate the conversation in Excel.</li>
+        <li>As a customer-service representative, I want the system to collect consistent qualification details, so that I can give the salesperson enough context to act.</li>
+        <li>As a sales attendant, I want to be notified when a qualified lead is assigned to me, so that no lead waits unnoticed.</li>
+        <li>As a sales attendant, I want follow-up tasks with due times and reminders, so that I do not forget to contact a prospect.</li>
+        <li>As the Bravies Homz founder, I want to see response time, qualification, assignment, and overdue-follow-up data, so that I can judge whether the pilot reduces missed leads.</li>
+        <li>As an authorised pilot administrator, I want to edit the initial reply, qualification questions, and team routing, so that Kora reflects the agency’s process without a product change.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Out of scope</h2>
+      <ul>
+        <li>Full CRM, deal pipeline, accounting, or property-management platform.</li>
+        <li>Listing publication, listing-fee collection, property inventory, or public property search.</li>
+        <li>Replacing humans for inspections, negotiation, property recommendations, or deal closing.</li>
+        <li>Inferring that a delayed response caused a lost sale.</li>
+        <li>Custom integrations with CRMs, advertising platforms, payments, or telephony systems.</li>
+        <li>Multi-agency tenancy, broad rollout, advanced AI training, predictive lead scoring, pricing, billing, CAC optimisation, or revenue forecasts.</li>
+        <li>Guaranteed performance improvements before the baseline and continuation threshold are agreed in writing.</li>
+      </ul>
+    </section>
+
+    <section class="callout warning">
+      <h2 style="margin-top:0">Pilot decisions still required</h2>
+      <ol>
+        <li>Record the Bravies Homz CEO/founder’s name and pilot signer.</li>
+        <li>Agree the three-month pilot price.</li>
+        <li>Set the current baseline for response time, qualification rate, and missed follow-ups.</li>
+        <li>Agree one day-30 continuation threshold: “X% of WhatsApp enquiries receive a qualified reply within Y minutes.”</li>
+      </ol>
+    </section>
+    <footer>Source: ACE Nigeria office-hours raw notes. Draft status: requirements are intentionally limited to the pilot evidence currently available.</footer>
+  </main>
+</body>
+</html>

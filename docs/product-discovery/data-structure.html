@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kora Pilot Data Structure</title>
+  <style>
+    :root { --ink:#172019; --muted:#5e6961; --paper:#f7f6f1; --panel:#fffefa; --line:#d9ddd4; --accent:#176b45; --soft:#e9f4ec; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { width:min(940px,calc(100% - 32px)); margin:48px auto 72px; }
+    header { border-bottom:1px solid var(--line); padding-bottom:28px; }
+    h1,h2,h3 { line-height:1.15; letter-spacing:-.02em; }
+    h1 { margin:0; font-size:clamp(2rem,5vw,3.4rem); }
+    h2 { margin:36px 0 12px; font-size:1.35rem; }
+    h3 { margin:0; font-size:1.08rem; }
+    .eyebrow { color:var(--accent); font-size:.78rem; font-weight:750; letter-spacing:.1em; text-transform:uppercase; }
+    .lede { color:var(--muted); font-size:1.08rem; max-width:760px; }
+    .badge { display:inline-block; margin-left:8px; padding:2px 8px; border-radius:999px; background:var(--soft); color:var(--accent); font-size:.75rem; font-weight:750; vertical-align:middle; }
+    details { margin:12px 0; background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+    summary { cursor:pointer; padding:16px 18px; font-weight:700; }
+    details[open] summary { border-bottom:1px solid var(--line); }
+    .content { padding:4px 18px 18px; }
+    .content p { color:var(--muted); margin:10px 0; }
+    li { margin:6px 0; }
+    footer { color:var(--muted); border-top:1px solid var(--line); margin-top:36px; padding-top:16px; font-size:.9rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">ACE Nigeria · Kora</p>
+      <h1>Pilot data structure</h1>
+      <p class="lede">The information Kora must retain to capture, qualify, hand off, and follow up on WhatsApp enquiries. A record is one saved entry for one thing.</p>
+    </header>
+
+    <h2>Required for the Must-have pilot flow</h2>
+    <details open><summary>1. Agency <span class="badge">Must</span></summary><div class="content"><p>The pilot agency whose enquiries Kora handles.</p><ul><li>Agency ID</li><li>Agency name</li><li>WhatsApp business number</li><li>Operating hours and time zone</li><li>Active/inactive status</li><li>Date created and last updated</li></ul></div></details>
+    <details><summary>2. Team member <span class="badge">Must</span></summary><div class="content"><p>An agency employee who can own a lead or a follow-up.</p><ul><li>Team member ID</li><li>Agency ID</li><li>Full name</li><li>Role</li><li>Work contact used for notifications</li><li>Active/inactive status</li><li>Date created and last updated</li></ul></div></details>
+    <details><summary>3. Buyer contact <span class="badge">Must</span></summary><div class="content"><p>The person who sends the WhatsApp enquiry.</p><ul><li>Buyer contact ID</li><li>Agency ID</li><li>WhatsApp phone number</li><li>Name, when supplied</li><li>Date first seen and last updated</li></ul></div></details>
+    <details><summary>4. Lead <span class="badge">Must</span></summary><div class="content"><p>The agency’s working record for one buyer enquiry.</p><ul><li>Lead ID</li><li>Agency ID</li><li>Buyer contact ID</li><li>Current status</li><li>Current assigned team member ID</li><li>First enquiry time</li><li>First-response time</li><li>Last customer-message time</li><li>Last agency/system-response time</li><li>Next follow-up due time</li><li>Closed time and closure reason</li><li>Date created and last updated</li></ul></div></details>
+    <details><summary>5. Conversation message <span class="badge">Must</span></summary><div class="content"><p>One message exchanged in the WhatsApp conversation.</p><ul><li>Message ID</li><li>Lead ID</li><li>Sender</li><li>Message text or supported attachment reference</li><li>Direction: incoming or outgoing</li><li>Sent/received time</li><li>Delivery state, if available</li><li>Whether it was an automatic acknowledgement or qualification question</li></ul></div></details>
+    <details><summary>6. Qualification answer <span class="badge">Must</span></summary><div class="content"><p>One answer collected from the buyer during qualification.</p><ul><li>Qualification answer ID</li><li>Lead ID</li><li>Question name</li><li>Answer value</li><li>Whether the answer is required</li><li>Time captured</li><li>Source</li></ul></div></details>
+    <details><summary>7. Lead assignment <span class="badge">Must</span></summary><div class="content"><p>The handoff of a qualified lead to the person responsible for acting on it.</p><ul><li>Assignment ID</li><li>Lead ID</li><li>Assigned team member ID</li><li>Assigned by</li><li>Assigned time</li><li>Assignment state</li><li>Reason or routing note</li></ul></div></details>
+    <details><summary>8. Follow-up task <span class="badge">Must</span></summary><div class="content"><p>The specific next action an assigned team member must take for a lead.</p><ul><li>Follow-up task ID</li><li>Lead ID</li><li>Owner team member ID</li><li>Task description</li><li>Due time</li><li>Task state</li><li>Completed time</li><li>Completion note or next action</li><li>Date created and last updated</li></ul></div></details>
+    <details><summary>9. Reminder / notification <span class="badge">Must</span></summary><div class="content"><p>A recorded alert about a new assignment or overdue follow-up.</p><ul><li>Notification ID</li><li>Recipient team member ID</li><li>Related lead ID</li><li>Related follow-up task ID</li><li>Notification type</li><li>Delivery channel</li><li>Scheduled time and sent time</li><li>Delivery state</li></ul></div></details>
+
+    <h2>Needed for Should-have features</h2>
+    <details><summary>10. Lead activity <span class="badge">Should</span></summary><div class="content"><p>A time-stamped record of important changes to a lead.</p><ul><li>Activity ID</li><li>Lead ID</li><li>Activity type</li><li>Person or system that made the change</li><li>Before and after values, where relevant</li><li>Time of change</li></ul></div></details>
+    <details><summary>11. Pilot configuration <span class="badge">Should</span></summary><div class="content"><p>Agency-specific settings used to tailor Kora without changing the product.</p><ul><li>Configuration ID</li><li>Agency ID</li><li>Approved first-response message</li><li>Qualification questions and required/optional status</li><li>Team routing rules</li><li>Default follow-up due-time rule</li><li>Configuration version, active status, and last updated time</li></ul></div></details>
+
+    <h2>Could-have feature</h2>
+    <details><summary>12. Inspection appointment <span class="badge">Could</span></summary><div class="content"><p>An optional future appointment created from a qualified lead.</p><ul><li>Appointment ID</li><li>Lead ID</li><li>Assigned team member ID</li><li>Proposed and confirmed date/time</li><li>Meeting location or property reference</li><li>Appointment state</li><li>Notes</li></ul></div></details>
+    <footer>Source: Kora Pilot Requirements</footer>
+  </main>
+</body>
+</html>

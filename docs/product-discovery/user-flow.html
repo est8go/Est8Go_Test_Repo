@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kora Pilot User Flow</title>
+  <style>
+    :root { --ink:#172019; --muted:#5e6961; --paper:#f7f6f1; --panel:#fffefa; --line:#d9ddd4; --accent:#176b45; --soft:#e9f4ec; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { width:min(900px,calc(100% - 32px)); margin:48px auto 72px; }
+    header { border-bottom:1px solid var(--line); padding-bottom:28px; }
+    h1,h2 { line-height:1.15; letter-spacing:-.02em; }
+    h1 { margin:0; font-size:clamp(2rem,5vw,3.4rem); }
+    h2 { margin:34px 0 12px; font-size:1.3rem; }
+    .eyebrow { color:var(--accent); font-size:.78rem; font-weight:750; letter-spacing:.1em; text-transform:uppercase; }
+    .lede { color:var(--muted); font-size:1.08rem; max-width:740px; }
+    ol { list-style:none; padding:0; margin:24px 0; counter-reset:flow; }
+    li { counter-increment:flow; position:relative; margin:0 0 12px 28px; padding:16px 18px 16px 24px; background:var(--panel); border:1px solid var(--line); border-radius:10px; }
+    li::before { content:counter(flow); position:absolute; left:-28px; top:16px; width:38px; height:38px; border-radius:50%; background:var(--accent); color:white; display:grid; place-items:center; font-weight:750; }
+    li strong { display:block; margin-bottom:4px; }
+    .completion { border-left:4px solid var(--accent); background:var(--soft); padding:16px 20px; margin-top:24px; }
+    footer { color:var(--muted); border-top:1px solid var(--line); margin-top:36px; padding-top:16px; font-size:.9rem; }
+    @media (max-width:560px) { main { margin-top:28px; } li { margin-left:20px; } li::before { left:-20px; width:32px; height:32px; top:18px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">ACE Nigeria · Kora</p>
+      <h1>Pilot user flow</h1>
+      <p class="lede">From a buyer’s first WhatsApp message to a completed human follow-up.</p>
+    </header>
+    <ol>
+      <li><strong>Buyer sends an enquiry.</strong>A buyer messages Bravies Homz’s WhatsApp business number, usually after seeing a property advert or social-media post.</li>
+      <li><strong>Kora captures the enquiry.</strong>Kora creates a lead record with the buyer’s WhatsApp contact, message time, and conversation context. The lead starts as <strong>New</strong>.</li>
+      <li><strong>Buyer receives an immediate acknowledgement.</strong>Kora sends the agency-approved first reply, including outside operating hours, and records the first-response time.</li>
+      <li><strong>Kora begins qualification.</strong>Kora asks for the buyer’s name, preferred location, property type, budget if supplied, and purchase timeline.</li>
+      <li><strong>Buyer answers the questions.</strong>Kora adds supplied answers to the lead record and continues the qualification conversation if key information is missing.</li>
+      <li><strong>Kora marks the lead as qualified.</strong>Once the required information is captured, the lead moves from <strong>Awaiting qualification</strong> to <strong>Qualified</strong>.</li>
+      <li><strong>Kora hands the lead to the agency team.</strong>Kora assigns or routes the lead to the responsible salesperson or customer-service representative and notifies that person.</li>
+      <li><strong>Assigned team member reviews the lead.</strong>The team member opens the lead list and sees the buyer’s messages, qualification details, owner, status, response time, and next action.</li>
+      <li><strong>Team member contacts the buyer.</strong>The assigned person answers specific questions and agrees the next human-led action, such as an inspection discussion. Kora does not negotiate or close the deal.</li>
+      <li><strong>Kora creates a follow-up task.</strong>Kora records a task with an owner and due time. The lead status becomes <strong>Handed off</strong>.</li>
+      <li><strong>Team member completes or updates the follow-up.</strong>The owner contacts the buyer by the due time and updates the next action or marks the lead <strong>Closed</strong>.</li>
+      <li><strong>Kora reminds when action is overdue.</strong>If no follow-up is completed by its due time, Kora notifies the owner; the sales manager or founder can see it in the lead list.</li>
+    </ol>
+    <section class="completion">
+      <h2 style="margin-top:0">Completion state</h2>
+      <p>The flow completes when a qualified buyer is handed to a named agency team member and that owner completes the follow-up or deliberately closes the lead. The pilot records response, qualification, assignment, and overdue follow-ups; it does not claim that Kora caused a sale.</p>
+    </section>
+    <footer>Source: Kora Pilot Requirements</footer>
+  </main>
+</body>
+</html>

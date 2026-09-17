@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ACE Nigeria - Office Hours Raw Notes</title>
+  <style>
+    :root { --ink:#172019; --muted:#5f6a62; --paper:#f7f6f1; --panel:#fffefa; --line:#d9ddd4; --accent:#176b45; --warn:#9b5e05; --danger:#a0302b; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { width:min(980px,calc(100% - 32px)); margin:48px auto 72px; }
+    header { border-bottom:1px solid var(--line); padding-bottom:28px; margin-bottom:24px; }
+    h1,h2,h3 { line-height:1.15; margin:0; letter-spacing:-.02em; }
+    h1 { font-size:clamp(2rem,5vw,3.4rem); }
+    h2 { font-size:1.25rem; }
+    h3 { font-size:1rem; }
+    p { margin:10px 0; }
+    .eyebrow { color:var(--accent); font-size:.78rem; font-weight:750; letter-spacing:.11em; text-transform:uppercase; margin:0 0 10px; }
+    .lede { color:var(--muted); font-size:1.08rem; max-width:760px; }
+    .toolbar { display:flex; gap:8px; flex-wrap:wrap; margin:22px 0 0; }
+    button { appearance:none; border:1px solid var(--line); background:var(--panel); color:var(--ink); padding:8px 12px; border-radius:7px; cursor:pointer; font:inherit; }
+    button[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:white; }
+    button:focus-visible, summary:focus-visible { outline:3px solid #83bd9c; outline-offset:3px; }
+    .note { border-left:4px solid var(--warn); padding:12px 16px; background:#fff8e8; margin:18px 0 28px; }
+    .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:18px 0 28px; }
+    .metric { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:15px; }
+    .metric strong { display:block; font-size:1.35rem; }
+    .metric span { color:var(--muted); font-size:.9rem; }
+    details { background:var(--panel); border:1px solid var(--line); border-radius:10px; margin:12px 0; overflow:hidden; }
+    summary { cursor:pointer; font-weight:700; padding:16px 18px; list-style-position:inside; }
+    details[open] summary { border-bottom:1px solid var(--line); }
+    .content { padding:4px 18px 18px; }
+    ul,ol { padding-left:1.25rem; }
+    li { margin:7px 0; }
+    .tag { display:inline-block; color:var(--accent); background:#e9f4ec; border-radius:999px; padding:2px 8px; font-size:.75rem; font-weight:700; margin-left:8px; }
+    .challenge { color:var(--danger); }
+    .question { background:#e9f4ec; border:1px solid #b9dbc4; border-radius:10px; padding:18px; }
+    blockquote { border-left:3px solid var(--accent); color:#2f4336; margin:14px 0; padding:4px 16px; }
+    .hidden { display:none !important; }
+    footer { color:var(--muted); font-size:.88rem; border-top:1px solid var(--line); margin-top:28px; padding-top:16px; }
+    @media (max-width:640px) { main { margin-top:28px; } .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">ACE Nigeria · Office Hours</p>
+      <h1>Raw notes <span class="tag">rough / in progress</span></h1>
+      <p class="lede">A working record of the canvas, the evidence gathered, and the claims that still need proof. Use the filters to focus the conversation.</p>
+      <div class="toolbar" aria-label="Note filters">
+        <button type="button" data-filter="all" aria-pressed="true">Show all</button>
+        <button type="button" data-filter="evidence" aria-pressed="false">Evidence</button>
+        <button type="button" data-filter="challenge" aria-pressed="false">Needs proof</button>
+        <button type="button" data-filter="question" aria-pressed="false">Next question</button>
+      </div>
+    </header>
+
+    <section class="grid" aria-label="Current evidence snapshot">
+      <div class="metric"><strong>2</strong><span>agencies reporting the issue</span></div>
+      <div class="metric"><strong>~5/week</strong><span>estimated lost leads</span></div>
+      <div class="metric"><strong>3 months</strong><span>Bravies Homz pilot commitment</span></div>
+    </section>
+
+    <section class="note" data-kind="challenge">
+      <strong>Current position:</strong> the evidence supports an after-hours WhatsApp and missed-follow-up problem. It does not yet support the broad claim of full sales-opportunity management, ₦10m monthly loss, or the stated pricing model.
+    </section>
+
+    <details data-kind="canvas">
+      <summary>Original canvas points</summary>
+      <div class="content">
+        <h3>Problem</h3>
+        <ul>
+          <li>Nigerian real-estate agencies managing buyer enquiries in WhatsApp lose opportunities through slow responses, inconsistent follow-ups over a 6-8 month buying cycle, and weak pipeline visibility.</li>
+          <li>Stated causes: manual WhatsApp replies, personal memory, spreadsheets, and junior staff.</li>
+          <li>Stated alternatives: HubSpot, Salesforce, and generic CRMs, described as foreign-built, expensive, and too complex for many Nigerian agencies.</li>
+        </ul>
+        <h3>Solution and UVP</h3>
+        <ul>
+          <li>Build <strong>Kora</strong>, a 24/7 AI-powered WhatsApp assistant for Nigerian real-estate agencies.</li>
+          <li>Respond to enquiries, qualify leads, automate follow-ups, coordinate enquiries with the right agent, and give managers sales visibility.</li>
+          <li>Claimed outcome: faster response, consistent long-term follow-up, and more efficient teams that close more deals.</li>
+        </ul>
+        <h3>Customer, channels, metrics, and economics</h3>
+        <ul>
+          <li>Primary persona: “Moses A.,” a founder/decision-maker in Abuja, later Lagos and other cities.</li>
+          <li>Channels: direct WhatsApp and community outreach, referrals, and industry events. Trust tactic: a free two-week pilot and ₦5,000 referral incentive.</li>
+          <li>Targets: 100 qualified leads monthly, ≥90% follow-up rate, ≥80% retention, and first response under 30 seconds.</li>
+          <li>Claimed advantage: local-market knowledge and agency-conversation data.</li>
+          <li>Costs: ₦187,000 total. Revenue: ₦1,080,000 subscription and ₦450,000 listing fee.</li>
+        </ul>
+      </div>
+    </details>
+
+    <details data-kind="evidence" open>
+      <summary>Evidence supplied <span class="tag">what we know</span></summary>
+      <div class="content">
+        <ul>
+          <li>Bravies Homz reported losing deals due to delayed replies.</li>
+          <li>Claimed pattern: about 5 of every 10 enquiries receive a delayed response; prospects move to available competitors.</li>
+          <li>At Bravieshomz, a customer-service representative sees new enquiries. During operating hours replies take minutes; after hours they wait until the next day or are missed.</li>
+          <li>After qualification, the same attendant records the lead in Excel, schedules inspections, and sends follow-up reminders. Follow-ups are sometimes forgotten.</li>
+          <li>Estimated lost leads: about five per week, roughly 20 per month.</li>
+          <li>Bravies Homz's CEO/founder and decision-maker has committed to a three-month pilot or trial for prompt response, automated lead qualification, and sales-team coordination.</li>
+        </ul>
+      </div>
+    </details>
+
+    <details data-kind="challenge">
+      <summary>Claims that need proof <span class="tag">do not assume</span></summary>
+      <div class="content challenge">
+        <ol>
+          <li>A delayed response is being equated to a lost deal without lead-level outcome records.</li>
+          <li>“Over ₦10m monthly” is undefined: it could be lost commission, expected revenue, or pipeline value.</li>
+          <li>The stated ₦200,000 current spend has not been connected to a specific budget line or workaround.</li>
+          <li>24/7 response, qualification, and team coordination are three product scopes. A pilot needs one narrow first job.</li>
+          <li>Local experience and conversation data are not an unfair advantage unless they outperform generic WhatsApp automation or a human attendant.</li>
+          <li>Pricing, CAC, costs, listing fees, retention target, and 100-lead target are not yet tied to willingness to pay or unit economics.</li>
+        </ol>
+      </div>
+    </details>
+
+    <details data-kind="question" open>
+      <summary>Next question <span class="tag">needed to continue</span></summary>
+      <div class="content question">
+        <p><strong>What exactly will Bravies Homz pay for the three-month pilot, and what is the single day-30 success threshold that makes its CEO continue paying?</strong></p>
+        <blockquote>“Bravies Homz will pay ₦X per month if Y% of WhatsApp enquiries receive a qualified reply within Z seconds/minutes.”</blockquote>
+      </div>
+    </details>
+
+    <details data-kind="reframe" open>
+      <summary>Provisional reframing</summary>
+      <div class="content">
+        <p>For founder-led Nigerian real-estate agencies that buy Facebook/Instagram leads into WhatsApp and lose prospects after operating hours or when follow-ups are forgotten, Kora may provide an immediate first reply, capture qualification details, and surface a task for the responsible agent.</p>
+        <p>It earns continued payment only if a pilot proves a defined improvement in timely qualified responses and retained leads.</p>
+        <p><em>This is deliberately narrower than the original canvas and remains provisional until the pilot price, owner, baseline, and success threshold are confirmed.</em></p>
+      </div>
+    </details>
+
+    <footer>Source: Business Model Workbook · ACE Nigeria. Last updated during the ongoing office-hours session.</footer>
+  </main>
+  <script>
+    const buttons = document.querySelectorAll('[data-filter]');
+    const sections = document.querySelectorAll('[data-kind]');
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const filter = button.dataset.filter;
+        buttons.forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+        sections.forEach((section) => {
+          const show = filter === 'all' || section.dataset.kind === filter;
+          section.classList.toggle('hidden', !show);
+          if (show && section.tagName === 'DETAILS') section.open = true;
+        });
+      });
+    });
+  </script>
+</body>
+</html>
