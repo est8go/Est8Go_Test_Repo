@@ -1,5 +1,7 @@
 name: Backend tests
 
+# This workflow is the merge gate for backend changes.
+
 on:
   pull_request:
     paths:
