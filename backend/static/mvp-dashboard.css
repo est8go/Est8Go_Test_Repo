@@ -50,6 +50,7 @@ tr:last-child td { border-bottom:0; }
 .action.primary { background:var(--indigo); color:white; border-color:var(--indigo); }
 .empty,.loading,.notice { padding:30px 18px; color:var(--muted); text-align:center; }
 .notice { border:1px solid #dedcfb; border-radius:12px; background:#f7f6ff; color:#4c4880; text-align:left; }
+.data-status { display:inline-flex; align-items:center; min-height:28px; padding:4px 10px; border:1px solid #d8d5ff; border-radius:999px; background:#f7f6ff; color:#514b95; font-size:12px; font-weight:700; }
 .tasks-grid { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:20px; }
 .task-list { display:grid; gap:10px; padding:14px; }
 .task { display:grid; grid-template-columns:1fr auto; gap:12px; padding:14px; border:1px solid var(--line); border-radius:10px; }
